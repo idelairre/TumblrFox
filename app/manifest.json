@@ -1,0 +1,39 @@
+{
+  "name": "Tumblr dashboard filter",
+  "short_name": "TumblrFoxFilter",
+  "description": "a super hacky dashboard filter for Tumblr",
+  "version": "0.0.0",
+  "manifest_version": 2,
+  "default_locale": "en",
+  "icons": {
+    "16": "images/fox.png",
+    "128": "images/fox.png"
+  },
+  "background": {
+    "scripts": [
+      "scripts/background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*",
+        "*://*.tumblr.com/*"
+      ],
+      "js": [
+        "scripts/contentscript.js"
+      ],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "storage",
+    "http://api.tumblr.com/*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "web_accessible_resources": [ "pages/chrome_ex_oauth.html" ]
+}

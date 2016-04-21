@@ -1,0 +1,89 @@
+<script id="filterPopoverTemplate" type="text/template">
+  <div id="filterPopoverMenu" class="popover popover_menu popover_gradient" style="display: block; width: 240px;">
+    <div class="popover_inner">
+      <ul class="popover_inner_list">
+        <div class="filter-menu" data-subview="filterMenu"></div>
+        <div class="filter-search" data-subview="searchFilter"></div>
+    </ul>
+  </div>
+</div>
+</script>
+
+<script id="searchFilterTemplate" type="text/template">
+  <li class="popover_subsection">
+    <div class="popover_header">
+      Search
+      <div class="popover_item_suffix">
+        <a href="#" class="toggle-user">Toggle user search</a>
+      </div>
+    </div>
+  <li id="searchFilter" class="popover_inner" style="width: 240px">
+    <div class="dashboard-search filter-search">
+      <form class="dashboard-search-form">
+        <span class="search-border"></span>
+        <div class="search-input" data-subview="input"></div>
+        <div class="search-filters" data-subview="filters"></div>
+      </form>
+    </div>
+    <div class="user-results" data-subview="searchResultView"></div>
+  </li>
+</li>
+</script>
+
+<script id="filterMenuTemplate" type="text/template">
+  <li class="popover_subsection">
+    <div class="popover_header">
+      Filter
+    </div>
+    <ul class="popover_menu_list">
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="text">
+          <i class="popover_menu_item_anchor_icon icon_post_text"></i>
+          Text
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="photo">
+          <i class="popover_menu_item_anchor_icon icon_post_photo"></i>
+          Photos
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="quote">
+          <i class="popover_menu_item_anchor_icon icon_post_quote"></i>
+          Quotes
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="link">
+          <i class="popover_menu_item_anchor_icon icon_post_link"></i>
+          Link
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="chat">
+          <i class="popover_menu_item_anchor_icon icon_post_chat"></i>
+          Chat
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="audio">
+          <i class="popover_menu_item_anchor_icon icon_post_audio"></i>
+          Audio
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="video">
+          <i class="popover_menu_item_anchor_icon icon_post_video"></i>
+          Video
+        </a>
+      </li>
+      <li class="popover_menu_item" data-js-menu-item>
+        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="answer">
+          <i class="popover_menu_item_anchor_icon help-icon"></i>
+          Answer
+        </a>
+      </li>
+    </ul>
+  </li>
+</script>
