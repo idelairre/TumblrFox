@@ -92,8 +92,8 @@ module.exports = (function searchComponent() {
       }
     },
     toggleLoader(e) {
-      // console.log('[TOGGLE LOADER]', e);
-      e === !0 ? this.loader ? this.loader.set('loading', !0) : this.loader = new Loader({
+      console.log('[TOGGLE LOADER]', e);
+      e === !0 ? this.loader ? this.loader.set('loading', !0) : this.loader = new Loader({ // I hate this
           $container: this.$el,
           type: 'bar',
           classModifiers: 'top',
@@ -119,12 +119,13 @@ module.exports = (function searchComponent() {
       this.set('showUserList', this.showUserList = !this.showUserList),
       Tumblr.AutoPaginator.stop();
     },
-    log(e, log, query) {
-      e === 'search-start' ? this.toggleLoader(true) : this.toggleLoader(false);
+    log(query) {
+      console.log(query);
+      query === 'search-complete' || this.model.previous('term') === query.term ? this.toggleLoader(false) : this.toggleLoader(true);
       if (!AutoPaginator.enabled) {
         Tumblr.AutoPaginator.stop(),
         AutoPaginator.reset({ apiFetch: false }),
-        AutoPaginator.start()
+        AutoPaginator.start();
       }
       return this.searchStarted = !0,
       this.model.set(query),
@@ -147,7 +148,7 @@ module.exports = (function searchComponent() {
       this.listenTo(this.model.posts, 'add', ::this.onPostsAdd),
       this.listenTo(this.model, 'search:reset', ::this.onSearchReset),
       this.listenTo(this.model, 'change:next_offset', ::this.onOffsetChange),
-      this.listenTo(Tumblr.Events, 'peeprsearch:change:term', bind(this.log, this, 'search-start', {})),
+      this.listenTo(Tumblr.Events, 'peeprsearch:change:term', this.log),
       this.listenTo(Tumblr.Events, 'indashblog:search:fetch-requested', ::this.onFetchRequested),
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       // this.listenTo(this.filters.model, 'change', after(2, this.evalFilter)); // if the attribute is not blog name, fetch posts

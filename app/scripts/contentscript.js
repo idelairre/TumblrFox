@@ -11,9 +11,6 @@ import postFetcher from './utils/postFetcher';
 import loaderComponent from './components/loaderComponent';
 import searchComponent from './components/searchComponent';
 
-console.log('[CONTENT SCRIPT] loaded');
-
-// TODO: make components overall less dependent on requires
 // get user search component to still search if there are no tags
 // NOTE: reblog follow button is broken
 
@@ -24,7 +21,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   document.body.insertAdjacentHTML('beforeend', popover);
 
   window.addEventListener('chrome:fetch:posts', e => {
-    console.log('[FETCH POSTS]', e.detail);
+    // console.log('[FETCH POSTS]', e.detail);
     chrome.runtime.sendMessage({ fetchPost: e.detail }, response => {
       const slug = new CustomEvent('chrome:response:posts', { detail: response });
       window.dispatchEvent(slug);
@@ -44,7 +41,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
 
       Tumblr.Fox.options = {
         rendered: false,
-        logging: false
+        logging: true
       }
 
       Tumblr.Fox.constants = {

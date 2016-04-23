@@ -38,6 +38,7 @@ module.exports = (function events() {
     },
     start() {
       tumblr.on('all', this.log);
+      console.log('[LOG]', 'initialized');
     },
     stop() {
       tumblr.off('all', this.log);
