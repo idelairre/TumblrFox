@@ -149,20 +149,22 @@ module.exports = (function postFormatter() {
   }
 
   Tumblr.Fox.renderPosts = function(response) {
-      let posts;
-      if (response.posts) {
-        posts = response.posts;
-      } else {
-        posts = response;
-      }
-      console.log('[RENDERING POSTS]', posts);
-      for (let i = 0; posts.length > i; i += 1) {
-        const post = posts[i];
-        let { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
-        Tumblr.Fox.constants.attachNode.before(postContainer);
-        Tumblr.Fox.createPostView(postElement, postModel);
-      }
+    let posts;
+    if (response.posts) {
+      posts = response.posts;
+    } else {
+      posts = response;
     }
+    for (let i = 0; posts.length > i; i += 1) {
+      Tumblr.Fox.renderPost(posts[i]);
+    }
+  }
+
+  Tumblr.Fox.renderPost = function(post) {
+    let { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
+    Tumblr.Fox.constants.attachNode.before(postContainer);
+    Tumblr.Fox.createPostView(postElement, postModel);
+  }
 
   return Tumblr.Fox;
 });

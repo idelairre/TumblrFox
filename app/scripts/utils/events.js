@@ -8,6 +8,7 @@ module.exports = (function events() {
       'DOMEventor:flatscroll',
       'LSLog:impression',
       'DOMEventor:updateRect',
+      'DOMEventor:keyup:backspace',
       'postsView:createPost',
       'postsView',
       'posts:destroyed',
@@ -17,10 +18,18 @@ module.exports = (function events() {
       'DOMEventor:keydown:alt',
       'DOMEventor:keydown:ctrl',
       'LSLog:video_loop',
+      'LSLog:video_auto_play',
       'toaster:updateMessagingUnreadCounts',
       'TumblelogPopover:mouseenter_posts',
       'post:embed:stateChange',
-      'VideoPlayer:looped'
+      'VideoPlayer:looped',
+      'DOMEventor:keydown:backspace',
+      'CrtControl:newPlayer',
+      'CrtControl:playerCreated',
+      'CrtPlayer:ready',
+      'VideoPlayer:autoplay',
+      'VideoPlayer:initialLoad',
+      'VideoPlayer:cacheUnload'
     ],
     log(e) {
       if (!Tumblr.Fox.Events.ignore.includes(e)) {
@@ -28,11 +37,9 @@ module.exports = (function events() {
       }
     },
     start() {
-      window.addEventListener('response:posts', Tumblr.Fox.handOffPosts);
       tumblr.on('all', this.log);
     },
     stop() {
-      window.removeEventListener('response:posts', Tumblr.Fox.handOffPosts);
       tumblr.off('all', this.log);
     }
   }

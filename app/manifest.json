@@ -1,7 +1,7 @@
 {
-  "name": "Tumblr dashboard filter",
+  "name": "Tumblr Fox",
   "short_name": "TumblrFoxFilter",
-  "description": "a super hacky dashboard filter for Tumblr",
+  "description": "A super hacky dashboard filter for Tumblr",
   "version": "0.0.0",
   "manifest_version": 2,
   "default_locale": "en",
@@ -20,6 +20,9 @@
         "http://*/*",
         "https://*/*",
         "*://*.tumblr.com/*"
+      ],
+      "css": [
+        "styles/popover.css"
       ],
       "js": [
         "scripts/contentscript.js"

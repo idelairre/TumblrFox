@@ -3,7 +3,7 @@
     <div class="popover_inner">
       <ul class="popover_inner_list">
         <div class="filter-menu" data-subview="filterMenu"></div>
-        <div class="filter-search" data-subview="searchFilter"></div>
+        <div data-subview="searchFilter"></div>
     </ul>
   </div>
 </div>
@@ -14,10 +14,11 @@
     <div class="popover_header">
       Search
       <div class="popover_item_suffix">
-        <a href="#" class="toggle-user">Toggle user search</a>
+        <a href="#" class="toggle-user"><span class="indicator">+</span> Toggle user search</a>
       </div>
     </div>
   <li id="searchFilter" class="popover_inner" style="width: 240px">
+    <div data-subview="loader"></div>
     <div class="dashboard-search filter-search">
       <form class="dashboard-search-form">
         <span class="search-border"></span>

@@ -1,6 +1,8 @@
 module.exports = (function filterMenuComponent() {
-  const $ = Backbone.$;
   Tumblr.Fox = Tumblr.Fox || {};
+
+  const $ = Backbone.$;
+  const { AutoPaginator, fetchPosts, filterPosts } = Tumblr.Fox;
 
   let FilterMenuComponent = Backbone.View.extend({
     className: 'popover--filter-select-dropdown',
@@ -12,19 +14,19 @@ module.exports = (function filterMenuComponent() {
       'click [data-js-menu-item]': 'filterAndFetchPosts'
     },
     filterAndFetchPosts(e) {
-      console.log('[FILTER SELECTED]', Tumblr.Fox.Loader.options);
-      e.preventDefault();
       if (Tumblr.Fox.Loader.options.loading) return;
+      console.log('[FILTER SELECTED]');
+      e.preventDefault();
       const type = $(e.target).data('js-menu-item-link');
       console.log('[FETCHING POSTS]', type);
       return Tumblr.AutoPaginator.stop(),
-      Tumblr.Fox.AutoPaginator.reset({ apiFetch: true }),
-      Tumblr.Fox.filterPosts(type),
+      AutoPaginator.reset({ apiFetch: true }),
+      filterPosts(type),
       setTimeout(() => {
-        Tumblr.Fox.fetchPosts({
+        fetchPosts({
           type: type,
-          limit: Tumblr.Fox.options.limit,
-          offset: Tumblr.Fox.options.offset
+          limit: Tumblr.Fox.apiSlug.limit,
+          offset: Tumblr.Fox.apiSlug.offset
         });
       }, 1);
     }

@@ -4,22 +4,22 @@ module.exports = (function filterPopoverComponent() {
   const $ = Backbone.$;
   const { debounce } = _;
   const { getComponent, require } = Tumblr.Fox;
-  const PrimaComponent = require(getComponent('n.uniqueId("component")'));
-  const transition = require(getComponent('webkitAnimationEnd')).transition;
-  const mixins = require(211);
-  const PopoverComponent = require(getComponent('createCollectionSubviewRenderer')[0]);
-  const ClickHandler = require(getComponent('function n(e,t){this.options=s.extend({preventInteraction:!1,ignoreSelectors:[]},t),this._onClick=s.bind(this._onClick,this,e),document.addEventListener("click",this._onClick,!0)}'));
+  const PrimaComponent = require(getComponent('PrimaComponent', 'n.uniqueId("component")'));
+  const transition = require(getComponent('transition', 'webkitAnimationEnd')).transition;
+  const popover = require(getComponent('PopoverMixin', '_crossesView'));
+  const PopoverComponent = require(getComponent('PopoverComponent', 'createCollectionSubviewRenderer')[0]);
+  const ClickHandler = require(getComponent('ClickHandler', 'function n(e,t){this.options=s.extend({preventInteraction:!1,ignoreSelectors:[]},t),this._onClick=s.bind(this._onClick,this,e),document.addEventListener("click",this._onClick,!0)}'));
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
   const { FilterMenuComponent, SearchComponent } = Tumblr.Fox;
 
   let FilterPopoverComponent = PopoverComponent.extend({
+    className: 'popover--filter-popover',
     defaults: {
       preventInteraction: !0,
-      toggleUser: false
+      toggleUser: !1
     },
-    mixins: [mixins],
-    className: 'popover--filter-popover',
+    mixins: [popover],
     template: $('#filterPopoverTemplate').html(),
     subviews: {
       filterMenu: {
@@ -34,8 +34,8 @@ module.exports = (function filterPopoverComponent() {
       }
     },
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e);
-      return PopoverComponent.prototype.initialize.apply(this, e);
+      return this.options = Object.assign({}, this.defaults, e),
+      PopoverComponent.prototype.initialize.apply(this, e);
     },
     render() {
       return this.$el.html(this.template),

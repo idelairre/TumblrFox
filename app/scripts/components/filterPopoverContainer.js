@@ -4,7 +4,7 @@ module.exports = (function filterPopoverContainer() {
   const $ = Backbone.$;
   const { getComponent, require } = Tumblr.Fox;
   const { FilterPopoverComponent } = Tumblr.Fox;
-  const PrimaComponent = require(getComponent('n.uniqueId("component")'));
+  const PrimaComponent = require(getComponent('PrimaComponent', 'n.uniqueId("component")'));
 
   let FilterPopoverContainer = PrimaComponent.extend({
     name: 'FilterPopover',
@@ -38,7 +38,9 @@ module.exports = (function filterPopoverContainer() {
     filterPopoverMenu.show();
   });
 
-  Tumblr.Fox.Events.start();
+  if (Tumblr.Fox.options.logging) {
+    Tumblr.Fox.Events.start();
+  }
   Tumblr.Fox.Loader.start();
 
   Tumblr.Fox.FilterPopoverContainer = FilterPopoverContainer;

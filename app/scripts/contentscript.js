@@ -10,7 +10,6 @@ import postFormatter from './utils/postFormatter';
 import postFetcher from './utils/postFetcher';
 import loaderComponent from './components/loaderComponent';
 import searchComponent from './components/searchComponent';
-import '../styles/popover.css';
 
 console.log('[CONTENT SCRIPT] loaded');
 
@@ -24,10 +23,10 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   accountButton.insertAdjacentHTML('afterend', icon);
   document.body.insertAdjacentHTML('beforeend', popover);
 
-  window.addEventListener('fetch:posts', e => {
+  window.addEventListener('chrome:fetch:posts', e => {
     console.log('[FETCH POSTS]', e.detail);
     chrome.runtime.sendMessage({ fetchPost: e.detail }, response => {
-      const slug = new CustomEvent('response:posts', { detail: response });
+      const slug = new CustomEvent('chrome:response:posts', { detail: response });
       window.dispatchEvent(slug);
     });
   });
@@ -44,10 +43,8 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       const formKey = $('#tumblr_form_key').attr('content');
 
       Tumblr.Fox.options = {
-        type: null,
-        offset: 0,
-        limit: 8,
-        rendered: false
+        rendered: false,
+        logging: false
       }
 
       Tumblr.Fox.constants = {
