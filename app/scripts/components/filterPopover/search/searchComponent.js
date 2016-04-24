@@ -3,15 +3,15 @@ module.exports = (function searchComponent() {
 
   const $ = Backbone.$;
   const { after, bind, debounce, each, isEmpty } = _;
-  const { AutoPaginator, getComponent, require, fetchPostData, filterPosts, renderPosts } = Tumblr.Fox;
-  const NavSearch = require(getComponent('NavSearch', 'nav-search'));
-  const PeeprBlogSearch = require(getComponent('PeeprBlogSearch', 'peepr-blog-search'));
-  const SearchResultView = require(getComponent('SearchResultView', 'inbox-recipients'));
-  const EventBus = require(getComponent('EventBus', '_addEventHandlerByString'));
-  const ConversationsCollection = require(getComponent('ConversationsCollection', '/svc/conversations/participant_suggestions'));
-  const InboxCompose = require(getComponent('InboxCompose', 'inbox-compose')[1]);
-  const BlogSearch = require(getComponent('BlogSearch', '/svc/search/blog_search')[0]);
-  const Loader = require(getComponent('Loader', 'this.createBarLoader()'))
+  const { AutoPaginator, getComponent, get, fetchPostData, filterPosts, renderPosts } = Tumblr.Fox;
+  const NavSearch = get('NavSearch');
+  const PeeprBlogSearch = get('PeeprBlogSearch');
+  const SearchResultView = get('SearchResultView');
+  const EventBus = get('EventBus');
+  const ConversationsCollection = get('ConversationsCollection');
+  const InboxCompose = get('InboxCompose');
+  const BlogSearch = get('BlogSearch');
+  const Loader = get('Loader');
 
   let Conversations = new ConversationsCollection();
 
@@ -92,7 +92,7 @@ module.exports = (function searchComponent() {
       }
     },
     toggleLoader(e) {
-      console.log('[TOGGLE LOADER]', e);
+      // console.log('[TOGGLE LOADER]', e);
       e === !0 ? this.loader ? this.loader.set('loading', !0) : this.loader = new Loader({ // I hate this
           $container: this.$el,
           type: 'bar',

@@ -2,9 +2,9 @@ module.exports = (function filterPopoverContainer() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { getComponent, require } = Tumblr.Fox;
+  const { getComponent, get } = Tumblr.Fox;
   const { FilterPopoverComponent } = Tumblr.Fox;
-  const PrimaComponent = require(getComponent('PrimaComponent', 'n.uniqueId("component")'));
+  const PrimaComponent = get('PrimaComponent');
 
   let FilterPopoverContainer = PrimaComponent.extend({
     name: 'FilterPopover',

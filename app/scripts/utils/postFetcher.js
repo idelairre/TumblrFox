@@ -1,3 +1,6 @@
+// NOTE: all this file does is fetch/filter posts and trigger events,
+// it is NOT responsible for rendering posts
+
 module.exports = (function postFetcher() {
   const $ = Backbone.$;
   Tumblr.Fox = Tumblr.Fox || {};
@@ -17,6 +20,7 @@ module.exports = (function postFetcher() {
   }
 
   Tumblr.Fox.fetchPosts = function(slug) {
+    console.log('[LOADING?]', Tumblr.Fox.Loader.options.loading);
     if (Tumblr.Fox.Loader.options.loading) return;
 
     const params = stringify({
@@ -84,16 +88,12 @@ module.exports = (function postFetcher() {
   }
 
   Tumblr.Fox.handOffPosts = function(e) {
+    console.log('[CHROME RESPONSE HANFOFF]', e.detail);
     const chromeResponse = e.detail;
     Tumblr.Fox.apiSlug.offset += chromeResponse.posts.length;
     for (let i = 0; chromeResponse.posts.length > i; i += 1) {
       const post = chromeResponse.posts[i];
-      Tumblr.Fox.fetchPostData({ blogNameOrId: post.blog_name, postId: post.id }, response => {
-        const postData = response.posts[0];
-        let { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(postData);
-        Tumblr.Fox.constants.attachNode.before(postContainer);
-        Tumblr.Fox.createPostView(postElement, postModel);
-      });
+      Tumblr.Fox.fetchPostData({ blogNameOrId: post.blog_name, postId: post.id });
     }
   }
 

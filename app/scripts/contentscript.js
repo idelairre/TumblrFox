@@ -1,15 +1,17 @@
-import autopaginatorComponent from './components/autopaginatorComponent';
+import autopaginatorComponent from './components/autopaginator/autopaginatorComponent';
 import componentFetcher from './utils/componentFetcher';
-import filterMenuComponent from './components/filterMenuComponent';
-import filterPopoverComponent from './components/filterPopoverComponent';
-import filterPopoverContainer from './components/filterPopoverContainer';
+import filterMenuComponent from './components/filterPopover/filterMenu/filterMenuComponent';
+import filterMenuTemplate from './components/filterPopover/filterMenu/filterMenuTemplate.html';
+import filterPopoverComponent from './components/filterPopover/filterPopoverComponent';
+import filterPopoverContainer from './components/filterPopover/filterPopoverContainer';
+import filterPopoverTemplate from './components/filterPopover/filterPopoverTemplate.html';
 import events from './utils/events';
 import icon from '../pages/icon/icon.html';
-import popover from '../pages/popover/popover.html';
 import postFormatter from './utils/postFormatter';
 import postFetcher from './utils/postFetcher';
-import loaderComponent from './components/loaderComponent';
-import searchComponent from './components/searchComponent';
+import loaderComponent from './components/loader/loaderComponent';
+import searchComponent from './components/filterPopover/search/searchComponent';
+import searchTemplate from './components/filterPopover/search/searchTemplate.html'
 
 // get user search component to still search if there are no tags
 // NOTE: reblog follow button is broken
@@ -18,7 +20,9 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   console.log('@tumblr');
   const accountButton = document.querySelector('#account_button');
   accountButton.insertAdjacentHTML('afterend', icon);
-  document.body.insertAdjacentHTML('beforeend', popover);
+  document.body.insertAdjacentHTML('beforeend', filterMenuTemplate);
+  document.body.insertAdjacentHTML('beforeend', filterPopoverTemplate);
+  document.body.insertAdjacentHTML('beforeend', searchTemplate);
 
   window.addEventListener('chrome:fetch:posts', e => {
     // console.log('[FETCH POSTS]', e.detail);
@@ -29,15 +33,33 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   });
 
   function main() {
-    window.webpackJsonp([0], [function(module, exports, __webpack_require__) {
+    window.webpackJsonp([0], [function(module, exports, require) {
       Tumblr.Fox = Tumblr.Fox || {};
-      Tumblr.Fox.require = __webpack_require__;
+      Tumblr.Fox.require = require;
       Tumblr.Fox.getComponent = Tumblr.Fox.getComponent.bind(this, Array.prototype.slice.call(arguments));
 
       const $ = Backbone.$;
       const listItems = $('#posts').find('li');
       const attachNode = $(listItems[listItems.length - 1]);
       const formKey = $('#tumblr_form_key').attr('content');
+
+      // initialize
+
+      Tumblr.Fox.getComponent('PrimaComponent', 'n.uniqueId("component")');
+      Tumblr.Fox.getComponent('animation', 'webkitAnimationEnd');
+      Tumblr.Fox.getComponent('PopoverMixin', '_crossesView');
+      Tumblr.Fox.getComponent('PopoverComponent', 'u.mixin.applyTo(d.prototype)');
+      Tumblr.Fox.getComponent('ClickHandler', 'function n(e,t){this.options=s.extend({preventInteraction:!1,ignoreSelectors:[]},t),this._onClick=s.bind(this._onClick,this,e),document.addEventListener("click",this._onClick,!0)}');
+      Tumblr.Fox.getComponent('NavSearch', 'nav-search');
+      Tumblr.Fox.getComponent('PeeprBlogSearch', 'peepr-blog-search');
+      Tumblr.Fox.getComponent('SearchResultView', 'inbox-recipients');
+      Tumblr.Fox.getComponent('EventBus', '_addEventHandlerByString');
+      Tumblr.Fox.getComponent('ConversationsCollection', '/svc/conversations/participant_suggestions');
+      Tumblr.Fox.getComponent('Loader', 'this.createBarLoader()');
+      Tumblr.Fox.getComponent('InboxCompose', '"inbox-compose"');
+      Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
+
+      console.log(Tumblr.Fox.$$componentCache);
 
       Tumblr.Fox.options = {
         rendered: false,

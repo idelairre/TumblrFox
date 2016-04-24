@@ -44,8 +44,8 @@ module.exports = (function autopaginator() {
       Tumblr.Events.on('indashblog:search:complete', ::this.searchPrepare),
       Tumblr.Events.on('indashblog:search:post-added', renderPost),
       Tumblr.Events.on('peepr-open-request', ::this.stop),
-      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination),
-      window.addEventListener('chrome:response:posts', ::this.apiPrepare);
+      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination);
+      // window.addEventListener('chrome:response:posts', ::this.apiPrepare);
       filterPosts();
     },
     stop() {
@@ -79,12 +79,12 @@ module.exports = (function autopaginator() {
     onScroll(e) {
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
         if (!this.options.apiFetch && this.options.noTerm) {
-          debounce(fetchPostData, 300).call(this, this.query.loggingData, renderPosts);
+          debounce(fetchPostData, 300).call(this, this.query.loggingData);
         } else if (!this.options.apiFetch && !this.options.noTerm) {
           Tumblr.Events.trigger('peepr-search:search-start', this.query);
           Tumblr.Events.trigger('indashblog:search:fetch-requested', this.query);
         } else {
-          debounce(fetchPosts, 300).call(this, Tumblr.Fox.options);
+          debounce(fetchPosts, 300).call(this, Tumblr.Fox.apiSlug);
         }
       }
     },

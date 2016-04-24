@@ -3,12 +3,12 @@ module.exports = (function filterPopoverComponent() {
 
   const $ = Backbone.$;
   const { debounce } = _;
-  const { getComponent, require } = Tumblr.Fox;
-  const PrimaComponent = require(getComponent('PrimaComponent', 'n.uniqueId("component")'));
-  const transition = require(getComponent('transition', 'webkitAnimationEnd')).transition;
-  const popover = require(getComponent('PopoverMixin', '_crossesView'));
-  const PopoverComponent = require(getComponent('PopoverComponent', 'createCollectionSubviewRenderer')[0]);
-  const ClickHandler = require(getComponent('ClickHandler', 'function n(e,t){this.options=s.extend({preventInteraction:!1,ignoreSelectors:[]},t),this._onClick=s.bind(this._onClick,this,e),document.addEventListener("click",this._onClick,!0)}'));
+  const { getComponent, get, require } = Tumblr.Fox;
+  const PrimaComponent = get('PrimaComponent');
+  const transition = get('animation').transition;
+  const popover = get('PopoverMixin');
+  const PopoverComponent = get('PopoverComponent');
+  const ClickHandler = get('ClickHandler');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
   const { FilterMenuComponent, SearchComponent } = Tumblr.Fox;
