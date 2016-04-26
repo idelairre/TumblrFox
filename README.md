@@ -2,7 +2,9 @@
 
 ## What it is
 
-A Chrome extension that adds a new navigation tab that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag. The idea is to aggregate Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
+A Chrome extension that adds a new navigation tab that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag.
+
+The idea is to aggregate Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
 
 Tumblr client-side code (primarily Backbone models and collections) are used where possible to benefit from improved performance over the public api.
 

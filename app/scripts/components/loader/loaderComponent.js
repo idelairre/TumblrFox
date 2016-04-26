@@ -15,7 +15,7 @@ module.exports = (function loader() {
       Tumblr.Events.on('peepr-open-request', this.stop),
       Tumblr.Events.on('fox:postFetch:started', this.show),
       Tumblr.Events.on('fox:postFetch:finished', this.hide),
-      Tumblr.Events.on('fox:postFetch:error', this.hide),
+      Tumblr.Events.on('fox:postFetch:failed', this.hide),
       window.addEventListener('chrome:fetch:posts', this.show),
       window.addEventListener('chrome:response:posts', this.hide);
     },
@@ -25,7 +25,7 @@ module.exports = (function loader() {
       Tumblr.Events.off('indashblog:search:post-added', this.hide),
       Tumblr.Events.off('fox:postFetch:started', this.show),
       Tumblr.Events.off('fox:postFetch:finished', this.hide),
-      Tumblr.Events.off('fox:postFetch:error', this.hide),
+      Tumblr.Events.off('fox:postFetch:failed', this.hide),
       window.removeEventListener('chrome:fetch:posts', this.show),
       window.removeEventListener('chrome:response:posts', this.hide),
       Tumblr.Events.on('peepr:close', this.start);

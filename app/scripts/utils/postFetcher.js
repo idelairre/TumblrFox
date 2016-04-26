@@ -16,7 +16,7 @@ module.exports = (function postFetcher() {
   Tumblr.Fox.apiSlug = {
     type: null,
     offset: 0,
-    limit: 8
+    limit: 12
   }
 
   Tumblr.Fox.fetchPosts = function(slug) {
@@ -26,7 +26,7 @@ module.exports = (function postFetcher() {
     const params = stringify({
       limit: (typeof slug.limit !== 'undefined' ? slug.limit : 12),
       type: slug.type,
-      offset: (typeof slug.offset !== 'undefined' ? slug.offset : null),
+      offset: (typeof slug.offset !== 'undefined' ? slug.offset : 0),
       since_id: (typeof slug.sinceId !== 'undefined' ? slug.sinceId : null)
     });
 
@@ -38,9 +38,13 @@ module.exports = (function postFetcher() {
   }
 
   Tumblr.Fox.fetchBlogPosts = function(slug) {
-    if (Tumblr.Fox.Loader.options.loading) {
-      return;
-    }
+    console.log('[LOADING?]', Tumblr.Fox.Loader.options.loading);
+    console.log('[SLUG]', slug);
+    if (Tumblr.Fox.Loader.options.loading) return;
+    const req = new CustomEvent('chrome:fetch:blogPosts', {
+      detail: slug
+    });
+    window.dispatchEvent(req);
   }
 
   Tumblr.Fox.fetchPostData = function(slug) {
@@ -55,9 +59,8 @@ module.exports = (function postFetcher() {
       data: {
         tumblelog_name_or_id: slug.blogNameOrId || slug.blogname,
         post_id: slug.postId,
-        limit: slug.limit || 10,
-        offset: slug.offset || 0,
-        post_type: slug.post_type
+        limit: slug.limit || 8,
+        offset: slug.offset || 0
       }
     });
 
@@ -66,12 +69,13 @@ module.exports = (function postFetcher() {
         Object.assign(Tumblr.Fox.AutoPaginator.query.loggingData, slug);
         Tumblr.Fox.AutoPaginator.query.loggingData.offset += data.response.posts.length;
       }
+      Tumblr.Prima.Models.Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(data.response.tumblelog)),
+      console.log('[TUMBLELOG]', data.response.tumblelog),
       Tumblr.Events.trigger('fox:postFetch:finished', data.response);
     })
 
     request.fail(error => {
-      Tumblr.Events.trigger('fox:postFetch:failed'),
-      console.error(error);
+      Tumblr.Events.trigger('fox:postFetch:failed', error);
     });
   }
 
@@ -88,7 +92,7 @@ module.exports = (function postFetcher() {
   }
 
   Tumblr.Fox.handOffPosts = function(e) {
-    console.log('[CHROME RESPONSE HANFOFF]', e.detail);
+    console.log('[CHROME RESPONSE HANDOFF]', e.detail);
     const chromeResponse = e.detail;
     Tumblr.Fox.apiSlug.offset += chromeResponse.posts.length;
     for (let i = 0; chromeResponse.posts.length > i; i += 1) {

@@ -232,6 +232,17 @@
   margin: auto;
 }
 
+.filter-search .search-settings {
+  order: 3;
+  flex: 1;
+  font-size: 24px;
+  line-height: 24px;
+  padding-right: 5px;
+  min-width: 24px;
+  margin: auto;
+  cursor: pointer;
+}
+
 .dashboard-search-form .search-input {
   padding: 15px;
   order: 2;
@@ -245,6 +256,7 @@
   font-size: 24px;
   line-height: 24px;
   padding-right: 5px;
+  min-width: 24px;
   margin: auto;
   cursor: pointer;
 }

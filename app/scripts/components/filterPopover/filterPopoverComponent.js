@@ -3,7 +3,7 @@ module.exports = (function filterPopoverComponent() {
 
   const $ = Backbone.$;
   const { debounce } = _;
-  const { getComponent, get, require } = Tumblr.Fox;
+  const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
   const PrimaComponent = get('PrimaComponent');
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
@@ -11,7 +11,6 @@ module.exports = (function filterPopoverComponent() {
   const ClickHandler = get('ClickHandler');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
-  const { FilterMenuComponent, SearchComponent } = Tumblr.Fox;
 
   let FilterPopoverComponent = PopoverComponent.extend({
     className: 'popover--filter-popover',

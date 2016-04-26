@@ -10,8 +10,12 @@ import icon from '../pages/icon/icon.html';
 import postFormatter from './utils/postFormatter';
 import postFetcher from './utils/postFetcher';
 import loaderComponent from './components/loader/loaderComponent';
+import loaderMixin from './mixins/loaderBar';
 import searchComponent from './components/filterPopover/search/searchComponent';
 import searchTemplate from './components/filterPopover/search/searchTemplate.html'
+import settingsIcon from './components/filterPopover/settings/settingsIcon/settingsIconComponent';
+import settingsPopoverTemplate from './components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
+import settingsPopoverComponent from './components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
 
 // get user search component to still search if there are no tags
 // NOTE: reblog follow button is broken
@@ -22,11 +26,18 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   accountButton.insertAdjacentHTML('afterend', icon);
   document.body.insertAdjacentHTML('beforeend', filterMenuTemplate);
   document.body.insertAdjacentHTML('beforeend', filterPopoverTemplate);
+  document.body.insertAdjacentHTML('beforeend', settingsPopoverTemplate);
   document.body.insertAdjacentHTML('beforeend', searchTemplate);
 
+  window.addEventListener('chrome:fetch:blogPosts', e => {
+    chrome.runtime.sendMessage({ fetchBlogPosts: e.detail }, response => {
+      const slug = new CustomEvent('chrome:response:posts', { detail: response });
+      window.dispatchEvent(slug);
+    });
+  });
+
   window.addEventListener('chrome:fetch:posts', e => {
-    // console.log('[FETCH POSTS]', e.detail);
-    chrome.runtime.sendMessage({ fetchPost: e.detail }, response => {
+    chrome.runtime.sendMessage({ fetchPosts: e.detail }, response => {
       const slug = new CustomEvent('chrome:response:posts', { detail: response });
       window.dispatchEvent(slug);
     });
@@ -43,7 +54,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       const attachNode = $(listItems[listItems.length - 1]);
       const formKey = $('#tumblr_form_key').attr('content');
 
-      // initialize
+      // cache components
 
       Tumblr.Fox.getComponent('PrimaComponent', 'n.uniqueId("component")');
       Tumblr.Fox.getComponent('animation', 'webkitAnimationEnd');
@@ -58,6 +69,8 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       Tumblr.Fox.getComponent('Loader', 'this.createBarLoader()');
       Tumblr.Fox.getComponent('InboxCompose', '"inbox-compose"');
       Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
+      Tumblr.Fox.getComponent('mixin', 'this.mixins=u.filter');
+      Tumblr.Fox.getComponent('TumblrView', 'this.cid=s.uniqueId("view")');
 
       console.log(Tumblr.Fox.$$componentCache);
 
@@ -72,6 +85,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       }
 
       window.fetchPostData = Tumblr.Fox.fetchPostData;
+      window.fetchBlogPosts = Tumblr.Fox.fetchBlogPosts;
       window.require = Tumblr.Fox.require;
       window.getComponent = Tumblr.Fox.getComponent;
     }]);
@@ -86,5 +100,5 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     }
   }
 
-  inject([postFetcher, postFormatter, componentFetcher, events, autopaginatorComponent, loaderComponent, main, searchComponent, filterMenuComponent, filterPopoverComponent, filterPopoverContainer]);
+  inject([postFetcher, postFormatter, componentFetcher, events, autopaginatorComponent, loaderComponent, main, loaderMixin, settingsPopoverComponent, settingsIcon, searchComponent, filterMenuComponent, filterPopoverComponent, filterPopoverContainer]);
 }

@@ -3,7 +3,7 @@ module.exports = (function searchComponent() {
 
   const $ = Backbone.$;
   const { after, bind, debounce, each, isEmpty } = _;
-  const { AutoPaginator, getComponent, get, fetchPostData, filterPosts, renderPosts } = Tumblr.Fox;
+  const { AutoPaginator, get, fetchPostData, filterPosts, renderPosts, loaderMixin, SettingsIcon } = Tumblr.Fox;
   const NavSearch = get('NavSearch');
   const PeeprBlogSearch = get('PeeprBlogSearch');
   const SearchResultView = get('SearchResultView');
@@ -11,17 +11,17 @@ module.exports = (function searchComponent() {
   const ConversationsCollection = get('ConversationsCollection');
   const InboxCompose = get('InboxCompose');
   const BlogSearch = get('BlogSearch');
-  const Loader = get('Loader');
 
   let Conversations = new ConversationsCollection();
 
-  // NOTE: this component has three states
-  // 1. search state
-  // 2. user select
-  // 3. search state with no results/presearch -- this sets default autoscroll behavior which just pulls posts from the blog without a filter
+  // TODO: handle if there are no results in the tag search, i.e., if the next offset is -1
 
-  // TODO: handle conditions
-  // if there are no results in the tag search, i.e., if the next offset is -1
+  // states: initial load => default user => autopaginator loads unfiltered dashboard posts from tumblr client
+  //         select user (has tags) => autopaginator loads unfiltered blog posts from tumblr client
+  //            select tag / filter => autopaginator loads filtered blog posts from tumblr client
+  //            no tag => autopaginator loads filtered posts from tumblr api
+  //         select user (no tags) => autopaginator loads unfiltered blog posts from tumblr client
+  //            select filter => autopaginator loads filtered blog posts from tumblr api
 
   const UserSearch = {
     fetchResults(query) {
@@ -45,6 +45,7 @@ module.exports = (function searchComponent() {
   Tumblr.Fox.SearchComponent = PeeprBlogSearch.extend({
     className: 'filter-search',
     template: $('#searchFilterTemplate').html(),
+    mixins: [loaderMixin],
     defaults: {
       showNsfwSwitch: !0
     },
@@ -57,6 +58,9 @@ module.exports = (function searchComponent() {
           context: 'input'
         }
       }
+      // settings: {
+      //   constructor: SettingsIcon
+      // }
     }),
     initialize(e) {
       return this.options = Object.assign({}, this.defaults, e),
@@ -84,21 +88,13 @@ module.exports = (function searchComponent() {
       this.bindEvents(),
       this.set('showUserList', false),
       this.initialized = !0,
+      console.log('[AFTER RENDER SUBVIEWS]'),
       this
     },
     evalItems(items) {
       if (isEmpty(items)) {
         return this.input.$el.find('input').attr('placeholder', `${this.model.get('blogname')} has no tags`);
       }
-    },
-    toggleLoader(e) {
-      // console.log('[TOGGLE LOADER]', e);
-      e === !0 ? this.loader ? this.loader.set('loading', !0) : this.loader = new Loader({ // I hate this
-          $container: this.$el,
-          type: 'bar',
-          classModifiers: 'top',
-          loading: !0
-      }) : this.loader.set('loading', !1)
     },
     evalFilter(e) { // broken, having trouble getting this to fire without clobbering tag search events
       console.log(e, this.model);
@@ -187,11 +183,11 @@ module.exports = (function searchComponent() {
     toggleUserList(e) {
       if (e.showUserList) {
         return this.$userList.show(),
-        this.$filters.hide(),
+        this.$filters.find('i').hide(),
         this.$el.find('.indicator').text('-');
       } else {
         return this.$userList.hide(),
-        this.$filters.show(),
+        this.$filters.find('i').show(),
         this.$el.find('.indicator').text('+');
       }
     },

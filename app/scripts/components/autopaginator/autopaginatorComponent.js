@@ -10,7 +10,8 @@ module.exports = (function autopaginator() {
     defaults: {
       apiFetch: false,
       noTags: false,
-      noTerm: true
+      noTerm: true,
+      hasFilter: false
     },
     query: {
       loggingData: {
