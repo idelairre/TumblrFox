@@ -34,21 +34,29 @@ chrome.storage.sync.get({
   });
 });
 
-// function sendSignedRequest(slug, callback) {
-//   let url = `https://api.tumblr.com/v2/blog/${slug.blogname}.tumblr.com/posts${slug.type ? '/' + slug.type : ''}`;
-//   let params = stringify({
-//     api_key: CONSUMER_KEY
-//   });
-//   console.log('[QUERY]', `${url}?${params}`);
-//   let request = $.ajax({
-//     url: `${url}?${params}`
-//   });
-//   request.always(data => {
-//     console.log(data);
-//     callback(data);
-//   });
-//   request.error(console.error.bind(console, '[ERROR]'));
-// }
+function sendSignedRequest(slug, callback) {
+  chrome.storage.sync.get({
+    consumerKey: ''
+  }, items => {
+    const url = `https://api.tumblr.com/v2/blog/${slug.blogname}.tumblr.com/posts${slug.type ? '/' + slug.type : ''}`;
+    const params = stringify({
+      api_key: items.consumerKey
+    });
+    console.log('[QUERY]', `${url}?${params}`);
+    let request = $.ajax({
+      url: `${url}?${params}`,
+      data: {
+        limit: slug.limit || 8,
+        offset: slug.offset || 0
+      }
+    });
+    request.always(data => {
+      console.log(data);
+      callback(data.response);
+    });
+    request.error(console.error.bind(console, '[ERROR]'));
+  });
+}
 
 function onAuthorized(slug, callback) {
   console.log(arguments);
@@ -60,11 +68,11 @@ function onAuthorized(slug, callback) {
     parameters: slug
   };
 
-  const url = slug.url || 'https://api.tumblr.com/v2/user/dashboard';
+  const url = 'https://api.tumblr.com/v2/user/dashboard';
 
-  oauth.sendSignedRequest(url, (response, xhr) => {
-    console.log(JSON.parse(response));
-    let posts = JSON.parse(response).response;
+  oauth.sendSignedRequest(url, (data, xhr) => {
+    console.log(JSON.parse(data));
+    const posts = JSON.parse(data).response;
     callback(posts);
   }, request);
 }

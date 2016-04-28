@@ -8,14 +8,16 @@ import filterPopoverTemplate from './components/filterPopover/filterPopoverTempl
 import events from './utils/events';
 import icon from '../pages/icon/icon.html';
 import postFormatter from './utils/postFormatter';
-import postFetcher from './utils/postFetcher';
+import postModel from './utils/postModel';
 import loaderComponent from './components/loader/loaderComponent';
 import loaderMixin from './mixins/loaderBar';
 import searchComponent from './components/filterPopover/search/searchComponent';
 import searchTemplate from './components/filterPopover/search/searchTemplate.html'
-import settingsIcon from './components/filterPopover/settings/settingsIcon/settingsIconComponent';
+import settings from './components/filterPopover/settings/settingsComponent';
 import settingsPopoverTemplate from './components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
 import settingsPopoverComponent from './components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
+
+import $ from 'jquery';
 
 // get user search component to still search if there are no tags
 // NOTE: reblog follow button is broken
@@ -71,6 +73,8 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
       Tumblr.Fox.getComponent('mixin', 'this.mixins=u.filter');
       Tumblr.Fox.getComponent('TumblrView', 'this.cid=s.uniqueId("view")');
+      Tumblr.Fox.getComponent('SearchFilters', '"search-filters"'); // extend this to get the settings options
+      Tumblr.Fox.getComponent('PopoverContainer', 'setPinnedTarget(e.pinnedTarget'); // see what the fuck this is
 
       console.log(Tumblr.Fox.$$componentCache);
 
@@ -100,5 +104,5 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     }
   }
 
-  inject([postFetcher, postFormatter, componentFetcher, events, autopaginatorComponent, loaderComponent, main, loaderMixin, settingsPopoverComponent, settingsIcon, searchComponent, filterMenuComponent, filterPopoverComponent, filterPopoverContainer]);
+  inject([postModel, postFormatter, componentFetcher, events, autopaginatorComponent, loaderComponent, main, loaderMixin, settingsPopoverComponent, settings, searchComponent, filterMenuComponent, filterPopoverComponent, filterPopoverContainer]);
 }

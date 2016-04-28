@@ -244,7 +244,7 @@
 }
 
 .dashboard-search-form .search-input {
-  padding: 15px;
+  padding: 15px 5px 15px 15px;
   order: 2;
   flex: 2;
   margin: auto;
@@ -363,4 +363,28 @@
     display: block;
     position: relative;
     height: 3px;
+}
+
+.popover--settings-popover {
+  z-index: 100 !important;
+  width: 240px;
+}
+
+.popover--settings-popover .popover {
+    transition: -webkit-transform 150ms cubic-bezier(.165,.84,.44,1),opacity 150ms cubic-bezier(.165,.84,.44,1);
+    transition: transform 150ms cubic-bezier(.165,.84,.44,1),opacity 150ms cubic-bezier(.165,.84,.44,1);
+    -webkit-transform: translateY(-15px);
+    -ms-transform: translateY(-15px);
+    transform: translateY(-15px);
+    position: relative;
+    width: 240px;
+    opacity: 0;
+}
+
+.popover--settings-popover .popover.popover--active {
+    z-index: 90;
+    -webkit-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+    opacity: 1
 }

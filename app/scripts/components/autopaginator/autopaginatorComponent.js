@@ -2,63 +2,40 @@ module.exports = (function autopaginator() {
   Tumblr.Fox = Tumblr.Fox || {};
   const $ = Backbone.$;
   const { debounce, filter } = _;
-  const { createPostView, fetchPostData, fetchPosts, filterPosts, formatDashboardPost, renderPost, renderPosts } = Tumblr.Fox;
+  const { createPostView, formatDashboardPost, Posts } = Tumblr.Fox;
+  const { Tumblelog } = Tumblr.Prima.Models;
 
   // NOTE: all this does is poop out posts. No component should be in charge of rendering posts except this one
+  // this component should not fetch posts except upon scrolling
 
   let AutoPaginator = Backbone.View.extend({
-    defaults: {
-      apiFetch: false,
-      noTags: false,
-      noTerm: true,
-      hasFilter: false
-    },
-    query: {
-      loggingData: {
-        blogname: null,
-        term: null,
-        sort: null,
-        post_type: null,
-        post_role: null,
-        next_offset: 0,
-        offset: 0
-      }
-    },
     initialize(e) {
-      return this.options = Object.assign({}, this.defaults, e),
-      this.query = this.query,
-      this.defaults = this.defaults,
+      return this.model = Tumblr.Fox.Posts,
       this.enabled = !1,
       this.defaultPagination = !0,
       this.bindEvents();
     },
     bindEvents() {
-      Tumblr.Events.on('fox:filter:fetch', ::this.fetchPosts),
-      Tumblr.Events.on('fox:filter:blogSelected', ::this.fetchPosts),
-      Tumblr.Events.on('fox:postFetch:finished', ::this.renderPosts),
-      window.addEventListener('chrome:response:posts', ::this.apiPrepare);
+      Tumblr.Events.on('fox:apiFetch:initial', ::this.start),
+      Tumblr.Events.on('fox:searchFetch:initial', ::this.start),
+      Tumblr.Events.on('fox:blogFetch:initial', ::this.start);
     },
     start() {
       this.enabled = !0,
       this.defaultPagination = !1,
       Tumblr.Events.on('DOMEventor:flatscroll', ::this.onScroll),
-      Tumblr.Events.on('indashblog:search:complete', ::this.searchPrepare),
-      Tumblr.Events.on('indashblog:search:post-added', renderPost),
       Tumblr.Events.on('peepr-open-request', ::this.stop),
-      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination);
-      // window.addEventListener('chrome:response:posts', ::this.apiPrepare);
-      filterPosts();
+      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination),
+      Tumblr.AutoPaginator.stop();
     },
     stop() {
-      // Tumblr.Events.off('fox:filter:blogSelected', this.fetchPosts);
       Tumblr.Events.off('DOMEventor:flatscroll', ::this.onScroll),
-      Tumblr.Events.off('indashblog:search:complete', ::this.searchPrepare),
-      Tumblr.Events.off('indashblog:search:post-added', renderPost),
       Tumblr.Events.off('peepr-open-request', ::this.stop),
       Tumblr.Events.off('disable-paginator', this.disableDefaultPagination),
-      window.removeEventListener('chrome:response:posts', ::this.apiPrepare);
-      this.enabled = !1;
-      this.defaultPagination = !0;
+      Tunblr.Events.on('peepr:close', ::this.start),
+      this.enabled = !1,
+      this.defaultPagination = !0,
+      Tumblr.AutoPaginator.start();
     },
     disableDefaultPagination(e) {
       // console.log('[DISABLE TUMBLR PAGINATOR]', e);
@@ -68,48 +45,10 @@ module.exports = (function autopaginator() {
     reset(opts) {
       Object.assign(this.options, opts || {});
     },
-    fetchPosts(e) {
-      // reset query
-      if (!this.enabled) {
-        this.start()
-      }
-      this.query.loggingData = Object.assign({ offset: 0 }, e),
-      this.reset({ noTerm: true }),
-      fetchPostData(this.query.loggingData);
-    },
     onScroll(e) {
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
-        if (!this.options.apiFetch && this.options.noTerm) {
-          debounce(fetchPostData, 300).call(this, this.query.loggingData);
-        } else if (!this.options.apiFetch && !this.options.noTerm) {
-          Tumblr.Events.trigger('peepr-search:search-start', this.query);
-          Tumblr.Events.trigger('indashblog:search:fetch-requested', this.query);
-        } else {
-          debounce(fetchPosts, 300).call(this, Tumblr.Fox.apiSlug);
-        }
+        debounce(this.model.fetch, 300).call(this.model);
       }
-    },
-    apiPrepare(response) {
-      this.reset({ apiFetch: true, noTerm: true }),
-      Tumblr.Fox.handOffPosts(response);
-    },
-    searchPrepare(response) {
-      this.reset({ apiFetch: false, noTerm: false }),
-      this.prepareDashboard(response);
-    },
-    prepareDashboard(response) {
-      // console.log('[RESPONSE]', response);
-      return filterPosts(),
-      setTimeout(() => {
-        const posts = filter(response, i => { return i.post_html });
-        this.renderPosts(posts);
-      }, 300);
-    },
-    renderPosts(response) {
-      if (!this.enabled) {
-        this.start();
-      }
-      renderPosts(response);
     }
   })
 

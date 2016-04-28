@@ -4,7 +4,6 @@ module.exports = (function filterPopoverComponent() {
   const $ = Backbone.$;
   const { debounce } = _;
   const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
-  const PrimaComponent = get('PrimaComponent');
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
   const PopoverComponent = get('PopoverComponent');
@@ -51,7 +50,7 @@ module.exports = (function filterPopoverComponent() {
     bindClickOutside() {
       const options = {
         preventInteraction: !0,
-        ignoreSelectors: ['.popover--blog-search', '.popover_content_wrapper', '.popover_menu_list', '.tumblelog_popover', '.ui_peepr_glass', '.drawer']
+        ignoreSelectors: ['.popover_content_wrapper', '.popover_inner_list', '.popover_menu_list', '.tumblelog_popover', '.ui_peepr_glass', '.drawer']
       };
       this.clickOutside = new ClickHandler(this.el, options),
       this.clickOutside.on('click:outside', this.hide, this),
@@ -75,16 +74,18 @@ module.exports = (function filterPopoverComponent() {
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
     hide() {
+      Tumblr.Events.trigger('popover:close', this),
       this.unbindClickOutside(),
       this.$pinned.removeClass('active'),
       this.$filterPopoverMenu.removeClass('popover--active'),
       transition(this.$el, ::this.afterHide);
     },
     afterHide() {
-      this.$el.css({ display: 'none' })
+      this.$el.css({ display: 'none' });
     },
     show() {
       console.log('[FILTER COMPONENT]', this),
+      Tumblr.Events.trigger('popover:open', this),
       this.bindClickOutside(),
       this.$pinned.addClass('active'),
       this.$el.css({ display: 'block' }),

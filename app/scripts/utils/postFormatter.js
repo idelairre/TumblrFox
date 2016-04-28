@@ -141,29 +141,10 @@ module.exports = (function postFormatter() {
       postView.$reblog_list = postView.$el.find('.reblog-list');
     }
 
-    Tumblr.postsView.collection.add(postModel);
     Tumblr.postsView.postViews.push(postView);
 
     Tumblr.Events.trigger('postsView:createPost', postView);
     Tumblr.Events.trigger('DOMEventor:updateRect');
-  }
-
-  Tumblr.Fox.renderPosts = function(response) {
-    let posts;
-    if (response.posts) {
-      posts = response.posts;
-    } else {
-      posts = response;
-    }
-    for (let i = 0; posts.length > i; i += 1) {
-      Tumblr.Fox.renderPost(posts[i]);
-    }
-  }
-
-  Tumblr.Fox.renderPost = function(post) {
-    let { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
-    Tumblr.Fox.constants.attachNode.before(postContainer);
-    Tumblr.Fox.createPostView(postElement, postModel);
   }
 
   return Tumblr.Fox;

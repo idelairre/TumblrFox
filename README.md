@@ -1,5 +1,7 @@
 # Tumblr (fox) filter
 
+
+
 ## What it is
 
 A Chrome extension that adds a new navigation tab that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag.
@@ -23,7 +25,6 @@ The Tumblr.Fox thing is an arbitrary namespace based off my dumb Tumblr handle t
 3. http://seveneyedfox.tumblr.com/post/142476902926/tumblr-notes-pt-3
 4. http://seveneyedfox.tumblr.com/post/142659709101/tumblr-notesthotz-pt-4
 5. http://seveneyedfox.tumblr.com/post/143001544861/tumblr-notes-pt-5
-
 
 
 ## Installation

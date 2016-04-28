@@ -3,7 +3,7 @@ module.exports = (function searchComponent() {
 
   const $ = Backbone.$;
   const { after, bind, debounce, each, isEmpty } = _;
-  const { AutoPaginator, get, fetchPostData, filterPosts, renderPosts, loaderMixin, SettingsIcon } = Tumblr.Fox;
+  const { AutoPaginator, get, fetchPostData, filterPosts, renderPosts, loaderMixin, Posts, Settings } = Tumblr.Fox;
   const NavSearch = get('NavSearch');
   const PeeprBlogSearch = get('PeeprBlogSearch');
   const SearchResultView = get('SearchResultView');
@@ -22,6 +22,8 @@ module.exports = (function searchComponent() {
   //            no tag => autopaginator loads filtered posts from tumblr api
   //         select user (no tags) => autopaginator loads unfiltered blog posts from tumblr client
   //            select filter => autopaginator loads filtered blog posts from tumblr api
+
+  // expand input to include a dashboard search model
 
   const UserSearch = {
     fetchResults(query) {
@@ -57,10 +59,15 @@ module.exports = (function searchComponent() {
           collection: Conversations,
           context: 'input'
         }
+      },
+      settings: {
+        constructor: Settings,
+        options: {
+          isFixedPosition: !0,
+          autoTeardown: !1,
+          teardownOnEscape: !1
+        }
       }
-      // settings: {
-      //   constructor: SettingsIcon
-      // }
     }),
     initialize(e) {
       return this.options = Object.assign({}, this.defaults, e),
@@ -82,13 +89,13 @@ module.exports = (function searchComponent() {
     afterRenderSubviews() {
       return this.$userList = this.searchResultView.$el,
       this.$filters = this.filters.$el,
+      this.$settings = this.settings.$el,
       this.input.model.set(this.options), // this enables the nsfw filter
       this.input.$el.find('input').attr('data-js-textinput', ''),
       Object.assign(this.input, UserSearch),
       this.bindEvents(),
       this.set('showUserList', false),
       this.initialized = !0,
-      console.log('[AFTER RENDER SUBVIEWS]'),
       this
     },
     evalItems(items) {
@@ -117,17 +124,14 @@ module.exports = (function searchComponent() {
     },
     log(query) {
       console.log(query);
-      query === 'search-complete' || this.model.previous('term') === query.term ? this.toggleLoader(false) : this.toggleLoader(true);
-      if (!AutoPaginator.enabled) {
-        Tumblr.AutoPaginator.stop(),
-        AutoPaginator.reset({ apiFetch: false }),
-        AutoPaginator.start();
+      if (query === 'search-complete' || this.model.previous('term') === query.term) {
+        this.toggleLoader(false);
+        return;
       }
-      return this.searchStarted = !0,
+      return this.toggleLoader(true),
+      this.searchStarted = !0,
       this.model.set(query),
-      this.model.fetch(),
-      Object.assign(AutoPaginator.query, query, this.model.attributes);
-      // console.log('[QUERY SLUG]', e, this.model, AutoPaginator.query);
+      this.model.fetch();
     },
     events: {
       'submit .dashboard-search-form': 'formSubmitHandler',
@@ -139,7 +143,7 @@ module.exports = (function searchComponent() {
     bindEvents() {
       this.listenTo(this, 'change:showUserList', this.toggleUserList),
       this.listenTo(this, 'change:showUserList', this.delegateInputEvents),
-      this.listenTo(this.model, 'change:blogname', after(1, this.onChangeBlog)), // reset term, fetch new posts
+      this.listenTo(this.model, 'change:blogname', this.onChangeBlog), // reset term, fetch new posts
       this.listenTo(this.model.posts, 'reset', ::this.onPostsReset),
       this.listenTo(this.model.posts, 'add', ::this.onPostsAdd),
       this.listenTo(this.model, 'search:reset', ::this.onSearchReset),
@@ -147,7 +151,7 @@ module.exports = (function searchComponent() {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', this.log),
       this.listenTo(Tumblr.Events, 'indashblog:search:fetch-requested', ::this.onFetchRequested),
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
-      // this.listenTo(this.filters.model, 'change', after(2, this.evalFilter)); // if the attribute is not blog name, fetch posts
+      this.listenTo(Tumblr.Fox.Posts, 'change', this.updateSearchSettings);
     },
     unbindEvents() {
       this.stopListening(this.filters.model, 'change', this.setAttributes),
@@ -156,6 +160,25 @@ module.exports = (function searchComponent() {
       this.stopListening(Tumblr.Events, 'indashblog:search:complete'),
       this.stopListening(Tumblr.Events, 'peepr-search:search-complete'),
       PeeprBlogSearch.prototype.unbindEvents.call(this);
+    },
+    updateSearchSettings(e) {
+      console.log('[SEARCH MODEL]', e, this.input);
+      if (e.get('tagSearch') === 'dashboard') {
+        this.showUserList ? this.setUserList() : null;
+        this.dashboardSearch = !0,
+        this.$filters.hide();
+        this.input.$el.find('input').attr('placeholder', 'Search dashboard'),
+        this.input.$el.find('input').val(''),
+        this.input.undelegateEvents(),
+        this.input.blogSearchAutocompleteHelper.undelegateEvents();
+      } else {
+        this.dashboardSearch = !1,
+        this.$filters.show(),
+        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`),
+        this.input.$el.find('input').val(''),
+        this.input.delegateEvents(),
+        this.input.blogSearchAutocompleteHelper.delegateEvents();
+      }
     },
     delegateInputEvents(e) {
       // console.log('[TOGGLE EVENTS]', e.showUserList);
@@ -173,20 +196,25 @@ module.exports = (function searchComponent() {
       }
     },
     onChangeBlog(e) {
-      e.term = '';
-      Tumblr.Events.trigger('fox:filter:blogSelected', e.attributes);
+      e.attributes.term = '';
+      e.attributes.next_offset = 0;
+      console.log('[BLOG CHANGE]', e);
+      Tumblr.Events.trigger('fox:filterFetch:started', e.attributes);
     },
     setUserList(e) {
-      e.preventDefault();
+      e ? e.preventDefault() : null;
       this.set('showUserList', this.showUserList = !this.showUserList);
     },
     toggleUserList(e) {
       if (e.showUserList) {
-        return this.$userList.show(),
+        return Tumblr.Fox.Posts.set('tagSearch', 'user'),
+        this.$userList.show(),
+        this.$settings.hide(),
         this.$filters.find('i').hide(),
         this.$el.find('.indicator').text('-');
       } else {
         return this.$userList.hide(),
+        this.$settings.show(),
         this.$filters.find('i').show(),
         this.$el.find('.indicator').text('+');
       }
@@ -195,7 +223,7 @@ module.exports = (function searchComponent() {
       console.log('[UPDATE LOG]', response);
       this.searchStarted = !1,
       Object.assign(this.filters.model, response.loggingData),
-      Object.assign(AutoPaginator.query, response);
+      Object.assign(Tumblr.Fox.Posts.query, response);
     }
   });
 
