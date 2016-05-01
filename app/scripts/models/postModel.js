@@ -108,15 +108,20 @@ module.exports = (function postModel() {
       });
     },
     fuzzySearch(term) {
+      // NOTE: need to find a way to populate the collection with proper post data and apply search filter
       this.filterPosts(),
       Tumblr.Events.trigger('fox:searchLikes:started'),
       this.collection.reset(Tumblr.Fox.$$cachedLikes),
       this.state.apiFetch = !0,
+      this.state.tagSearch = !0,
       setTimeout(() => {
-        this.collection.map(post => {
+        this.collection.filter(post => {
           if (post.get('tags').indexOf(term) > -1) {
             console.log('[POST]', post);
-            this.fetchPostData({ postId: post.id, blogNameOrId: post.attributes.blog_name });
+            this.fetchPostData({
+              postId: post.id,
+              blogNameOrId: post.attributes.blog_name
+            });
           }
         });
         Tumblr.Events.trigger('fox:searchLikes:finished');
@@ -143,14 +148,14 @@ module.exports = (function postModel() {
       window.dispatchEvent(req);
     },
     fetchPostData(slug) {
-      console.log('[FETCH POST DATA] can fetch?', this.state.apiFetch && Tumblr.Fox.Loader.options.loading);
+      // console.log('[FETCH POST DATA] can fetch?', this.state.apiFetch && Tumblr.Fox.Loader.options.loading);
       if (!this.state.apiFetch && Tumblr.Fox.Loader.options.loading) {
         return;
       }
-      Tumblr.Events.trigger('fox:postFetch:started', slug);
-      let request = $.ajax({
+      $.ajax({
         url: 'https://www.tumblr.com/svc/indash_blog/posts',
         beforeSend: (xhr) => {
+          Tumblr.Events.trigger('fox:postFetch:started', slug);
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
         },
         data: {
@@ -158,18 +163,20 @@ module.exports = (function postModel() {
           post_id: slug.postId,
           limit: slug.limit || 8,
           offset: slug.offset || 0
+        },
+        success: (data) => { // add posts to model, notify autopager
+          if (data.response.tumblelog) {
+            Tumblelog.collection.add(new Tumblelog(data.response.tumblelog));
+          }
+          // if (!this.state.apiSearch && !this.state.tagSearch) {
+            Tumblr.Events.trigger('fox:postFetch:finished', data.response);
+          // }
+          Object.assign(this.query.loggingData, slug),
+          this.query.loggingData.offset += data.response.posts.length;
+        },
+        fail: (error) => {
+          Tumblr.Events.trigger('fox:postFetch:failed', error);
         }
-      });
-      request.success(data => { // add posts to model, notify autopager
-        if (data.response.tumblelog) {
-          Tumblelog.collection.add(new Tumblelog(data.response.tumblelog));
-        }
-        Object.assign(this.query.loggingData, slug),
-        this.query.loggingData.offset += data.response.posts.length,
-        Tumblr.Events.trigger('fox:postFetch:finished', data.response);
-      });
-      request.fail(error => {
-        Tumblr.Events.trigger('fox:postFetch:failed', error);
       });
     },
     handOffPosts(e) {

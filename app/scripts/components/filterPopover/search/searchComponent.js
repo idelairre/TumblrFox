@@ -156,7 +156,9 @@ module.exports = (function searchComponent() {
         console.log('[LIKES SEARCH]', query)
         return this.toggleLoader(true),
         Posts.fuzzySearch(query.term),
-        this.listenTo(Tumblr.Events, 'fox:searchLikes:finished', this.toggleLoader(false));
+        setTimeout(() => {
+          this.toggleLoader(false);
+        }, 300);
       }
       if (query === 'search-complete' || this.model.previous('term') === query.term) {
         this.toggleLoader(false);
@@ -204,7 +206,7 @@ module.exports = (function searchComponent() {
       }
     },
     updateSearchSettings(state) {
-      console.log('[UPDATE SEARCH SETTINGS] called', state);
+      console.log('[UPDATE SEARCH SETTINGS] called', this);
       this.setState(state);
       if (state === 'dashboard') {
         this.showUserList ? this.setUserList() : null;

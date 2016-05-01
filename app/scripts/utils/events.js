@@ -29,12 +29,14 @@ module.exports = (function events() {
       'CrtPlayer:ready',
       'VideoPlayer:autoplay',
       'VideoPlayer:initialLoad',
-      'VideoPlayer:cacheUnload',
-      'fox:postFetch:started',
-      'fox:postFetch:finished'
+      'VideoPlayer:cacheUnload'
     ],
     log(e) {
       if (!Tumblr.Fox.Events.ignore.includes(e)) {
+        if (e.includes('fox')) {
+          console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
+          return;
+        }
         console.log('[LOG]', arguments);
       }
     },

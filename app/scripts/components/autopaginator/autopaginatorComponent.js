@@ -22,18 +22,21 @@ module.exports = (function autopaginator() {
       Tumblr.Events.on('fox:searchLikes:started', ::this.disableAll);
     },
     start() {
+      console.log('[AUTOPAGINATOR] started');
       Tumblr.Events.on('DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.on('peepr-open-request', ::this.stop);
       Tumblr.Events.on('disable-paginator', this.disableDefaultPagination);
       this.disableDefaultPagination();
     },
     stop() {
+      console.log('[AUTOPAGINATOR] stopped');
       Tumblr.Events.off('DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.off('peepr-open-request', ::this.stop);
       Tumblr.Events.off('disable-paginator', this.disableDefaultPagination);
       Tumblr.Events.on('peepr:close', ::this.start);
     },
     disableAll() {
+      console.log('[AUTOPAGINATOR] all pagination disabled');
       this.enabled = !1,
       this.defaultPagination = !1,
       Tumblr.AutoPaginator.stop(),
@@ -50,6 +53,9 @@ module.exports = (function autopaginator() {
       Tumblr.AutoPaginator.stop();
     },
     onScroll(e) {
+      if (!this.enabled) {
+        return;
+      }
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
         debounce.bind(once(this.model.fetch).call(this.model), 300); // fucking lodash
       }
