@@ -1,5 +1,9 @@
 import autopaginatorComponent from './components/autopaginator/autopaginatorComponent';
+import bridge from './utils/bridge';
 import componentFetcher from './utils/componentFetcher';
+import dashboardAutocompleteModel from './models/dashboardAutocompleteModel';
+import filterTemplate from './components/filterPopover/filter/filterTemplate.html';
+import filterComponent from './components/filterPopover/filter/filterComponent';
 import filterMenuComponent from './components/filterPopover/filterMenu/filterMenuComponent';
 import filterMenuTemplate from './components/filterPopover/filterMenu/filterMenuTemplate.html';
 import filterPopoverComponent from './components/filterPopover/filterPopoverComponent';
@@ -8,41 +12,36 @@ import filterPopoverTemplate from './components/filterPopover/filterPopoverTempl
 import events from './utils/events';
 import icon from '../pages/icon/icon.html';
 import postFormatter from './utils/postFormatter';
-import postModel from './utils/postModel';
+import postModel from './models/postModel';
 import loaderComponent from './components/loader/loaderComponent';
 import loaderMixin from './mixins/loaderBar';
 import searchComponent from './components/filterPopover/search/searchComponent';
 import searchTemplate from './components/filterPopover/search/searchTemplate.html'
-import settings from './components/filterPopover/settings/settingsComponent';
+import settingsComponent from './components/filterPopover/settings/settingsComponent';
 import settingsPopoverTemplate from './components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
 import settingsPopoverComponent from './components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
-
 import $ from 'jquery';
 
-// get user search component to still search if there are no tags
 // NOTE: reblog follow button is broken
 
 if (window.location.href.includes('https://www.tumblr.com')) {
   console.log('@tumblr');
   const accountButton = document.querySelector('#account_button');
   accountButton.insertAdjacentHTML('afterend', icon);
+  document.body.insertAdjacentHTML('beforeend', filterTemplate);
   document.body.insertAdjacentHTML('beforeend', filterMenuTemplate);
   document.body.insertAdjacentHTML('beforeend', filterPopoverTemplate);
   document.body.insertAdjacentHTML('beforeend', settingsPopoverTemplate);
   document.body.insertAdjacentHTML('beforeend', searchTemplate);
 
-  window.addEventListener('chrome:fetch:blogPosts', e => {
-    chrome.runtime.sendMessage({ fetchBlogPosts: e.detail }, response => {
-      const slug = new CustomEvent('chrome:response:posts', { detail: response });
-      window.dispatchEvent(slug);
-    });
-  });
+  bridge.initialize();
 
-  window.addEventListener('chrome:fetch:posts', e => {
-    chrome.runtime.sendMessage({ fetchPosts: e.detail }, response => {
-      const slug = new CustomEvent('chrome:response:posts', { detail: response });
-      window.dispatchEvent(slug);
-    });
+  chrome.runtime.sendMessage({ type: 'getCachedLikes' }, response => {
+     console.log('[CACHED LIKES]', response.length);
+     const slug = new CustomEvent('chrome:cachedLikes', {
+       detail: response
+     });
+     window.dispatchEvent(slug);
   });
 
   function main() {
@@ -57,7 +56,6 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       const formKey = $('#tumblr_form_key').attr('content');
 
       // cache components
-
       Tumblr.Fox.getComponent('PrimaComponent', 'n.uniqueId("component")');
       Tumblr.Fox.getComponent('animation', 'webkitAnimationEnd');
       Tumblr.Fox.getComponent('PopoverMixin', '_crossesView');
@@ -73,7 +71,10 @@ if (window.location.href.includes('https://www.tumblr.com')) {
       Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
       Tumblr.Fox.getComponent('mixin', 'this.mixins=u.filter');
       Tumblr.Fox.getComponent('TumblrView', 'this.cid=s.uniqueId("view")');
-      Tumblr.Fox.getComponent('SearchFilters', '"search-filters"'); // extend this to get the settings options
+      Tumblr.Fox.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
+      Tumblr.Fox.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
+      Tumblr.Fox.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
+      Tumblr.Fox.getComponent('SearchFilters', '[data-filter]');
       Tumblr.Fox.getComponent('PopoverContainer', 'setPinnedTarget(e.pinnedTarget'); // see what the fuck this is
 
       console.log(Tumblr.Fox.$$componentCache);
@@ -87,6 +88,8 @@ if (window.location.href.includes('https://www.tumblr.com')) {
         attachNode: attachNode,
         formKey: formKey
       }
+
+      Tumblr.Fox.Posts.set('tagSearch', 'user');
 
       window.fetchPostData = Tumblr.Fox.fetchPostData;
       window.fetchBlogPosts = Tumblr.Fox.fetchBlogPosts;
@@ -104,5 +107,5 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     }
   }
 
-  inject([postModel, postFormatter, componentFetcher, events, autopaginatorComponent, loaderComponent, main, loaderMixin, settingsPopoverComponent, settings, searchComponent, filterMenuComponent, filterPopoverComponent, filterPopoverContainer]);
+  inject([postModel, postFormatter, componentFetcher, events, autopaginatorComponent, loaderComponent, main, loaderMixin, dashboardAutocompleteModel, filterComponent, settingsPopoverComponent, settingsComponent, searchComponent, filterMenuComponent, filterPopoverComponent, filterPopoverContainer]);
 }

@@ -6,7 +6,6 @@ module.exports = (function settingsPopover() {
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
   const PopoverComponent = get('PopoverComponent');
-  const SearchFilters = get('SearchFilters');
   const ClickHandler = get('ClickHandler');
 
   let SettingsPopoverComponent = PopoverComponent.extend({
@@ -19,9 +18,10 @@ module.exports = (function settingsPopover() {
     },
     render() {
       return this.$el.html(this.template),
-      this.$settingsPopoverMenu = this.$('.popover_menu'),
+      this.$main = this.$('.popover_menu'),
       this.$dashboard = this.$('.dashboard'),
       this.$user = this.$('.user'),
+      this.$likes = this.$('.likes'),
       this.setSelected(Tumblr.Fox.Posts.get('tagSearch')),
       setTimeout(::this.setActiveAndBindEvents, 1),
       this;
@@ -39,7 +39,7 @@ module.exports = (function settingsPopover() {
       this.clickOutside && (this.clickOutside.remove(), this.clickOutside = null)
     },
     setActiveAndBindEvents() {
-      this.$settingsPopoverMenu.addClass('popover--active'),
+      this.$main.addClass('popover--active'),
       this.bindClickOutside();
     },
     show() {
@@ -48,17 +48,15 @@ module.exports = (function settingsPopover() {
     },
     setSelected(setting) {
       Tumblr.Fox.Posts.set('tagSearch', setting);
-      if (setting === 'user') {
-        this.$user.find('i').show(),
-        this.$dashboard.find('i').hide();
-      } else {
-        this.$user.find('i').hide(),
-        this.$dashboard.find('i').show();
-      }
+      Tumblr.Events.trigger('fox:setSearchState', setting);
+      this.$('i').each(function () {
+        $(this).hide();
+      });
+      this.$(`i.${setting}`).show();
     },
     hide() {
       this.unbindClickOutside(),
-      this.$settingsPopoverMenu.removeClass('popover--active'),
+      this.$main.removeClass('popover--active'),
       transition(this.$el, ::this.afterHide);
     },
     hideOnSelect(e) {
@@ -82,5 +80,5 @@ module.exports = (function settingsPopover() {
 
   Tumblr.Fox.SettingsPopoverComponent = SettingsPopoverComponent;
 
-  return Tumblr.Fox;
+  return Tumblr;
 })

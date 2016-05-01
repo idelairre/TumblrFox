@@ -38,6 +38,7 @@
   "permissions": [
     "tabs",
     "storage",
+    "unlimitedStorage",
     "http://api.tumblr.com/*",
     "https://*/*",
     "http://*/*"

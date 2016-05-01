@@ -6,13 +6,17 @@
     body: {
       padding: 10px;
     }
-
     .input-option {
       margin-top: 5px;
     }
-
     #status {
       padding-left: 5px;
+    }
+    #container {
+      margin: 20px;
+      width: 400px;
+      height: 8px;
+      position: relative;
     }
   </style>
 </head>
@@ -30,9 +34,10 @@
       Consumer secret
     </label>
   </div>
+  <div id="container"></div>
   <br>
   <div>
-    <button id="save">Save</button><font id="status"></font>
+    <button id="save">Save</button><button id="cachePosts">Cache likes</button><button id="resetCache">Reset cache</button><font id="status"></font>
   </div>
 
   <script src="../scripts/options.js"></script>

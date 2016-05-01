@@ -37,12 +37,12 @@ module.exports = (function settings() {
     },
     onPopoverClose() {
       defer(() => {
-        this.popover = null
+        this.popover = null;
       });
     }
   })
 
   Tumblr.Fox.Settings = Settings;
 
-  return Tumblr.Fox;
+  return Tumblr;
 })

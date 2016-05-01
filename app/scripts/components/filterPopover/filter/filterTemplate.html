@@ -1,0 +1,46 @@
+<script id="filterTemplate" type="text/template">
+  <div class="popover popover_menu popover_gradient" style="width: 170px">
+    <div class="popover_inner">
+      <ul class="popover_inner_list search_filter_items">
+        <li class="popover_menu_item sort_filter" data-filter="sort:POPULARITY_DESC">
+          <span class="popover_menu_item_anchor">
+            <i class="icon icon_checkmark"></i>
+            Top Posts
+          </span>
+        </li>
+        <li class="popover_menu_item sort_filter active" data-filter="sort:CREATED_DESC">
+          <span class="popover_menu_item_anchor">
+            <i class="icon icon_checkmark"></i>
+            Recent Posts
+          </span>
+        </li>
+      </ul>
+      <ul class="popover_inner_list search_filter_items">
+        <li class="popover_menu_item sort_filter toggle">
+          <span class="popover_menu_item_anchor"></span>
+          <div class="option-radio">
+            <label class="binary_switch">
+              <input type="checkbox" name="post_role" id="post_role" data-value="ORIGINAL">
+              <span class="binary_switch_track"></span>
+              <span class="binary_switch_button"></span>
+            </label>
+          </div>
+          Original Posts
+        </li>
+      </ul>
+      <ul class="popover_inner_list search_filter_items">
+        <li class="popover_menu_item sort_filter toggle">
+          <span class="popover_menu_item_anchor"></span>
+          <div class="option-radio">
+            <label class="binary_switch">
+              <input type="checkbox" name="filter_nsfw" id="filter_nsfw" data-value="true" class="search-nsfw-filter-checkbox-input">
+              <span class="binary_switch_track"></span>
+              <span class="binary_switch_button"></span>
+            </label>
+          </div>
+          Safe search
+        </li>
+      </ul>
+    </div>
+  </div>
+</script>

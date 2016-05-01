@@ -1,7 +1,7 @@
 module.exports = (function autopaginator() {
   Tumblr.Fox = Tumblr.Fox || {};
   const $ = Backbone.$;
-  const { debounce, filter } = _;
+  const { debounce, filter, once } = _;
   const { createPostView, formatDashboardPost, Posts } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
 
@@ -16,43 +16,47 @@ module.exports = (function autopaginator() {
       this.bindEvents();
     },
     bindEvents() {
-      Tumblr.Events.on('fox:apiFetch:initial', ::this.start),
-      Tumblr.Events.on('fox:searchFetch:initial', ::this.start),
+      Tumblr.Events.on('fox:apiFetch:initial', ::this.start);
       Tumblr.Events.on('fox:blogFetch:initial', ::this.start);
+      Tumblr.Events.on('fox:searchFetch:initial', ::this.start);
+      Tumblr.Events.on('fox:searchLikes:started', ::this.disableAll);
     },
     start() {
-      this.enabled = !0,
-      this.defaultPagination = !1,
-      Tumblr.Events.on('DOMEventor:flatscroll', ::this.onScroll),
-      Tumblr.Events.on('peepr-open-request', ::this.stop),
-      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination),
-      Tumblr.AutoPaginator.stop();
+      Tumblr.Events.on('DOMEventor:flatscroll', ::this.onScroll);
+      Tumblr.Events.on('peepr-open-request', ::this.stop);
+      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination);
+      this.disableDefaultPagination();
     },
     stop() {
-      Tumblr.Events.off('DOMEventor:flatscroll', ::this.onScroll),
-      Tumblr.Events.off('peepr-open-request', ::this.stop),
-      Tumblr.Events.off('disable-paginator', this.disableDefaultPagination),
-      Tunblr.Events.on('peepr:close', ::this.start),
+      Tumblr.Events.off('DOMEventor:flatscroll', ::this.onScroll);
+      Tumblr.Events.off('peepr-open-request', ::this.stop);
+      Tumblr.Events.off('disable-paginator', this.disableDefaultPagination);
+      Tumblr.Events.on('peepr:close', ::this.start);
+    },
+    disableAll() {
+      this.enabled = !1,
+      this.defaultPagination = !1,
+      Tumblr.AutoPaginator.stop(),
+      this.stop();
+    },
+    enableDefaultPagination() {
       this.enabled = !1,
       this.defaultPagination = !0,
       Tumblr.AutoPaginator.start();
     },
-    disableDefaultPagination(e) {
-      // console.log('[DISABLE TUMBLR PAGINATOR]', e);
-      this.defaultPagination = false,
+    disableDefaultPagination() {
+      this.enabled = !0,
+      this.defaultPagination = !1,
       Tumblr.AutoPaginator.stop();
-    },
-    reset(opts) {
-      Object.assign(this.options, opts || {});
     },
     onScroll(e) {
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
-        debounce(this.model.fetch, 300).call(this.model);
+        debounce.bind(once(this.model.fetch).call(this.model), 300); // fucking lodash
       }
     }
   })
 
   Tumblr.Fox.AutoPaginator = new AutoPaginator();
 
-  return Tumblr.Fox;
+  return Tumblr;
 })

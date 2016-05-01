@@ -46,5 +46,5 @@ module.exports = (function filterPopoverContainer() {
   Tumblr.Fox.FilterPopoverContainer = FilterPopoverContainer;
   Tumblr.Fox.filterPopoverMenu = filterPopoverMenu;
 
-  return Tumblr.Fox;
+  return Tumblr;
 })

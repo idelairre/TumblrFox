@@ -1,7 +1,7 @@
 module.exports = (function events() {
   Tumblr.Fox = Tumblr.Fox || {};
 
-  const tumblr = Object.assign({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events);
+  const tumblr = Object.assign({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events, window.Events);
 
   Tumblr.Fox.Events = {
     ignore: [
@@ -29,7 +29,9 @@ module.exports = (function events() {
       'CrtPlayer:ready',
       'VideoPlayer:autoplay',
       'VideoPlayer:initialLoad',
-      'VideoPlayer:cacheUnload'
+      'VideoPlayer:cacheUnload',
+      'fox:postFetch:started',
+      'fox:postFetch:finished'
     ],
     log(e) {
       if (!Tumblr.Fox.Events.ignore.includes(e)) {
@@ -38,6 +40,7 @@ module.exports = (function events() {
     },
     start() {
       tumblr.on('all', this.log);
+      Backbone.history.on('all', this.log);
       console.log('[LOG]', 'initialized');
     },
     stop() {
