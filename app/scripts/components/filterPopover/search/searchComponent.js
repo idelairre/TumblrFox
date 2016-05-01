@@ -30,6 +30,7 @@ module.exports = (function searchComponent() {
   const defaultFilter = clone(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype);
 
   const InputExtension = {
+    dashboardSearchAutocompleteModel: new DashboardSearchAutocompleteModel(),
     fetchResults(query) {
       // console.log('[USER QUERY]', query);
       return Conversations.fetch({ data: { q: query, limit: 8 }});
@@ -212,9 +213,8 @@ module.exports = (function searchComponent() {
       } else if (state === 'likes') {
         this.input.$el.find('input').attr('placeholder', 'Search likes'),
         this.input.$el.find('input').val(''),
-        this.input.blogSearchAutocompleteHelper.model = new DashboardSearchAutocompleteModel(),
-        this.input.blogSearchAutocompleteHelper.model.fetch(),
-        this.input.model = Object.assign(new Backbone.Model(), this.input.model); // not sure why this happens
+        this.input.blogSearchAutocompleteHelper.model = this.input.dashboardSearchAutocompleteModel,
+        this.input.blogSearchAutocompleteHelper.model.fetch();
       } else {
         this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`),
         this.input.$el.find('input').val(''),

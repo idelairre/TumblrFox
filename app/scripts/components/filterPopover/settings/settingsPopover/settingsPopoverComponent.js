@@ -18,6 +18,7 @@ module.exports = (function settingsPopover() {
     },
     render() {
       return this.$el.html(this.template),
+      this.initialized = !1,
       this.$main = this.$('.popover_menu'),
       this.$dashboard = this.$('.dashboard'),
       this.$user = this.$('.user'),
@@ -40,15 +41,18 @@ module.exports = (function settingsPopover() {
     },
     setActiveAndBindEvents() {
       this.$main.addClass('popover--active'),
-      this.bindClickOutside();
+      this.bindClickOutside(),
+      this.initialized = !0;
     },
     show() {
       this.$el.css({ display: 'block' }),
       setTimeout(::this.setActiveAndBindEvents, 1);
     },
     setSelected(setting) {
-      Tumblr.Fox.Posts.set('tagSearch', setting);
-      Tumblr.Events.trigger('fox:setSearchState', setting);
+      if (this.initialized) {
+        Tumblr.Fox.Posts.set('tagSearch', setting);
+        Tumblr.Events.trigger('fox:setSearchState', setting);
+      }
       this.$('i').each(function () {
         $(this).hide();
       });
