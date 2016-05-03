@@ -51,7 +51,6 @@ module.exports = (function dashboardSearchAutocompleteModel() {
       if (!this.fetched) {
         this.items.reset(e.detail.slice(0, 250));
         this.fetched = !0;
-        console.timeEnd('#items.reset()');
       }
       this.get('matchTerm') === '' ? this.set('typeAheadMatches', this.items.toJSON()) : null,
       window.removeEventListener('chrome:response:tags', ::this.parse),
@@ -61,5 +60,5 @@ module.exports = (function dashboardSearchAutocompleteModel() {
 
   Tumblr.Fox.DashboardSearchAutocompleteModel = new DashboardSearchAutocompleteModel();
 
-  return Tumblr;
+  return Tumblr.Fox.DashboardSearchAutocompleteModel;
 });

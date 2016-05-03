@@ -101,7 +101,8 @@ module.exports = (function searchComponent() {
       this.blog = e.blog,
       // this is the crazy filter dropdown
       this.model = new BlogSearch({
-        blogname: this.blog.id
+        blogname: this.blog.id,
+        themeParams: this.blog.get('global_theme_params')
       }),
       this.setState('user'),
       this.initializeSubviews();
@@ -148,14 +149,13 @@ module.exports = (function searchComponent() {
       Tumblr.AutoPaginator.stop();
     },
     log(query) {
-      if (query === 'search-complete' || this.model.previous('term') === query.term) {
+      if (query === 'search-complete' || this.model.previous('term') === query.term) { // || this.model.previous('term') === query.term
         this.toggleLoader(false);
         return;
       }
       if (this.state.likesSearch) {
-        console.log('[LIKES SEARCH]', query),
         this.toggleLoader(true),
-        Posts.searchLikes(query.term).then(() => {
+        Posts.searchLikes(this.model.attributes).then(() => {
           this.toggleLoader(false);
         });
         return;
@@ -173,6 +173,7 @@ module.exports = (function searchComponent() {
       'click .blog-search-input' : 'onFormClick'
     },
     bindEvents() {
+      // TODO: make these conditional on state
       this.listenTo(this, 'change:showUserList', this.toggleUserList);
       this.listenTo(this, 'change:showUserList', this.delegateInputEvents);
       this.listenTo(this.model, 'change:blogname', this.onChangeBlog); // reset term, fetch new posts
@@ -184,15 +185,33 @@ module.exports = (function searchComponent() {
       this.listenTo(Tumblr.Events, 'indashblog:search:fetch-requested', ::this.onFetchRequested);
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
-      this.listenTo(this.model, 'change', console.log.bind(console, '[FILTER]'));
+      this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
+      // this.listenTo(this.model, 'change', ::this.setFilter);
     },
     unbindEvents() {
-      this.stopListening(this.filters.model, 'change', this.setAttributes);
       this.stopListening(this, 'change:showUserList', this.toggleUserList);
       this.stopListening(this, 'change:showUserList', this.delegateInputEvents);
+      this.stopListening(this.model, 'change:blogname', this.onChangeBlog); // reset term, fetch new posts
+      this.stopListening(this.model.posts, 'reset', ::this.onPostsReset);
+      this.stopListening(this.model.posts, 'add', ::this.onPostsAdd);
+      this.stopListening(this.model, 'search:reset', ::this.onSearchReset);
+      this.stopListening(this.model, 'change:next_offset', ::this.onOffsetChange);
       this.stopListening(Tumblr.Events, 'indashblog:search:complete');
       this.stopListening(Tumblr.Events, 'peepr-search:search-complete');
-      PeeprBlogSearch.prototype.unbindEvents.call(this);
+      this.stopListening(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
+      this.stopListening(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
+    },
+    setFilter(model) {
+      if (!this.state.likesSearch) {
+        return;
+      }
+      console.log(model.changed);
+      if (!model.changed.unsetTerm && !model.changed.term && model.changed.term !== '' && model.changed.unsetTerm !== '') { // not happy with this
+        this.toggleLoader(true),
+        Posts.searchLikes(model.attributes).then(() => {
+          this.toggleLoader(false);
+        });
+      }
     },
     setState(state) {
       for (let key in this.state) {
@@ -263,6 +282,7 @@ module.exports = (function searchComponent() {
     updateLog(response) {
       console.log('[UPDATE LOG]', response);
       this.searchStarted = !1,
+      this.model.set(response.loggingData),
       Object.assign(this.filters.model, response.loggingData),
       Object.assign(Tumblr.Fox.Posts.query, response);
     }

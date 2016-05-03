@@ -36,7 +36,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   bridge.initialize();
 
   function main() {
-    window.webpackJsonp([0], [function(module, exports, require) {
+    window.webpackJsonp(0, [function(module, exports, require) {
       Tumblr.Fox = Tumblr.Fox || {};
       Tumblr.Fox.require = require;
       Tumblr.Fox.getComponent = Tumblr.Fox.getComponent.bind(this, Array.prototype.slice.call(arguments));
@@ -80,7 +80,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
         formKey: formKey
       }
 
-      Tumblr.Fox.Posts.set('tagSearch', 'user');
+      Tumblr.Fox.Posts.set('tagSearch', 'user'); // NOTE: this is fucked right now
 
       window.fetchPostData = Tumblr.Fox.fetchPostData;
       window.fetchBlogPosts = Tumblr.Fox.fetchBlogPosts;

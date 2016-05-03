@@ -2,7 +2,7 @@ import { ChromeExOAuth } from './lib/chrome_ex_oauth';
 import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, REQUEST_TOKEN_URL } from './constants';
 import $ from 'jquery'
 // import Backbone from 'backbone';
-import { countBy, debounce, identity, uniq } from 'lodash';
+import { countBy, debounce, identity } from 'lodash';
 import async from 'async';
 import './lib/livereload';
 
@@ -166,11 +166,32 @@ function searchLikes(args, callback) {
   console.log('[SEARCH LIKES]', args);
   chrome.storage.local.get({ posts: [] }, items => {
     let term = (typeof args === 'string' ? args : args.term);
-    let matches = items.posts.filter(post => {
-      if (post.tags.indexOf(term) > -1) {
-        return post;
-      }
-    });
+    let matches = items.posts;
+    if (term !== '') {
+      matches = matches.filter(post => {
+        if (post.tags.indexOf(term) > -1) {
+          return post;
+        }
+      });
+    }
+    matches = term === '' ? matches.slice(0, 5000) : matches;
+    if (args.post_type && args.post_type !== 'ANY') {
+      const type = args.post_type.toLowerCase();
+      matches = matches.filter(post => {
+        if (post.type === type) {
+          return post;
+        }
+      });
+    }
+    if (args.sort && args.sort === 'CREATED_DESC') {
+      matches = matches.sort((a, b) => {
+        return a.timestamp - b.timestamp;
+      }).reverse();
+    } else if (args.sort && args.sort === 'POPULARITY_DESC') {
+      matches = matches.sort((a, b) => {
+        return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1: 0);
+      }).reverse();
+    }
     if (args.offset && args.limit) {
       const { offset, limit } = args;
       matches = matches.slice(offset, offset + limit);

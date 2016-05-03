@@ -147,5 +147,5 @@ module.exports = (function postFormatter() {
     Tumblr.Events.trigger('DOMEventor:updateRect');
   }
 
-  return Tumblr.Fox;
+  return Tumblr;
 });

@@ -18,7 +18,7 @@ module.exports = (function filters() {
     events: SearchFilters.prototype.events,
     initialize(e) {
       mapKeys(SearchFilters.prototype, (val, key) => {
-        if (typeof val === 'function' && key !== 'template') {
+        if (typeof val === 'function' && key !== 'template' && key !== 'render' && key !== 'initialize' && key !== 'bindEvents') {
           this[key] = val;
         }
       }),
@@ -29,6 +29,9 @@ module.exports = (function filters() {
       this.$main = this.$('.popover_menu'),
       setTimeout(::this.setActiveAndBindEvents, 1),
       this;
+    },
+    bindEvents() {
+      SearchFilters.prototype.bindEvents.apply(this);
     },
     bindClickOutside() {
       this._popoverBase.autoTeardown && (this.clickOutside = new ClickHandler(this.el),

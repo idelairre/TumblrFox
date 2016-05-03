@@ -29,7 +29,9 @@ module.exports = (function events() {
       'CrtPlayer:ready',
       'VideoPlayer:autoplay',
       'VideoPlayer:initialLoad',
-      'VideoPlayer:cacheUnload'
+      'VideoPlayer:cacheUnload',
+      'fox:postFetch:started',
+      'fox:postFetch:finished'
     ],
     log(e) {
       if (!Tumblr.Fox.Events.ignore.includes(e)) {
@@ -50,5 +52,5 @@ module.exports = (function events() {
     }
   }
 
-  return Tumblr.Fox;
+  return Tumblr;
 });

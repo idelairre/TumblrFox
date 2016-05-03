@@ -59,9 +59,9 @@ gulp.task('scripts', (cb) => {
         root: path.resolve('node_modules')
       },
       node: {
-        net: "empty",
-        tls: "empty",
-        fs: "empty"
+        net: 'empty',
+        tls: 'empty',
+        fs: 'empty'
       },
       eslint: {
         configFile: '.eslintrc'

@@ -24,12 +24,12 @@ module.exports = (function componentFetcher() {
   Tumblr.Fox.$$componentCache = {};
 
   Tumblr.Fox.get = function(componentName) {
-    return Tumblr.Fox.$$componentCache[componentName]
+    return Tumblr.Fox.$$componentCache[componentName];
   }
 
   Tumblr.Fox.put = function(name, component) {
     Tumblr.Fox.$$componentCache[name] = component;
   }
 
-  return Tumblr.Fox;
+  return Tumblr;
 });

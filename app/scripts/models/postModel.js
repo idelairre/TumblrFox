@@ -1,6 +1,6 @@
 module.exports = (function postModel() {
   const $ = Backbone.$;
-  const { each, defer, filter, memoize, rest } = _;
+  const { each, defer, memoize } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
@@ -73,7 +73,9 @@ module.exports = (function postModel() {
       if (matches.length > 0) {
         this.handOffPosts({ posts: matches });
       } else {
-        Tumblr.Events.trigger('fox:searchLikes:finished');
+        if (Tumblr.Fox.AutoPaginator.enabled) {
+          Tumblr.Events.trigger('fox:searchLikes:finished');
+        }
       }
     },
     setTerm(e) {
@@ -107,7 +109,15 @@ module.exports = (function postModel() {
     fetchLikesByTag(slug) {
       console.log('[FETCH LIKES BY TAG]', slug);
       const deferred = $.Deferred();
+      slug = Object.assign({
+        term: slug.term,
+        post_role: slug.post_role,
+        post_type: slug.post_type,
+        sort: slug.sort,
+        filter_nsfw: slug.filter_nsfw
+      });
       const req = new CustomEvent('chrome:search:likes', { detail: slug });
+      console.log(req);
       const resolve = e => {
         this.$$matches = e.detail;
         deferred.resolve(e.detail);
@@ -130,13 +140,13 @@ module.exports = (function postModel() {
         $('li[data-pageable]').remove();
       });
     },
-    searchLikes(term) {
+    searchLikes(query) {
       const deferred = $.Deferred();
       this.filterPosts(),
       Tumblr.Events.trigger('fox:searchLikes:started'),
       this.state.apiFetch = !0,
       this.state.tagSearch = !0,
-      this.fetchLikesByTag(term).then(matches => {
+      this.fetchLikesByTag(query).then(matches => {
         matches = matches.slice(0, 8);
         this.handOffPosts({ posts: matches });
         Tumblr.Events.trigger('fox:searchLikes:finished');
@@ -201,7 +211,7 @@ module.exports = (function postModel() {
     },
     renderPosts(response) {
       let posts = response.posts || response;
-      for (let i = 0; posts.length > i; i += 1) {
+      for (let i = 0; posts.length > i; i += 1) { // NOTE: posts do not come out in order due to different formatting times
         this.renderPost(posts[i]);
       }
     },
@@ -215,7 +225,7 @@ module.exports = (function postModel() {
 
   Tumblr.Fox.Posts = new Posts();
 
-  return Tumblr;
+  return Tumblr.Fox.Posts;
 });
 
 // apiBlogFetchPosts(slug) {

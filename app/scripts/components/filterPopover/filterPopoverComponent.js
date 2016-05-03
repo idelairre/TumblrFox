@@ -11,6 +11,8 @@ module.exports = (function filterPopoverComponent() {
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
+  // NOTE: teardown is not consistently resetting the original peepr-search component
+
   let FilterPopoverComponent = PopoverComponent.extend({
     className: 'popover--filter-popover',
     defaults: {
@@ -59,7 +61,7 @@ module.exports = (function filterPopoverComponent() {
     beforeTeardown() {
       return this.remove(),
       this.$pinned.removeClass('active'),
-      this
+      this;
     },
     unbindClickOutside() {
       this.clickOutside.remove(),
@@ -69,6 +71,7 @@ module.exports = (function filterPopoverComponent() {
     hide() {
       Tumblr.Events.trigger('popover:close', this),
       this.unbindClickOutside(),
+      this.searchFilter.unbindEvents(),
       this.$pinned.removeClass('active'),
       this.$filterPopoverMenu.removeClass('popover--active'),
       transition(this.$el, ::this.afterHide);
