@@ -1,9 +1,12 @@
 import { ChromeExOAuth } from './lib/chrome_ex_oauth';
 import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, REQUEST_TOKEN_URL } from './constants';
 import $ from 'jquery'
+// import Backbone from 'backbone';
 import { countBy, debounce, identity, uniq } from 'lodash';
 import async from 'async';
 import './lib/livereload';
+
+// TODO: add method to update cache on boot
 
 let oauth = {};
 
@@ -28,7 +31,7 @@ chrome.storage.sync.get({
   });
 });
 
-let likedPostsCount = 2000;
+let likedPostsCount = 17401;
 
 function cacheLikeTags(callback) {
   chrome.storage.local.get({ posts: [] }, items => {
@@ -52,6 +55,9 @@ function cacheLikeTags(callback) {
       }
       parsedTags.push(tag);
     }
+    parsedTags = parsedTags.sort((a, b) => {
+      return a.count - b.count;
+    }).reverse();
     chrome.storage.local.set({ tags: parsedTags }, () => {
       console.log('[TAGS]', parsedTags);
     });
@@ -62,10 +68,10 @@ function cacheLikeTags(callback) {
 function preloadLikes(callback) {
   let slug = {
     blogname: 'luxfoks',
-    limit: 20
+    limit: 50
   };
   chrome.storage.local.get({ posts: [] }, items => {
-    console.log('[POSTS]', items);
+    console.log('[POSTS COUNT]', items.posts.length);
     populatePostCache(slug, items, callback)
   });
 }
@@ -78,10 +84,9 @@ function populatePostCache(slug, items, callback) {
       slug.limit = (likedPostsCount - (items.posts.length - 1));
     }
     if (items.posts.length !== 0) {
-      slug.before = items.posts[items.posts.length - 1].timestamp;
+      slug.before = items.posts[items.posts.length - 1].liked_timestamp;
     }
-    // console.log('[LIKED POST COUNT]', likedPostsCount);
-    fetchLikedPosts(slug, response => {
+    debounce(fetchLikedPosts, 0).call(this, slug, response => {
       if (likedPostsCount === null) {
         likedPostsCount = response.liked_count;
       }
@@ -89,13 +94,15 @@ function populatePostCache(slug, items, callback) {
       chrome.storage.local.set({ posts: items.posts });
       let percentComplete = Math.round(((items.posts.length - 1) / likedPostsCount) * 100);
       percentComplete = (percentComplete > 100 ? 100 : percentComplete);
-      console.log('[PERCENT COMPLETE]', percentComplete, likedPostsCount - (items.posts.length - 1));
       callback(percentComplete);
       next();
     });
     chrome.storage.local.get({ posts: [] }, items => {
-      console.log('[POSTS]', items);
+      console.log('[POSTS]', items.posts.length);
     });
+  }, (...errors) => {
+    console.error('[ERROR]', ...errors);
+    callback(...errors)
   });
 }
 
@@ -134,6 +141,7 @@ function fetchBlogPosts(slug, callback) {
 
 function fetchLikedPosts(slug, callback) {
   console.log('[SLUG]', slug);
+  // console.log('[BEFORE DATE]', new Date(slug.before * 1000));
   chrome.storage.sync.get({ consumerKey: '' }, items => {
     let data = {
       api_key: items.consumerKey,
@@ -145,10 +153,30 @@ function fetchLikedPosts(slug, callback) {
       url: `https://api.tumblr.com/v2/blog/${slug.blogname}.tumblr.com/likes`,
       data: data
     });
-    request.always(data => {
-      // console.log('[RESPONSE]', data);
+    request.success(data => {
       callback(data.response);
     });
+    request.fail((...errors) => {
+      throw new Error(...errors);
+    });
+  });
+}
+
+function searchLikes(args, callback) {
+  console.log('[SEARCH LIKES]', args);
+  chrome.storage.local.get({ posts: [] }, items => {
+    let term = (typeof args === 'string' ? args : args.term);
+    let matches = items.posts.filter(post => {
+      if (post.tags.indexOf(term) > -1) {
+        return post;
+      }
+    });
+    if (args.offset && args.limit) {
+      const { offset, limit } = args;
+      matches = matches.slice(offset, offset + limit);
+      return callback(matches);
+    }
+    return callback(matches);
   });
 }
 
@@ -174,23 +202,23 @@ function onAuthorized(slug, callback) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log(request);
   switch (request.type) {
-    case 'dashboardPosts':
+    case 'fetchPosts':
       oauth.authorize(() => {
-        onAuthorized(request.fetchPosts, sendResponse);
+        onAuthorized(request.payload, sendResponse);
       });
       return true;
-    case 'blogPosts':
-      fetchBlogPosts(request.fetchBlogPosts, sendResponse);
+    case 'fetchBlogPosts':
+      fetchBlogPosts(request.payload, sendResponse);
       return true;
-    case 'likedPosts':
-      fetchLikedPosts(request.fetchLikedPosts, sendResponse);
-      return true;
-    case 'getCachedLikes':
-      fetchPreloadedLikes(sendResponse);
+    case 'fetchLikes':
+      fetchLikedPosts(request.payload, sendResponse);
       return true;
     case 'likeTags':
       fetchLikeTags(sendResponse);
       return true;
+    case 'searchLikes':
+      searchLikes(request.payload, sendResponse);
+      return true
     }
 });
 

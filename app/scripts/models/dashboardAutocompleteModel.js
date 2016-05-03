@@ -2,9 +2,8 @@ module.exports = (function dashboardSearchAutocompleteModel() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { invoke, omit } = _;
+  const { invoke, omit, sortBy } = _;
   const { get } = Tumblr.Fox;
-  const AutoComplete = get('AutoComplete');
 
   let DashboardSearchAutocompleteModel = Backbone.Model.extend({
     defaults: {
@@ -19,14 +18,16 @@ module.exports = (function dashboardSearchAutocompleteModel() {
       this.fetch();
     },
     bindEvents() {
-      window.addEventListener('chrome:response:tags', ::this.parse),
-      this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange),
+      this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
       this.listenTo(this, 'change:matchTerm', ::this.setMatches);
     },
     fetch() {
       const deferred = $.Deferred();
-      const slug = new Event('chrome:fetch:tags');
-      window.dispatchEvent(slug);
+      if (!this.fetched) {
+        const slug = new Event('chrome:fetch:tags');
+        window.dispatchEvent(slug);
+      }
+      window.addEventListener('chrome:response:tags', ::this.parse);
       deferred.resolve(this.items);
       return deferred.promise();
     },
@@ -37,29 +38,28 @@ module.exports = (function dashboardSearchAutocompleteModel() {
       this.set('matchTerm', e.term);
     },
     hasMatches() {
-      return this.items.length && this.get('typeAheadMatches').length || !!this.fetched;
+      return this.items.length && this.get('typeAheadMatches').length || this.fetched;
     },
     setMatches() {
       const term = this.get('matchTerm');
-      if (!term.length) {
-        return this.set('typeAheadMatches', this.items.toJSON());
-      }
       const matches = this.items.filter(tag => {
         return tag.get('tag').indexOf(term) > -1;
       });
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
-      return this.items.reset(e.detail),
-      this.fetched = !0,
-      this.get('matchTerm') === '' ? this.set('typeAheadMatches', invoke(this.items.filter(tag => {
-        return tag.get('count') > 1;
-      }), 'toJSON')) : null,
+      if (!this.fetched) {
+        this.items.reset(e.detail.slice(0, 250));
+        this.fetched = !0;
+        console.timeEnd('#items.reset()');
+      }
+      this.get('matchTerm') === '' ? this.set('typeAheadMatches', this.items.toJSON()) : null,
+      window.removeEventListener('chrome:response:tags', ::this.parse),
       omit(e, 'tags');
     }
   })
 
-  Tumblr.Fox.DashboardSearchAutocompleteModel = DashboardSearchAutocompleteModel;
+  Tumblr.Fox.DashboardSearchAutocompleteModel = new DashboardSearchAutocompleteModel();
 
   return Tumblr;
 });

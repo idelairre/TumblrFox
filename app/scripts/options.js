@@ -29,6 +29,8 @@ function restoreOptions() {
 }
 
 function cacheLikes() {
+  let progress = document.getElementById('container');
+  progress.style.display = 'block';
   let status = document.getElementById('status');
   const port = chrome.runtime.connect({
     name: 'cacheLikes'
@@ -39,6 +41,7 @@ function cacheLikes() {
     }
     if (response === 'done') {
       status.textContent = response;
+      progress.style.display = 'none';
       return;
     }
     bar.animate(response / 100);

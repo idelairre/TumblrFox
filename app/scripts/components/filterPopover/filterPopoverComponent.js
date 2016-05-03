@@ -33,7 +33,7 @@ module.exports = (function filterPopoverComponent() {
     },
     initialize(e) {
       return this.options = Object.assign({}, this.defaults, e),
-      PopoverComponent.prototype.initialize.apply(this, e);
+      this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', this.hide);
     },
     render() {
       return this.$el.html(this.template),
@@ -50,18 +50,11 @@ module.exports = (function filterPopoverComponent() {
     bindClickOutside() {
       const options = {
         preventInteraction: !0,
-        ignoreSelectors: ['.popover_content_wrapper', '.popover_inner_list', '.popover_menu_list', '.tumblelog_popover', '.ui_peepr_glass', '.drawer']
+        ignoreSelectors: ['.popover', '.popover_inner', '.popover_content_wrapper', '.popover_inner_list', '.popover_menu_list', '.tumblelog_popover', '.ui_peepr_glass', '.drawer']
       };
       this.clickOutside = new ClickHandler(this.el, options),
       this.clickOutside.on('click:outside', this.hide, this),
-      this.clickOutside.on('click:inside', this.hideFilterPopover, this),
       this.listenTo(Tumblr.Events, 'DOMEventor:keyup:escape', this.hide)
-    },
-    hideFilterPopover(e) {
-      const menuItem = $(e.target);
-      if (typeof menuItem.data('js-menu-item-link') !== 'undefined') {
-        this.hide();
-      }
     },
     beforeTeardown() {
       return this.remove(),

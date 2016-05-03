@@ -37,7 +37,7 @@ module.exports = (function events() {
           console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
           return;
         }
-        console.log('[LOG]', arguments);
+        // console.log('[LOG]', arguments);
       }
     },
     start() {

@@ -13,8 +13,7 @@ module.exports = (function settingsPopover() {
     mixins: [popover],
     template: $('#settingsPopoverTemplate').html(),
     initialize(e) {
-      return this.options = Object.assign({}, e),
-      PopoverComponent.prototype.initialize.apply(this, e);
+      return this.options = Object.assign({}, e);
     },
     render() {
       return this.$el.html(this.template),
@@ -30,7 +29,7 @@ module.exports = (function settingsPopover() {
     bindClickOutside() {
       const options = {
         preventInteraction: !0,
-        ignoreSelectors: ['.popover_inner_list']
+        ignoreSelectors: ['.popover_content_wrapper', '.tumblelog_popover']
       };
       this._popoverBase.autoTeardown && (this.clickOutside = new ClickHandler(this.el, options),
       this.clickOutside.on('click:outside', this.hide, this),

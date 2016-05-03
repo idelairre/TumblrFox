@@ -30,7 +30,7 @@ module.exports = (function searchComponent() {
   const defaultFilter = clone(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype);
 
   const InputExtension = {
-    dashboardSearchAutocompleteModel: new DashboardSearchAutocompleteModel(),
+    dashboardSearchAutocompleteModel: DashboardSearchAutocompleteModel,
     fetchResults(query) {
       // console.log('[USER QUERY]', query);
       return Conversations.fetch({ data: { q: query, limit: 8 }});
@@ -103,6 +103,7 @@ module.exports = (function searchComponent() {
       this.model = new BlogSearch({
         blogname: this.blog.id
       }),
+      this.setState('user'),
       this.initializeSubviews();
     },
     initializeSubviews() {
@@ -124,44 +125,39 @@ module.exports = (function searchComponent() {
       Object.assign(this.input, InputExtension),
       this.bindEvents(),
       this.set('showUserList', false),
-      console.log(this.input),
       this;
     },
-    evalItems(items) {
-      if (isEmpty(items)) {
-        return this.input.$el.find('input').attr('placeholder', `${this.model.get('blogname')} has no tags`);
-      }
-    },
-    evalFilter(e) { // broken, having trouble getting this to fire without clobbering tag search events
-      console.log(e, this.model);
-      if (!this.searchStarted && e.term === '') {
-        Tumblr.Events.trigger('fox:filter:fetch', e.attributes);
+    evalItems(data) {
+      console.log('[TAGS]', data);
+      if (isEmpty(data.tags)) {
+        this.input.blogSearchAutocompleteModel.items.reset([]);
+        this.input.$el.find('input').attr('placeholder', `${this.model.get('blogname')} has no tags`);
       }
     },
     selectBlog(e) {
       e.preventDefault();
       const tumblelog = this.$(e.target).parent().find('h3').text();
       return this.model.set('blogname', tumblelog),
-      this.model.set(this.input.attributes),
       this.input.blogSearchAutocompleteModel.set('blogname', tumblelog),
       this.input.$el.find('input').attr('placeholder', `Search ${tumblelog}`),
       this.input.$el.find('input').val(''),
-      this.input.blogSearchAutocompleteModel.initialize(),
-      this.input.blogSearchAutocompleteModel.getItems().then(::this.evalItems),
+      this.input.blogSearchAutocompleteModel.fetch().then(this.evalItems),
       this.set('showUserList', this.showUserList = !this.showUserList),
+      this.setState('userSearch'),
+      Posts.state.apiFetch = !1,
       Tumblr.AutoPaginator.stop();
     },
     log(query) {
-      if (this.state.likesSearch) {
-        console.log('[LIKES SEARCH]', query)
-        return this.toggleLoader(true),
-        Posts.fuzzySearch(query.term),
-        setTimeout(() => {
-          this.toggleLoader(false);
-        }, 300);
-      }
       if (query === 'search-complete' || this.model.previous('term') === query.term) {
         this.toggleLoader(false);
+        return;
+      }
+      if (this.state.likesSearch) {
+        console.log('[LIKES SEARCH]', query),
+        this.toggleLoader(true),
+        Posts.searchLikes(query.term).then(() => {
+          this.toggleLoader(false);
+        });
         return;
       }
       return this.toggleLoader(true),
@@ -188,6 +184,7 @@ module.exports = (function searchComponent() {
       this.listenTo(Tumblr.Events, 'indashblog:search:fetch-requested', ::this.onFetchRequested);
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
+      this.listenTo(this.model, 'change', console.log.bind(console, '[FILTER]'));
     },
     unbindEvents() {
       this.stopListening(this.filters.model, 'change', this.setAttributes);
@@ -250,6 +247,8 @@ module.exports = (function searchComponent() {
     toggleUserList(e) {
       if (e.showUserList) {
         return Tumblr.Fox.Posts.set('tagSearch', 'user'),
+        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`),
+        this.input.$el.find('input').val(''),
         this.$userList.show(),
         this.$settings.hide(),
         this.$filters.find('i').hide(),

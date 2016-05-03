@@ -20,7 +20,6 @@ import searchTemplate from './components/filterPopover/search/searchTemplate.htm
 import settingsComponent from './components/filterPopover/settings/settingsComponent';
 import settingsPopoverTemplate from './components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
 import settingsPopoverComponent from './components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
-import $ from 'jquery';
 
 // NOTE: reblog follow button is broken
 
@@ -35,14 +34,6 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   document.body.insertAdjacentHTML('beforeend', searchTemplate);
 
   bridge.initialize();
-
-  chrome.runtime.sendMessage({ type: 'getCachedLikes' }, response => {
-     console.log('[CACHED LIKES]', response.length);
-     const slug = new CustomEvent('chrome:cachedLikes', {
-       detail: response
-     });
-     window.dispatchEvent(slug);
-  });
 
   function main() {
     window.webpackJsonp([0], [function(module, exports, require) {

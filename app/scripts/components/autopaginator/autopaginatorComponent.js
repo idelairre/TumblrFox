@@ -19,7 +19,8 @@ module.exports = (function autopaginator() {
       Tumblr.Events.on('fox:apiFetch:initial', ::this.start);
       Tumblr.Events.on('fox:blogFetch:initial', ::this.start);
       Tumblr.Events.on('fox:searchFetch:initial', ::this.start);
-      Tumblr.Events.on('fox:searchLikes:started', ::this.disableAll);
+      Tumblr.Events.on('fox:searchLikes:started', ::this.start);
+      Tumblr.Events.on('fox:searchLikes:finished', ::this.stop);
     },
     start() {
       console.log('[AUTOPAGINATOR] started');

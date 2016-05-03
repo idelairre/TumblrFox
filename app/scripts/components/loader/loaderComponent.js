@@ -16,9 +16,12 @@ module.exports = (function loader() {
       Tumblr.Events.on('fox:postFetch:started', this.show);
       Tumblr.Events.on('fox:postFetch:finished', this.hide);
       Tumblr.Events.on('fox:postFetch:failed', this.hide);
+      Tumblr.Events.on('fox:searchLikes:started', this.show);
+      Tumblr.Events.on('fox:searchLikes:finished', this.hide);
       window.addEventListener('chrome:fetch:posts', this.show);
       window.addEventListener('chrome:fetch:likes', this.show);
       window.addEventListener('chrome:response:posts', this.hide);
+      window.addEventListener('chrome:response:likes', this.hide);
     },
     stop() {
       Tumblr.Events.off('indashblog:search:fetch-requested', this.show);
@@ -27,9 +30,12 @@ module.exports = (function loader() {
       Tumblr.Events.off('fox:postFetch:started', this.show);
       Tumblr.Events.off('fox:postFetch:finished', this.hide);
       Tumblr.Events.off('fox:postFetch:failed', this.hide);
+      Tumblr.Events.off('fox:searchLikes:started', this.show);
+      Tumblr.Events.off('fox:searchLikes:finished', this.hide);
       window.removeEventListener('chrome:fetch:posts', this.show);
       window.removeEventListener('chrome:fetch:likes', this.show);
       window.removeEventListener('chrome:response:posts', this.hide);
+      window.removeEventListener('chrome:response:likes', this.hide);
       Tumblr.Events.on('peepr:close', this.start);
     },
     show() {

@@ -2,7 +2,7 @@ module.exports = (function filterMenuComponent() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { get, AutoPaginator, Posts } = Tumblr.Fox;
+  const { get, AutoPaginator } = Tumblr.Fox;
   const SearchFilters = get('SearchFilters');
 
   let FilterMenuComponent = Backbone.View.extend({
