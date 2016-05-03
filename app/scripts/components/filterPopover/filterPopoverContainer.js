@@ -41,7 +41,6 @@ module.exports = (function filterPopoverContainer() {
   if (Tumblr.Fox.options.logging) {
     Tumblr.Fox.Events.start();
   }
-  Tumblr.Fox.Loader.start();
 
   Tumblr.Fox.FilterPopoverContainer = FilterPopoverContainer;
   Tumblr.Fox.filterPopoverMenu = filterPopoverMenu;

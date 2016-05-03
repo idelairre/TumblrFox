@@ -28,7 +28,7 @@ module.exports = (function postModel() {
       state: {
         apiFetch: !1,
         tagSearch: !0
-      }
+      },
     },
     initialize(e) {
       this.query = this.defaults.query,
@@ -36,6 +36,7 @@ module.exports = (function postModel() {
       this.state = this.defaults.state,
       this.items = Tumblr.Posts,
       this.fetchedLikes = !1,
+      this.loading = !1,
       this.bindEvents();
     },
     bindEvents() {
@@ -45,14 +46,13 @@ module.exports = (function postModel() {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.setTerm);
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
       this.listenTo(Tumblr.Events, 'indashblog:search:post-added', ::this.renderPost);
-      window.addEventListener('chrome:response:posts', ::this.handOffPosts);
     },
     fetch() {
       const deferred = $.Deferred();
       if (this.state.tagSearch && this.state.apiFetch) {
         this.renderSearchResults();
       } else if (this.state.apiFetch) {
-        this.apiFetchPosts(this.apiSlug);
+        this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
       } else if (!this.state.apiFetch && this.query.loggingData.term === '') {
         this.clientFetchPosts(this.query.loggingData);
       } else {
@@ -62,7 +62,7 @@ module.exports = (function postModel() {
       return deferred.resolve(this.items);
     },
     renderSearchResults() {
-      if (Tumblr.Fox.Loader.options.loading) {
+      if (this.loading) {
         return;
       }
       const opts = {
@@ -81,12 +81,18 @@ module.exports = (function postModel() {
     setTerm(e) {
       this.query.loggingData.term = e.term;
     },
+    toggleLoader() {
+      this.set('loading', this.loading = !this.loading);
+    },
     initialApiFetch(type) {
+      if (this.loading) {
+        return;
+      }
       this.filterPosts(type),
       this.state.apiFetch = !0,
       this.state.tagSearch = !1,
       setTimeout(() => {
-        this.apiFetchPosts(this.apiSlug);
+        this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
       }, 300);
     },
     initialBlogFetch(e) {
@@ -107,7 +113,7 @@ module.exports = (function postModel() {
       }, 300);
     },
     fetchLikesByTag(slug) {
-      console.log('[FETCH LIKES BY TAG]', slug);
+      // console.log('[FETCH LIKES BY TAG]', slug);
       const deferred = $.Deferred();
       slug = Object.assign({
         term: slug.term,
@@ -117,12 +123,13 @@ module.exports = (function postModel() {
         filter_nsfw: slug.filter_nsfw
       });
       const req = new CustomEvent('chrome:search:likes', { detail: slug });
-      console.log(req);
       const resolve = e => {
-        this.$$matches = e.detail;
-        deferred.resolve(e.detail);
-        window.removeEventListener('chrome:response:likes', resolve);
+        this.$$matches = e.detail,
+        deferred.resolve(e.detail),
+        window.removeEventListener('chrome:response:likes', resolve),
+        this.toggleLoader();
       }
+      this.toggleLoader();
       window.dispatchEvent(req);
       window.addEventListener('chrome:response:likes', resolve);
       return deferred.promise();
@@ -146,30 +153,39 @@ module.exports = (function postModel() {
       Tumblr.Events.trigger('fox:searchLikes:started'),
       this.state.apiFetch = !0,
       this.state.tagSearch = !0,
+      this.toggleLoader(),
       this.fetchLikesByTag(query).then(matches => {
         matches = matches.slice(0, 8);
         this.handOffPosts({ posts: matches });
         Tumblr.Events.trigger('fox:searchLikes:finished');
+        this.toggleLoader(),
         deferred.resolve(matches);
       });
       return deferred.promise();
     },
-    // TODO: put this in a promise pattern
     apiFetchPosts(slug) {
-      if (Tumblr.Fox.Loader.options.loading) {
+      if (this.loading) {
         return;
       }
       let req;
+      const deferred = $.Deferred();
+      this.toggleLoader();
       if (this.apiSlug.type === 'likes') {
         req = new CustomEvent('chrome:fetch:likes', { detail: slug });
       } else {
         req = new CustomEvent('chrome:fetch:posts', { detail: slug });
       }
-      console.log('[API FETCH]', slug);
+      const resolve = e => {
+        deferred.resolve(e.detail),
+        window.removeEventListener('chrome:response:posts', resolve),
+        this.toggleLoader();
+      }
+      window.addEventListener('chrome:response:posts', resolve);
       window.dispatchEvent(req);
+      return deferred.promise();
     },
     clientFetchPosts(slug) {
-      if (!this.state.apiFetch && Tumblr.Fox.Loader.options.loading) {
+      if (!this.state.apiFetch && this.loading) {
         return;
       }
       $.ajax({

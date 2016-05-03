@@ -23,14 +23,14 @@ module.exports = (function autopaginator() {
       Tumblr.Events.on('fox:searchLikes:finished', ::this.stop);
     },
     start() {
-      console.log('[AUTOPAGINATOR] started');
+      // console.log('[AUTOPAGINATOR] started');
       Tumblr.Events.on('DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.on('peepr-open-request', ::this.stop);
       Tumblr.Events.on('disable-paginator', this.disableDefaultPagination);
       this.disableDefaultPagination();
     },
     stop() {
-      console.log('[AUTOPAGINATOR] stopped');
+      // console.log('[AUTOPAGINATOR] stopped');
       Tumblr.Events.off('DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.off('peepr-open-request', ::this.stop);
       Tumblr.Events.off('disable-paginator', this.disableDefaultPagination);

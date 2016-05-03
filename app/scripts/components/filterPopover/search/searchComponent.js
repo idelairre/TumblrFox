@@ -155,7 +155,9 @@ module.exports = (function searchComponent() {
       }
       if (this.state.likesSearch) {
         this.toggleLoader(true),
+        Posts.toggleLoader(),
         Posts.searchLikes(this.model.attributes).then(() => {
+          Posts.toggleLoader(),
           this.toggleLoader(false);
         });
         return;

@@ -62,9 +62,6 @@ module.exports = (function filterMenuComponent() {
       Tumblr.Events.trigger('fox:setFilter', { loggingData: { post_type: type.toUpperCase() } });
     },
     filterAndFetchPosts(type) {
-      if (Tumblr.Fox.Loader.options.loading) {
-        return;
-      }
       Tumblr.Events.trigger('fox:apiFetch:initial', type);
     }
   });

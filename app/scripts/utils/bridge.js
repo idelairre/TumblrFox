@@ -1,7 +1,6 @@
 module.exports = {
   initialize() {
     this.bindEvents();
-
     window.addEventListener('chrome:fetch:tags', () => {
       this.fetchLikeTags(tags => {
         this.trigger('chrome:response:tags', tags);
