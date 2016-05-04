@@ -9,22 +9,30 @@ module.exports = (function filterMenuComponent() {
     defaults: {
       state: {
         likes: !1,
-        dashboard: !0,
-        user: !1
-      }
+        dashboard: !1,
+        user: !0
+      },
+      disabled: !1
     },
     className: 'popover--filter-select-dropdown',
     template: $('#filterMenuTemplate').html(),
     initialize(e) {
       this.state = this.defaults.state,
+      this.disabled = this.defaults.disabled,
       this.listenTo(Tumblr.Events, 'fox:setSearchState', this.toggleLikes);
     },
     render() {
       return this.$el.html(this.template),
-      this.resetChecks();
+      Tumblr.Events.trigger('fox:setFilter', { loggingData: { post_type: 'ANY' } }),
+      this.resetChecks(),
+      this.$('i[data-check="any"]').show();
     },
     events: {
       'click [data-js-menu-item]': 'toggleSelection'
+    },
+    bindEvents() {
+      this.listenTo(Tumblr.Events, 'peepr-open-request', this.set('disabled', !0));
+      this.listenTo(Tumblr.Events, 'peepr:close', this.set('disabled', !1));
     },
     resetChecks() {
       this.$('i[data-check]').each(function () {
@@ -49,6 +57,9 @@ module.exports = (function filterMenuComponent() {
     },
     toggleSelection(e) { // NOTE: make sure to put this back while the states are half-functional
       e.preventDefault();
+      if (this.disabled) {
+        return;
+      }
       const type = $(e.target).data('js-menu-item-link');
       this.resetChecks(),
       this.$(`i[data-check="${type}"]`).show();
@@ -68,5 +79,5 @@ module.exports = (function filterMenuComponent() {
 
   Tumblr.Fox.FilterMenuComponent = FilterMenuComponent;
 
-  return Tumblr;
+  return Tumblr.Fox.FilterMenuComponent;
 })

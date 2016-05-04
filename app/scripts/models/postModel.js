@@ -1,6 +1,6 @@
 module.exports = (function postModel() {
   const $ = Backbone.$;
-  const { each, defer, memoize } = _;
+  const { each, defer, memoize, once } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
@@ -46,13 +46,18 @@ module.exports = (function postModel() {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.setTerm);
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
       this.listenTo(Tumblr.Events, 'indashblog:search:post-added', ::this.renderPost);
+      this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
+    },
+    unbindEvents() {
+      this.stopListening();
+      this.listenTo(Tumblr.Events, 'peepr:close', ::this.bindEvents);
     },
     fetch() {
       const deferred = $.Deferred();
       if (this.state.tagSearch && this.state.apiFetch) {
         this.renderSearchResults();
       } else if (this.state.apiFetch) {
-        this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
+          this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
       } else if (!this.state.apiFetch && this.query.loggingData.term === '') {
         this.clientFetchPosts(this.query.loggingData);
       } else {
@@ -74,7 +79,7 @@ module.exports = (function postModel() {
         this.handOffPosts({ posts: matches });
       } else {
         if (Tumblr.Fox.AutoPaginator.enabled) {
-          Tumblr.Events.trigger('fox:searchLikes:finished');
+          once(Tumblr.Events.trigger).call('fox:searchLikes:finished');
         }
       }
     },
@@ -91,6 +96,8 @@ module.exports = (function postModel() {
       this.filterPosts(type),
       this.state.apiFetch = !0,
       this.state.tagSearch = !1,
+      this.apiSlug.offset = 0,
+      this.query.loggingData.offset = 0,
       setTimeout(() => {
         this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
       }, 300);
@@ -155,20 +162,19 @@ module.exports = (function postModel() {
       this.state.tagSearch = !0,
       this.toggleLoader(),
       this.fetchLikesByTag(query).then(matches => {
-        matches = matches.slice(0, 8);
-        this.handOffPosts({ posts: matches });
-        Tumblr.Events.trigger('fox:searchLikes:finished');
+        matches = matches.slice(0, 8),
+        this.handOffPosts(matches),
         this.toggleLoader(),
         deferred.resolve(matches);
       });
       return deferred.promise();
     },
     apiFetchPosts(slug) {
+      const deferred = $.Deferred();
       if (this.loading) {
-        return;
+        return deferred.reject(); // remember this shit
       }
       let req;
-      const deferred = $.Deferred();
       this.toggleLoader();
       if (this.apiSlug.type === 'likes') {
         req = new CustomEvent('chrome:fetch:likes', { detail: slug });
@@ -214,7 +220,16 @@ module.exports = (function postModel() {
       });
     },
     handOffPosts(e) {
-      const posts = e.posts || e.detail.liked_posts || e.detail.posts || e.models;
+      console.log('[RESPONSE]', e);
+      if (e === []) {
+        console.log('[HANDOFF POSTS] empty');
+        return;
+      }
+      const posts = e.length ? e : e.posts || e.liked_posts || e.models || e.detail.liked_posts || e.detail.posts; // this is because of poor choices, this needs to be hammered down
+      if (posts.length === 0) {
+        Tumblr.Events.trigger('fox:noMatches');
+        return;
+      }
       this.apiSlug.offset += posts.length;
       let length = posts.length;
       for (let i = 0; length > i; i += 1) {

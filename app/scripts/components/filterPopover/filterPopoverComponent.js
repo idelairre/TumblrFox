@@ -93,5 +93,5 @@ module.exports = (function filterPopoverComponent() {
 
   Tumblr.Fox.FilterPopoverComponent = FilterPopoverComponent;
 
-  return Tumblr;
+  return Tumblr.Fox.FilterPopoverComponent;
 })

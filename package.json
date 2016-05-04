@@ -11,7 +11,8 @@
     "dev:firefox": "gulp --watch --vendor=firefox",
     "dev:opera": "gulp --watch --vendor=opera",
     "start": "npm run dev:chrome",
-    "build": "npm run build:chrome"
+    "build": "npm run build:chrome",
+    "test": "gulp test"
   },
   "devDependencies": {
     "app-root-path": "^1.0.0",

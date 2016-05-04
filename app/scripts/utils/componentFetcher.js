@@ -31,5 +31,5 @@ module.exports = (function componentFetcher() {
     Tumblr.Fox.$$componentCache[name] = component;
   }
 
-  return Tumblr;
+  return Tumblr.Fox;
 });

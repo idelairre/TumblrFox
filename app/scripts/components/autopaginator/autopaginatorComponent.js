@@ -16,24 +16,22 @@ module.exports = (function autopaginator() {
       this.bindEvents();
     },
     bindEvents() {
-      Tumblr.Events.on('fox:apiFetch:initial', ::this.start);
-      Tumblr.Events.on('fox:blogFetch:initial', ::this.start);
-      Tumblr.Events.on('fox:searchFetch:initial', ::this.start);
-      Tumblr.Events.on('fox:searchLikes:started', ::this.start);
-      Tumblr.Events.on('fox:searchLikes:finished', ::this.stop);
+      this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.start);
+      this.listenTo(Tumblr.Events, 'fox:blogFetch:initial', ::this.start);
+      this.listenTo(Tumblr.Events, 'fox:searchFetch:initial', ::this.start);
+      this.listenTo(Tumblr.Events,'fox:searchLikes:started', ::this.start);
+      this.listenTo(Tumblr.Events,'fox:searchLikes:finished', ::this.stop);
     },
     start() {
-      // console.log('[AUTOPAGINATOR] started');
-      Tumblr.Events.on('DOMEventor:flatscroll', ::this.onScroll);
-      Tumblr.Events.on('peepr-open-request', ::this.stop);
-      Tumblr.Events.on('disable-paginator', this.disableDefaultPagination);
+      console.log('[AUTOPAGINATOR] started');
+      this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
+      this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.stop);
+      this.listenTo(Tumblr.Events, 'disable-paginator', this.disableDefaultPagination);
       this.disableDefaultPagination();
     },
     stop() {
       // console.log('[AUTOPAGINATOR] stopped');
-      Tumblr.Events.off('DOMEventor:flatscroll', ::this.onScroll);
-      Tumblr.Events.off('peepr-open-request', ::this.stop);
-      Tumblr.Events.off('disable-paginator', this.disableDefaultPagination);
+      this.stopListening();
       Tumblr.Events.on('peepr:close', ::this.start);
     },
     disableAll() {
@@ -65,5 +63,5 @@ module.exports = (function autopaginator() {
 
   Tumblr.Fox.AutoPaginator = new AutoPaginator();
 
-  return Tumblr;
+  return Tumblr.Fox.AutoPaginator;
 })

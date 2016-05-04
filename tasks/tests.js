@@ -78,5 +78,5 @@ gulp.task('tests', (cb) => {
     .pipe(plumber())
     .pipe(named())
     .pipe(gulpWebpack(config))
-    .pipe(gulp.dest('test'))
+    .pipe(gulp.dest('test/dist'))
 });

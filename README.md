@@ -33,7 +33,7 @@ The Tumblr.Fox thing is an arbitrary namespace based off my dumb Tumblr handle t
 
 ## Usage
 
-Run `$ gulp --watch` and load the `dist`-directory into chrome.
+Run `$ npm run start` and load the `dist`-directory into chrome.
 
 ## Tasks
 
@@ -46,10 +46,10 @@ Run `$ gulp --watch` and load the `dist`-directory into chrome.
 |----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--watch`      | Starts a livereload server and watches all assets. <br>To reload the extension on change include `livereload.js` in your bundle.                      |
 | `--production` | Minifies all assets                                                                                                                                   |
-| `--verbose`    | Log additional data to the console.                                                                                                                   |
-| `--vendor`     | Compile the extension for different vendors (chrome, firefox, opera)  Default: chrome                                                                 |
-| `--sourcemaps` | Force the creation of sourcemaps. Default: !production                                                                                                |
 
+### Test
+
+		$ npm run tests
 
 ### Pack
 

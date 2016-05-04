@@ -192,6 +192,7 @@ function searchLikes(args, callback) {
         return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1: 0);
       }).reverse();
     }
+    console.log('[MATCHES]', matches);
     if (args.offset && args.limit) {
       const { offset, limit } = args;
       matches = matches.slice(offset, offset + limit);

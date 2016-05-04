@@ -6,10 +6,10 @@ import DashboardAutocompleteModel from '../../app/scripts/models/dashboardAutoco
 let dashboardAutocompleteModel = DashboardAutocompleteModel();
 
 describe('dashboardAutocompleteModel', () => {
-  it('should exist', () => {
-    expect(dashboardAutocompleteModel).to.exist;
-  });
   describe('#initialize()', () => {
+    it('should exist', () => {
+      expect(dashboardAutocompleteModel).to.exist;
+    });
     it('should successfully create a new dashboardAutocompleteModel', () =>{
       expect(dashboardAutocompleteModel.items).to.exist;
     });
