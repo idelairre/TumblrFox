@@ -3,9 +3,11 @@ import ProgressBar from 'progressbar.js';
 function saveOptions() {
   let consumerKey = document.getElementById('consumerKey').value;
   let consumerSecret = document.getElementById('consumerSecret').value;
+  let userName = document.getElementById('userName').value;
   chrome.storage.sync.set({
     consumerKey: consumerKey,
-    consumerSecret: consumerSecret
+    consumerSecret: consumerSecret,
+    userName: userName
   }, () => {
     // Update status to let user know options were saved.
     let status = document.getElementById('status');
@@ -21,10 +23,12 @@ function saveOptions() {
 function restoreOptions() {
   chrome.storage.sync.get({
     consumerKey: '',
-    consumerSecret: ''
+    consumerSecret: '',
+    userName: ''
   }, items => {
     document.getElementById('consumerKey').value = items.consumerKey;
     document.getElementById('consumerSecret').value = items.consumerSecret;
+    document.getElementById('userName').value = items.userName;
   });
 }
 
@@ -36,15 +40,17 @@ function cacheLikes() {
     name: 'cacheLikes'
   });
   port.onMessage.addListener(response => {
-    if (response === 100) {
+    let { percentComplete, itemsLeft } = response;
+    if (percentComplete === 100) {
       port.postMessage({ type: 'cacheTags'});
     }
-    if (response === 'done') {
-      status.textContent = response;
+    if (percentComplete === 'done') {
+      status.textContent = percentComplete;
       progress.style.display = 'none';
       return;
     }
-    bar.animate(response / 100);
+    status.textContent = `items left: ${itemsLeft}`;
+    bar.animate(percentComplete / 100);
   });
   status.textContent = '';
   port.postMessage({ type: 'cacheLikes'});

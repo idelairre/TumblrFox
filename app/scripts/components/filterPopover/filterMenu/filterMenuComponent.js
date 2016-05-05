@@ -7,19 +7,12 @@ module.exports = (function filterMenuComponent() {
 
   let FilterMenuComponent = Backbone.View.extend({
     defaults: {
-      state: {
-        likes: !1,
-        dashboard: !1,
-        user: !0
-      },
       disabled: !1
     },
     className: 'popover--filter-select-dropdown',
     template: $('#filterMenuTemplate').html(),
     initialize(e) {
-      this.state = this.defaults.state,
-      this.disabled = this.defaults.disabled,
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', this.toggleLikes);
+      this.disabled = this.defaults.disabled;
     },
     render() {
       return this.$el.html(this.template),
@@ -38,22 +31,6 @@ module.exports = (function filterMenuComponent() {
       this.$('i[data-check]').each(function () {
         $(this).hide();
       });
-    },
-    setState(state) {
-      for (let key in this.state) {
-        this.state[key] = !1;
-        if (key.includes(state)) {
-          this.state[key] = !0;
-        }
-      }
-    },
-    toggleLikes(state) {
-      this.setState(state);
-      if (state === 'likes') {
-        this.$('[data-js-menu-item-link="likes"]').hide();
-      } else {
-        this.$('[data-js-menu-item-link="likes"]').show();
-      }
     },
     toggleSelection(e) { // NOTE: make sure to put this back while the states are half-functional
       e.preventDefault();

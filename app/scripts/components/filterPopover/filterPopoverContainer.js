@@ -10,12 +10,12 @@ module.exports = (function filterPopoverContainer() {
     name: 'FilterPopover',
     view(e) {
       return Object.assign(e, {
-        pinnedTarget: $('#filter'),
+        pinnedTarget: $('#filter_button'),
         isFixedPosition: !0,
         autoTeardown: !1,
         teardownOnEscape: !1
       }),
-      new FilterPopoverComponent(e)
+      new FilterPopoverComponent(e);
     },
     show() {
       this.view.show()
@@ -23,27 +23,11 @@ module.exports = (function filterPopoverContainer() {
     render() {
       return this.view.render(),
       this.trigger('append'),
-      this
+      this;
     }
   })
 
-  let filterPopoverMenu = new FilterPopoverContainer();
-
-  $('#filter').click(() => {
-    if (!Tumblr.Fox.options.rendered) {
-      filterPopoverMenu.render();
-      Tumblr.Fox.options.rendered = true;
-      return;
-    }
-    filterPopoverMenu.show();
-  });
-
-  if (Tumblr.Fox.options.logging) {
-    Tumblr.Fox.Events.start();
-  }
-
   Tumblr.Fox.FilterPopoverContainer = FilterPopoverContainer;
-  Tumblr.Fox.filterPopoverMenu = filterPopoverMenu;
 
-  return Tumblr;
+  return Tumblr.Fox.FilterPopoverMenu;
 })

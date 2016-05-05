@@ -2,7 +2,7 @@ module.exports = (function filterPopoverComponent() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { debounce } = _;
+  const { debounce, each } = _;
   const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
@@ -17,7 +17,11 @@ module.exports = (function filterPopoverComponent() {
     className: 'popover--filter-popover',
     defaults: {
       preventInteraction: !0,
-      toggleUser: !1
+      state: {
+        likes: !1,
+        dashboard: !1,
+        user: !0
+      }
     },
     mixins: [popover],
     template: $('#filterPopoverTemplate').html(),
@@ -34,7 +38,9 @@ module.exports = (function filterPopoverComponent() {
       }
     },
     initialize(e) {
-      return this.options = Object.assign({}, this.defaults, e),
+      this.options = Object.assign({}, this.defaults, e),
+      this.state = this.defaults.state,
+      this.listenTo(Tumblr.Events, 'fox:setSearchState', this.setState),
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', this.hide);
     },
     render() {
@@ -48,6 +54,9 @@ module.exports = (function filterPopoverComponent() {
       }, 1),
       console.log('[RENDERED COMPONENT]', this),
       this;
+    },
+    afterRenderSubviews() {
+      this.setState('user');
     },
     bindClickOutside() {
       const options = {
@@ -67,6 +76,22 @@ module.exports = (function filterPopoverComponent() {
       this.clickOutside.remove(),
       this.clickOutside = null,
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
+    },
+    setState(state) {
+      for (let key in this.state) {
+        this.state[key] = !1;
+        if (key.includes(state)) {
+          this.state[key] = !0;
+        }
+      }
+      // console.log('[STATE]', this, state);
+      each(this._subviews, subview => {
+        subview.state = this.state;
+        if (subview._subviews) {
+          this.setState.call(subview, state);
+        }
+      });
+      // console.log('[SUBVIEWS]', this._subviews);
     },
     hide() {
       Tumblr.Events.trigger('popover:close', this),

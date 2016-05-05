@@ -18,10 +18,11 @@ module.exports = (function loader() {
       this.listenTo(this.model, 'change:loading', ::this.setLoading);
     },
     setLoading(e) {
+      console.log('[LOADING?]', e.loading);
       if (e.loading) {
         this.show();
       } else {
-        this.hide();
+        setTimeout(::this.hide, 300);
       }
     },
     show() {

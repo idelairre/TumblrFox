@@ -1,12 +1,22 @@
 import { ChromeExOAuth } from './lib/chrome_ex_oauth';
 import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, REQUEST_TOKEN_URL } from './constants';
 import $ from 'jquery'
-// import Backbone from 'backbone';
-import { countBy, debounce, identity } from 'lodash';
+import { countBy, debounce, difference, findIndex, identity, includes, union, uniqBy } from 'lodash';
 import async from 'async';
 import './lib/livereload';
 
-// TODO: add method to update cache on boot
+function hasElement(array, compArray) {
+  for (let i = 0; array.length - 1 > i; i += 1) {
+    let post = array[i];
+    for (let j = 0; compArray.length - 1 > j; j += 1) {
+      let testPost = compArray[j];
+      if (post.id === testPost.id) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 let oauth = {};
 
@@ -31,7 +41,7 @@ chrome.storage.sync.get({
   });
 });
 
-let likedPostsCount = 17401;
+let likedPostsCount = null;
 
 function cacheLikeTags(callback) {
   chrome.storage.local.get({ posts: [] }, items => {
@@ -66,13 +76,15 @@ function cacheLikeTags(callback) {
 }
 
 function preloadLikes(callback) {
-  let slug = {
-    blogname: 'luxfoks',
-    limit: 50
-  };
-  chrome.storage.local.get({ posts: [] }, items => {
-    console.log('[POSTS COUNT]', items.posts.length);
-    populatePostCache(slug, items, callback)
+  chrome.storage.sync.get({ userName: '' }, items => {
+    let slug = {
+      blogname: items.userName,
+      limit: 50
+    };
+    chrome.storage.local.get({ posts: [] }, items => {
+      console.log('[POSTS COUNT]', items.posts.length);
+      populatePostCache(slug, items, callback)
+    });
   });
 }
 
@@ -93,18 +105,109 @@ function populatePostCache(slug, items, callback) {
       items.posts = items.posts.concat(response.liked_posts);
       chrome.storage.local.set({ posts: items.posts });
       let percentComplete = Math.round(((items.posts.length - 1) / likedPostsCount) * 100);
+      let itemsLeft = likedPostsCount - items.posts.length - 1;
       percentComplete = (percentComplete > 100 ? 100 : percentComplete);
-      callback(percentComplete);
+      console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
+      callback({
+        percentComplete: percentComplete,
+        itemsLeft: itemsLeft
+      });
       next();
     });
     chrome.storage.local.get({ posts: [] }, items => {
       console.log('[POSTS]', items.posts.length);
     });
-  }, (...errors) => {
-    console.error('[ERROR]', ...errors);
-    callback(...errors)
   });
 }
+
+function initSyncLikes(posts) {
+  if (!posts || posts.length === 0) {
+    return;
+  }
+  // console.log('[POSTS]', posts.length);
+  chrome.storage.sync.get({ userName: '' }, items => {
+  const userName = items.userName;
+    let slug = {
+      blogname: userName,
+      offset: 0,
+      limit: 50
+    };
+    let callback = (response) => {
+      if (response.liked_posts.length !== 0) {
+        console.log('[NEW POSTS?]', !hasElement(posts, response.liked_posts));
+        if (!hasElement(posts, response.liked_posts)) {
+          slug.offset += response.liked_posts.length;
+          posts = union(posts, response.liked_posts);
+          if (typeof posts !== 'undefined') {
+            chrome.storage.local.set({ posts: posts });
+            console.log('[POSTS]', posts.length);
+          } else {
+            throw new Error('Posts are corrupt');
+          }
+          fetchLikedPosts(slug, callback);
+        } else {
+          console.log('[DONE SYNCING]')
+        }
+      }
+    }
+    fetchLikedPosts(slug, callback);
+  });
+}
+
+// NOTE: this is simply too slow
+
+function syncLikes(payload) {
+  let { action, postId } = payload;
+  if (action === 'like') {
+    chrome.storage.sync.get({ userName: '' }, items => {
+      const userName = items.userName;
+      let slug = {
+        blogname: userName,
+        offset: 0,
+        limit: 1
+      };
+      fetchLikedPosts(slug, response => {
+        chrome.storage.local.get({ posts: []}, items => {
+          let oldLen = items.posts.length;
+          items.posts.unshift(response.liked_posts[0]);
+          console.log('[UPDATED LIKES]', oldLen, items.posts.length);
+          chrome.storage.local.set({ posts: items.posts });
+        });
+      });
+    });
+  } else {
+    chrome.storage.local.get({ posts: []}, items => {
+      let posts = items.posts;
+      let index = findIndex(posts, { id: postId });
+      console.log('[POST INDEX]', index);
+      if (index >= 0) {
+        let oldLen = posts.length;
+        posts.splice(index, 1);
+        console.log(`[UPDATED LIKES] old length: ${oldLen}, new length: ${posts.length}`);
+        chrome.storage.local.set({ posts: posts });
+      }
+    });
+  }
+}
+
+function ensureIntegrity() {
+  const deferred = $.Deferred();
+  chrome.storage.local.get({ posts: [] }, items => {
+    let posts = items.posts;
+    if (typeof posts === 'undefined' || posts.length === 0) {
+      return deferred.reject();
+    }
+    console.log('[ENSURING INTEGRITY...]');
+    console.log('[BEFORE]', posts.length);
+    posts = uniqBy(posts, 'id');
+    console.log('[AFTER]', posts.length);
+    chrome.storage.local.set({ posts: posts });
+    deferred.resolve(posts);
+  });
+  return deferred.promise();
+}
+
+ensureIntegrity().then(initSyncLikes);
 
 function fetchPreloadedLikes(callback) {
   chrome.storage.local.get({ posts: [] }, items => {
@@ -140,7 +243,7 @@ function fetchBlogPosts(slug, callback) {
 }
 
 function fetchLikedPosts(slug, callback) {
-  console.log('[SLUG]', slug);
+  // console.log('[SLUG]', slug);
   // console.log('[BEFORE DATE]', new Date(slug.before * 1000));
   chrome.storage.sync.get({ consumerKey: '' }, items => {
     let data = {
@@ -154,6 +257,7 @@ function fetchLikedPosts(slug, callback) {
       data: data
     });
     request.success(data => {
+      // console.log('[RESPONSE]', data.response);
       callback(data.response);
     });
     request.fail((...errors) => {
@@ -241,6 +345,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'searchLikes':
       searchLikes(request.payload, sendResponse);
       return true
+    case 'updateLikes':
+      syncLikes(request.payload);
+      return true;
     }
 });
 

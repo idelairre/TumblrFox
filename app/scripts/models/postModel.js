@@ -1,6 +1,6 @@
 module.exports = (function postModel() {
   const $ = Backbone.$;
-  const { each, defer, memoize, once } = _;
+  const { each, defer, memoize, once, isEmpty } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
@@ -44,9 +44,12 @@ module.exports = (function postModel() {
       this.listenTo(Tumblr.Events, 'fox:filterFetch:started', ::this.initialBlogFetch); // update query, fetch post data
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.initialApiFetch); // filter posts, fetch posts from api
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.setTerm);
+      this.listenTo(Tumblr.Events, 'indashblog:search:started', ::this.toggleLoader);
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
       this.listenTo(Tumblr.Events, 'indashblog:search:post-added', ::this.renderPost);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
+      this.listenTo(Tumblr.Events, 'post:like:set', this.updateLikesCache.bind(this, 'like'));
+      this.listenTo(Tumblr.Events, 'post:unlike:set', this.updateLikesCache.bind(this, 'unlike'));
     },
     unbindEvents() {
       this.stopListening();
@@ -66,8 +69,18 @@ module.exports = (function postModel() {
       }
       return deferred.resolve(this.items);
     },
+    updateLikesCache(action, postId) {
+      console.log('[UPDATE LIKES]', action, postId);
+      // const req = new CustomEvent('chrome:update:likes', {
+      //   detail: {
+      //     postId: postId,
+      //     action: action
+      //   }
+      // });
+      // window.dispatchEvent(req);
+    },
     renderSearchResults() {
-      if (this.loading) {
+      if (this.loading || isEmpty(this.$$matches)) {
         return;
       }
       const opts = {
@@ -116,11 +129,12 @@ module.exports = (function postModel() {
       this.state.apiFetch = !1,
       this.state.tagSearch = !0,
       setTimeout(() => {
-        this.renderPosts(posts.filter(post => { return post.post_html }));
+        posts = posts.filter(post => { return post.post_html });
+        this.renderPosts(posts),
+        this.toggleLoader();
       }, 300);
     },
     fetchLikesByTag(slug) {
-      // console.log('[FETCH LIKES BY TAG]', slug);
       const deferred = $.Deferred();
       slug = Object.assign({
         term: slug.term,
@@ -160,13 +174,38 @@ module.exports = (function postModel() {
       Tumblr.Events.trigger('fox:searchLikes:started'),
       this.state.apiFetch = !0,
       this.state.tagSearch = !0,
-      this.toggleLoader(),
       this.fetchLikesByTag(query).then(matches => {
         matches = matches.slice(0, 8),
         this.handOffPosts(matches),
-        this.toggleLoader(),
         deferred.resolve(matches);
       });
+      return deferred.promise();
+    },
+    searchDashboard(query) {
+      const deferred = $.Deferred();
+      let posts = Tumblr.postsView.postViews;
+      console.log('[QUERY]', query, Tumblr.postsView.postViews),
+      Tumblr.Events.trigger('fox:searchLikes:started'),
+      this.state.apiFetch = !0,
+      this.state.tagSearch = !0,
+      this.filterPosts(),
+      this.toggleLoader();
+      setTimeout(() => {
+        this.$$matches = posts.filter(post => {
+          this.items.add(post.model);
+          let tagElems = post.$el.find('.post_tags');
+          if (tagElems.length > 0) {
+            let rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
+            if (rawTags.includes(query.term)) {
+              return post;
+            }
+          }
+        });
+        console.log(this.$$matches);
+        this.handOffPosts(this.$$matches);
+        this.toggleLoader();
+      }, 300);
+      deferred.resolve(this.items);
       return deferred.promise();
     },
     apiFetchPosts(slug) {
@@ -194,7 +233,7 @@ module.exports = (function postModel() {
       if (!this.state.apiFetch && this.loading) {
         return;
       }
-      $.ajax({
+      return $.ajax({
         url: 'https://www.tumblr.com/svc/indash_blog/posts',
         beforeSend: (xhr) => {
           Tumblr.Events.trigger('fox:postFetch:started', slug);
@@ -206,13 +245,14 @@ module.exports = (function postModel() {
           limit: slug.limit || 8,
           offset: slug.offset || 0
         },
-        success: (data) => { // add posts to model, notify autopager
+        success: (data) => {
           if (data.response.tumblelog) {
             Tumblelog.collection.add(new Tumblelog(data.response.tumblelog));
           }
           Tumblr.Events.trigger('fox:postFetch:finished', data.response);
           Object.assign(this.query.loggingData, slug),
           this.query.loggingData.offset += data.response.posts.length;
+          return data;
         },
         fail: (error) => {
           Tumblr.Events.trigger('fox:postFetch:failed', error);
@@ -222,7 +262,6 @@ module.exports = (function postModel() {
     handOffPosts(e) {
       console.log('[RESPONSE]', e);
       if (e === []) {
-        console.log('[HANDOFF POSTS] empty');
         return;
       }
       const posts = e.length ? e : e.posts || e.liked_posts || e.models || e.detail.liked_posts || e.detail.posts; // this is because of poor choices, this needs to be hammered down
@@ -235,12 +274,15 @@ module.exports = (function postModel() {
       for (let i = 0; length > i; i += 1) {
         const post = posts[i];
         this.clientFetchPosts({
-          blogNameOrId: post.blog_name || post.get('blog_name'),
+          blogNameOrId: post.blog_name || post.model.attributes.tumblelog || post.get('blog_name'),
           postId: post.id
         });
       }
     },
     renderPosts(response) {
+      if (!response) {
+        return;
+      }
       let posts = response.posts || response;
       for (let i = 0; posts.length > i; i += 1) { // NOTE: posts do not come out in order due to different formatting times
         this.renderPost(posts[i]);

@@ -33,12 +33,17 @@ module.exports = (function main() {
 
     Tumblr.Fox.options = {
       rendered: false,
-      logging: true
+      logging: true,
+      test: false
     }
 
     Tumblr.Fox.constants = {
       attachNode: attachNode,
       formKey: formKey
+    }
+
+    if (Tumblr.Fox.options.logging) {
+      Tumblr.Fox.Events.start();
     }
 
     Tumblr.Fox.Posts.set('tagSearch', 'user');

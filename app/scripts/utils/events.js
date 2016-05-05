@@ -1,7 +1,7 @@
 module.exports = (function events() {
   Tumblr.Fox = Tumblr.Fox || {};
 
-  const tumblr = Object.assign({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events, window.Events);
+  const tumblr = Object.assign({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events);
 
   Tumblr.Fox.Events = {
     ignore: [
@@ -9,9 +9,8 @@ module.exports = (function events() {
       'LSLog:impression',
       'DOMEventor:updateRect',
       'DOMEventor:keyup:backspace',
-      'postsView:createPost',
-      'postsView',
       'posts:destroyed',
+      'postsView:createPost',
       'Header:mouseenter',
       'Header:mouseleave',
       'VideoPlayer:timeupdate',
@@ -34,12 +33,12 @@ module.exports = (function events() {
       'fox:postFetch:finished'
     ],
     log(e) {
-      if (!Tumblr.Fox.Events.ignore.includes(e)) {
+      if (!Tumblr.Fox.Events.ignore.includes(e) && Tumblr.Fox.options.logging) {
         if (e.includes('fox')) {
           console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
           return;
         }
-        // console.log('[LOG]', arguments);
+        console.log('[LOG]', arguments);
       }
     },
     start() {
