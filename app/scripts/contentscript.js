@@ -10,6 +10,7 @@ import FilterMenuTemplate from './components/filterPopover/filterMenu/filterMenu
 import filterPopoverComponent from './components/filterPopover/filterPopoverComponent';
 import filterPopoverContainer from './components/filterPopover/filterPopoverContainer';
 import FilterPopoverTemplate from './components/filterPopover/filterPopoverTemplate.html';
+import FollowerList from './components/followerList/followerListComponent';
 import events from './utils/events';
 import FilterIconTemplate from '../pages/icon/icon.html';
 import main from './main.js';
@@ -71,6 +72,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     filterMenuComponent,
     filterPopoverComponent,
     filterPopoverContainer,
-    FilterIcon
+    FilterIcon,
+    FollowerList
   ]);
 }

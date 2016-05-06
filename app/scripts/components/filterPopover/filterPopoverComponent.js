@@ -84,14 +84,16 @@ module.exports = (function filterPopoverComponent() {
           this.state[key] = !0;
         }
       }
-      // console.log('[STATE]', this, state);
+      console.log('[STATE]', this, state);
       each(this._subviews, subview => {
         subview.state = this.state;
         if (subview._subviews) {
           this.setState.call(subview, state);
+        } else if (subview.model) {
+          subview.model.set('state', this.state);
         }
       });
-      // console.log('[SUBVIEWS]', this._subviews);
+      console.log('[SUBVIEWS]', this._subviews);
     },
     hide() {
       Tumblr.Events.trigger('popover:close', this),

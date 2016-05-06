@@ -34,13 +34,16 @@ module.exports = (function filters() {
           this[key] = val;
         }
       }),
+      this.state = this.model.attributes.state,
       this.bindEvents();
     },
     render() {
       return this.$el.html(this.template),
       this.$main = this.$('.popover_menu'),
-      this.$date = this.$('.date-filter-input'),
-      this.$date.val(new Date().toDateInputValue()),
+      this.$date = this.$('.date-filter'),
+      this.$toggleItems = this.$('.toggle_items'),
+      console.log(this.$toggleItems),
+      !this.state.likes ? this.$date.parents().find('.datepicker').hide() : this.$date.find('input').val(new Date().toDateInputValue()) && this.$toggleItems.hide(),
       setTimeout(::this.setActiveAndBindEvents, 1),
       this;
     },

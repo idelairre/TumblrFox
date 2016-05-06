@@ -35,25 +35,34 @@ module.exports = {
     window.dispatchEvent(req);
   },
   bindEvents() {
-    this.listenTo('chrome:fetch:posts', posts => {
-      this.trigger('chrome:response:posts', posts);
+    // NOTE: maybe wrap the callback in the trigger and automatically create and remove the listener?
+    // this way the api will resemble a normal request
+    this.listenTo('chrome:fetch:posts', response => {
+      console.log(response);
+      this.trigger('chrome:response:posts', response);
     });
-    this.listenTo('chrome:fetch:blogPosts', posts => {
-      this.trigger('chrome:response:posts', posts);
+    this.listenTo('chrome:fetch:blogPosts', response => {
+      console.log(response);
+      this.trigger('chrome:response:posts', response);
     });
-    // TODO: make this cache posts
-    this.listenTo('chrome:fetch:likes', posts => {
-      this.trigger('chrome:response:posts', posts);
+    this.listenTo('chrome:fetch:likes', response => {
+      console.log(response);
+      this.trigger('chrome:response:posts', response);
     });
-    this.listenTo('chrome:search:likes', likedPosts => {
-      this.trigger('chrome:response:likes', likedPosts);
+    this.listenTo('chrome:search:likes', response => {
+      console.log(response);
+      this.trigger('chrome:response:likes', response);
     });
-    this.listenTo('chrome:update:likes');
+    this.listenTo('chrome:fetch:followers', response => {
+      console.log('[RESPONSE]', response);
+      this.trigger('chrome:response:followers', response);
+    });
     window.addEventListener('chrome:fetch:tags', () => {
       this.fetchLikeTags(tags => {
         this.trigger('chrome:response:tags', tags);
       });
     });
+    this.listenTo('chrome:update:likes');
   },
   fetchLikeTags(callback) {
     chrome.storage.local.get({ tags: [] }, items => {

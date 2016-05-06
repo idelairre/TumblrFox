@@ -11,7 +11,7 @@ module.exports = (function postModel() {
       apiSlug: {
         type: null,
         offset: 0,
-        limit: 12,
+        limit: 8,
         blogname: currentUser().id
       },
       query: {
@@ -141,7 +141,8 @@ module.exports = (function postModel() {
         post_role: slug.post_role,
         post_type: slug.post_type,
         sort: slug.sort,
-        filter_nsfw: slug.filter_nsfw
+        filter_nsfw: slug.filter_nsfw,
+        before: slug.before
       });
       const req = new CustomEvent('chrome:search:likes', { detail: slug });
       const resolve = e => {

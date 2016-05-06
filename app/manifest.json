@@ -39,9 +39,7 @@
     "tabs",
     "storage",
     "unlimitedStorage",
-    "http://api.tumblr.com/*",
-    "https://*/*",
-    "http://*/*"
+    "http://api.tumblr.com/*"
   ],
   "web_accessible_resources": [ "pages/chrome_ex_oauth.html" ]
 }
