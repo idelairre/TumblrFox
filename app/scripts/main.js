@@ -24,12 +24,15 @@ module.exports = (function main() {
     Tumblr.Fox.getComponent('InboxCompose', '"inbox-compose"');
     Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
     Tumblr.Fox.getComponent('mixin', 'this.mixins=u.filter');
+    Tumblr.Fox.getComponent('TumblrModel', 'n.Model.extend({})');
     Tumblr.Fox.getComponent('TumblrView', 'this.cid=s.uniqueId("view")');
     Tumblr.Fox.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
     Tumblr.Fox.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
     Tumblr.Fox.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
     Tumblr.Fox.getComponent('SearchFilters', '[data-filter]');
-    Tumblr.Fox.getComponent('PopoverContainer', 'setPinnedTarget(e.pinnedTarget'); // see what the fuck this is
+    Tumblr.Fox.getComponent('PopoverContainer', 'setPinnedTarget(e.pinnedTarget');
+
+    Object.assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
 
     Tumblr.Fox.options = {
       rendered: false,
@@ -45,9 +48,7 @@ module.exports = (function main() {
     if (Tumblr.Fox.options.logging) {
       Tumblr.Fox.Events.start();
     }
-
-    Tumblr.Fox.Posts.set('tagSearch', 'user');
-
+    
     window.fetchPostData = Tumblr.Fox.fetchPostData;
     window.fetchBlogPosts = Tumblr.Fox.fetchBlogPosts;
     window.require = Tumblr.Fox.require;

@@ -20,5 +20,5 @@ module.exports = (function loaderMixin() {
 
   Tumblr.Fox.loaderMixin = loader;
 
-  return Tumblr;
+  return Tumblr.Fox.loaderMixin;
 })

@@ -22,28 +22,32 @@
 </head>
 
 <body>
+  <h1>Authentication</h1>
   <div class="input-option">
     <label>
+      User name:<br>
       <input type="text" id="userName">
-      User name
     </label>
   </div>
   <div class="input-option">
     <label>
+      Consumer key:<br>
       <input type="text" id="consumerKey">
-      Consumer key
     </label>
   </div>
   <div class="input-option">
     <label>
+      Consumer secret:<br>
       <input type="text" id="consumerSecret">
-      Consumer secret
     </label>
   </div>
+  <h1>Cache</h1>
+  <p>Likes: <font id="likes"></font> out of <font id="totalLikes"></p>
+  <p>Following: <font id="following"></font> out of <font id="totalFollowing"></p>
   <div id="container" style="display: none"></div>
   <br>
   <div>
-    <button id="save">Save</button><button id="cachePosts">Cache likes</button><button id="resetCache">Reset cache</button><font id="status"></font>
+    <button id="save">Save</button><button id="cacheFollowing">Cache Following</button><button id="cachePosts">Cache likes</button><button id="cacheTags">Cache Tags</button><button id="resetCache">Reset cache</button><font id="status"></font>
   </div>
 
   <script src="../scripts/options.js"></script>

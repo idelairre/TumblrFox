@@ -38,35 +38,23 @@ module.exports = {
     // NOTE: maybe wrap the callback in the trigger and automatically create and remove the listener?
     // this way the api will resemble a normal request
     this.listenTo('chrome:fetch:posts', response => {
-      console.log(response);
       this.trigger('chrome:response:posts', response);
     });
     this.listenTo('chrome:fetch:blogPosts', response => {
-      console.log(response);
       this.trigger('chrome:response:posts', response);
     });
     this.listenTo('chrome:fetch:likes', response => {
-      console.log(response);
       this.trigger('chrome:response:posts', response);
     });
     this.listenTo('chrome:search:likes', response => {
-      console.log(response);
       this.trigger('chrome:response:likes', response);
     });
-    this.listenTo('chrome:fetch:followers', response => {
-      console.log('[RESPONSE]', response);
-      this.trigger('chrome:response:followers', response);
+    this.listenTo('chrome:fetch:following', response => {
+      this.trigger('chrome:response:following', response);
     });
-    window.addEventListener('chrome:fetch:tags', () => {
-      this.fetchLikeTags(tags => {
-        this.trigger('chrome:response:tags', tags);
-      });
+    this.listenTo('chrome:fetch:tags', response => {
+      this.trigger('chrome:response:tags', response);
     });
     this.listenTo('chrome:update:likes');
-  },
-  fetchLikeTags(callback) {
-    chrome.storage.local.get({ tags: [] }, items => {
-      callback(items.tags);
-    });
   }
 }

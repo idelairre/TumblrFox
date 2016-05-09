@@ -1,37 +1,67 @@
-module.exports = (function followList() {
+module.exports = (function followerList() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
+  const { debounce } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
+  const { FollowerModel, FollowerItemComponent } = Tumblr.Fox;
 
-  let FollowList = Backbone.View.extend({
+  // TODO: create sort options button, add filters (most recently updated, alphabetically, etc...)
+
+  let FollowerList = Backbone.View.extend({
+    defaults: {
+      offset: 0,
+      limit: 25
+    },
     initialize(e) {
-      this.items = Tumblelog.collection,
-      this.$pagination = this.$('#pagination'),
-      this.$pagination.hide(),
-      this.fetch();
-      console.log('[FOLLOW LIST]', this);
-    },
-    fetch() { // NOTE: maybe this is more appropriate for a model?
-      const slug = {
-        url: `https://api.tumblr.com/v2/blog/${currentUser().id}/followers`,
-        limit: 50
-      };
-      const req = new CustomEvent('chrome:fetch:followers', {
-        detail: slug
+      this.options = this.defaults;
+      this.model = new FollowerModel(),
+      this.$followers = this.$('.follower'),
+      this.$followers = this.$followers.slice(1, this.$followers.length)
+      this.$pagination = this.$('#pagination'), // insert followers before pagination element
+      this.$pagination.hide();
+      this.clearElements(),
+      this.model.fetch().then(() => {
+        this.populate(),
+        this.bindEvents();
       });
-      const callback = (response) => {
-        window.removeEventListener('chrome:response:followers', callback);
-      }
-      window.dispatchEvent(req);
-      window.addEventListener('chrome:response:followers', callback);
     },
+    bindEvents() {
+      this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 100));
+    },
+    clearElements() {
+      this.$followers.each(function() {
+        $(this).fadeOut(300, () => {
+          $(this).remove();
+        });
+      });
+    },
+    onScroll() {
+      let followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
+      followers.map(follower => {
+        this.renderFollower(follower);
+      });
+    },
+    populate() {
+      let followers = this.model.items.slice(0, this.options.limit);
+      followers.map(follower => {
+        this.renderFollower(follower);
+      });
+      this.options.offset += followers.length;
+    },
+    renderFollower(model) {
+      let follower = new FollowerItemComponent(model);
+      follower.render();
+      this.$el.find('.left_column').append(follower.$el);
+    }
   });
 
-  Tumblr.Fox.FollowList = new FollowList({
-    el: $('#following')
-  });
+  if (window.location.href === 'https://www.tumblr.com/following') {
+    Tumblr.Fox.FollowerList = new FollowerList({
+      el: $('#following')
+    });
+  }
 
-  return Tumblr.Fox.FollowList;
+  return Tumblr.Fox.FollowerList;
 })

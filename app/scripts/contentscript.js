@@ -1,6 +1,7 @@
-import autopaginatorComponent from './components/autopaginator/autopaginatorComponent';
+import AutopaginatorComponent from './components/autopaginator/autopaginatorComponent';
 import bridge from './utils/bridge';
 import componentFetcher from './utils/componentFetcher';
+import ChromeMixin from './mixins/chromeTrigger';
 import tagSearchAutocompleteModel from './models/tagSearchAutocompleteModel';
 import FilterTemplate from './components/filterPopover/filter/filterTemplate.html';
 import filterComponent from './components/filterPopover/filter/filterComponent';
@@ -10,19 +11,22 @@ import FilterMenuTemplate from './components/filterPopover/filterMenu/filterMenu
 import filterPopoverComponent from './components/filterPopover/filterPopoverComponent';
 import filterPopoverContainer from './components/filterPopover/filterPopoverContainer';
 import FilterPopoverTemplate from './components/filterPopover/filterPopoverTemplate.html';
+import FollowerModel from './models/followerModel';
 import FollowerList from './components/followerList/followerListComponent';
-import events from './utils/events';
+import FollowerItem from './components/followerList/followerItem/followerItemComponent';
+import Events from './utils/events';
 import FilterIconTemplate from '../pages/icon/icon.html';
 import main from './main.js';
 import postFormatter from './utils/postFormatter';
-import postModel from './models/postModel';
-import loaderComponent from './components/loader/loaderComponent';
+import PostModel from './models/postModel';
+import LoaderComponent from './components/loader/loaderComponent';
 import loaderMixin from './mixins/loaderBar';
 import searchComponent from './components/filterPopover/search/searchComponent';
 import SearchTemplate from './components/filterPopover/search/searchTemplate.html'
 import settingsComponent from './components/filterPopover/settings/settingsComponent';
 import SettingsPopoverTemplate from './components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
 import settingsPopoverComponent from './components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
+import Time from './utils/time';
 
 // NOTE: reblog follow button is broken
 
@@ -56,14 +60,17 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   ]);
 
   inject([
-    postModel,
     postFormatter,
     componentFetcher,
-    events,
-    autopaginatorComponent,
-    loaderComponent,
+    Events,
+    Time,
     main,
+    ChromeMixin,
     loaderMixin,
+    FollowerModel,
+    PostModel,
+    AutopaginatorComponent, // depends on PostModel
+    LoaderComponent, // must be loaded after PostModel or doesn't listen correctly
     tagSearchAutocompleteModel,
     filterComponent,
     settingsPopoverComponent,
@@ -73,6 +80,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     filterPopoverComponent,
     filterPopoverContainer,
     FilterIcon,
+    FollowerItem,
     FollowerList
   ]);
 }

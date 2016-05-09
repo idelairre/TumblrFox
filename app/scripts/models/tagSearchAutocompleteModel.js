@@ -3,9 +3,10 @@ module.exports = (function tagSearchAutocompleteModel() {
 
   const $ = Backbone.$;
   const { countBy, identity, invoke, omit, sortBy, uniq } = _;
-  const { get } = Tumblr.Fox;
+  const { get, chromeMixin } = Tumblr.Fox;
 
   let TagSearchAutocompleteModel = Backbone.Model.extend({
+    mixins: [chromeMixin],
     defaults: {
       matchTerm: '',
       maxRender: 20,
@@ -30,16 +31,21 @@ module.exports = (function tagSearchAutocompleteModel() {
       this.listenTo(this, 'change:matchTerm', ::this.setMatches);
     },
     fetch() {
-      console.log('[STATE]', this.state);
       if (this.state.dashboard) {
         return this.dashboardFetch();
       } else {
         return this.chromeFetch();
       }
     },
-    dashboardFetch() {
-      // yes it pulls them off the dom because Tumblr
+    // NOTE: doesn't fetch new tags after API fetch and having initially fetched dashboard tags
+    // need a trigger to flush tags
+    dashboardFetch() { // called on popover open, this leads to problems of where to pull tags from...
       let tagArray = [];
+      const deferred = $.Deferred();
+      deferred.resolve(this.items);
+      if (Tumblr.Fox.Posts.state.dashboardSearch) {
+        return deferred.promise();
+      }
       Tumblr.postsView.postViews.filter(post => {
         let tagElems = post.$el.find('.post_tags');
         if (tagElems.length > 0) {
@@ -61,15 +67,11 @@ module.exports = (function tagSearchAutocompleteModel() {
         tags.push(tag);
       }
       this.parse(tags);
-      const deferred = $.Deferred();
-      deferred.resolve(this.items);
       return deferred.promise();
     },
     chromeFetch() {
       const deferred = $.Deferred();
-      const slug = new Event('chrome:fetch:tags');
-      window.dispatchEvent(slug);
-      window.addEventListener('chrome:response:tags', ::this.parse);
+      this.chromeTrigger('chrome:fetch:tags', ::this.parse);
       deferred.resolve(this.items);
       return deferred.promise();
     },
@@ -94,13 +96,7 @@ module.exports = (function tagSearchAutocompleteModel() {
       if (!this.fetched) {
         this.items.reset(tags.slice(0, 250));
       }
-      // NOTE: find an elegant way to cache tags
-      // if (this.state.dashboard) {
-      //   this.$$dashboardTags = this.$$dashboardTags.concat(this.items.models);
-      //   this.items.reset(this.$$dashboardTags);
-      // }
       this.get('matchTerm') === '' ? this.set('typeAheadMatches', this.items.toJSON()) : null,
-      window.removeEventListener('chrome:response:tags', ::this.parse),
       omit(e, 'tags');
     }
   })

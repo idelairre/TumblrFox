@@ -40,8 +40,7 @@ module.exports = (function postFormatter() {
     // NOTE: pt is probably premium_tracked, don't need to set that
     const postWrapper = `<div
         id="post_${postData.id}"
-        class="post post_full with_permalink pt reblog_ui_refresh
-        is_${postData.type}
+        class="post post_full with_permalink pt reblog_ui_refresh is_${postData.type}
         ${Tumblr.Prima.currentUser().attributes.name === postData.blog.name ? 'is_mine' : 'not_mine'}
         ${postData.reblogged_from_id ? 'is_reblog' : 'is_original'}
         ${postData.source_title ? 'has_source' : 'no_source' }
@@ -147,5 +146,5 @@ module.exports = (function postFormatter() {
     Tumblr.Events.trigger('DOMEventor:updateRect');
   }
 
-  return Tumblr;
+  return Tumblr.Fox;
 });

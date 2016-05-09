@@ -167,6 +167,7 @@ module.exports = (function searchComponent() {
         });
         return;
       }
+      // go to default behavior
       return this.toggleLoader(true),
       this.searchStarted = !0,
       this.model.set(query),
@@ -195,8 +196,6 @@ module.exports = (function searchComponent() {
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
       this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
-      // this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
-      // this.listenTo(this.model, 'change', ::this.setFilter);
     },
     unbindEvents() {
       // unbind shit

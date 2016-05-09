@@ -24,12 +24,44 @@ function restoreOptions() {
   chrome.storage.sync.get({
     consumerKey: '',
     consumerSecret: '',
-    userName: ''
+    userName: '',
+    totalFollowingCount: 0,
+    totalLikedPostsCount: 0
   }, items => {
     document.getElementById('consumerKey').value = items.consumerKey;
     document.getElementById('consumerSecret').value = items.consumerSecret;
     document.getElementById('userName').value = items.userName;
+    document.getElementById('totalFollowing').textContent = items.totalFollowingCount
+    document.getElementById('totalLikes').textContent = items.totalLikedPostsCount
   });
+  chrome.storage.local.get({
+    cachedLikes: 0,
+    cachedFollowing: 0
+  }, items => {
+    document.getElementById('following').textContent = items.cachedFollowing;
+    document.getElementById('likes').textContent = items.cachedLikes;
+  });
+}
+
+function cacheTags() {
+  let progress = document.getElementById('container');
+  progress.style.display = 'block';
+  let status = document.getElementById('status');
+  const port = chrome.runtime.connect({
+    name: 'cacheTags'
+  });
+  port.onMessage.addListener(response => {
+    let { percentComplete, itemsLeft } = response;
+    if (percentComplete === 'done') {
+      status.textContent = percentComplete;
+      progress.style.display = 'none';
+      return;
+    }
+    status.textContent = `items left: ${itemsLeft}`;
+    bar.animate(percentComplete / 100);
+  });
+  status.textContent = '';
+  port.postMessage({ type: 'cacheTags'});
 }
 
 function cacheLikes() {
@@ -41,9 +73,6 @@ function cacheLikes() {
   });
   port.onMessage.addListener(response => {
     let { percentComplete, itemsLeft } = response;
-    if (percentComplete === 100) {
-      port.postMessage({ type: 'cacheTags'});
-    }
     if (percentComplete === 'done') {
       status.textContent = percentComplete;
       progress.style.display = 'none';
@@ -54,6 +83,27 @@ function cacheLikes() {
   });
   status.textContent = '';
   port.postMessage({ type: 'cacheLikes'});
+}
+
+function cacheFollowing() {
+  let progress = document.getElementById('container');
+  let status = document.getElementById('status');
+  const port = chrome.runtime.connect({
+    name: 'cacheFollowing'
+  });
+  progress.style.display = 'block';
+  port.onMessage.addListener(response => {
+    let { percentComplete, itemsLeft } = response;
+    if (percentComplete === 'done') {
+      status.textContent = percentComplete;
+      progress.style.display = 'none';
+      return;
+    }
+    status.textContent = `items left: ${itemsLeft}`;
+    bar.animate(percentComplete / 100);
+  });
+  status.textContent = '';
+  port.postMessage({ type: 'cacheFollowing'});
 }
 
 function resetCache() {
@@ -99,5 +149,7 @@ let bar = new ProgressBar.Line(container, {
 
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
+document.getElementById('cacheFollowing').addEventListener('click', cacheFollowing);
+document.getElementById('cacheTags').addEventListener('click', cacheTags);
 document.getElementById('cachePosts').addEventListener('click', cacheLikes);
 document.getElementById('resetCache').addEventListener('click', resetCache);

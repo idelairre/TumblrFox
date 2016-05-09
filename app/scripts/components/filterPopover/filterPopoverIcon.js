@@ -13,8 +13,12 @@ module.exports = (function filterIcon() {
     },
     render() {
       this.$el.html(this.template),
-      $('.tab_bar').append(this.$el),
-      this.popover = new FilterPopoverContainer();
+      $('.tab_bar').append(this.$el);
+      if (window.location.href === 'https://www.tumblr.com/dashboard') {
+        this.popover = new FilterPopoverContainer();
+      } else if (window.location.href === 'https://www.tumblr.com/following') {
+        // manage followers
+      }
     },
     togglePopover() {
       if (!Tumblr.Fox.options.rendered) {

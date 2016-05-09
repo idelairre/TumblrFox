@@ -21,17 +21,17 @@ module.exports = (function autopaginator() {
       this.listenTo(Tumblr.Events, 'fox:searchFetch:initial', ::this.start);
       this.listenTo(Tumblr.Events,'fox:searchLikes:started', ::this.start);
       this.listenTo(Tumblr.Events,'fox:searchLikes:finished', ::this.stop);
+      this.listenTo(Tumblr.Events, 'fox:disablePagination', ::this.disableAll);
     },
     start() {
       console.log('[AUTOPAGINATOR] started');
       this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.stop);
-      this.listenTo(Tumblr.Events, 'disable-paginator', this.disableDefaultPagination);
       this.disableDefaultPagination();
     },
     stop() {
       // console.log('[AUTOPAGINATOR] stopped');
-      this.stopListening();
+      this.stopListening(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.on('peepr:close', ::this.start);
     },
     disableAll() {
