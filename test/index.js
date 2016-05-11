@@ -5,13 +5,11 @@ import Main from '../app/scripts/main';
 import AutopaginatorComponent from '../app/scripts/components/autopaginator/autopaginatorComponent';
 import ComponentFetcher from '../app/scripts/utils/componentFetcher';
 import Events from '../app/scripts/utils/events';
-import FilterComponent from '../app/scripts/components/filterPopover/filter/filterComponent';
+import FilterComponent from '../app/scripts/components/filterPopover/filterDropdown/filterDropdownComponent';
 import FilterIcon from '../app/scripts/components/filterPopover/filterPopoverIcon';
-import FilterIconTemplate from '../app/pages/icon/icon.html';
-import FilterTemplate from '../app/scripts/components/filterPopover/filter/filterTemplate.html';
+import FilterTemplate from '../app/scripts/components/filterPopover/filterDropdown/filterDropdownTemplate.html';
 import FilterMenuComponent from '../app/scripts/components/filterPopover/filterMenu/filterMenuComponent';
 import FilterMenuTemplate from '../app/scripts/components/filterPopover/filterMenu/filterMenuTemplate.html';
-import FilterPopoverTemplate from '../app/scripts/components/filterPopover/filterPopoverTemplate.html';
 import FilterPopoverComponent from '../app/scripts/components/filterPopover/filterPopoverComponent';
 import FilterPopoverContainer from '../app/scripts/components/filterPopover/filterPopoverContainer';
 import LoaderComponent from '../app/scripts/components/loader/loaderComponent';
@@ -21,11 +19,9 @@ import PostFormatter from '../app/scripts/utils/postFormatter';
 import SearchTemplate from '../app/scripts/components/filterPopover/search/searchTemplate.html'
 import SearchComponent from '../app/scripts/components/filterPopover/search/searchComponent';
 import SettingsComponent from '../app/scripts/components/filterPopover/settings/settingsComponent';
-import SettingsTemplate from '../app/scripts/components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
-import SettingsPopoverComponent from '../app/scripts/components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
 import userFixture from './data/user.json';
 import blogFixture from './data/blog.json';
-import '../app/styles/popover.css';
+import '../app/styles/popover.less';
 
 chai.use(sinonChai);
 
@@ -52,10 +48,7 @@ function injectTemplates(templates) {
 injectTemplates([
   FilterTemplate,
   FilterMenuTemplate,
-  FilterPopoverTemplate,
-  FilterIconTemplate,
-  SearchTemplate,
-  SettingsTemplate
+  SearchTemplate
 ]);
 
 initialize([
@@ -68,7 +61,6 @@ initialize([
   Main,
   LoaderMixin,
   FilterComponent,
-  SettingsPopoverComponent,
   SettingsComponent,
   SearchComponent,
   FilterMenuComponent,

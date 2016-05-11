@@ -1,4 +1,4 @@
-module.exports = (function filters() {
+module.exports = (function filterDropdown() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
@@ -10,12 +10,6 @@ module.exports = (function filters() {
   const ClickHandler = get('ClickHandler');
   const PopoverComponent = get('PopoverComponent');
   const popover = get('PopoverMixin');
-
-  Date.prototype.toDateInputValue = function() {
-    let local = new Date(this);
-    local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
-    return local.toJSON().slice(0,10);
-  };
 
   let FilterComponent = PopoverComponent.extend({
     className: 'popover--blog-search blog-search-filters-popover',
@@ -35,6 +29,7 @@ module.exports = (function filters() {
         }
       }),
       this.state = this.model.attributes.state,
+      console.log(this.state);
       this.bindEvents();
     },
     render() {

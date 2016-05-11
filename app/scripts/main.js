@@ -13,7 +13,7 @@ module.exports = (function main() {
     Tumblr.Fox.getComponent('PrimaComponent', 'n.uniqueId("component")');
     Tumblr.Fox.getComponent('animation', 'webkitAnimationEnd');
     Tumblr.Fox.getComponent('PopoverMixin', '_crossesView');
-    Tumblr.Fox.getComponent('PopoverComponent', 'u.mixin.applyTo(d.prototype)');
+    Tumblr.Fox.getComponent('PopoverComponent', 'u.mixin.applyTo(d.prototype)'); // this is more like an expanded Backbone view than specifically a popover
     Tumblr.Fox.getComponent('ClickHandler', 'function n(e,t){this.options=s.extend({preventInteraction:!1,ignoreSelectors:[]},t),this._onClick=s.bind(this._onClick,this,e),document.addEventListener("click",this._onClick,!0)}');
     Tumblr.Fox.getComponent('NavSearch', 'nav-search');
     Tumblr.Fox.getComponent('PeeprBlogSearch', 'peepr-blog-search');
@@ -23,7 +23,7 @@ module.exports = (function main() {
     Tumblr.Fox.getComponent('Loader', 'this.createBarLoader()');
     Tumblr.Fox.getComponent('InboxCompose', '"inbox-compose"');
     Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
-    Tumblr.Fox.getComponent('mixin', 'this.mixins=u.filter');
+    Tumblr.Fox.getComponent('Mixin', 'this.mixins=u.filter');
     Tumblr.Fox.getComponent('TumblrModel', 'n.Model.extend({})');
     Tumblr.Fox.getComponent('TumblrView', 'this.cid=s.uniqueId("view")');
     Tumblr.Fox.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
@@ -48,7 +48,7 @@ module.exports = (function main() {
     if (Tumblr.Fox.options.logging) {
       Tumblr.Fox.Events.start();
     }
-    
+
     window.fetchPostData = Tumblr.Fox.fetchPostData;
     window.fetchBlogPosts = Tumblr.Fox.fetchBlogPosts;
     window.require = Tumblr.Fox.require;

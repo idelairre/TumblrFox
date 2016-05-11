@@ -2,30 +2,32 @@ import AutopaginatorComponent from './components/autopaginator/autopaginatorComp
 import bridge from './utils/bridge';
 import componentFetcher from './utils/componentFetcher';
 import ChromeMixin from './mixins/chromeTrigger';
-import tagSearchAutocompleteModel from './models/tagSearchAutocompleteModel';
-import FilterTemplate from './components/filterPopover/filter/filterTemplate.html';
-import filterComponent from './components/filterPopover/filter/filterComponent';
+import TagSearchAutocompleteModel from './models/tagSearchAutocompleteModel';
+import FilterDropdownTemplate from './components/filterPopover/filterDropdown/filterDropdownTemplate.html';
+import FilterDropdownComponent from './components/filterPopover/filterDropdown/filterDropdownComponent';
 import FilterIcon from './components/filterPopover/filterPopoverIcon';
 import filterMenuComponent from './components/filterPopover/filterMenu/filterMenuComponent';
 import FilterMenuTemplate from './components/filterPopover/filterMenu/filterMenuTemplate.html';
 import filterPopoverComponent from './components/filterPopover/filterPopoverComponent';
 import filterPopoverContainer from './components/filterPopover/filterPopoverContainer';
-import FilterPopoverTemplate from './components/filterPopover/filterPopoverTemplate.html';
-import FollowerModel from './models/followerModel';
-import FollowerList from './components/followerList/followerListComponent';
 import FollowerItem from './components/followerList/followerItem/followerItemComponent';
+import FollowerList from './components/followerList/followerListComponent';
+import FollowerModel from './models/followerModel';
+import FollowerSearch from './components/followerList/followerSearch/followerSearchComponent';
 import Events from './utils/events';
-import FilterIconTemplate from '../pages/icon/icon.html';
 import main from './main.js';
 import postFormatter from './utils/postFormatter';
 import PostModel from './models/postModel';
+import PopoverMixin from './mixins/popover';
+import PopoverTemplate from './components/popover/popoverTemplate.html';
+import PopoverComponent from './components/popover/popoverComponent';
 import LoaderComponent from './components/loader/loaderComponent';
-import loaderMixin from './mixins/loaderBar';
-import searchComponent from './components/filterPopover/search/searchComponent';
+import LoaderMixin from './mixins/loaderBar';
+import SearchComponent from './components/filterPopover/search/searchComponent';
+import SearchResultsTemplate from './components/searchResults/searchResultsTemplate.html';
+import SearchResultsComponent from './components/searchResults/searchResultsComponent';
 import SearchTemplate from './components/filterPopover/search/searchTemplate.html'
-import settingsComponent from './components/filterPopover/settings/settingsComponent';
-import SettingsPopoverTemplate from './components/filterPopover/settings/settingsPopover/settingsPopoverTemplate.html';
-import settingsPopoverComponent from './components/filterPopover/settings/settingsPopover/settingsPopoverComponent';
+import SettingsComponent from './components/filterPopover/settings/settingsComponent';
 import Time from './utils/time';
 
 // NOTE: reblog follow button is broken
@@ -39,6 +41,8 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     for (let i = 0; modules.length > i; i += 1) {
       const module = modules[i];
       const app = document.createElement('script');
+      app.setAttribute('id', module.name);
+      app.setAttribute('type', 'text/javascript');
       app.appendChild(document.createTextNode('(' + module + ')();'));
       (document.body || document.head || document.documentElement).appendChild(app);
     }
@@ -51,12 +55,11 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   }
 
   injectTemplates([
-    FilterTemplate,
+    FilterDropdownTemplate,
     FilterMenuTemplate,
-    FilterPopoverTemplate,
-    FilterIconTemplate,
-    SearchTemplate,
-    SettingsPopoverTemplate
+    PopoverTemplate,
+    SearchResultsTemplate,
+    SearchTemplate
   ]);
 
   inject([
@@ -66,21 +69,24 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     Time,
     main,
     ChromeMixin,
-    loaderMixin,
+    LoaderMixin,
+    PopoverMixin,
     FollowerModel,
     PostModel,
+    PopoverComponent,
     AutopaginatorComponent, // depends on PostModel
     LoaderComponent, // must be loaded after PostModel or doesn't listen correctly
-    tagSearchAutocompleteModel,
-    filterComponent,
-    settingsPopoverComponent,
-    settingsComponent,
-    searchComponent,
+    TagSearchAutocompleteModel,
+    FilterDropdownComponent,
+    SettingsComponent,
+    SearchComponent,
+    SearchResultsComponent,
     filterMenuComponent,
     filterPopoverComponent,
     filterPopoverContainer,
     FilterIcon,
     FollowerItem,
+    FollowerSearch,
     FollowerList
   ]);
 }

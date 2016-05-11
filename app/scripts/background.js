@@ -26,6 +26,12 @@ db.version(3).stores({
   tags: 'tag, count'
 });
 
+db.version(4).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, tags, timestamp, type',
+  following: 'name, updated',
+  tags: 'tag, count'
+});
+
 db.open().catch(error => {
   console.error(error);
 });
@@ -149,7 +155,7 @@ function preloadFollowing(callback) {
       let slug = {
         url: `https://api.tumblr.com/v2/user/following`,
         limit: 20,
-        offset: count
+        offset: 0
       };
       console.log('[CACHED FOLLOWING]', count);
       populateFollowing(slug, items, count, callback);
@@ -165,10 +171,10 @@ function populateFollowing(slug, items, followingCount, callback) {
       chrome.storage.local.set({ cachedFollowing: followingCount }, () => {
         let { percentComplete, itemsLeft } = calculatePercent(followingCount, items.totalFollowingCount);
         console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}, [FOLLOWING]: ${followingCount}`);
-        callback({
+        callback ? callback({
           percentComplete: percentComplete,
           itemsLeft: itemsLeft
-        });
+        }) : null;
         next();
       });
     });
@@ -181,7 +187,6 @@ function populateFollowing(slug, items, followingCount, callback) {
     // }
     debounce(oauth.authorize, 10).call(oauth, () => {
       onAuthorized(slug, response => {
-        console.log(response.blogs.length);
         if (response.blogs.length > 0) {
           slug.offset += response.blogs.length;
           items.totalFollowingCount = response.total_blogs;
@@ -379,11 +384,18 @@ function fetchBlogPosts(slug, callback) {
   });
 }
 
-function fetchFollowing(callback) {
-  db.following.toCollection().toArray(followers => {
-    console.log('[FOLLOWERS]', followers);
-    return callback(followers);
-  });
+function fetchFollowing(query, callback) {
+  if (query === 'alphabetically') {
+    db.following.orderBy('name').toArray(followers => {
+      console.log('[FOLLOWERS]', followers);
+      return callback(followers);
+    });
+  } else {
+    db.following.orderBy('updated').reverse().toArray(followers => {
+      console.log('[FOLLOWERS]', followers);
+      return callback(followers);
+    });
+  }
 }
 
 function fetchLikedPosts(slug, callback) {
@@ -497,7 +509,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       fetchBlogPosts(request.payload, sendResponse);
       return true;
     case 'fetchFollowing':
-      fetchFollowing(sendResponse);
+      fetchFollowing(request.payload, sendResponse);
       return true;
     case 'fetchLikes':
       fetchLikedPosts(request.payload, sendResponse);
@@ -510,6 +522,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true
     case 'updateLikes':
       syncLikes(request.payload);
+      return true;
+    case 'updateFollowing':
+      preloadFollowing(sendResponse);
       return true;
     }
 });

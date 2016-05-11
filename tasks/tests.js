@@ -30,7 +30,7 @@ let config = {
   module: {
     noParse: /node_modules\/json-schema\/lib\/validate\.js/,
     loaders: [
-      { test: /\.css$/, loader: 'style-loader!css-loader'  },
+      { test: /\.less$/, loader: 'style-loader!css-loader!less-loader'  },
       { test: /\.html$/, loader: 'html' },
       { test: /\.js$/, loader: 'babel?cacheDirectory', exclude: /node_modules/ },
       { test: /\.json$/, loader: 'json' }

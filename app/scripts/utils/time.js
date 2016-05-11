@@ -10,7 +10,7 @@ module.exports = (function time() {
   }
 
   Tumblr.Fox.decrementTumblrDay = function(date) {
-    return toTumblrTime(fromTumblrTime(date).subtractDays(1));
+    return Tumblr.Fox.toTumblrTime(Tumblr.Fox.fromTumblrTime(date).subtractDays(1));
   }
 
   Tumblr.Fox.prettyDate = function(date) {
@@ -35,6 +35,12 @@ module.exports = (function time() {
   Date.prototype.subtractDays = function(days) {
     this.setDate(this.getDate() - days);
     return this;
+  }
+
+  Date.prototype.toDateInputValue = function() {
+    let local = new Date(this);
+    local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+    return local.toJSON().slice(0,10);
   }
 
   return Tumblr.Fox;

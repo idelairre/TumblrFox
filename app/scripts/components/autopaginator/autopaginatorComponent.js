@@ -9,46 +9,46 @@ module.exports = (function autopaginator() {
   // this component should not fetch posts except upon scrolling
 
   let AutoPaginator = Backbone.View.extend({
+    model: Posts,
     initialize(e) {
-      return this.model = Tumblr.Fox.Posts,
       this.enabled = !1,
       this.defaultPagination = !0,
       this.bindEvents();
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.start);
-      this.listenTo(Tumblr.Events, 'fox:blogFetch:initial', ::this.start);
-      this.listenTo(Tumblr.Events, 'fox:searchFetch:initial', ::this.start);
-      this.listenTo(Tumblr.Events,'fox:searchLikes:started', ::this.start);
-      this.listenTo(Tumblr.Events,'fox:searchLikes:finished', ::this.stop);
+      this.listenTo(Tumblr.Events, 'fox:autopaginator:start', ::this.start);
+      this.listenTo(Tumblr.Events,'fox:autopaginator:stop', ::this.stop);
       this.listenTo(Tumblr.Events, 'fox:disablePagination', ::this.disableAll);
+      this.listenTo(Tumblr.Events, 'indashblog:search:results-end', ::this.stop);
     },
     start() {
       console.log('[AUTOPAGINATOR] started');
+      this.enabled = !0;
       this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.stop);
       this.disableDefaultPagination();
     },
     stop() {
-      // console.log('[AUTOPAGINATOR] stopped');
+      console.log('[AUTOPAGINATOR] stopped');
+      this.enabled = !1;
       this.stopListening(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.on('peepr:close', ::this.start);
     },
     disableAll() {
       console.log('[AUTOPAGINATOR] all pagination disabled');
-      this.enabled = !1,
-      this.defaultPagination = !1,
-      Tumblr.AutoPaginator.stop(),
+      this.enabled = !1;
+      this.defaultPagination = !1;
+      Tumblr.AutoPaginator.stop();
       this.stop();
     },
     enableDefaultPagination() {
-      this.enabled = !1,
-      this.defaultPagination = !0,
+      this.enabled = !1;
+      this.defaultPagination = !0;
       Tumblr.AutoPaginator.start();
     },
     disableDefaultPagination() {
-      this.enabled = !0,
-      this.defaultPagination = !1,
+      this.enabled = !0;
+      this.defaultPagination = !1;
       Tumblr.AutoPaginator.stop();
     },
     onScroll(e) {

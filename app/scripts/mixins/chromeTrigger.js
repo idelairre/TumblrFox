@@ -3,7 +3,7 @@ module.exports = (function chromeTrigger() {
 
   const $ = Backbone.$;
   const { get } = Tumblr.Fox;
-  const Mixin = get('mixin');
+  const Mixin = get('Mixin');
 
   let chromeMixin = new Mixin({
     /**

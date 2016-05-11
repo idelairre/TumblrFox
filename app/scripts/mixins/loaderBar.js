@@ -3,7 +3,7 @@ module.exports = (function loaderMixin() {
 
   const $ = Backbone.$;
   const { get } = Tumblr.Fox;
-  const Mixin = get('mixin');
+  const Mixin = get('Mixin');
   const Loader = get('Loader');
 
   let loader = new Mixin({

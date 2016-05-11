@@ -1,0 +1,42 @@
+<script id="popoverTemplate" type="text/template">
+  <div class="popover popover_menu popover_gradient">
+    <div class="popover_inner">
+      <ul class="popover_inner_list">
+        <% _.each(items, function(item, key, index) { %>
+          <% if (item.header) { %>
+          <li class="popover_subsection">
+            <div class="popover_header">
+              <%= item.header %>
+              <% } %>
+              <% if (typeof item.suffix !== 'undefined') { %>
+                <div class="popover_item_suffix">
+                  <a class="<%= item.suffix.toLowerCase() %>"><%= item.suffix %></a>
+                </div>
+              <% } %>
+            <% if (item.header) { %>
+            </div>
+            <% } %>
+            <ul class="popover_menu_list search_filter_items">
+            <% var listItems = item.listItems %>
+            <% _.each(listItems, function(listItem, key, index) { %>
+              <% var hasIcon = listItem.icon !== '' ? '_icon' : '' %>
+              <li class="popover_menu_item <%= listItem.name.toLowerCase().replace(/\s/g, '_') %>" data-js-menu-item>
+                <% if (listItem.icon && listItem.icon !== 'none') { %>
+                  <i class="popover_menu_item_anchor_icon <%= listItem.icon %>"></i>
+                <% } %>
+                <% if (selection === 'checkmark') { %>
+                  <% var checked = listItem.checked ? 'inline' : 'none'; %>
+                  <i class="icon icon_checkmark" style="float: right; display: <%= checked %>;" data-check="<%= listItem.name.toLowerCase() %>"></i>
+                <% } %>
+                <a class="popover_menu_item_anchor<%= hasIcon %>" data-js-menu-item-link="<%= listItem.name.toLowerCase() %>">
+                  <%= listItem.name %>
+                </a>
+              </li>
+            <% });%>
+            </ul>
+          </li>
+      <% }); %>
+      </ul>
+    </div>
+  </div>
+</script>

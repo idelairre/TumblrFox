@@ -4,21 +4,36 @@ module.exports = (function filterMenuComponent() {
   const $ = Backbone.$;
   const { get, AutoPaginator } = Tumblr.Fox;
   const SearchFilters = get('SearchFilters');
+  const PopoverComponent = get('PopoverComponent');
 
   let FilterMenuComponent = Backbone.View.extend({
     defaults: {
-      disabled: !1
+      disabled: !1,
+      state: {
+        likes: !1,
+        dashboard: !1,
+        user: !0
+      }
     },
     className: 'popover--filter-select-dropdown',
     template: $('#filterMenuTemplate').html(),
     initialize(e) {
+      this.state = this.defaults.state;
       this.disabled = this.defaults.disabled;
     },
     render() {
-      return this.$el.html(this.template),
-      Tumblr.Events.trigger('fox:setFilter', { loggingData: { post_type: 'ANY' } }),
-      this.resetChecks(),
+      const querySlug = {
+        loggingData: {
+          post_type: 'ANY'
+        }
+      };
+      this.$el.html(this.template);
+      Tumblr.Events.trigger('fox:setFilter', querySlug);
+      this.resetChecks();
       this.$('i[data-check="any"]').show();
+      this.rendered = !0;
+      this.trigger('rendered', this);
+      console.log(this);
     },
     events: {
       'click [data-js-menu-item]': 'toggleSelection'
@@ -37,6 +52,7 @@ module.exports = (function filterMenuComponent() {
       if (this.disabled) {
         return;
       }
+      console.log('[FILTER MENU STATE]', this.state);
       const type = $(e.target).data('js-menu-item-link');
       this.resetChecks(),
       this.$(`i[data-check="${type}"]`).show();
@@ -47,10 +63,16 @@ module.exports = (function filterMenuComponent() {
       }
     },
     selectFilter(type) {
-      Tumblr.Events.trigger('fox:setFilter', { loggingData: { post_type: type.toUpperCase() } });
+      const querySlug = {
+        loggingData: {
+          post_type: type.toUpperCase()
+        }
+      };
+      Tumblr.Events.trigger('fox:setFilter', querySlug);
     },
     filterAndFetchPosts(type) {
       Tumblr.Events.trigger('fox:apiFetch:initial', type);
+      Tumblr.Events.trigger('fox:autopaginator:start');
     }
   });
 

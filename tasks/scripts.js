@@ -31,8 +31,8 @@ gulp.task('scripts', (cb) => {
           exclude: /node_modules/
         }],
         loaders: [{
-          test: /\.css$/,
-          loader: 'style-loader!css-loader'
+          test: /\.less$/,
+          loader: 'style-loader!css-loader!less-loader'
         }, {
           test: /\.html$/,
           loader: 'html'

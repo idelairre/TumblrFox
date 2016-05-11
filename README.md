@@ -1,31 +1,33 @@
 # Tumblr (fox) filter
 
+## Features
 
++ Filter and search your dashboard posts, liked posts and user posts by type, reblog status (original or reblog), popularity, recentness, tag or by date
++ Filter and search through tumblelogs you're following, order alphabetically or by how recently they were updated
++ Claim your data: Download and cache your posts and users you are following
++ Tumblr client-side data (primarily Backbone models and collections) are used where possible to benefit from improved performance and richer data over the public api.
 
-## What it is
+## tl:dr
 
-A Chrome extension that adds a new navigation tab that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag.
+A Chrome extension that adds a new navigation tab and dropdown that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag.
 
-The idea is to aggregate Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
+## The idea
 
-Tumblr client-side code (primarily Backbone models and collections) are used where possible to benefit from improved performance over the public api.
++ Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
++ Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier.
++ Leverage es6 + es7 features while maintaining a code style consistent with Tumblr's code base
 
-## Notes
+## Note
 
 This is liable to break as Tumblr updates and is not by any means official or fully supported by me. This is pretty much an experiment in using the objects floating around the Tumblr window to try and make new components using Tumblr's custom Backbone code.
 
-Basically the app injects a bunch of scripts that expand the Tumblr window object and listens for window events that allow it to make requests and handoff data using chrome extension scripts.
-
-The Tumblr.Fox thing is an arbitrary namespace based off my dumb Tumblr handle that is basically a weird ES5/6-ey looking module pattern which I had to opt for since import syntax does not work with script injection and I had to make ```require``` behave differently by assigning it to the webpackJsonp window object so I could use Tumblr's mixins and components (see dev notes below).
-
-## Relevant dev posts
+## Relevant development posts
 
 1. http://seveneyedfox.tumblr.com/post/142342782841/tumblr-notes-pt-1
 2. http://seveneyedfox.tumblr.com/post/142392103991/tumblr-notes-pt-2
 3. http://seveneyedfox.tumblr.com/post/142476902926/tumblr-notes-pt-3
 4. http://seveneyedfox.tumblr.com/post/142659709101/tumblr-notesthotz-pt-4
 5. http://seveneyedfox.tumblr.com/post/143001544861/tumblr-notes-pt-5
-
 
 ## Installation
 
@@ -49,10 +51,10 @@ Run `$ npm run start` and load the `dist`-directory into chrome.
 
 ### Test
 
-		$ npm run tests
+	$ npm run tests
 
 ### Pack
 
 Zips your `dist` directory and saves it in the `packages` directory.
 
-    $ gulp pack --vendor=firefox
+    $ gulp pack --vendor=chrome

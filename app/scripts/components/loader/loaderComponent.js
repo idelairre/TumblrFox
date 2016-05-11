@@ -16,10 +16,12 @@ module.exports = (function loader() {
     },
     bindEvents() {
       this.listenTo(this.model, 'change:loading', ::this.setLoading);
+      this.listenTo(Tumblr.Events, 'indashblog:search:results-end', ::this.setLoading);
     },
     setLoading(e) {
-      console.log('[LOADING?]', e.loading);
-      if (e.loading) {
+      // console.log('[LOADING?]', e);
+      // this.loading = !!e.loading;
+      if (e && e.loading) {
         this.show();
       } else {
         setTimeout(::this.hide, 300);

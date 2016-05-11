@@ -53,9 +53,6 @@ module.exports = (function followerItem() {
   let FollowerItem = Backbone.View.extend({
     template: template($(followerTemplate).html()),
     className: 'follower clearfix',
-    initialize(e) {
-      this.model = e;
-    },
     render() {
       this.$el.removeAttributes({ ignore: 'class' });
       if (this.model.collection.indexOf(this.model) % 2 === 0) {
@@ -63,11 +60,9 @@ module.exports = (function followerItem() {
       }
       this.model.attributes.avatar = this.model.attributes.avatar[1];
       this.model.attributes.updated = Tumblr.Fox.prettyDate(Tumblr.Fox.fromTumblrTime(this.model.attributes.updated));
-      this.model.attributes.can_subscribe = true; // TODO: findout how to get this data
+      this.model.attributes.can_subscribe = this.model.attributes.can_subscribe || true; // TODO: findout how to get this data
       this.model.attributes.formkey = constants.formkey;
       this.$el = this.$el.html(this.template(this.model));
-      this.$followButton = this.$el.find('button.follow_button');
-      this.$unfollowButton = this.$el.find('button.unfollow_button');
       this.$popover = new Tumblr.TumblelogPopover.PopticaInfoPopover({
         el: this.$el.find('.poptica_header'),
         auto_show: false,
@@ -95,17 +90,45 @@ module.exports = (function followerItem() {
       'click div.poptica_header': 'togglePopover'
     },
     follow(e) {
+      e.stopPropagation();
       e.preventDefault();
-      this.$followButton.hide();
-      this.$unfollowButton.show();
+      const followButton = this.$el.find('button.follow_button');
+      const tumblelogName = followButton.attr('data-name');
+      Tumblr.follow({
+        tumblelog: tumblelogName,
+        source: 'FOLLOW_SOURCE_FOLLOWING_PAGE'
+      }, {
+        success() {
+          $(`#loading_${tumblelogName}`).show();
+          $(`#follow_button_${tumblelogName}`).hide();
+          $(`#unfollow_button_${tumblelogName}`).show();
+        },
+        complete() {
+          $(`#loading_${tumblelogName}`).hide();
+        }
+      });
+      this.capturing = (Tumblr.Capture) ? new Tumblr.Capture.CrushClick() : null;
       console.log('[FOLLOW] called');
     },
     unfollow(e) {
+      e.stopPropagation();
       e.preventDefault();
-      this.$followButton.show();
-      this.$unfollowButton.hide();
-      console.log(e.target);
-      console.log('[UNFOLLOW] called');
+      const unfollowButton = this.$el.find('button.unfollow_button');
+      const tumblelogName = unfollowButton.attr('data-name');
+      Tumblr.unfollow({
+        tumblelog: tumblelogName,
+        source: 'UNFOLLOW_SOURCE_FOLLOWING_PAGE'
+      }, {
+        success() {
+          $(`#loading_${tumblelogName}`).show();
+          $(`#follow_button_${tumblelogName}`).show();
+          $(`#unfollow_button_${tumblelogName}`).hide();
+        },
+        complete() {
+          $(`#loading_${tumblelogName}`).hide();
+        }
+      });
+      this.capturing = (Tumblr.Capture) ? new Tumblr.Capture.CrushClick() : null;
     },
     togglePopover(e) {
       e.preventDefault();
@@ -114,16 +137,7 @@ module.exports = (function followerItem() {
     }
   });
 
-  Tumblr.Fox.FollowerItemComponent = FollowerItem;
+  Tumblr.Fox.FollowerItem = FollowerItem;
 
-  return Tumblr.Fox.FollowerItemComponent;
+  return Tumblr.Fox.FollowerItem;
 })
-
-/**
-* @param {Object} Ajax request params. Recognized Parameters:
-*   "tumblelog" {String} Tumblelog name.
-*   "source" {String} The follow source (all caps).
-*/
-// follow(tumblelog, source) {
-//   return Tumble.follow({ tumblelog, source });
-// },

@@ -55,6 +55,7 @@ module.exports = {
     this.listenTo('chrome:fetch:tags', response => {
       this.trigger('chrome:response:tags', response);
     });
+    this.listenTo('chrome:update:following');
     this.listenTo('chrome:update:likes');
   }
 }

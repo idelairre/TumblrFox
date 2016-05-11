@@ -7,11 +7,24 @@ module.exports = (function filterPopoverComponent() {
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
   const PopoverComponent = get('PopoverComponent');
+  const PeeprBlogSearch = get('PeeprBlogSearch');
   const ClickHandler = get('ClickHandler');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
   // NOTE: teardown is not consistently resetting the original peepr-search component
+
+  const filterPopoverTemplate = `
+    <script id="filterPopoverTemplate" type="text/template">
+      <div id="filterPopoverMenu" class="popover popover_menu popover_gradient" style="display: block; width: 240px; margin-top: -4px;">
+        <div class="popover_inner">
+          <ul class="popover_inner_list">
+            <div class="filter-menu" data-subview="filterMenu"></div>
+            <div data-subview="searchFilter"></div>
+          </ul>
+        </div>
+      </div>
+    </script>`;
 
   let FilterPopoverComponent = PopoverComponent.extend({
     className: 'popover--filter-popover',
@@ -24,7 +37,7 @@ module.exports = (function filterPopoverComponent() {
       }
     },
     mixins: [popover],
-    template: $('#filterPopoverTemplate').html(),
+    template: $(filterPopoverTemplate).html(),
     subviews: {
       filterMenu: {
         constructor: FilterMenuComponent
@@ -40,8 +53,9 @@ module.exports = (function filterPopoverComponent() {
     initialize(e) {
       this.options = Object.assign({}, this.defaults, e),
       this.state = this.defaults.state,
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', this.setState),
-      this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', this.hide);
+      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setState),
+      this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);
+      this.listenTo(this, 'all', console.log.bind(console, '[FILTER POPOVER]'));
     },
     render() {
       return this.$el.html(this.template),
@@ -52,11 +66,13 @@ module.exports = (function filterPopoverComponent() {
         this.$filterPopoverMenu.addClass('popover--active'),
         this.bindClickOutside();
       }, 1),
-      console.log('[RENDERED COMPONENT]', this),
+      // console.log('[RENDERED COMPONENT]', this),
       this;
     },
     afterRenderSubviews() {
-      this.setState('user');
+      setTimeout(() => {
+        this.setState('user');
+      }, 1);
     },
     bindClickOutside() {
       const options = {
@@ -77,23 +93,31 @@ module.exports = (function filterPopoverComponent() {
       this.clickOutside = null,
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
-    setState(state) {
-      for (let key in this.state) {
-        this.state[key] = !1;
-        if (key.includes(state)) {
-          this.state[key] = !0;
+    setState(state) { // NOTE: this is terrible, maybe make a mixin to manage state?
+      console.log('[SET STATE]', state);
+      try {
+        for (let key in this.state) {
+          this.state[key] = !1;
+          if (key.includes(state)) {
+            this.state[key] = !0;
+          }
         }
+        each(this._subviews, subview => {
+          console.log('[CHANGE STATE?]', subview.state !== this.state);
+          if (subview.state !== this.state) {
+            subview.state = this.state;
+            if (subview._subviews) {
+              console.log('[SUBVIEW]', subview);
+              this.setState.call(subview, state);
+            }
+            if (subview.model) {
+              subview.model.set('state', this.state);
+            }
+          }
+        });
+      } catch (e) {
+        console.error(e);
       }
-      console.log('[STATE]', this, state);
-      each(this._subviews, subview => {
-        subview.state = this.state;
-        if (subview._subviews) {
-          this.setState.call(subview, state);
-        } else if (subview.model) {
-          subview.model.set('state', this.state);
-        }
-      });
-      console.log('[SUBVIEWS]', this._subviews);
     },
     hide() {
       Tumblr.Events.trigger('popover:close', this),
@@ -107,7 +131,7 @@ module.exports = (function filterPopoverComponent() {
       this.$el.css({ display: 'none' });
     },
     show() {
-      console.log('[FILTER COMPONENT]', this),
+      // console.log('[FILTER COMPONENT]', this),
       Tumblr.Events.trigger('popover:open', this),
       this.bindClickOutside(),
       this.$pinned.addClass('active'),
@@ -117,6 +141,8 @@ module.exports = (function filterPopoverComponent() {
       }, 1);
     }
   })
+
+  // Object.assign(FilterPopoverComponent, PeeprBlogSearch.prototype);
 
   Tumblr.Fox.FilterPopoverComponent = FilterPopoverComponent;
 

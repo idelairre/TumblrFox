@@ -29,7 +29,8 @@ module.exports = (function events() {
       'VideoPlayer:initialLoad',
       'VideoPlayer:cacheUnload',
       'fox:postFetch:started',
-      'fox:postFetch:finished'
+      'fox:postFetch:finished',
+      'DOMEventor:flatscroll'
     ],
     log(e) {
       if (!Tumblr.Fox.Events.ignore.includes(e) && Tumblr.Fox.options.logging) {

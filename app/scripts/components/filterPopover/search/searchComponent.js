@@ -95,7 +95,7 @@ module.exports = (function searchComponent() {
       }
     }),
     initialize(e) {
-      return this.options = Object.assign({}, this.defaults, e),
+      this.options = Object.assign({}, this.defaults, e),
       this.state = this.defaults.state,
       this.searchActive = !1,
       this.blog = e.blog,
@@ -130,49 +130,48 @@ module.exports = (function searchComponent() {
     evalItems(data) {
       console.log('[TAGS]', data);
       if (isEmpty(data.tags)) {
-        this.input.blogSearchAutocompleteModel.items.reset([]);
+        console.log('[INPUT]', this.input);
+        // this.input.blogSearchAutocompleteModel.items.reset([]);
         this.input.$el.find('input').attr('placeholder', `${this.model.get('blogname')} has no tags`);
       }
     },
     selectBlog(e) {
       e.preventDefault();
       const tumblelog = this.$(e.target).parent().find('h3').text();
-      return this.model.set('blogname', tumblelog),
-      this.input.blogSearchAutocompleteModel.set('blogname', tumblelog),
-      this.input.$el.find('input').attr('placeholder', `Search ${tumblelog}`),
-      this.input.$el.find('input').val(''),
-      this.input.blogSearchAutocompleteModel.fetch().then(this.evalItems),
-      this.set('showUserList', this.showUserList = !this.showUserList),
-      this.trigger(Tumblr.Events, 'fox:setSearchState', 'user'),
-      Posts.state.apiFetch = !1,
+      this.model.set('blogname', tumblelog);
+      this.input.blogSearchAutocompleteModel.set('blogname', tumblelog);
+      this.input.$el.find('input').attr('placeholder', `Search ${tumblelog}`);
+      this.input.$el.find('input').val('');
+      this.input.blogSearchAutocompleteModel.fetch().then(::this.evalItems);
+      this.set('showUserList', this.showUserList = !this.showUserList);
+      this.trigger(Tumblr.Events, 'fox:setSearchState', 'user');
       Tumblr.AutoPaginator.stop();
+      Posts.state.apiFetch = !1;
     },
     log(query) {
-      if (query === 'search-complete' || this.model.previous('term') === query.term) { // || this.model.previous('term') === query.term
+      console.log('[QUERY]', query);
+      if (query === 'search-complete' || query === 'search-results-end' || this.model.previous('term') === query.term) { // || this.model.previous('term') === query.term
         this.toggleLoader(false);
         return;
       }
       if (this.state.likes) {
         this.toggleLoader(true),
-        console.log('[QUERY]', this.model.attributes),
         Posts.searchLikes(this.model.attributes).then(() => {
           this.toggleLoader(false);
         });
         return;
       } else if (this.state.dashboard) {
         this.toggleLoader(true),
-        console.log('[QUERY]', this.model.attributes),
         Posts.searchDashboard(this.model.attributes).then(() => {
           this.toggleLoader(false);
         });
         return;
       }
-      // go to default behavior
+      // go to weird default Tumblr behavior
       return this.toggleLoader(true),
       this.searchStarted = !0,
       this.model.set(query),
-      this.model.fetch(),
-      console.log('[QUERY]', this.model.attributes);
+      this.model.fetch();
     },
     events: {
       'submit .dashboard-search-form': 'formSubmitHandler',
