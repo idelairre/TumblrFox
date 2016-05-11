@@ -40,9 +40,9 @@ function ChromeExOAuth(url_request_token, url_auth_token, url_access_token,
       }
     }
   }
-};
+}
 
-/*******************************************************************************
+/** *****************************************************************************
  * PUBLIC API METHODS
  * Call these from your background page.
  ******************************************************************************/
@@ -64,7 +64,7 @@ function ChromeExOAuth(url_request_token, url_auth_token, url_access_token,
  *             http://code.google.com/apis/accounts/docs/OAuth_ref.html#GetAuth
  * @return {ChromeExOAuth} An initialized ChromeExOAuth object.
  */
-ChromeExOAuth.initBackgroundPage = function(oauth_config) {
+ChromeExOAuth.initBackgroundPage = function (oauth_config) {
   window.chromeExOAuthConfig = oauth_config;
   window.chromeExOAuth = ChromeExOAuth.fromConfig(oauth_config);
   window.chromeExOAuthRedirectStarted = false;
@@ -72,14 +72,14 @@ ChromeExOAuth.initBackgroundPage = function(oauth_config) {
 
   var url_match = chrome.extension.getURL(window.chromeExOAuth.callback_page);
   var tabs = {};
-  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.url &&
       changeInfo.url.substr(0, url_match.length) === url_match &&
       changeInfo.url != tabs[tabId] &&
       window.chromeExOAuthRequestingAccess == false) {
       chrome.tabs.create({
         'url': changeInfo.url
-      }, function(tab) {
+      }, function (tab) {
         tabs[tab.id] = tab.url;
         chrome.tabs.remove(tabId);
       });
@@ -97,11 +97,11 @@ ChromeExOAuth.initBackgroundPage = function(oauth_config) {
  *         token {String} The OAuth access token.
  *         secret {String} The OAuth access token secret.
  */
-ChromeExOAuth.prototype.authorize = function(callback) {
+ChromeExOAuth.prototype.authorize = function (callback) {
   if (this.hasToken()) {
     callback(this.getToken(), this.getTokenSecret());
   } else {
-    window.chromeExOAuthOnAuthorize = function(token, secret) {
+    window.chromeExOAuthOnAuthorize = function (token, secret) {
       callback(token, secret);
     };
     chrome.tabs.create({
@@ -114,7 +114,7 @@ ChromeExOAuth.prototype.authorize = function(callback) {
  * Clears any OAuth tokens stored for this configuration.  Effectively a
  * "logout" of the configured OAuth API.
  */
-ChromeExOAuth.prototype.clearTokens = function() {
+ChromeExOAuth.prototype.clearTokens = function () {
   delete localStorage[this.key_token + encodeURI(this.oauth_scope)];
   delete localStorage[this.key_token_secret + encodeURI(this.oauth_scope)];
 };
@@ -125,7 +125,7 @@ ChromeExOAuth.prototype.clearTokens = function() {
  * the configured OAuth API.
  * @return {Boolean} True if an access token exists.
  */
-ChromeExOAuth.prototype.hasToken = function() {
+ChromeExOAuth.prototype.hasToken = function () {
   return !!this.getToken();
 };
 
@@ -146,7 +146,7 @@ ChromeExOAuth.prototype.hasToken = function() {
  *         "parameters" {Object} Query parameters to include in the request.
  *         "headers" {Object} Additional headers to include in the request.
  */
-ChromeExOAuth.prototype.sendSignedRequest = function(url, callback, opt_params) {
+ChromeExOAuth.prototype.sendSignedRequest = function (url, callback, opt_params) {
   var method = opt_params && opt_params['method'] || 'GET';
   var body = opt_params && opt_params['body'] || null;
   var params = opt_params && opt_params['parameters'] || {};
@@ -154,7 +154,7 @@ ChromeExOAuth.prototype.sendSignedRequest = function(url, callback, opt_params) 
 
   var signedUrl = this.signURL(url, method, params);
 
-  ChromeExOAuth.sendRequest(method, signedUrl, headers, body, function(xhr) {
+  ChromeExOAuth.sendRequest(method, signedUrl, headers, body, function (xhr) {
     if (xhr.readyState == 4) {
       callback(xhr.responseText, xhr);
     }
@@ -170,7 +170,7 @@ ChromeExOAuth.prototype.sendSignedRequest = function(url, callback, opt_params) 
  * @param {Object} opt_params Query parameters to include in the request.
  * @return {String} The base url plus any query params plus any OAuth params.
  */
-ChromeExOAuth.prototype.signURL = function(url, method, opt_params) {
+ChromeExOAuth.prototype.signURL = function (url, method, opt_params) {
   var token = this.getToken();
   var secret = this.getTokenSecret();
   if (!token || !secret) {
@@ -202,7 +202,7 @@ ChromeExOAuth.prototype.signURL = function(url, method, opt_params) {
  * @param {Object} opt_params Query parameters to include in the request.
  * @return {String} An Authorization header containing the oauth_* params.
  */
-ChromeExOAuth.prototype.getAuthorizationHeader = function(url, method,
+ChromeExOAuth.prototype.getAuthorizationHeader = function (url, method,
   opt_params) {
   var token = this.getToken();
   var secret = this.getTokenSecret();
@@ -227,7 +227,7 @@ ChromeExOAuth.prototype.getAuthorizationHeader = function(url, method,
   });
 };
 
-/*******************************************************************************
+/** *****************************************************************************
  * PRIVATE API METHODS
  * Used by the library.  There should be no need to call these methods directly.
  ******************************************************************************/
@@ -248,7 +248,7 @@ ChromeExOAuth.prototype.getAuthorizationHeader = function(url, method,
  *             http://code.google.com/apis/accounts/docs/OAuth_ref.html#GetAuth
  * @return {ChromeExOAuth} An initialized ChromeExOAuth object.
  */
-ChromeExOAuth.fromConfig = function(oauth_config) {
+ChromeExOAuth.fromConfig = function (oauth_config) {
   return new ChromeExOAuth(
     oauth_config['request_url'],
     oauth_config['authorize_url'],
@@ -267,18 +267,18 @@ ChromeExOAuth.fromConfig = function(oauth_config) {
  * the OAuth flow.  Once an access token is obtained, this function closes
  * chrome_ex_oauth.html.
  */
-ChromeExOAuth.initCallbackPage = function() {
+ChromeExOAuth.initCallbackPage = function () {
   var background_page = chrome.extension.getBackgroundPage();
   var oauth_config = background_page.chromeExOAuthConfig;
   var oauth = ChromeExOAuth.fromConfig(oauth_config);
   background_page.chromeExOAuthRedirectStarted = true;
-  oauth.initOAuthFlow(function(token, secret) {
+  oauth.initOAuthFlow(function (token, secret) {
     background_page.chromeExOAuthOnAuthorize(token, secret);
     background_page.chromeExOAuthRedirectStarted = false;
     chrome.tabs.query({
       active: true,
       currentWindow: true
-    }, function(tabs) {
+    }, function (tabs) {
       chrome.tabs.remove(tabs[0].id);
     });
   });
@@ -294,11 +294,11 @@ ChromeExOAuth.initCallbackPage = function() {
  *     ready state changes.  See documentation for XMLHttpRequest's
  *     onreadystatechange handler for more information.
  */
-ChromeExOAuth.sendRequest = function(method, url, headers, body, callback) {
+ChromeExOAuth.sendRequest = function (method, url, headers, body, callback) {
   var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function(data) {
+  xhr.onreadystatechange = function (data) {
     callback(xhr, data);
-  }
+  };
   xhr.open(method, url, true);
   if (headers) {
     for (var header in headers) {
@@ -316,7 +316,7 @@ ChromeExOAuth.sendRequest = function(method, url, headers, body, callback) {
  * @return {Object} An object representing the decoded key/value pairs found
  *     in the encoded string.
  */
-ChromeExOAuth.formDecode = function(encoded) {
+ChromeExOAuth.formDecode = function (encoded) {
   var params = encoded.split("&");
   var decoded = {};
   for (var i = 0, param; param = params[i]; i++) {
@@ -339,7 +339,7 @@ ChromeExOAuth.formDecode = function(encoded) {
  * @return {Object} A object representing any key/value pairs found in the
  *     current window's querystring.
  */
-ChromeExOAuth.getQueryStringParams = function() {
+ChromeExOAuth.getQueryStringParams = function () {
   var urlparts = window.location.href.split("?");
   if (urlparts.length >= 2) {
     var querystring = urlparts.slice(1).join("?");
@@ -356,9 +356,9 @@ ChromeExOAuth.getQueryStringParams = function() {
  * @param {Object} obj The object to bind to the function's "this".
  * @return {Function} A closure that will call the bound function.
  */
-ChromeExOAuth.bind = function(func, obj) {
+ChromeExOAuth.bind = function (func, obj) {
   var newargs = Array.prototype.slice.call(arguments).slice(2);
-  return function() {
+  return function () {
     var combinedargs = newargs.concat(Array.prototype.slice.call(arguments));
     func.apply(obj, combinedargs);
   };
@@ -368,7 +368,7 @@ ChromeExOAuth.bind = function(func, obj) {
  * Encodes a value according to the RFC3986 specification.
  * @param {String} val The string to encode.
  */
-ChromeExOAuth.toRfc3986 = function(val) {
+ChromeExOAuth.toRfc3986 = function (val) {
   return encodeURIComponent(val)
     .replace(/\!/g, "%21")
     .replace(/\*/g, "%2A")
@@ -381,7 +381,7 @@ ChromeExOAuth.toRfc3986 = function(val) {
  * Decodes a string that has been encoded according to RFC3986.
  * @param {String} val The string to decode.
  */
-ChromeExOAuth.fromRfc3986 = function(val) {
+ChromeExOAuth.fromRfc3986 = function (val) {
   var tmp = val
     .replace(/%21/g, "!")
     .replace(/%2A/g, "*")
@@ -399,7 +399,7 @@ ChromeExOAuth.fromRfc3986 = function(val) {
  * @return {String} The URL with URL-encoded versions of the key and value
  *     appended, prefixing them with "&" or "?" as needed.
  */
-ChromeExOAuth.addURLParam = function(url, key, value) {
+ChromeExOAuth.addURLParam = function (url, key, value) {
   var sep = (url.indexOf('?') >= 0) ? "&" : "?";
   return url + sep +
     ChromeExOAuth.toRfc3986(key) + "=" + ChromeExOAuth.toRfc3986(value);
@@ -409,7 +409,7 @@ ChromeExOAuth.addURLParam = function(url, key, value) {
  * Stores an OAuth token for the configured scope.
  * @param {String} token The token to store.
  */
-ChromeExOAuth.prototype.setToken = function(token) {
+ChromeExOAuth.prototype.setToken = function (token) {
   localStorage[this.key_token + encodeURI(this.oauth_scope)] = token;
 };
 
@@ -417,7 +417,7 @@ ChromeExOAuth.prototype.setToken = function(token) {
  * Retrieves any stored token for the configured scope.
  * @return {String} The stored token.
  */
-ChromeExOAuth.prototype.getToken = function() {
+ChromeExOAuth.prototype.getToken = function () {
   return localStorage[this.key_token + encodeURI(this.oauth_scope)];
 };
 
@@ -425,7 +425,7 @@ ChromeExOAuth.prototype.getToken = function() {
  * Stores an OAuth token secret for the configured scope.
  * @param {String} secret The secret to store.
  */
-ChromeExOAuth.prototype.setTokenSecret = function(secret) {
+ChromeExOAuth.prototype.setTokenSecret = function (secret) {
   localStorage[this.key_token_secret + encodeURI(this.oauth_scope)] = secret;
 };
 
@@ -433,7 +433,7 @@ ChromeExOAuth.prototype.setTokenSecret = function(secret) {
  * Retrieves any stored secret for the configured scope.
  * @return {String} The stored secret.
  */
-ChromeExOAuth.prototype.getTokenSecret = function() {
+ChromeExOAuth.prototype.getTokenSecret = function () {
   return localStorage[this.key_token_secret + encodeURI(this.oauth_scope)];
 };
 
@@ -449,18 +449,18 @@ ChromeExOAuth.prototype.getTokenSecret = function() {
  *         token {String} The OAuth access token.
  *         secret {String} The OAuth access token secret.
  */
-ChromeExOAuth.prototype.initOAuthFlow = function(callback) {
+ChromeExOAuth.prototype.initOAuthFlow = function (callback) {
   if (!this.hasToken()) {
     var params = ChromeExOAuth.getQueryStringParams();
     if (params['chromeexoauthcallback'] == 'true') {
       var oauth_token = params['oauth_token'];
-      var oauth_verifier = params['oauth_verifier']
+      var oauth_verifier = params['oauth_verifier'];
       this.getAccessToken(oauth_token, oauth_verifier, callback);
     } else {
       var request_params = {
         'url_callback_param': 'chromeexoauthcallback'
-      }
-      this.getRequestToken(function(url) {
+      };
+      this.getRequestToken(function (url) {
         window.location.href = url;
       }, request_params);
     }
@@ -482,7 +482,7 @@ ChromeExOAuth.prototype.initOAuthFlow = function(callback) {
  *             URL in order to indicate to this library that a redirect has
  *             taken place.
  */
-ChromeExOAuth.prototype.getRequestToken = function(callback, opt_args) {
+ChromeExOAuth.prototype.getRequestToken = function (callback, opt_args) {
   if (typeof callback !== "function") {
     throw new Error("Specified callback must be a function.");
   }
@@ -523,7 +523,7 @@ ChromeExOAuth.prototype.getRequestToken = function(callback, opt_args) {
  * @param {XMLHttpRequest} xhr The XMLHttpRequest object used to fetch the
  *     request token.
  */
-ChromeExOAuth.prototype.onRequestToken = function(callback, xhr) {
+ChromeExOAuth.prototype.onRequestToken = function (callback, xhr) {
   if (xhr.readyState == 4) {
     if (xhr.status == 200) {
       var params = ChromeExOAuth.formDecode(xhr.responseText);
@@ -552,7 +552,7 @@ ChromeExOAuth.prototype.onRequestToken = function(callback, xhr) {
  *         token {String} The OAuth access token.
  *         secret {String} The OAuth access token secret.
  */
-ChromeExOAuth.prototype.getAccessToken = function(oauth_token, oauth_verifier,
+ChromeExOAuth.prototype.getAccessToken = function (oauth_token, oauth_verifier,
   callback) {
   if (typeof callback !== "function") {
     throw new Error("Specified callback must be a function.");
@@ -591,7 +591,7 @@ ChromeExOAuth.prototype.getAccessToken = function(oauth_token, oauth_verifier,
  * @param {XMLHttpRequest} xhr The XMLHttpRequest object used to fetch the
  *     access token.
  */
-ChromeExOAuth.prototype.onAccessToken = function(callback, xhr) {
+ChromeExOAuth.prototype.onAccessToken = function (callback, xhr) {
   if (xhr.readyState == 4) {
     var bg = chrome.extension.getBackgroundPage();
     if (xhr.status == 200) {

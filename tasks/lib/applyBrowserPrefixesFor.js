@@ -15,17 +15,17 @@
  * @param  {Object} manifest
  * @return {Object}
  */
-export default function applyBrowserPrefixesFor(vendor){
-  return function(manifest){
-    Object.keys(manifest).forEach((key)=>{
+export default function applyBrowserPrefixesFor(vendor) {
+  return function (manifest) {
+    Object.keys(manifest).forEach((key) => {
       let match = key.match(/^__(chrome|firefox|opera)__(.*)/);
 
-      if(!match){
+      if (!match) {
         return;
       }
 
       // Swap key with non prefixed name
-      if(match[1] === vendor){
+      if (match[1] === vendor) {
         manifest[match[2]] = manifest[key];
       }
 
@@ -35,5 +35,5 @@ export default function applyBrowserPrefixesFor(vendor){
 
     });
     return manifest;
-  }
-};
+  };
+}

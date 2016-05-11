@@ -4,8 +4,8 @@ import zip from 'gulp-zip';
 import packageDetails from '../package.json';
 import args from './lib/args';
 
-function getPackFileType(){
-  switch(args.vendor){
+function getPackFileType() {
+  switch (args.vendor) {
     case 'firefox':
       return '.xpi';
     default:

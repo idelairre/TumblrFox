@@ -3,11 +3,8 @@ module.exports = (function followerList() {
 
   const $ = Backbone.$;
   const { debounce, each } = _;
-  const { Tumblelog } = Tumblr.Prima.Models;
-  const { currentUser } = Tumblr.Prima;
   const { FollowerModel, FollowerItem, FollowerSearch } = Tumblr.Fox;
 
-  // TODO: create sort options button, add filters (most recently updated, alphabetically, etc...)
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
   // states:
@@ -15,7 +12,7 @@ module.exports = (function followerList() {
   //    alphabetically => clear elements => onScroll => populate followers from model
   //    updated => clear elements => onScroll => populate followers from model
 
-  let FollowerList = Backbone.View.extend({
+  const FollowerList = Backbone.View.extend({
     defaults: {
       offset: 25,
       limit: 25,
@@ -26,16 +23,16 @@ module.exports = (function followerList() {
       },
       query: 'followed'
     },
-    initialize(e) {
+    initialize() {
       this.options = this.defaults;
       this.state = this.defaults.state;
-      this.model = new FollowerModel(),
-      this.$followers = this.$('.follower'),
-      this.$followers = this.$followers.slice(1, this.$followers.length),
+      this.model = new FollowerModel();
+      this.$followers = this.$('.follower');
+      this.$followers = this.$followers.slice(1, this.$followers.length);
       this.$followerSearch = new FollowerSearch({
         el: $('#invite_someone')
-      }),
-      this.$pagination = this.$('#pagination'), // insert followers before pagination element
+      });
+      this.$pagination = this.$('#pagination'); // insert followers before pagination element
       this.$pagination.hide();
       this.bindEvents();
     },
@@ -55,7 +52,7 @@ module.exports = (function followerList() {
     fetch(option) {
       option = option.split(' ');
       option = option[option.length - 1];
-      for (let key in this.state) {
+      for (const key in this.state) {
         if (option !== key) {
           this.state[key] = false;
         }
@@ -85,27 +82,27 @@ module.exports = (function followerList() {
       if (this.state.followed) {
         this.model.fetch(this.options.query).then(followers => {
           this.renderFollowerViews(followers);
-        })
+        });
       } else {
-        let followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
+        const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
         followers.map(follower => {
-          this.renderFollower(follower);
+          return this.renderFollower(follower);
         });
       }
     },
     populate(e) {
-      let followers = e.models.slice(0, this.options.limit);
+      const followers = e.models.slice(0, this.options.limit);
       this.clearElements().then(() => {
         followers.map(follower => {
           return this.renderFollower(follower);
         });
-        this.$followers = this.$('.follower'),
-        this.$followers = this.$followers.slice(1, this.$followers.length),
+        this.$followers = this.$('.follower');
+        this.$followers = this.$followers.slice(1, this.$followers.length);
         this.options.offset += followers.length;
       });
     },
     renderFollower(model) {
-      let follower = new FollowerItem({ model: model });
+      const follower = new FollowerItem({ model });
       follower.render();
       this.$el.find('.left_column').append(follower.$el);
       return follower.$el[0];
@@ -114,8 +111,8 @@ module.exports = (function followerList() {
       each(response, view => {
         this.$el.find('.left_column').append(view); // use the tumblr follower init code to append snowmen
         this.renderSnowman(this.$(view));
-      }),
-      this.$followers = this.$('.follower'),
+      });
+      this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
     },
     renderSnowman(view) {
@@ -137,7 +134,7 @@ module.exports = (function followerList() {
           show_flag_button: false,
           targetPost: view
         }
-      }
+      };
       new Tumblr.Prima.Snowman(snowman);
       new FollowerItem({ model: tumblelogModel, el: view });
     }
@@ -150,4 +147,4 @@ module.exports = (function followerList() {
   }
 
   return Tumblr.Fox.FollowerList;
-})
+});

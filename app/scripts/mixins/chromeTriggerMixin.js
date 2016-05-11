@@ -1,4 +1,4 @@
-module.exports = (function chromeTrigger() {
+module.exports = (function chromeTriggerMixin() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
@@ -15,10 +15,10 @@ module.exports = (function chromeTrigger() {
       console.log('[CHROME TRIGGER]', arguments);
       let req;
       if (!payload) {
-        req = new Event(eventName)
+        req = new Event(eventName);
       } else if (!callback && typeof payload === 'function') {
         callback = payload;
-        req = new Event(eventName)
+        req = new Event(eventName);
       } else {
         req = new CustomEvent(eventName, { detail: payload });
       }
@@ -34,9 +34,9 @@ module.exports = (function chromeTrigger() {
       window.dispatchEvent(req);
       window.addEventListener(responseEvent, onFinish);
     }
-  })
+  });
 
   Tumblr.Fox.chromeMixin = chromeMixin;
 
   return Tumblr.Fox.chromeMixin;
-})
+});

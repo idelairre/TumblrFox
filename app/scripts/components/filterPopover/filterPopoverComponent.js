@@ -2,12 +2,11 @@ module.exports = (function filterPopoverComponent() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { debounce, each } = _;
+  const { each } = _;
   const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
   const PopoverComponent = get('PopoverComponent');
-  const PeeprBlogSearch = get('PeeprBlogSearch');
   const ClickHandler = get('ClickHandler');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
@@ -26,7 +25,7 @@ module.exports = (function filterPopoverComponent() {
       </div>
     </script>`;
 
-  let FilterPopoverComponent = PopoverComponent.extend({
+  const FilterPopoverComponent = PopoverComponent.extend({
     className: 'popover--filter-popover',
     defaults: {
       preventInteraction: !0,
@@ -51,23 +50,21 @@ module.exports = (function filterPopoverComponent() {
       }
     },
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e),
-      this.state = this.defaults.state,
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setState),
+      this.options = Object.assign({}, this.defaults, e);
+      this.state = this.defaults.state;
+      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setState);
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);
-      this.listenTo(this, 'all', console.log.bind(console, '[FILTER POPOVER]'));
+      // this.listenTo(this, 'all', console.log.bind(console, '[FILTER POPOVER]'));
     },
     render() {
-      return this.$el.html(this.template),
-      this.$pinned.addClass('active'),
-      this.$filterPopoverMenu = this.$('.popover_menu'),
-      this.$searchBar = this.$('.filter-search'),
+      this.$el.html(this.template);
+      this.$pinned.addClass('active');
+      this.$filterPopoverMenu = this.$('.popover_menu');
+      this.$searchBar = this.$('.filter-search');
       setTimeout(() => {
-        this.$filterPopoverMenu.addClass('popover--active'),
+        this.$filterPopoverMenu.addClass('popover--active');
         this.bindClickOutside();
-      }, 1),
-      // console.log('[RENDERED COMPONENT]', this),
-      this;
+      }, 1);
     },
     afterRenderSubviews() {
       setTimeout(() => {
@@ -79,35 +76,34 @@ module.exports = (function filterPopoverComponent() {
         preventInteraction: !0,
         ignoreSelectors: ['.popover', '.popover_inner', '.popover_content_wrapper', '.popover_inner_list', '.popover_menu_list', '.tumblelog_popover', '.ui_peepr_glass', '.drawer']
       };
-      this.clickOutside = new ClickHandler(this.el, options),
-      this.clickOutside.on('click:outside', this.hide, this),
-      this.listenTo(Tumblr.Events, 'DOMEventor:keyup:escape', this.hide)
+      this.clickOutside = new ClickHandler(this.el, options);
+      this.clickOutside.on('click:outside', this.hide, this);
+      this.listenTo(Tumblr.Events, 'DOMEventor:keyup:escape', this.hide);
     },
     beforeTeardown() {
-      return this.remove(),
-      this.$pinned.removeClass('active'),
-      this;
+      this.remove();
+      this.$pinned.removeClass('active');
     },
     unbindClickOutside() {
-      this.clickOutside.remove(),
-      this.clickOutside = null,
+      this.clickOutside.remove();
+      this.clickOutside = null;
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
     setState(state) { // NOTE: this is terrible, maybe make a mixin to manage state?
-      console.log('[SET STATE]', state);
+      // console.log('[SET STATE]', state);
       try {
-        for (let key in this.state) {
+        for (const key in this.state) {
           this.state[key] = !1;
           if (key.includes(state)) {
             this.state[key] = !0;
           }
         }
         each(this._subviews, subview => {
-          console.log('[CHANGE STATE?]', subview.state !== this.state);
+          // console.log('[CHANGE STATE?]', subview.state !== this.state);
           if (subview.state !== this.state) {
             subview.state = this.state;
             if (subview._subviews) {
-              console.log('[SUBVIEW]', subview);
+              // console.log('[SUBVIEW]', subview);
               this.setState.call(subview, state);
             }
             if (subview.model) {
@@ -120,11 +116,11 @@ module.exports = (function filterPopoverComponent() {
       }
     },
     hide() {
-      Tumblr.Events.trigger('popover:close', this),
-      this.unbindClickOutside(),
-      this.searchFilter.unbindEvents(),
-      this.$pinned.removeClass('active'),
-      this.$filterPopoverMenu.removeClass('popover--active'),
+      Tumblr.Events.trigger('popover:close', this);
+      this.unbindClickOutside();
+      this.searchFilter.unbindEvents();
+      this.$pinned.removeClass('active');
+      this.$filterPopoverMenu.removeClass('popover--active');
       transition(this.$el, ::this.afterHide);
     },
     afterHide() {
@@ -132,19 +128,17 @@ module.exports = (function filterPopoverComponent() {
     },
     show() {
       // console.log('[FILTER COMPONENT]', this),
-      Tumblr.Events.trigger('popover:open', this),
-      this.bindClickOutside(),
-      this.$pinned.addClass('active'),
-      this.$el.css({ display: 'block' }),
+      Tumblr.Events.trigger('popover:open', this);
+      this.bindClickOutside();
+      this.$pinned.addClass('active');
+      this.$el.css({ display: 'block' });
       setTimeout(() => {
         this.$filterPopoverMenu.addClass('popover--active');
       }, 1);
     }
-  })
-
-  // Object.assign(FilterPopoverComponent, PeeprBlogSearch.prototype);
+  });
 
   Tumblr.Fox.FilterPopoverComponent = FilterPopoverComponent;
 
   return Tumblr.Fox.FilterPopoverComponent;
-})
+});

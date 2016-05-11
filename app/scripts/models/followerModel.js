@@ -41,7 +41,7 @@ module.exports = (function followerModel() {
           response = response.slice(1, response.length);
           this.options.offset += this.options.limit;
           this.$views.add(response);
-          console.log('[RESPONSE]', response);
+          // console.log('[RESPONSE]', response);
           deferred.resolve(response);
         },
         fail: (error) => {
@@ -56,4 +56,4 @@ module.exports = (function followerModel() {
   Tumblr.Fox.FollowerModel = FollowerModel;
 
   return Tumblr.Fox.FollowerModel;
-})
+});

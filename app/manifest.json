@@ -18,28 +18,30 @@
     "page": "pages/options.html",
     "chrome_style": true
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "http://*/*",
-        "https://*/*",
-        "*://*.tumblr.com/*"
-      ],
-      "css": [
-        "styles/popover.css"
-      ],
-      "js": [
-        "scripts/contentscript.js"
-      ],
-      "run_at": "document_end",
-      "all_frames": false
-    }
-  ],
+  "content_scripts": [{
+    "matches": [
+      "http://*/*",
+      "https://*/*",
+      "*://*.tumblr.com/*"
+    ],
+    "css": [
+      "styles/popover.css"
+    ],
+    "js": [
+      "scripts/contentscript.js"
+    ],
+    "run_at": "document_end",
+    "all_frames": false
+  }],
   "permissions": [
     "tabs",
     "storage",
     "unlimitedStorage",
-    "http://api.tumblr.com/*"
+    "http://api.tumblr.com/*",
+    "https://tumblr.com/*",
+    "https://www.tumblr.com/oauth/request_token",
+    "https://www.tumblr.com/oauth/authorize",
+    "https://www.tumblr.com/oauth/access_token"
   ],
-  "web_accessible_resources": [ "pages/chrome_ex_oauth.html" ]
+  "web_accessible_resources": ["pages/chrome_ex_oauth.html"]
 }

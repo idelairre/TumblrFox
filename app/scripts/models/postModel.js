@@ -88,7 +88,7 @@ module.exports = (function postModel() {
       const slug = {
         postId: postId,
         action: action
-      }
+      };
       this.chromeTrigger('chrome:update:likes', slug);
     },
     renderSearchResults() {
@@ -98,7 +98,7 @@ module.exports = (function postModel() {
       const opts = {
         offset: this.apiSlug.offset,
         limit: this.apiSlug.limit
-      }
+      };
       const matches = this.$$matches.slice(opts.offset, opts.offset + opts.limit);
       matches.length > 0 ? this.toggleLoader() : null;
       if (isEmpty(matches)) {
@@ -146,7 +146,7 @@ module.exports = (function postModel() {
       this.state.dashboardSearch = !1,
       setTimeout(() => {
         posts = posts.filter(post => {
-          return post.post_html
+          return post.post_html;
         }),
         this.renderPosts(posts),
         this.toggleLoader();
@@ -168,7 +168,7 @@ module.exports = (function postModel() {
         this.$$matches = response,
         deferred.resolve(response),
         this.toggleLoader();
-      }
+      };
       this.chromeTrigger('chrome:search:likes', slug, resolve);
       return deferred.promise();
     },
@@ -249,7 +249,7 @@ module.exports = (function postModel() {
       const resolve = (response) => {
         deferred.resolve(response),
         this.toggleLoader();
-      }
+      };
       this.toggleLoader();
       if (this.apiSlug.type === 'likes') {
         this.chromeTrigger('chrome:fetch:likes', slug, resolve);

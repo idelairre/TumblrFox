@@ -6,14 +6,14 @@ module.exports = (function popover() {
   const { get, PopoverMixin } = Tumblr.Fox;
   const PopoverComponent = get('PopoverComponent');
 
-  let Popover = PopoverComponent.extend({
+  const Popover = PopoverComponent.extend({
     mixins: [PopoverMixin],
     template: template($('#popoverTemplate').html()),
     events: {
       'click li.popover_menu_item': 'toggleSelected'
     },
     initialize(e) {
-      this.options = Object.assign({}, e),
+      this.options = Object.assign({}, e);
       this.initialized = !1;
     },
     render() {
@@ -32,14 +32,15 @@ module.exports = (function popover() {
       this.options.items.map(section => {
         if (!this.options.multipleSelection) {
           section.listItems.map(li => {
-            if (li.name.toLowerCase() !== option) {
-              li.checked = false;
-            }
             if (li.name.toLowerCase() === option) {
               li.checked = true;
+            } else {
+              li.checked = false;
             }
+            return li;
           });
         }
+        return section;
       });
       this.setSelected(option);
     },
@@ -48,9 +49,9 @@ module.exports = (function popover() {
       this.$(`i.icon[data-check="${option}"]`).show();
       return this.options.onSelect.apply(this, arguments);
     }
-  })
+  });
 
   Tumblr.Fox.Popover = Popover;
 
   return Tumblr.Fox.Popover;
-})
+});

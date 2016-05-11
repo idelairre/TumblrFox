@@ -67,9 +67,9 @@ module.exports = (function settings() {
         Tumblr.Events.trigger('fox:setSearchState', setting);
       }
     }
-  })
+  });
 
   Tumblr.Fox.Settings = Settings;
 
   return Tumblr;
-})
+});

@@ -3,8 +3,8 @@ import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 import Main from '../app/scripts/main';
 import AutopaginatorComponent from '../app/scripts/components/autopaginator/autopaginatorComponent';
-import ComponentFetcher from '../app/scripts/utils/componentFetcher';
-import Events from '../app/scripts/utils/events';
+import ComponentFetcher from '../app/scripts/utils/componentFetcherUtil';
+import Events from '../app/scripts/utils/eventsUtil';
 import FilterComponent from '../app/scripts/components/filterPopover/filterDropdown/filterDropdownComponent';
 import FilterIcon from '../app/scripts/components/filterPopover/filterPopoverIcon';
 import FilterTemplate from '../app/scripts/components/filterPopover/filterDropdown/filterDropdownTemplate.html';
@@ -13,10 +13,10 @@ import FilterMenuTemplate from '../app/scripts/components/filterPopover/filterMe
 import FilterPopoverComponent from '../app/scripts/components/filterPopover/filterPopoverComponent';
 import FilterPopoverContainer from '../app/scripts/components/filterPopover/filterPopoverContainer';
 import LoaderComponent from '../app/scripts/components/loader/loaderComponent';
-import LoaderMixin from '../app/scripts/mixins/loaderBar';
+import LoaderMixin from '../app/scripts/mixins/loaderBarMixin';
 import PostModel from '../app/scripts/models/postModel';
-import PostFormatter from '../app/scripts/utils/postFormatter';
-import SearchTemplate from '../app/scripts/components/filterPopover/search/searchTemplate.html'
+import PostFormatter from '../app/scripts/utils/postFormatterUtil';
+import SearchTemplate from '../app/scripts/components/filterPopover/search/searchTemplate.html';
 import SearchComponent from '../app/scripts/components/filterPopover/search/searchComponent';
 import SettingsComponent from '../app/scripts/components/filterPopover/settings/settingsComponent';
 import userFixture from './data/user.json';
@@ -29,9 +29,9 @@ let { Tumblelog } = Tumblr.Prima.Models;
 
 let userModel = new Tumblelog(userFixture);
 
-Tumblr.Prima.currentUser = function() {
+Tumblr.Prima.currentUser = function () {
   return userModel;
-}
+};
 
 function initialize(dependencies) {
   for (let i = 0; dependencies.length > i; i += 1) {

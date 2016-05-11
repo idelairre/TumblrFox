@@ -14,7 +14,7 @@ let config = {
   entry: 'mocha!./test/index.js',
   output: {
     path: '/test',
-    publicPath: 'http://localhost:8000/test' ,
+    publicPath: 'http://localhost:8000/test',
     filename: 'test.build.js',
     chunkFilename: '[name].[id].js'
   },
@@ -30,7 +30,7 @@ let config = {
   module: {
     noParse: /node_modules\/json-schema\/lib\/validate\.js/,
     loaders: [
-      { test: /\.less$/, loader: 'style-loader!css-loader!less-loader'  },
+      { test: /\.less$/, loader: 'style-loader!css-loader!less-loader' },
       { test: /\.html$/, loader: 'html' },
       { test: /\.js$/, loader: 'babel?cacheDirectory', exclude: /node_modules/ },
       { test: /\.json$/, loader: 'json' }
@@ -44,7 +44,7 @@ let config = {
   resolveLoader: {
     root: appRoot.resolve('node_modules')
   }
-}
+};
 
 let bundleStart = null;
 let compiler = webpack(config);
@@ -78,5 +78,5 @@ gulp.task('tests', (cb) => {
     .pipe(plumber())
     .pipe(named())
     .pipe(gulpWebpack(config))
-    .pipe(gulp.dest('test/dist'))
+    .pipe(gulp.dest('test/dist'));
 });

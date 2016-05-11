@@ -13,7 +13,8 @@
     "dev:opera": "gulp --watch --vendor=opera",
     "start": "npm run dev:chrome",
     "build": "npm run build:chrome",
-    "test": "gulp tests"
+    "test": "gulp tests",
+    "package": "tar -zcvf tumblrFox.tar.gz dist/chrome"
   },
   "devDependencies": {
     "app-root-path": "^1.0.0",
@@ -49,6 +50,7 @@
     "gulp-livereload": "^3.8.0",
     "gulp-minify-css": "^1.2.1",
     "gulp-plumber": "^1.0.1",
+    "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.0.4",
     "gulp-sequence": "^0.4.1",
     "gulp-sourcemaps": "^1.5.2",
@@ -80,5 +82,14 @@
     "webpack-stream": "^3.1.0",
     "yargs": "^4.3.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "xo": {
+    "esnext": true,
+    "rules": {
+      "indent": [0],
+      "babel/object-curly-spacing": [0],
+      "no-new": [0],
+      "camelcase": [0]
+    }
+  }
 }

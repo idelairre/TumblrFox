@@ -4,23 +4,22 @@ module.exports = (function followerItem() {
   const $ = Backbone.$;
   const { template } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
-  const { currentUser } = Tumblr.Prima;
-  const { FollowerModel, constants } = Tumblr.Fox;
+  const { constants } = Tumblr.Fox;
 
-  $.fn.removeAttributes = function(args) {
-    let ignore = args.ignore;
-    return this.each(function() {
-      let attributes = $.map(this.attributes, (item) => {
+  $.fn.removeAttributes = function (args) {
+    const ignore = args.ignore;
+    return this.each(function () {
+      const attributes = $.map(this.attributes, item => {
         if (item.name !== ignore) {
           return item.name;
         }
       });
-      let elem = $(this);
+      const elem = $(this);
       $.each(attributes, (i, item) => {
         elem.removeAttr(item);
       });
     });
-  }
+  };
 
   const followerTemplate = `
     <script type="text/template">
@@ -50,7 +49,7 @@ module.exports = (function followerItem() {
       </div>
     </script>`;
 
-  let FollowerItem = Backbone.View.extend({
+  const FollowerItem = Backbone.View.extend({
     template: template($(followerTemplate).html()),
     className: 'follower clearfix',
     render() {
@@ -86,7 +85,7 @@ module.exports = (function followerItem() {
     },
     events: {
       'click button.unfollow_button': 'unfollow',
-      'click button.follow_button' : 'follow',
+      'click button.follow_button': 'follow',
       'click div.poptica_header': 'togglePopover'
     },
     follow(e) {
@@ -128,7 +127,7 @@ module.exports = (function followerItem() {
           $(`#loading_${tumblelogName}`).hide();
         }
       });
-      this.capturing = (Tumblr.Capture) ? new Tumblr.Capture.CrushClick() : null;
+      this.capturing = Tumblr.Capture ? new Tumblr.Capture.CrushClick() : null;
     },
     togglePopover(e) {
       e.preventDefault();
@@ -140,4 +139,4 @@ module.exports = (function followerItem() {
   Tumblr.Fox.FollowerItem = FollowerItem;
 
   return Tumblr.Fox.FollowerItem;
-})
+});

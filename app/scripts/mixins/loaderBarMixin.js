@@ -14,11 +14,11 @@ module.exports = (function loaderMixin() {
           type: 'bar',
           classModifiers: 'top',
           loading: !0
-      }) : this.loader.set('loading', !1)
+      }) : this.loader.set('loading', !1);
     }
-  })
+  });
 
   Tumblr.Fox.loaderMixin = loader;
 
   return Tumblr.Fox.loaderMixin;
-})
+});

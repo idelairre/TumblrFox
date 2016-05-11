@@ -57,4 +57,4 @@ module.exports = (function popoverMixin() {
   Tumblr.Fox.PopoverMixin = PopoverMixin;
 
   return Tumblr.Fox.PopoverMixin;
-})
+});

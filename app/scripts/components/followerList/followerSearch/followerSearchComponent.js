@@ -1,11 +1,10 @@
 module.exports = (function followerSearch() {
   Tumblr.Fox = Tumblr.Fox || {};
 
-  const $ = Backbone.$;
   const { defer } = _;
   const { Popover } = Tumblr.Fox;
 
-  // , {
+  // {
   //   header: 'Input',
   //   listItems: [
   //     { icon: 'icon_filter', name: 'Filter following', checked: false },
@@ -13,7 +12,7 @@ module.exports = (function followerSearch() {
   //   ]
   // }]
 
-  let FollowerSearch = Backbone.View.extend({
+  const FollowerSearch = Backbone.View.extend({
     defaults: {
       state: {
         search: !1,
@@ -28,7 +27,7 @@ module.exports = (function followerSearch() {
         ]
       }]
     },
-    initialize(e) {
+    initialize() {
       this.state = this.defaults.state,
       this.popoverOptions = this.defaults.popoverOptions,
       this.$form = this.$('form'),
@@ -78,4 +77,4 @@ module.exports = (function followerSearch() {
   Tumblr.Fox.FollowerSearch = FollowerSearch;
 
   return Tumblr.Fox.FollowerSearch;
-})
+});

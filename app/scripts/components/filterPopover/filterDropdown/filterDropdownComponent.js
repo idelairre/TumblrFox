@@ -2,7 +2,7 @@ module.exports = (function filterDropdown() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { bindAll, defaults, mapKeys } = _;
+  const { mapKeys } = _;
   const { get } = Tumblr.Fox;
   const SearchFiltersPopover = get('SearchFiltersPopover');
   const SearchFilters = get('SearchFilters');
@@ -11,7 +11,7 @@ module.exports = (function filterDropdown() {
   const PopoverComponent = get('PopoverComponent');
   const popover = get('PopoverMixin');
 
-  let FilterComponent = PopoverComponent.extend({
+  const FilterComponent = PopoverComponent.extend({
     className: 'popover--blog-search blog-search-filters-popover',
     mixins: Object.assign([popover], SearchFiltersPopover.prototype.mixins),
     template: $('#filterTemplate').html(),
@@ -22,25 +22,28 @@ module.exports = (function filterDropdown() {
       'click .option-radio': 'onCheckboxClick',
       'change [type=checkbox]': 'onCheckboxChange'
     },
-    initialize(e) {
+    initialize() {
       mapKeys(SearchFilters.prototype, (val, key) => {
         if (typeof val === 'function' && key !== 'template' && key !== 'render' && key !== 'initialize' && key !== 'bindEvents' && key !== 'events') {
           this[key] = val;
         }
-      }),
-      this.state = this.model.attributes.state,
+      });
+      this.state = this.model.attributes.state;
       console.log(this.state);
       this.bindEvents();
     },
     render() {
-      return this.$el.html(this.template),
-      this.$main = this.$('.popover_menu'),
-      this.$date = this.$('.date-filter'),
-      this.$toggleItems = this.$('.toggle_items'),
-      console.log(this.$toggleItems),
-      !this.state.likes ? this.$date.parents().find('.datepicker').hide() : this.$date.find('input').val(new Date().toDateInputValue()) && this.$toggleItems.hide(),
-      setTimeout(::this.setActiveAndBindEvents, 1),
-      this;
+      this.$el.html(this.template);
+      this.$main = this.$('.popover_menu');
+      this.$date = this.$('.date-filter');
+      this.$toggleItems = this.$('.toggle_items');
+      console.log(this.$toggleItems);
+      if (this.state.likes) {
+        this.$date.find('input').val(new Date().toDateInputValue()) && this.$toggleItems.hide();
+      } else {
+        this.$date.parents().find('.datepicker').hide();
+      }
+      setTimeout(::this.setActiveAndBindEvents, 1);
     },
     bindEvents() {
       SearchFilters.prototype.bindEvents.apply(this);
@@ -53,32 +56,32 @@ module.exports = (function filterDropdown() {
       this.model.set('before', Date.parse(e.currentTarget.value));
       console.log('[MODEL]', this.model.attributes);
     },
-    toggleDate(e){
+    toggleDate(e) {
       console.log(e);
     },
     hide() {
-      this.unbindClickOutside(),
-      this.$main.removeClass('popover--active'),
+      this.unbindClickOutside();
+      this.$main.removeClass('popover--active');
       transition(this.$el, ::this.afterHide);
     },
     afterHide() {
-      this.teardown(),
+      this.teardown();
       this.remove();
     },
     unbindClickOutside() {
       this.clickOutside && (this.clickOutside.remove(), this.clickOutside = null);
     },
     setActiveAndBindEvents() {
-      this.$main.addClass('popover--active'),
+      this.$main.addClass('popover--active');
       this.bindClickOutside();
     },
     show() {
-      this.$el.css({ display: 'block' }),
+      this.$el.css({ display: 'block' });
       setTimeout(::this.setActiveAndBindEvents, 1);
-    },
+    }
   });
 
   Tumblr.Fox.Filters = FilterComponent;
 
   return Tumblr.Fox.Filters;
-})
+});

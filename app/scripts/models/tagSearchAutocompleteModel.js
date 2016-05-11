@@ -63,7 +63,7 @@ module.exports = (function tagSearchAutocompleteModel() {
         let tag = {
           tag: key,
           count: tagArray[key]
-        }
+        };
         tags.push(tag);
       }
       this.parse(tags);
@@ -99,7 +99,7 @@ module.exports = (function tagSearchAutocompleteModel() {
       this.get('matchTerm') === '' ? this.set('typeAheadMatches', this.items.toJSON()) : null,
       omit(e, 'tags');
     }
-  })
+  });
 
   Tumblr.Fox.TagSearchAutocompleteModel = new TagSearchAutocompleteModel();
 

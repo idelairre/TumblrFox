@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
 
-let { SearchComponent } = Tumblr.Fox
+let { SearchComponent } = Tumblr.Fox;
 
 let searchComponent = new SearchComponent({
   blogname: Tumblr.Prima.currentUser().id,

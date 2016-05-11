@@ -1,5 +1,5 @@
 module.exports = (function main() {
-  window.webpackJsonp(0, [function(module, exports, require) {
+  window.webpackJsonp(0, [function (module, exports, require) {
     Tumblr.Fox = Tumblr.Fox || {};
     Tumblr.Fox.require = require;
     Tumblr.Fox.getComponent = Tumblr.Fox.getComponent.bind(this, Array.prototype.slice.call(arguments));
@@ -38,12 +38,12 @@ module.exports = (function main() {
       rendered: false,
       logging: true,
       test: false
-    }
+    };
 
     Tumblr.Fox.constants = {
-      attachNode: attachNode,
-      formKey: formKey
-    }
+      attachNode,
+      formKey
+    };
 
     if (Tumblr.Fox.options.logging) {
       Tumblr.Fox.Events.start();
@@ -54,4 +54,4 @@ module.exports = (function main() {
     window.require = Tumblr.Fox.require;
     window.getComponent = Tumblr.Fox.getComponent;
   }]);
-})
+});

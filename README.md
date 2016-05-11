@@ -4,7 +4,7 @@
 
 + Filter and search your dashboard posts, liked posts and user posts by type, reblog status (original or reblog), popularity, recentness, tag or by date
 + Filter and search through tumblelogs you're following, order alphabetically or by how recently they were updated
-+ Claim your data: Download and cache your posts and users you are following
++ Download and cache your posts and users you are following
 + Tumblr client-side data (primarily Backbone models and collections) are used where possible to benefit from improved performance and richer data over the public api.
 
 ## tl:dr
@@ -16,10 +16,19 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 + Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
 + Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier.
 + Leverage es6 + es7 features while maintaining a code style consistent with Tumblr's code base
++ Tag search on enter keypress
++ Update readme with pictures
 
 ## Note
 
 This is liable to break as Tumblr updates and is not by any means official or fully supported by me. This is pretty much an experiment in using the objects floating around the Tumblr window to try and make new components using Tumblr's custom Backbone code.
+
+## To do
+
++ Get Webpack build to preserve filepaths
++ Refactor caching functions so that they reflect actual post/followers count not cached count
++ Get app to work on another computer (HEUH)
++ Get SearchComponent to properly teardown when closed so that the PeeprBlogSearch doesn't open duplicate popovers
 
 ## Relevant development posts
 

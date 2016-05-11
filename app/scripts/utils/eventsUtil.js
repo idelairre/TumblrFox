@@ -47,7 +47,7 @@ module.exports = (function events() {
     stop() {
       tumblr.off('all', this.log);
     }
-  }
+  };
 
   return Tumblr.Events;
 });

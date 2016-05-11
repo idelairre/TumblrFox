@@ -1,12 +1,12 @@
-import { ChromeExOAuth } from './lib/chrome_ex_oauth';
-import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, REQUEST_TOKEN_URL } from './constants';
-import { countBy, debounce, defer, differenceBy, findIndex, identity, union, uniqBy } from 'lodash';
+import $ from 'jquery';
+import { countBy, debounce, differenceBy, identity } from 'lodash';
 import async from 'async';
 import Dexie from 'dexie';
-import $ from 'jquery'
+import { ChromeExOAuth } from './lib/chrome_ex_oauth';
+import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, REQUEST_TOKEN_URL } from './constants';
 import './lib/livereload';
 
-let db = new Dexie('TumblrFox');
+const db = new Dexie('TumblrFox');
 
 db.version(1).stores({
   posts: 'id, liked_timestamp, tags',
@@ -48,23 +48,10 @@ function decrementTumblrDay(date) {
   return toTumblrTime(fromTumblrTime(date).subtractDays(1));
 }
 
-Date.prototype.subtractDays = function(days) {
+Date.prototype.subtractDays = function (days) {
   this.setDate(this.getDate() - days);
   return this;
-}
-
-function hasElement(array, compArray) {
-  for (let i = 0; array.length - 1 > i; i += 1) {
-    let post = array[i];
-    for (let j = 0; compArray.length - 1 > j; j += 1) {
-      let testPost = compArray[j];
-      if (post.id === testPost.id) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
+};
 
 let oauth = {};
 
@@ -76,43 +63,40 @@ chrome.tabs.onUpdated.addListener(tabId => {
   // chrome.pageAction.show(tabId);
 });
 
-chrome.storage.sync.get({
-  consumerKey: '',
-  consumerSecret: ''
-}, items => {
+chrome.storage.sync.get({ consumerKey: '', consumerSecret: '' }, items => {
   oauth = ChromeExOAuth.initBackgroundPage({
-    'request_url': REQUEST_TOKEN_URL,
-    'authorize_url': AUTHORIZATION_BASE_URL,
-    'access_url': ACCESS_TOKEN_URL,
-    'consumer_key': items.consumerKey,
-    'consumer_secret': items.consumerSecret,
+    request_url: REQUEST_TOKEN_URL,
+    authorize_url: AUTHORIZATION_BASE_URL,
+    access_url: ACCESS_TOKEN_URL,
+    consumer_key: items.consumerKey,
+    consumer_secret: items.consumerSecret
   });
 });
 
 function parseTags(posts, callback) {
   try {
-    let tags = [];
-    let parsedTags = [];
+    const tags = [];
+    const parsedTags = [];
     let i = 0;
     while (posts.length - 1 > i) {
       i += 1;
-      let post = posts[i];
-      let len = post.tags.length;
+      const post = posts[i];
+      const len = post.tags.length;
       if (len !== 0) {
         for (let j = 0; len > j; j += 1) {
-          let tag = post.tags[j];
+          const tag = post.tags[j];
           console.log('[TAG]', tag, i);
           tags.push(tag);
         }
       }
     }
     if (i === (posts.length - 1)) {
-      let orderedTags = countBy(tags, identity);
-      for (let key in orderedTags) {
-        let tag = {
+      const orderedTags = countBy(tags, identity);
+      for (const key in orderedTags) {
+        const tag = {
           tag: key,
           count: orderedTags[key]
-        }
+        };
         parsedTags.push(tag);
       }
       callback(parsedTags);
@@ -125,13 +109,10 @@ function parseTags(posts, callback) {
 function cacheLikeTags(callback) {
   console.log('[CACHING TAGS...]');
   const log = (tagsCount, added) => {
-    let percentComplete = ((added / tagsCount) * 100).toFixed(2);
-    console.log(`[PERCENT COMPLETE]: ${percentComplete}`,'[POSTS PARSED]:', added, '[POSTS LEFT]:', tagsCount);
-    callback({
-      percentComplete: percentComplete,
-      itemsLeft: tagsCount
-    });
-  }
+    const percentComplete = ((added / tagsCount) * 100).toFixed(2);
+    console.log(`[PERCENT COMPLETE]: ${percentComplete}`, '[POSTS PARSED]:', added, '[POSTS LEFT]:', tagsCount);
+    callback({ percentComplete, tagsCount });
+  };
   db.posts.toCollection().toArray(posts => {
     parseTags(posts, tags => {
       console.log('[TAGS]', tags.length);
@@ -148,11 +129,8 @@ function cacheLikeTags(callback) {
 
 function preloadFollowing(callback) {
   db.following.toCollection().count(count => {
-    chrome.storage.sync.get({
-      userName: '',
-      totalFollowingCount: 0
-    }, items => {
-      let slug = {
+    chrome.storage.sync.get({ userName: '', totalFollowingCount: 0 }, items => {
+      const slug = {
         url: `https://api.tumblr.com/v2/user/following`,
         limit: 20,
         offset: 0
@@ -169,25 +147,22 @@ function populateFollowing(slug, items, followingCount, callback) {
     db.following.toCollection().count(count => {
       followingCount = (count - 1);
       chrome.storage.local.set({ cachedFollowing: followingCount }, () => {
-        let { percentComplete, itemsLeft } = calculatePercent(followingCount, items.totalFollowingCount);
+        const { percentComplete, itemsLeft } = calculatePercent(followingCount, items.totalFollowingCount);
         console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}, [FOLLOWING]: ${followingCount}`);
-        callback ? callback({
-          percentComplete: percentComplete,
-          itemsLeft: itemsLeft
-        }) : null;
+        callback ? callback({ percentComplete, itemsLeft }) : null;
         next();
       });
     });
-  }
+  };
   async.whilst(() => {
     return items.totalFollowingCount === 0 || items.totalFollowingCount > followingCount;
   }, next => {
     // if (items.totalFollowingCount !== 0 && (items.totalFollowingCount - followingCount) < slug.limit) {
     //   slug.limit = (items.totalFollowingCount - followingCount);
     // }
-    debounce(oauth.authorize, 10).call(oauth, () => {
+    debounce(oauth.authorize, 20).call(oauth, () => {
       onAuthorized(slug, response => {
-        if (response.blogs.length > 0) {
+        if (response.blogs && response.blogs.length > 0) {
           slug.offset += response.blogs.length;
           items.totalFollowingCount = response.total_blogs;
           if (items.totalFollowingCount === 0) {
@@ -195,12 +170,12 @@ function populateFollowing(slug, items, followingCount, callback) {
               totalFollowingCount: items.totalFollowingCount
             });
           }
-          for (let key in slug) {
+          for (const key in slug) {
             if (key.includes('oauth')) {
               delete slug[key];
             }
           }
-          let transaction = db.following.bulkPut(response.blogs);
+          const transaction = db.following.bulkPut(response.blogs);
           transaction.then(() => {
             log(followingCount, items, next);
           });
@@ -214,7 +189,6 @@ function populateFollowing(slug, items, followingCount, callback) {
             percentComplete: 100,
             itemsLeft: 0
           });
-          return;
         }
       });
     });
@@ -225,11 +199,8 @@ function populateFollowing(slug, items, followingCount, callback) {
 
 function preloadLikes(callback) {
   console.log('[PRELOADING LIKES]');
-  chrome.storage.sync.get({
-    userName : '',
-    totalLikedPostsCount: 0
-  }, items => {
-    let slug = {
+  chrome.storage.sync.get({ userName: '', totalLikedPostsCount: 0 }, items => {
+    const slug = {
       blogname: items.userName,
       limit: 50
     };
@@ -245,8 +216,8 @@ function preloadLikes(callback) {
 }
 
 function calculatePercent(count, objects) {
-  let percentComplete = ((count / objects) * 100).toFixed(2);
-  let itemsLeft = objects - count;
+  const percentComplete = ((count / objects) * 100).toFixed(2);
+  const itemsLeft = objects - count;
   return { percentComplete, itemsLeft };
 }
 
@@ -255,17 +226,16 @@ function populatePostCache(slug, items, postCount, callback) {
   const log = (postCount, items, next) => {
     db.posts.toCollection().count(count => {
       postCount = (count - 1);
-      chrome.storage.local.set({ cachedLikes: postCount });
-      let { percentComplete, itemsLeft } = calculatePercent(postCount, items.totalLikedPostsCount);
+      chrome.storage.local.set({
+        cachedLikes: postCount
+      });
+      const { percentComplete, itemsLeft } = calculatePercent(postCount, items.totalLikedPostsCount);
       console.log('[BEFORE DATE]', fromTumblrTime(slug.before));
       console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}, [POSTS]: ${postCount}`);
-      callback({
-        percentComplete: percentComplete,
-        itemsLeft: itemsLeft
-      });
+      callback({ percentComplete, itemsLeft });
       next();
     });
-  }
+  };
   async.whilst(() => {
     return items.totalLikedPostsCount === 0 || items.totalLikedPostsCount > postCount;
   }, next => {
@@ -282,7 +252,7 @@ function populatePostCache(slug, items, postCount, callback) {
           });
         }
         slug.before = decrementTumblrDay(slug.before);
-        let transaction = db.posts.bulkPut(response.liked_posts);
+        const transaction = db.posts.bulkPut(response.liked_posts);
         transaction.then(() => {
           log(postCount, items, next);
         });
@@ -296,7 +266,6 @@ function populatePostCache(slug, items, postCount, callback) {
           percentComplete: 100,
           itemsLeft: 0
         });
-        return;
       }
     });
   }, error => {
@@ -311,23 +280,25 @@ function initialSyncLikes(posts) {
     return;
   }
   // console.log('[POSTS]', posts.length);
-  chrome.storage.sync.get({ userName: '' }, items => {
-  const userName = items.userName;
-    let slug = {
+  chrome.storage.sync.get({
+    userName: ''
+  }, items => {
+    const userName = items.userName;
+    const slug = {
       blogname: userName,
       offset: 0,
       limit: 50
     };
-    let callback = (response) => {
+    const callback = response => {
       posts.toArray(items => {
-        let difference = differenceBy(response.liked_posts, items, 'id');
+        const difference = differenceBy(response.liked_posts, items, 'id');
         if (difference.length !== 0) {
           console.log('[ADDING NEW LIKES]', difference);
           posts.bulkPut(difference);
         }
         console.log('[SYNC DONE]');
       });
-    }
+    };
     console.log('[SYNCING LIKES]');
     fetchLikedPosts(slug, callback);
   });
@@ -335,11 +306,11 @@ function initialSyncLikes(posts) {
 
 function syncLikes(payload) {
   console.log(payload);
-  let { action, postId } = payload;
+  const { action, postId } = payload;
   chrome.storage.sync.get({ userName: '' }, items => {
     if (action === 'like') {
       const userName = items.userName;
-      let slug = {
+      const slug = {
         blogname: userName,
         offset: 0,
         limit: 1
@@ -351,7 +322,7 @@ function syncLikes(payload) {
         });
       });
     } else {
-      db.posts.delete(post.id).then(() => {
+      db.posts.delete(postId).then(() => {
         console.log('[REMOVED LIKE]');
       });
     }
@@ -366,11 +337,9 @@ function fetchLikeTags(callback) {
 }
 
 function fetchBlogPosts(slug, callback) {
-  chrome.storage.sync.get({
-    consumerKey: ''
-  }, items => {
+  chrome.storage.sync.get({ consumerKey: '' }, items => {
     const url = `https://api.tumblr.com/v2/blog/${slug.blogname}.tumblr.com/posts${slug.type ? '/' + slug.type : ''}`;
-    let request = $.ajax({
+    const request = $.ajax({
       type: 'GET',
       url: `${url}?api_key=${items.consumerKey}`,
       data: {
@@ -402,12 +371,12 @@ function fetchLikedPosts(slug, callback) {
   console.log('[SLUG]', slug);
   // console.log('[BEFORE DATE]', new Date(slug.before * 1000));
   chrome.storage.sync.get({ consumerKey: '' }, items => {
-    let data = {
+    const data = {
       api_key: items.consumerKey,
-      limit: slug.limit || 8,
+      limit: slug.limit || 8
     };
     Object.assign(data, slug);
-    let request = $.ajax({
+    const request = $.ajax({
       type: 'GET',
       url: `https://api.tumblr.com/v2/blog/${slug.blogname}.tumblr.com/likes`,
       data: data
@@ -426,7 +395,7 @@ function fetchLikedPosts(slug, callback) {
 function searchLikes(args, callback) {
   console.log('[SEARCH LIKES]', args);
   db.posts.toCollection().toArray(posts => {
-    let term = (typeof args === 'string' ? args : args.term);
+    const term = (typeof args === 'string' ? args : args.term);
     let matches = posts;
     if (term !== '') {
       matches = matches.filter(post => {
@@ -450,7 +419,7 @@ function searchLikes(args, callback) {
       }).reverse();
     } else if (args.sort && args.sort === 'POPULARITY_DESC') {
       matches = matches.sort((a, b) => {
-        return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1: 0);
+        return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1 : 0);
       }).reverse();
     }
     if (args.before) {
@@ -463,7 +432,10 @@ function searchLikes(args, callback) {
     }
     console.log('[MATCHES]', matches);
     if (args.offset && args.limit) {
-      const { offset, limit } = args;
+      const {
+        offset,
+        limit
+      } = args;
       matches = matches.slice(offset, offset + limit);
       return callback(matches);
     }
@@ -484,15 +456,13 @@ function onAuthorized(slug, callback) {
   const url = slug.url || 'https://api.tumblr.com/v2/user/dashboard';
 
   oauth.sendSignedRequest(url, (data, xhr) => {
+    console.log('[XHR]', xhr);
     try {
-      if (data && JSON.parse(data)) {
-        const response = JSON.parse(data).response;
-        callback(response);
-      }
+      const response = JSON.parse(data).response;
+      callback(response);
     } catch (error) {
-      console.log(data);
       console.error(error);
-      return;
+      callback(data);
     }
   }, request);
 }
@@ -519,14 +489,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
     case 'searchLikes':
       searchLikes(request.payload, sendResponse);
-      return true
+      return true;
     case 'updateLikes':
       syncLikes(request.payload);
       return true;
     case 'updateFollowing':
       preloadFollowing(sendResponse);
       return true;
-    }
+  }
 });
 
 chrome.runtime.onConnect.addListener(port => {

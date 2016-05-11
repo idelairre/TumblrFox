@@ -4,7 +4,7 @@ module.exports = (function searchResults() {
   const $ = Backbone.$;
   const { template } = _;
 
-  let SearchResults = Backbone.View.extend({
+  const SearchResults = Backbone.View.extend({
     defaults: {
       initialized: !1
     },
@@ -40,13 +40,13 @@ module.exports = (function searchResults() {
       }
     },
     render(query) {
-      this.initialized = !0,
-      this.$el = this.$el.html(this.template(query)),
+      this.initialized = !0;
+      this.$el = this.$el.html(this.template(query));
       $('#posts').append(this.$el);
     }
-  })
+  });
 
   Tumblr.Fox.SearchResults = new SearchResults();
 
   return Tumblr.Fox.SearchResults;
-})
+});

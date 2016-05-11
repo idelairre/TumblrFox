@@ -2,11 +2,8 @@ module.exports = (function filterMenuComponent() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { get, AutoPaginator } = Tumblr.Fox;
-  const SearchFilters = get('SearchFilters');
-  const PopoverComponent = get('PopoverComponent');
 
-  let FilterMenuComponent = Backbone.View.extend({
+  const FilterMenuComponent = Backbone.View.extend({
     defaults: {
       disabled: !1,
       state: {
@@ -17,7 +14,7 @@ module.exports = (function filterMenuComponent() {
     },
     className: 'popover--filter-select-dropdown',
     template: $('#filterMenuTemplate').html(),
-    initialize(e) {
+    initialize() {
       this.state = this.defaults.state;
       this.disabled = this.defaults.disabled;
     },
@@ -43,9 +40,7 @@ module.exports = (function filterMenuComponent() {
       this.listenTo(Tumblr.Events, 'peepr:close', this.set('disabled', !1));
     },
     resetChecks() {
-      this.$('i[data-check]').each(function () {
-        $(this).hide();
-      });
+      this.$('i[data-check]').hide();
     },
     toggleSelection(e) { // NOTE: make sure to put this back while the states are half-functional
       e.preventDefault();
@@ -54,7 +49,7 @@ module.exports = (function filterMenuComponent() {
       }
       console.log('[FILTER MENU STATE]', this.state);
       const type = $(e.target).data('js-menu-item-link');
-      this.resetChecks(),
+      this.resetChecks();
       this.$(`i[data-check="${type}"]`).show();
       if (this.state.dashboard) {
         this.filterAndFetchPosts(type);
@@ -79,4 +74,4 @@ module.exports = (function filterMenuComponent() {
   Tumblr.Fox.FilterMenuComponent = FilterMenuComponent;
 
   return Tumblr.Fox.FilterMenuComponent;
-})
+});

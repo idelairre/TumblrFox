@@ -31,11 +31,11 @@ const args = yargs
     describe: 'Force the creation of sourcemaps'
   })
 
-  .argv
+  .argv;
 
 // Use production flag for sourcemaps
 // as a fallback
-if(typeof args.sourcemaps === 'undefined'){
+if (typeof args.sourcemaps === 'undefined') {
   args.sourcemaps = !args.production;
 }
 

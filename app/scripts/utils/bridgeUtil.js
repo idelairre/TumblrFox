@@ -4,14 +4,14 @@ module.exports = {
   },
   camelCase(str) {
     return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) => {
-      if (+match === 0) {
+      if (Number(match) === 0) {
         return '';
       } // or if (/\s+/.test(match)) for white spaces
-      return index == 0 ? match.toLowerCase() : match.toUpperCase();
+      return index === 0 ? match.toLowerCase() : match.toUpperCase();
     });
   },
   listenTo(eventName, callback) {
-    let eventSlug = this.camelCase(eventName.split(':').splice(1).join(' '));
+    const eventSlug = this.camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
       let req = {};
       if (e.detail) {
@@ -58,4 +58,4 @@ module.exports = {
     this.listenTo('chrome:update:following');
     this.listenTo('chrome:update:likes');
   }
-}
+};

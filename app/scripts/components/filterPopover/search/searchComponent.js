@@ -2,19 +2,16 @@ module.exports = (function searchComponent() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  const { after, bind, clone, debounce, each, isEmpty } = _;
-  const { AutoPaginator, get, fetchPostData, filterPosts, renderPosts, loaderMixin, TagSearchAutocompleteModel, Filters, Posts, Settings } = Tumblr.Fox;
-  const NavSearch = get('NavSearch');
+  const { clone, debounce, each, isEmpty } = _;
+  const { get, loaderMixin, TagSearchAutocompleteModel, Filters, Posts, Settings } = Tumblr.Fox;
   const PeeprBlogSearch = get('PeeprBlogSearch');
   const SearchResultView = get('SearchResultView');
-  const SearchFilters = get('SearchFilters');
   const EventBus = get('EventBus');
   const ConversationsCollection = get('ConversationsCollection');
   const InboxCompose = get('InboxCompose');
   const BlogSearch = get('BlogSearch');
-  const AutocompleteSearch = get('AutoComplete');
 
-  let Conversations = new ConversationsCollection();
+  const Conversations = new ConversationsCollection();
 
   // TODO: handle if there are no results in the tag search, i.e., if the next offset is -1
 
@@ -47,7 +44,7 @@ module.exports = (function searchComponent() {
     _onTextInputBlur(e) {
       this._debouncedSearch(this.$(e.target).val());
     }
-  }
+  };
 
   const FiltersPopover = {
     showPopover() {
@@ -63,9 +60,9 @@ module.exports = (function searchComponent() {
       Object.assign(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype, defaultFilter);
       PeeprBlogSearch.prototype.subviews.filters.constructor.prototype.onPopoverClose.call(this);
     }
-  }
+  };
 
-  let SearchComponent = PeeprBlogSearch.extend({
+  const SearchComponent = PeeprBlogSearch.extend({
     className: 'filter-search',
     template: $('#searchFilterTemplate').html(),
     mixins: [loaderMixin],
@@ -95,37 +92,36 @@ module.exports = (function searchComponent() {
       }
     }),
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e),
-      this.state = this.defaults.state,
-      this.searchActive = !1,
-      this.blog = e.blog,
+      this.options = Object.assign({}, this.defaults, e);
+      this.state = this.defaults.state;
+      this.searchActive = !1;
+      this.blog = e.blog;
       // this is the crazy filter dropdown
       this.model = new BlogSearch({
         blogname: Tumblr.Prima.currentUser().id,
         themeParams: this.blog.get('global_theme_params')
-      }),
+      });
       this.initializeSubviews();
     },
     initializeSubviews() {
-      Object.assign(this.subviews.filters.constructor.prototype, FiltersPopover),
+      Object.assign(this.subviews.filters.constructor.prototype, FiltersPopover);
       each(this.subviews, subview => {
-        subview.options = subview.options || {},
-        subview.options.model = this.model
+        subview.options = subview.options || {};
+        subview.options.model = this.model;
       });
     },
     render() {
-      return this.$el.html(this.template),
+      this.$el.html(this.template);
       this.bindEvents();
     },
     afterRenderSubviews() {
-      return this.$userList = this.searchResultView.$el,
-      this.$filters = this.filters.$el,
-      this.$settings = this.settings.$el,
-      this.input.model.set(this.options), // this enables the nsfw filter
-      this.input.$el.find('input').attr('data-js-textinput', ''),
-      Object.assign(this.input, InputExtension),
-      this.set('showUserList', false),
-      this;
+      this.$userList = this.searchResultView.$el;
+      this.$filters = this.filters.$el;
+      this.$settings = this.settings.$el;
+      this.input.model.set(this.options); // this enables the nsfw filter
+      this.input.$el.find('input').attr('data-js-textinput', '');
+      Object.assign(this.input, InputExtension);
+      this.set('showUserList', false);
     },
     evalItems(data) {
       console.log('[TAGS]', data);
@@ -155,22 +151,20 @@ module.exports = (function searchComponent() {
         return;
       }
       if (this.state.likes) {
-        this.toggleLoader(true),
-        Posts.searchLikes(this.model.attributes).then(() => {
+        this.toggleLoader(true);
+        return Posts.searchLikes(this.model.attributes).then(() => {
           this.toggleLoader(false);
         });
-        return;
       } else if (this.state.dashboard) {
-        this.toggleLoader(true),
-        Posts.searchDashboard(this.model.attributes).then(() => {
+        this.toggleLoader(true);
+        return Posts.searchDashboard(this.model.attributes).then(() => {
           this.toggleLoader(false);
         });
-        return;
       }
       // go to weird default Tumblr behavior
-      return this.toggleLoader(true),
-      this.searchStarted = !0,
-      this.model.set(query),
+      this.toggleLoader(true);
+      this.searchStarted = !0;
+      this.model.set(query);
       this.model.fetch();
     },
     events: {
@@ -178,7 +172,7 @@ module.exports = (function searchComponent() {
       'click .toggle-user': 'setUserList',
       'click [data-start-conversation]': 'selectBlog',
       'click .post_type_filter': 'onFormClick',
-      'click .blog-search-input' : 'onFormClick'
+      'click .blog-search-input': 'onFormClick'
     },
     bindEvents() {
       // TODO: make these conditional on state
@@ -195,6 +189,7 @@ module.exports = (function searchComponent() {
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
       this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
+      // this.listenTo(Tumblr.Events, 'DOMEventor:keyup:enter', ::this.search);
     },
     unbindEvents() {
       // unbind shit
@@ -215,34 +210,34 @@ module.exports = (function searchComponent() {
       console.log('[UPDATE SEARCH SETTINGS] called', this);
       if (state === 'dashboard') {
         this.showUserList ? this.setUserList() : null;
-        this.input.$el.find('input').attr('placeholder', 'Search dashboard'),
+        this.input.$el.find('input').attr('placeholder', 'Search dashboard');
         this.input.$el.find('input').val('');
-        this.input.tagSearchAutocompleteModel.state = this.state,
-        this.input.blogSearchAutocompleteHelper.model = this.input.tagSearchAutocompleteModel,
+        this.input.tagSearchAutocompleteModel.state = this.state;
+        this.input.blogSearchAutocompleteHelper.model = this.input.tagSearchAutocompleteModel;
         this.input.blogSearchAutocompleteHelper.model.fetch();
       } else if (state === 'likes') {
-        this.input.$el.find('input').attr('placeholder', 'Search likes'),
-        this.input.$el.find('input').val(''),
-        this.input.tagSearchAutocompleteModel.state = this.state,
-        this.input.blogSearchAutocompleteHelper.model = this.input.tagSearchAutocompleteModel,
+        this.input.$el.find('input').attr('placeholder', 'Search likes');
+        this.input.$el.find('input').val('');
+        this.input.tagSearchAutocompleteModel.state = this.state;
+        this.input.blogSearchAutocompleteHelper.model = this.input.tagSearchAutocompleteModel;
         this.input.blogSearchAutocompleteHelper.model.fetch();
       } else {
-        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`),
-        this.input.$el.find('input').val(''),
+        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`);
+        this.input.$el.find('input').val('');
         this.input.blogSearchAutocompleteHelper.model = this.input.blogSearchAutocompleteModel;
       }
     },
     delegateInputEvents(e) {
       if (e.showUserList) {
-        this.input.undelegateEvents(),
-        this.filters.undelegateEvents(),
-        this.input.blogSearchAutocompleteHelper.undelegateEvents(),
-        this.input.delegateEvents(InboxCompose.prototype.events),
+        this.input.undelegateEvents();
+        this.filters.undelegateEvents();
+        this.input.blogSearchAutocompleteHelper.undelegateEvents();
+        this.input.delegateEvents(InboxCompose.prototype.events);
         this.searchResultView.delegateEvents();
       } else {
-        this.input.undelegateEvents(),
-        this.input.delegateEvents(),
-        this.filters.delegateEvents(),
+        this.input.undelegateEvents();
+        this.input.delegateEvents();
+        this.filters.delegateEvents();
         this.input.blogSearchAutocompleteHelper.delegateEvents();
       }
     },
@@ -259,25 +254,25 @@ module.exports = (function searchComponent() {
     },
     toggleUserList(e) {
       if (e.showUserList) {
-        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`),
-        this.input.$el.find('input').val(''),
-        this.$userList.show(),
-        this.$settings.hide(),
-        this.$filters.find('i').hide(),
-        this.$el.find('.indicator').text('-'),
+        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`);
+        this.input.$el.find('input').val('');
+        this.$userList.show();
+        this.$settings.hide();
+        this.$filters.find('i').hide();
+        this.$el.find('.indicator').text('-');
         Tumblr.Fox.Posts.set('tagSearch', 'user');
       } else {
-        this.$userList.hide(),
-        this.$settings.show(),
-        this.$filters.find('i').show(),
+        this.$userList.hide();
+        this.$settings.show();
+        this.$filters.find('i').show();
         this.$el.find('.indicator').text('+');
       }
     },
     updateLog(response) {
       console.log('[UPDATE LOG]', response);
-      this.searchStarted = !1,
-      this.model.set(response.loggingData),
-      Object.assign(this.filters.model, response.loggingData),
+      this.searchStarted = !1;
+      this.model.set(response.loggingData);
+      Object.assign(this.filters.model, response.loggingData);
       Object.assign(Tumblr.Fox.Posts.query, response);
     }
   });
@@ -285,4 +280,4 @@ module.exports = (function searchComponent() {
   Tumblr.Fox.SearchComponent = SearchComponent;
 
   return Tumblr.Fox.SearchComponent;
-})
+});

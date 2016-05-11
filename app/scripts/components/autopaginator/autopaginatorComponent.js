@@ -1,23 +1,21 @@
 module.exports = (function autopaginator() {
   Tumblr.Fox = Tumblr.Fox || {};
-  const $ = Backbone.$;
-  const { debounce, filter, once } = _;
-  const { createPostView, formatDashboardPost, Posts } = Tumblr.Fox;
-  const { Tumblelog } = Tumblr.Prima.Models;
+  const { debounce, once } = _;
+  const { Posts } = Tumblr.Fox;
 
   // NOTE: all this does is poop out posts. No component should be in charge of rendering posts except this one
   // this component should not fetch posts except upon scrolling
 
-  let AutoPaginator = Backbone.View.extend({
+  const AutoPaginator = Backbone.View.extend({
     model: Posts,
-    initialize(e) {
-      this.enabled = !1,
-      this.defaultPagination = !0,
+    initialize() {
+      this.enabled = !1;
+      this.defaultPagination = !0;
       this.bindEvents();
     },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'fox:autopaginator:start', ::this.start);
-      this.listenTo(Tumblr.Events,'fox:autopaginator:stop', ::this.stop);
+      this.listenTo(Tumblr.Events, 'fox:autopaginator:stop', ::this.stop);
       this.listenTo(Tumblr.Events, 'fox:disablePagination', ::this.disableAll);
       this.listenTo(Tumblr.Events, 'indashblog:search:results-end', ::this.stop);
     },
@@ -59,9 +57,9 @@ module.exports = (function autopaginator() {
         debounce.bind(once(this.model.fetch).call(this.model), 300); // fucking lodash
       }
     }
-  })
+  });
 
   Tumblr.Fox.AutoPaginator = new AutoPaginator();
 
   return Tumblr.Fox.AutoPaginator;
-})
+});

@@ -2,16 +2,15 @@ module.exports = (function loader() {
   Tumblr.Fox = Tumblr.Fox || {};
 
   const $ = Backbone.$;
-  // TODO: turn this into a backbone view so it can listen to post model changes rather than have a huge number of listeners
 
-  let Loader = Backbone.View.extend({
+  const Loader = Backbone.View.extend({
     defaults: {
       loading: false,
       error: false
     },
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e),
-      this.model = Tumblr.Fox.Posts,
+      this.options = Object.assign({}, this.defaults, e);
+      this.model = Tumblr.Fox.Posts;
       this.bindEvents();
     },
     bindEvents() {
@@ -40,4 +39,4 @@ module.exports = (function loader() {
   });
 
   return Tumblr.Fox.Loader;
-})
+});
