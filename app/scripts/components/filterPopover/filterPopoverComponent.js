@@ -1,6 +1,4 @@
-module.exports = (function filterPopoverComponent() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { each } = _;
   const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
@@ -93,9 +91,11 @@ module.exports = (function filterPopoverComponent() {
       // console.log('[SET STATE]', state);
       try {
         for (const key in this.state) {
-          this.state[key] = !1;
-          if (key.includes(state)) {
-            this.state[key] = !0;
+          if ({}.hasOwnProperty.call(this.state, key)) {
+            this.state[key] = !1;
+            if (key.includes(state)) {
+              this.state[key] = !0;
+            }
           }
         }
         each(this._subviews, subview => {

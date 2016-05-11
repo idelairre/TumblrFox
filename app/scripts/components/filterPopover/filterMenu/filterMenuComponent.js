@@ -1,6 +1,4 @@
-module.exports = (function filterMenuComponent() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
 
   const FilterMenuComponent = Backbone.View.extend({

@@ -11,6 +11,7 @@ module.exports = {
     });
   },
   listenTo(eventName, callback) {
+    console.log('[BRIDGE LISTEN]', eventName);
     const eventSlug = this.camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
       let req = {};

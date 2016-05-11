@@ -1,6 +1,4 @@
-module.exports = (function filterIcon() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function filterIcon(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { FilterPopoverContainer } = Tumblr.Fox;
 

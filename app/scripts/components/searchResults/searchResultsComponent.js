@@ -1,6 +1,4 @@
-module.exports = (function searchResults() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function searchResults(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { template } = _;
 

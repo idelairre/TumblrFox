@@ -1,6 +1,4 @@
-module.exports = (function followerModel() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function followerModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { chromeMixin } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;

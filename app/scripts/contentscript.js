@@ -15,7 +15,8 @@ import FollowerList from './components/followerList/followerListComponent';
 import FollowerModel from './models/followerModel';
 import FollowerSearch from './components/followerList/followerSearch/followerSearchComponent';
 import Events from './utils/eventsUtil';
-import Main from './main.js';
+import Init from './init';
+import Main from './main';
 import postFormatter from './utils/postFormatterUtil';
 import PostModel from './models/postModel';
 import PopoverMixin from './mixins/popoverMixin';
@@ -37,7 +38,7 @@ function inject(modules) {
     const module = modules[i];
     const app = document.createElement('script');
     app.setAttribute('type', 'text/javascript');
-    app.appendChild(document.createTextNode('(' + module + ')();'));
+    app.appendChild(document.createTextNode('(' + module + ')(Tumblr, Backbone, _);'));
     (document.body || document.head || document.documentElement).appendChild(app);
   }
 }
@@ -62,6 +63,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   ]);
 
   inject([
+    Init,
     postFormatter,
     componentFetcher,
     Events,

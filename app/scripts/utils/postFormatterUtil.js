@@ -1,7 +1,5 @@
-module.exports = (function postFormatter() {
+module.exports = (function postFormatter(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  Tumblr.Fox = Tumblr.Fox || {};
-
   Tumblr.Fox.formatType = function (postData) {
     if (postData.type === 'text') {
       return 'regular';

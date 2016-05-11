@@ -1,6 +1,4 @@
-module.exports = (function tagSearchAutocompleteModel() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { countBy, identity, invoke, omit, sortBy, uniq } = _;
   const { get, chromeMixin } = Tumblr.Fox;
@@ -92,6 +90,7 @@ module.exports = (function tagSearchAutocompleteModel() {
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
+      console.log(e);
       let tags = e.detail || e;
       if (!this.fetched) {
         this.items.reset(tags.slice(0, 250));

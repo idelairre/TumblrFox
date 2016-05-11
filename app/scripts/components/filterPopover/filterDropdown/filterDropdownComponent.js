@@ -1,6 +1,4 @@
-module.exports = (function filterDropdown() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function filterDropdown(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { mapKeys } = _;
   const { get } = Tumblr.Fox;
@@ -39,7 +37,8 @@ module.exports = (function filterDropdown() {
       this.$toggleItems = this.$('.toggle_items');
       console.log(this.$toggleItems);
       if (this.state.likes) {
-        this.$date.find('input').val(new Date().toDateInputValue()) && this.$toggleItems.hide();
+        this.$date.find('input').val(new Date().toDateInputValue());
+        this.$toggleItems.hide();
       } else {
         this.$date.parents().find('.datepicker').hide();
       }

@@ -1,4 +1,4 @@
-module.exports = (function postModel() {
+module.exports = (function postModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { each, defer, memoize, once, isEmpty } = _;
   const { Tumblelog } = Tumblr.Prima.Models;

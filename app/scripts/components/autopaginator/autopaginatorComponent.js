@@ -1,5 +1,4 @@
-module.exports = (function autopaginator() {
-  Tumblr.Fox = Tumblr.Fox || {};
+module.exports = (function autopaginator(Tumblr, Backbone, _) {
   const { debounce, once } = _;
   const { Posts } = Tumblr.Fox;
 

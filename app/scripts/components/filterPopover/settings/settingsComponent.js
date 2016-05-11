@@ -1,6 +1,4 @@
-module.exports = (function settings() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function settings(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { defer } = _;
   const { get, SettingsPopoverComponent, Popover } = Tumblr.Fox;

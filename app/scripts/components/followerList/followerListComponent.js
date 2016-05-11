@@ -1,6 +1,4 @@
-module.exports = (function followerList() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function followerList(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { debounce, each } = _;
   const { FollowerModel, FollowerItem, FollowerSearch } = Tumblr.Fox;

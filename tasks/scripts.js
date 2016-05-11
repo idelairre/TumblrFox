@@ -29,7 +29,7 @@ gulp.task('scripts', (cb) => {
       tmp[path.basename] = path;
     }))
     .pipe(gulpWebpack({
-      devtool: args.sourcemaps ? 'eval' : null,
+      devtool: args.sourcemaps ? 'source-map' : null,
       watch: args.watch,
       output: {
         filename: '[name].js'

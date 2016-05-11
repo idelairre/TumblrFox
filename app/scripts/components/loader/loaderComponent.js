@@ -1,6 +1,4 @@
-module.exports = (function loader() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function loader(Tumblr, Backbone, _) {
   const $ = Backbone.$;
 
   const Loader = Backbone.View.extend({

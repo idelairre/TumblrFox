@@ -1,6 +1,4 @@
-module.exports = (function popover() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function popover(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { template } = _;
   const { get, PopoverMixin } = Tumblr.Fox;

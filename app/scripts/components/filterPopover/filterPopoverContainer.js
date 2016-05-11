@@ -1,6 +1,4 @@
-module.exports = (function filterPopoverContainer() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { get } = Tumblr.Fox;
   const { FilterPopoverComponent } = Tumblr.Fox;
@@ -15,7 +13,7 @@ module.exports = (function filterPopoverContainer() {
         autoTeardown: !1,
         teardownOnEscape: !1
       });
-      new FilterPopoverComponent(e);
+      return new FilterPopoverComponent(e);
     },
     show() {
       this.view.show();

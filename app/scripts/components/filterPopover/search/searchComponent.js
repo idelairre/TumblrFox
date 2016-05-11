@@ -1,6 +1,4 @@
-module.exports = (function searchComponent() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function searchComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { clone, debounce, each, isEmpty } = _;
   const { get, loaderMixin, TagSearchAutocompleteModel, Filters, Posts, Settings } = Tumblr.Fox;

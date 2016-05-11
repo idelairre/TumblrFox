@@ -1,9 +1,6 @@
-module.exports = (function followerItem() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function followerItem(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { template } = _;
-  const { Tumblelog } = Tumblr.Prima.Models;
   const { constants } = Tumblr.Fox;
 
   $.fn.removeAttributes = function (args) {

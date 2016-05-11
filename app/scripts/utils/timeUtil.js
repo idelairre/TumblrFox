@@ -1,6 +1,4 @@
-module.exports = (function time() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function time(Tumblr, Backbone, _) {
   Tumblr.Fox.toTumblrTime = function (date) {
     return Date.parse(date) / 1000;
   };

@@ -1,6 +1,4 @@
-module.exports = (function followerSearch() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function followerSearch(Tumblr, Backbone, _) {
   const { defer } = _;
   const { Popover } = Tumblr.Fox;
 

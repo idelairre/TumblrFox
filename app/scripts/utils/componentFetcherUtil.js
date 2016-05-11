@@ -1,6 +1,4 @@
-module.exports = (function componentFetcher() {
-  Tumblr.Fox = Tumblr.Fox || {};
-
+module.exports = (function componentFetcher(Tumblr, Backbone, _) {
   Tumblr.Fox.getComponent = function (args, object, searchTerm) {
     const modules = args[2].m;
     let putFlag = true;
