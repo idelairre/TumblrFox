@@ -1,6 +1,6 @@
 module.exports = (function postModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { each, defer, memoize, once, isEmpty } = _;
+  const { isEmpty } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
   const { chromeMixin } = Tumblr.Fox;
@@ -9,7 +9,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
 
   // NOTE: this strikes me as a "super model", maybe thin this out?
 
-  let Posts = Backbone.Model.extend({
+  const Posts = Backbone.Model.extend({
     mixins: [chromeMixin],
     defaults: {
       apiSlug: {
@@ -35,13 +35,13 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         dashboardSearch: !1
       }
     },
-    initialize(e) {
-      this.query = this.defaults.query,
-      this.apiSlug = this.defaults.apiSlug,
-      this.state = this.defaults.state,
-      this.items = Tumblr.Posts,
-      this.fetchedLikes = !1,
-      this.loading = !1,
+    initialize() {
+      this.query = this.defaults.query;
+      this.apiSlug = this.defaults.apiSlug;
+      this.state = this.defaults.state;
+      this.items = Tumblr.Posts;
+      this.fetchedLikes = !1;
+      this.loading = !1;
       this.bindEvents();
     },
     bindEvents() {
@@ -86,8 +86,8 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
     updateLikesCache(action, postId) {
       console.log('[UPDATE LIKES]', action, postId);
       const slug = {
-        postId: postId,
-        action: action
+        postId,
+        action
       };
       this.chromeTrigger('chrome:update:likes', slug);
     },
@@ -100,13 +100,17 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         limit: this.apiSlug.limit
       };
       const matches = this.$$matches.slice(opts.offset, opts.offset + opts.limit);
-      matches.length > 0 ? this.toggleLoader() : null;
+      if (matches.length > 0) {
+         this.toggleLoader();
+       }
       if (isEmpty(matches)) {
         console.log('[NO MATCHES]');
         Tumblr.Events.trigger('fox:searchLikes:finished', this.query.loggingData);
-        Tumblr.Fox.AutoPaginator.enabled ? Tumblr.Events.trigger('fox:autopaginator:stop') : null;
+        if (Tumblr.Fox.AutoPaginator.enabled) {
+           Tumblr.Events.trigger('fox:autopaginator:stop');
+         }
       } else if (matches.length > 0) {
-        this.handOffPosts({ posts: matches }),
+        this.handOffPosts({ posts: matches });
         this.toggleLoader();
       }
     },
@@ -120,35 +124,35 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       if (this.loading) {
         return;
       }
-      this.filterPosts(type),
-      this.state.apiFetch = !0,
-      this.state.tagSearch = !1,
-      this.state.dashboardSearch = !1,
-      this.resetQueryOffsets(),
+      this.filterPosts(type);
+      this.state.apiFetch = !0;
+      this.state.tagSearch = !1;
+      this.state.dashboardSearch = !1;
+      this.resetQueryOffsets();
       setTimeout(() => {
         this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
       }, 300);
     },
     initialBlogFetch(e) {
       if (e.blogname !== this.query.loggingData.blogname) {
-       this.filterPosts(),
+       this.filterPosts();
        Tumblr.Events.trigger('fox:autopaginator:start');
       }
       this.resetQueryOffsets();
-      this.query.loggingData = Object.assign({ offset: 0 }, e), // this is weird and I don't want to touch it
+      this.query.loggingData = Object.assign({ offset: 0 }, e); // this is weird and I don't want to touch it
       this.clientFetchPosts(this.query.loggingData);
     },
     initialIndashSearch(posts) {
-      Tumblr.Events.trigger('fox:autopaginator:start'),
-      this.filterPosts(),
-      this.state.apiFetch = !1,
-      this.state.tagSearch = !0,
-      this.state.dashboardSearch = !1,
+      Tumblr.Events.trigger('fox:autopaginator:start');
+      this.filterPosts();
+      this.state.apiFetch = !1;
+      this.state.tagSearch = !0;
+      this.state.dashboardSearch = !1;
       setTimeout(() => {
         posts = posts.filter(post => {
           return post.post_html;
-        }),
-        this.renderPosts(posts),
+        });
+        this.renderPosts(posts);
         this.toggleLoader();
       }, 300);
     },
@@ -164,9 +168,9 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         filter_nsfw: slug.filter_nsfw,
         before: slug.before
       });
-      const resolve = (response) => {
-        this.$$matches = response,
-        deferred.resolve(response),
+      const resolve = response => {
+        this.$$matches = response;
+        deferred.resolve(response);
         this.toggleLoader();
       };
       this.chromeTrigger('chrome:search:likes', slug, resolve);
@@ -177,21 +181,21 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         this.apiSlug.type = filterType;
         this.resetQueryOffsets();
       }
-      Tumblr.Posts.reset([]),
-      Tumblr.postsView.collection.reset([]),
-      Tumblr.postsView.postViews = [],
+      Tumblr.Posts.reset([]);
+      Tumblr.postsView.collection.reset([]);
+      Tumblr.postsView.postViews = [];
       $('li[data-pageable]').fadeOut(300, () => {
-        $('.standalone-ad-container').remove(),
+        $('.standalone-ad-container').remove();
         $('li[data-pageable]').remove();
       });
     },
     searchLikes(query) {
       const deferred = $.Deferred();
-      this.filterPosts(),
-      Tumblr.Events.trigger('fox:autopaginator:start'),
-      this.state.apiFetch = !0,
-      this.state.tagSearch = !0,
-      this.state.dashboardSearch = !1,
+      this.filterPosts();
+      Tumblr.Events.trigger('fox:autopaginator:start');
+      this.state.apiFetch = !0;
+      this.state.tagSearch = !0;
+      this.state.dashboardSearch = !1;
       this.fetchLikesByTag(query).then(matches => {
         matches = matches.slice(0, 8);
         this.handOffPosts(matches);
@@ -201,9 +205,9 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
     },
     parseTags(postViews) {
       return postViews.map(post => {
-        let tagElems = post.$el.find('.post_tags');
+        const tagElems = post.$el.find('.post_tags');
         if (tagElems.length > 0) {
-          let rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
+          const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
           post.tags = rawTags.filter(tag => {
             if (tag !== '') {
               return tag;
@@ -218,15 +222,15 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       const deferred = $.Deferred();
       let results = [];
       if (!this.state.dashboardSearch) { // cache posts and search amongst these from now on
-        this.state.dashboardSearch = !0,
-        this.$$matches = Tumblr.postsView.postViews,
+        this.state.dashboardSearch = !0;
+        this.$$matches = Tumblr.postsView.postViews;
         this.parseTags(this.$$matches);
       }
-      console.log('[QUERY]', query, this.$$matches),
-      Tumblr.Events.trigger('fox:disablePagination'),
-      this.state.apiFetch = !0,
-      this.state.tagSearch = !0,
-      this.filterPosts(),
+      console.log('[QUERY]', query, this.$$matches);
+      Tumblr.Events.trigger('fox:disablePagination');
+      this.state.apiFetch = !0;
+      this.state.tagSearch = !0;
+      this.filterPosts();
       this.toggleLoader();
       setTimeout(() => {
         results = this.$$matches.filter(post => { // TODO: make sure to filter by other query parameters
@@ -235,7 +239,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
           }
         });
         console.log(this.$$matches, results);
-        this.handOffPosts(results); // at the handoff its fetching more posts from the same blog
+        this.handOffPosts(results);
         this.toggleLoader();
       }, 300);
       deferred.resolve(this.items);
@@ -246,8 +250,8 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       if (this.loading) {
         return deferred.reject(); // remember this shit
       }
-      const resolve = (response) => {
-        deferred.resolve(response),
+      const resolve = response => {
+        deferred.resolve(response);
         this.toggleLoader();
       };
       this.toggleLoader();
@@ -271,7 +275,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       }
       $.ajax({
         url: 'https://www.tumblr.com/svc/indash_blog/posts',
-        beforeSend: (xhr) => {
+        beforeSend: xhr => {
           Tumblr.Events.trigger('fox:postFetch:started', slug);
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
         },
@@ -281,7 +285,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
           limit: slug.limit || 8,
           offset: slug.offset || 0
         },
-        success: (data) => {
+        success: data => {
           if (data.response.tumblelog) {
             Tumblelog.collection.add(new Tumblelog(data.response.tumblelog));
           }
@@ -289,11 +293,11 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
             this.toggleLoader();
           }
           Tumblr.Events.trigger('fox:postFetch:finished', data.response);
-          Object.assign(this.query.loggingData, slug),
+          Object.assign(this.query.loggingData, slug);
           this.query.loggingData.offset += data.response.posts.length;
           return data;
         },
-        fail: (error) => {
+        fail: error => {
           Tumblr.Events.trigger('fox:postFetch:failed', error);
         }
       });
@@ -305,7 +309,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         return;
       }
       const posts = e.length ? e : e.posts || e.liked_posts || e.models || e.detail.liked_posts || e.detail.posts; // this is because of poor choices, this needs to be hammered down
-      let length = posts.length;
+      const length = posts.length;
       this.apiSlug.offset += length;
       for (let i = 0; length > i; i += 1) {
         const post = posts[i];
@@ -319,15 +323,15 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       if (!response) {
         return;
       }
-      let posts = response.posts || response;
+      const posts = response.posts || response;
       for (let i = 0; posts.length > i; i += 1) { // NOTE: posts do not come out in order due to different formatting times
         this.renderPost(posts[i]);
       }
     },
     renderPost(post) {
-      let { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
-      Tumblr.Fox.constants.attachNode.before(postContainer),
-      Tumblr.Fox.createPostView(postElement, postModel),
+      const { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
+      Tumblr.Fox.constants.attachNode.before(postContainer);
+      Tumblr.Fox.createPostView(postElement, postModel);
       this.items.add(postModel);
     }
   });

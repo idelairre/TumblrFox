@@ -28,6 +28,9 @@ This is liable to break as Tumblr updates and is not by any means official or fu
 + Get Webpack build to preserve filepaths
 + Refactor caching functions so that they reflect actual post/followers count not cached count
 + Get app to work on another computer (HEUH)
++ Speed up init time (maybe pre-fetch scripts and pull from local cache instead of when the site initializes?)
++ Use generators for dexie queries in background.js
++ Find a way to speed up queries and caching/improve user experience for initial caching functions
 + Get SearchComponent to properly teardown when closed so that the PeeprBlogSearch doesn't open duplicate popovers
 
 ## Relevant development posts

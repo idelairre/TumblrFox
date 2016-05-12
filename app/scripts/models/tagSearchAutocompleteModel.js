@@ -1,9 +1,9 @@
 module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { countBy, identity, invoke, omit, sortBy, uniq } = _;
-  const { get, chromeMixin } = Tumblr.Fox;
+  const { countBy, identity, invoke, omit } = _;
+  const { chromeMixin } = Tumblr.Fox;
 
-  let TagSearchAutocompleteModel = Backbone.Model.extend({
+  const TagSearchAutocompleteModel = Backbone.Model.extend({
     mixins: [chromeMixin],
     defaults: {
       matchTerm: '',
@@ -15,13 +15,13 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
         user: !0
       }
     },
-    initialize(e) {
-      this.fetched = !1,
-      this.state = this.defaults.state,
-      this.items = new Backbone.Collection(),
-      this.$$dashboardTags = [],
-      this.$$likesTags = [],
-      this.bindEvents(),
+    initialize() {
+      this.fetched = !1;
+      this.state = this.defaults.state;
+      this.items = new Backbone.Collection();
+      this.$$dashboardTags = [];
+      this.$$likesTags = [];
+      this.bindEvents();
       this.fetch();
     },
     bindEvents() {
@@ -38,14 +38,14 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     // NOTE: doesn't fetch new tags after API fetch and having initially fetched dashboard tags
     // need a trigger to flush tags
     dashboardFetch() { // called on popover open, this leads to problems of where to pull tags from...
-      let tagArray = [];
+      const tagArray = [];
       const deferred = $.Deferred();
       deferred.resolve(this.items);
       if (Tumblr.Fox.Posts.state.dashboardSearch) {
         return deferred.promise();
       }
       Tumblr.postsView.postViews.filter(post => {
-        let tagElems = post.$el.find('.post_tags');
+        const tagElems = post.$el.find('.post_tags');
         if (tagElems.length > 0) {
           let rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
           rawTags = rawTags.filter(tag => {
@@ -55,14 +55,16 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
           });
         }
       });
-      let tags = [];
-      tagArray = countBy(tagArray, identity);
-      for (let key in tagArray) {
-        let tag = {
-          tag: key,
-          count: tagArray[key]
-        };
-        tags.push(tag);
+      const tags = [];
+      const tagCounts = countBy(tagArray, identity);
+      for (const key in tagCounts) {
+        if ({}.hasOwnProperty.call(tagCounts, key)) {
+          const tag = {
+            tag: key,
+            count: tagCounts[key]
+          };
+          tags.push(tag);
+        }
       }
       this.parse(tags);
       return deferred.promise();
@@ -90,12 +92,13 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
-      console.log(e);
-      let tags = e.detail || e;
+      const tags = e.detail || e;
       if (!this.fetched) {
         this.items.reset(tags.slice(0, 250));
       }
-      this.get('matchTerm') === '' ? this.set('typeAheadMatches', this.items.toJSON()) : null,
+      if (this.get('matchTerm') === '') {
+         this.set('typeAheadMatches', this.items.toJSON());
+       }
       omit(e, 'tags');
     }
   });

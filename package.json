@@ -1,5 +1,5 @@
 {
-  "name": "tumblr-filter",
+  "name": "tumblr-fox",
   "private": true,
   "version": "0.0.0",
   "description": "",
@@ -86,10 +86,22 @@
   "xo": {
     "esnext": true,
     "rules": {
-      "indent": [0],
-      "babel/object-curly-spacing": [0],
-      "no-new": [0],
-      "camelcase": [0]
+      "indent": [
+        0
+      ],
+      "babel/object-curly-spacing": [
+        0
+      ],
+      "babel/new-cap": [0],
+      "no-new": [
+        0
+      ],
+      "camelcase": [
+        0
+      ],
+      "xo/filename-case": [
+        0
+      ]
     }
   }
 }

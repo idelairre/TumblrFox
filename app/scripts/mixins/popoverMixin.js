@@ -1,5 +1,4 @@
 module.exports = (function popoverMixin(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
   const { get } = Tumblr.Fox;
   const Popover = get('PopoverMixin');
   const Mixin = get('Mixin');

@@ -15,6 +15,9 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
     if (results.length === 1 && putFlag) {
       Tumblr.Fox.put(object, Tumblr.Fox.require(results[0]));
     }
+    if (results.length === 0) {
+      console.error('[GET COMPONENT FAILED]', object);
+    }
     console.log('[GET COMPONENT]', object, results);
     return results;
   };

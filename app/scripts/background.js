@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { countBy, debounce, differenceBy, identity } from 'lodash';
+import { camelCase, countBy, debounce, differenceBy, flatten, identity } from 'lodash';
 import async from 'async';
 import Dexie from 'dexie';
 import { ChromeExOAuth } from './lib/chrome_ex_oauth';
@@ -73,34 +73,27 @@ chrome.storage.sync.get({ consumerKey: '', consumerSecret: '' }, items => {
   });
 });
 
-function parseTags(posts, callback) {
+function calculatePercent(count, objects) {
+  const percentComplete = ((count / objects) * 100).toFixed(2);
+  const itemsLeft = objects - count;
+  const total = objects;
+  return { percentComplete, itemsLeft, total };
+}
+
+// TODO: break this up so that it can report progress to front end
+// NOTE: this had a tendency to crash the browser
+function parseTags(tags, callback) {
   try {
-    const tags = [];
-    const parsedTags = [];
-    let i = 0;
-    while (posts.length - 1 > i) {
-      i += 1;
-      const post = posts[i];
-      const len = post.tags.length;
-      if (len !== 0) {
-        for (let j = 0; len > j; j += 1) {
-          const tag = post.tags[j];
-          console.log('[TAG]', tag, i);
-          tags.push(tag);
-        }
-      }
+    let parsedTags = [];
+    const orderedTags = countBy(tags, identity);
+    for (const key in orderedTags) {
+      const tag = {
+        tag: key,
+        count: orderedTags[key]
+      };
+      parsedTags.push(tag);
     }
-    if (i === (posts.length - 1)) {
-      const orderedTags = countBy(tags, identity);
-      for (const key in orderedTags) {
-        const tag = {
-          tag: key,
-          count: orderedTags[key]
-        };
-        parsedTags.push(tag);
-      }
-      callback(parsedTags);
-    }
+    callback(parsedTags);
   } catch (e) {
     console.error(e);
   }
@@ -108,68 +101,85 @@ function parseTags(posts, callback) {
 
 function cacheLikeTags(callback) {
   console.log('[CACHING TAGS...]');
-  const log = (tagsCount, added) => {
-    const percentComplete = ((added / tagsCount) * 100).toFixed(2);
-    console.log(`[PERCENT COMPLETE]: ${percentComplete}`, '[POSTS PARSED]:', added, '[POSTS LEFT]:', tagsCount);
-    callback({ percentComplete, tagsCount });
+  let items = {
+    totalTagsCount: 0,
+    cachedTagsCount: 0,
+    total: 0
   };
-  db.posts.toCollection().toArray(posts => {
-    parseTags(posts, tags => {
+  db.posts.orderBy('tags').keys(tags => {
+    console.log('[TAGS LENGTH]', tags.length);
+    tags = flatten(tags.filter(tagArray => {
+      if (tagArray.length > 0) {
+        return tagArray;
+      }
+    }));
+    parseTags(tags, response => {
       console.log('[TAGS]', tags.length);
       let i = 0;
-      while (tags.length - 1 > i) {
-        i += 1;
-        console.log('[ADDING]', tags[i]);
-        db.tags.add(tags[i]);
-        log(tags.length, i);
+      while (response.length > i) {
+        console.log('[ADDING]', response[i].tag);
+        db.tags.put(response[i]);
+        items.total = response.length;
+        log('tags', i, items, response => {
+          i += 1;
+          callback(response);
+        });
       }
     });
   });
 }
 
 function preloadFollowing(callback) {
-  db.following.toCollection().count(count => {
-    chrome.storage.sync.get({ userName: '', totalFollowingCount: 0 }, items => {
-      const slug = {
-        url: `https://api.tumblr.com/v2/user/following`,
-        limit: 20,
-        offset: 0
-      };
-      console.log('[CACHED FOLLOWING]', count);
-      populateFollowing(slug, items, count, callback);
+  db.following.toCollection().delete().then(() => {
+    db.following.toCollection().count(count => {
+      chrome.storage.sync.get({
+        userName: '',
+        totalFollowingCount: 0
+      }, items => {
+        let slug = {
+          url: `https://api.tumblr.com/v2/user/following`,
+          limit: 20,
+          offset: 0
+        };
+        console.log('[CACHED FOLLOWING]', count);
+        populateFollowing(slug, items, count, callback);
+      });
     });
   });
 }
 
+function log(database, itemCount, items, callback) {
+  db[database].toCollection().count(count => {
+    itemCount = (count - 1);
+    const cachedKey = camelCase(`cached-${database}-count`);
+    const totalKey = camelCase(`total-${database}-count`);
+    const { percentComplete, itemsLeft, total } = calculatePercent(itemCount, items.total);
+    let storageSlug = {};
+    storageSlug[cachedKey] = itemCount;
+    chrome.storage.local.set(storageSlug);
+    console.log('[SYNC KEY]', items[totalKey]);
+    console.log('[STORAGE KEY]', storageSlug[cachedKey]);
+    if (items[totalKey] === 0) {
+      let syncSlug = {};
+      syncSlug[totalKey] = items.total;
+      items[totalKey] = items.total;
+      chrome.storage.sync.set(syncSlug);
+    }
+    console.log('[KEYS]', cachedKey, totalKey);
+    console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
+    callback({ database, percentComplete, itemsLeft, total });
+  });
+};
+
 function populateFollowing(slug, items, followingCount, callback) {
-  // TODO: abstract this
-  const log = (followingCount, items, next) => {
-    db.following.toCollection().count(count => {
-      followingCount = (count - 1);
-      chrome.storage.local.set({ cachedFollowing: followingCount }, () => {
-        const { percentComplete, itemsLeft } = calculatePercent(followingCount, items.totalFollowingCount);
-        console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}, [FOLLOWING]: ${followingCount}`);
-        callback ? callback({ percentComplete, itemsLeft }) : null;
-        next();
-      });
-    });
-  };
   async.whilst(() => {
     return items.totalFollowingCount === 0 || items.totalFollowingCount > followingCount;
   }, next => {
-    // if (items.totalFollowingCount !== 0 && (items.totalFollowingCount - followingCount) < slug.limit) {
-    //   slug.limit = (items.totalFollowingCount - followingCount);
-    // }
     debounce(oauth.authorize, 20).call(oauth, () => {
       onAuthorized(slug, response => {
-        if (response.blogs && response.blogs.length > 0) {
+        if (response && response.blogs.length) {
           slug.offset += response.blogs.length;
-          items.totalFollowingCount = response.total_blogs;
-          if (items.totalFollowingCount === 0) {
-            chrome.storage.sync.set({
-              totalFollowingCount: items.totalFollowingCount
-            });
-          }
+          items.total = response.total_blogs;
           for (const key in slug) {
             if (key.includes('oauth')) {
               delete slug[key];
@@ -177,11 +187,18 @@ function populateFollowing(slug, items, followingCount, callback) {
           }
           const transaction = db.following.bulkPut(response.blogs);
           transaction.then(() => {
-            log(followingCount, items, next);
+            log('following', followingCount, items, response => {
+              next(null);
+              callback(response);
+            });
           });
           transaction.catch(Dexie.BulkError, error => {
-            console.log('[DB ERROR]', error.message);
-            log(followingCount, items, next);
+            log('following', followingCount, items, response => {
+              console.log('[DB ERROR]', error.message);
+              console.log('[DB ERROR]', response);
+              next(null);
+              callback(response);
+            });
           });
         } else {
           console.log('[RESPONSE EMPTY. DONE CACHING]');
@@ -199,8 +216,8 @@ function populateFollowing(slug, items, followingCount, callback) {
 
 function preloadLikes(callback) {
   console.log('[PRELOADING LIKES]');
-  chrome.storage.sync.get({ userName: '', totalLikedPostsCount: 0 }, items => {
-    const slug = {
+  chrome.storage.sync.get({ userName: '', totalPostsCount: 0 }, items => {
+    let slug = {
       blogname: items.userName,
       limit: 50
     };
@@ -215,50 +232,29 @@ function preloadLikes(callback) {
   });
 }
 
-function calculatePercent(count, objects) {
-  const percentComplete = ((count / objects) * 100).toFixed(2);
-  const itemsLeft = objects - count;
-  return { percentComplete, itemsLeft };
-}
-
 function populatePostCache(slug, items, postCount, callback) {
   console.log('[ITEMS]', items);
-  const log = (postCount, items, next) => {
-    db.posts.toCollection().count(count => {
-      postCount = (count - 1);
-      chrome.storage.local.set({
-        cachedLikes: postCount
-      });
-      const { percentComplete, itemsLeft } = calculatePercent(postCount, items.totalLikedPostsCount);
-      console.log('[BEFORE DATE]', fromTumblrTime(slug.before));
-      console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}, [POSTS]: ${postCount}`);
-      callback({ percentComplete, itemsLeft });
-      next();
-    });
-  };
   async.whilst(() => {
-    return items.totalLikedPostsCount === 0 || items.totalLikedPostsCount > postCount;
+    return items.totalPostsCount === 0 || items.totalPostsCount > postCount;
   }, next => {
-    if (items.totalLikedPostsCount !== 0 && (items.totalLikedPostsCount - postCount) < slug.limit) {
-      slug.limit = (items.totalLikedPostsCount - postCount);
-    }
     debounce(fetchLikedPosts, 0).call(this, slug, response => {
       if (response.liked_posts.length > 0) {
-        if (items.totalLikedPostsCount === 0) {
-          items.totalLikedPostsCount = response.liked_count;
-          console.log(items.totalLikedPostsCount);
-          chrome.storage.sync.set({
-            totalLikedPostsCount: items.totalLikedPostsCount
-          });
-        }
+        items.total = response.liked_count;
         slug.before = decrementTumblrDay(slug.before);
+        console.log('[BEFORE]', fromTumblrTime(slug.before));
         const transaction = db.posts.bulkPut(response.liked_posts);
         transaction.then(() => {
-          log(postCount, items, next);
+          log('posts', postCount, items, response => {
+            next(null);
+            callback(response);
+          });
         });
         transaction.catch(Dexie.BulkError, error => {
           console.log('[DB]', error.message);
-          log(postCount, items, next);
+          log('posts', postCount, items, response => {
+            next(null);
+            callback(response);
+          });
         });
       } else {
         console.log('[RESPONSE EMPTY. DONE CACHING]');
@@ -280,9 +276,7 @@ function initialSyncLikes(posts) {
     return;
   }
   // console.log('[POSTS]', posts.length);
-  chrome.storage.sync.get({
-    userName: ''
-  }, items => {
+  chrome.storage.sync.get({ userName: '' }, items => {
     const userName = items.userName;
     const slug = {
       blogname: userName,
@@ -432,10 +426,7 @@ function searchLikes(args, callback) {
     }
     console.log('[MATCHES]', matches);
     if (args.offset && args.limit) {
-      const {
-        offset,
-        limit
-      } = args;
+      const { offset, limit } = args;
       matches = matches.slice(offset, offset + limit);
       return callback(matches);
     }
@@ -465,6 +456,22 @@ function onAuthorized(slug, callback) {
       callback(data);
     }
   }, request);
+}
+function resetCache(callback) {
+  chrome.storage.local.clear(() => {
+    const error = chrome.runtime.lastError;
+    if (error) {
+      console.error(error);
+      callback(error);
+    }
+  });
+  db.delete().then(() => {
+    console.log('[DB] deleted');
+    callback({ percentComplete: 100, itemsLeft: 0 });
+  }).catch(error => {
+    console.error('[DB]', error);
+    callback(error);
+  });
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -500,26 +507,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.runtime.onConnect.addListener(port => {
-  port.onMessage.addListener(msg => {
-    if (msg.type === 'cacheLikes') {
-      preloadLikes(response => {
-        port.postMessage(response);
-      });
-    }
-    if (msg.type === 'cacheTags') {
-      cacheLikeTags(response => {
-        port.postMessage(response);
-      });
-    }
-    if (msg.type === 'cacheFollowing') {
-      preloadFollowing(response => {
-        port.postMessage(response);
-      });
-    }
+  port.onMessage.addListener(request => {
+    switch(request.type) {
+      case 'cacheLikes':
+        preloadLikes(::port.postMessage);
+        break;
+      case 'cacheTags':
+        cacheLikeTags(::port.postMessage);
+        break;
+      case 'cacheFollowing':
+        preloadFollowing(::port.postMessage);
+        break;
+      case 'resetCache':
+        resetCache(::port.postMessage);
+        break;
+      }
   });
 });
 
 initialSyncLikes(db.posts);
-
-window.cacheLikeTags = cacheLikeTags;
-window.preloadFollowing = preloadFollowing;
