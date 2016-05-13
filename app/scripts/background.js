@@ -2,8 +2,10 @@ import $ from 'jquery';
 import { camelCase, countBy, debounce, differenceBy, flatten, identity } from 'lodash';
 import async from 'async';
 import Dexie from 'dexie';
+import { spawn } from 'dexie';
 import { ChromeExOAuth } from './lib/chrome_ex_oauth';
 import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, REQUEST_TOKEN_URL } from './constants';
+import 'babel-polyfill';
 import './lib/livereload';
 
 const db = new Dexie('TumblrFox');
@@ -130,20 +132,20 @@ function cacheLikeTags(callback) {
 }
 
 function preloadFollowing(callback) {
-  db.following.toCollection().delete().then(() => {
-    db.following.toCollection().count(count => {
-      chrome.storage.sync.get({
-        userName: '',
-        totalFollowingCount: 0
-      }, items => {
-        let slug = {
-          url: `https://api.tumblr.com/v2/user/following`,
-          limit: 20,
-          offset: 0
-        };
-        console.log('[CACHED FOLLOWING]', count);
-        populateFollowing(slug, items, count, callback);
-      });
+  spawn(function*() {
+    yield db.following.toCollection().delete();
+    let count = yield db.following.toCollection().count();
+    chrome.storage.sync.get({
+      userName: '',
+      totalFollowingCount: 0
+    }, items => {
+      let slug = {
+        url: `https://api.tumblr.com/v2/user/following`,
+        limit: 20,
+        offset: 0
+      };
+      console.log('[CACHED FOLLOWING]', count);
+      populateFollowing(slug, items, count, callback);
     });
   });
 }
@@ -157,15 +159,15 @@ function log(database, itemCount, items, callback) {
     let storageSlug = {};
     storageSlug[cachedKey] = itemCount;
     chrome.storage.local.set(storageSlug);
-    console.log('[SYNC KEY]', items[totalKey]);
-    console.log('[STORAGE KEY]', storageSlug[cachedKey]);
+    // console.log('[SYNC KEY]', items[totalKey]);
+    // console.log('[STORAGE KEY]', storageSlug[cachedKey]);
     if (items[totalKey] === 0) {
       let syncSlug = {};
       syncSlug[totalKey] = items.total;
       items[totalKey] = items.total;
       chrome.storage.sync.set(syncSlug);
     }
-    console.log('[KEYS]', cachedKey, totalKey);
+    // console.log('[KEYS]', cachedKey, totalKey);
     console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
     callback({ database, percentComplete, itemsLeft, total });
   });
@@ -175,39 +177,39 @@ function populateFollowing(slug, items, followingCount, callback) {
   async.whilst(() => {
     return items.totalFollowingCount === 0 || items.totalFollowingCount > followingCount;
   }, next => {
-    debounce(oauth.authorize, 20).call(oauth, () => {
-      onAuthorized(slug, response => {
-        if (response && response.blogs.length) {
-          slug.offset += response.blogs.length;
-          items.total = response.total_blogs;
-          for (const key in slug) {
-            if (key.includes('oauth')) {
-              delete slug[key];
-            }
+    debounce(oauthRequest, 0).call(this, slug, response => {
+      if (response.blogs && response.blogs.length) {
+        slug.offset += response.blogs.length;
+        items.total = response.total_blogs;
+        for (const key in slug) {
+          if (key.includes('oauth')) {
+            delete slug[key];
           }
-          const transaction = db.following.bulkPut(response.blogs);
-          transaction.then(() => {
-            log('following', followingCount, items, response => {
-              next(null);
-              callback(response);
-            });
-          });
-          transaction.catch(Dexie.BulkError, error => {
-            log('following', followingCount, items, response => {
-              console.log('[DB ERROR]', error.message);
-              console.log('[DB ERROR]', response);
-              next(null);
-              callback(response);
-            });
-          });
-        } else {
-          console.log('[RESPONSE EMPTY. DONE CACHING]');
-          callback({
-            percentComplete: 100,
-            itemsLeft: 0
-          });
         }
-      });
+        const transaction = db.following.bulkPut(response.blogs);
+        transaction.then(() => {
+          log('following', followingCount, items, response => {
+            next(null);
+            callback(response);
+          });
+        });
+        transaction.catch(Dexie.BulkError, error => {
+          log('following', followingCount, items, response => {
+            console.log('[DB ERROR]', error.message);
+            console.log('[DB ERROR]', response);
+            next(null);
+            callback(response);
+          });
+        });
+      } else {
+        console.log('[RESPONSE EMPTY. DONE CACHING]');
+        log('following', followingCount, items, response => {
+          response.percentComplete = 100;
+          response.itemsLeft = 0;
+          next(null);
+          callback(response);
+        });
+      }
     });
   }, error => {
     console.error(error);
@@ -240,7 +242,8 @@ function populatePostCache(slug, items, postCount, callback) {
     debounce(fetchLikedPosts, 0).call(this, slug, response => {
       if (response.liked_posts.length > 0) {
         items.total = response.liked_count;
-        slug.before = decrementTumblrDay(slug.before);
+        // slug.before = decrementTumblrDay(slug.before);
+        slug.before = response.liked_posts[response.liked_posts.length - 1].liked_timestamp;
         console.log('[BEFORE]', fromTumblrTime(slug.before));
         const transaction = db.posts.bulkPut(response.liked_posts);
         transaction.then(() => {
@@ -262,6 +265,7 @@ function populatePostCache(slug, items, postCount, callback) {
           percentComplete: 100,
           itemsLeft: 0
         });
+        return;
       }
     });
   }, error => {
@@ -303,9 +307,8 @@ function syncLikes(payload) {
   const { action, postId } = payload;
   chrome.storage.sync.get({ userName: '' }, items => {
     if (action === 'like') {
-      const userName = items.userName;
       const slug = {
-        blogname: userName,
+        blogname: items.userName,
         offset: 0,
         limit: 1
       };
@@ -388,8 +391,9 @@ function fetchLikedPosts(slug, callback) {
 // TODO: refactor to make use of indexeddb methods
 function searchLikes(args, callback) {
   console.log('[SEARCH LIKES]', args);
-  db.posts.toCollection().toArray(posts => {
-    const term = (typeof args === 'string' ? args : args.term);
+  const term = (typeof args === 'string' ? args : args.term);
+  spawn(function*() {
+    let posts = yield db.posts.toCollection().toArray();
     let matches = posts;
     if (term !== '') {
       matches = matches.filter(post => {
@@ -398,7 +402,6 @@ function searchLikes(args, callback) {
         }
       });
     }
-    matches = term === '' ? matches.slice(0, 5000) : matches;
     if (args.post_type && args.post_type !== 'ANY') {
       const type = args.post_type.toLowerCase();
       matches = matches.filter(post => {
@@ -434,6 +437,13 @@ function searchLikes(args, callback) {
   });
 }
 
+function oauthRequest(slug, callback) {
+  oauth.authorize(() => {
+    onAuthorized(slug, callback);
+  });
+}
+
+// TODO: better error logging
 function onAuthorized(slug, callback) {
   console.log('[SLUG]', slug);
   const request = {
@@ -448,15 +458,15 @@ function onAuthorized(slug, callback) {
 
   oauth.sendSignedRequest(url, (data, xhr) => {
     console.log('[XHR]', xhr);
-    try {
+    if (xhr.response !== '') {
       const response = JSON.parse(data).response;
       callback(response);
-    } catch (error) {
-      console.error(error);
+    } else {
       callback(data);
     }
   }, request);
 }
+
 function resetCache(callback) {
   chrome.storage.local.clear(() => {
     const error = chrome.runtime.lastError;
@@ -503,6 +513,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'updateFollowing':
       preloadFollowing(sendResponse);
       return true;
+    default:
+      // do nothing
   }
 });
 
@@ -521,6 +533,8 @@ chrome.runtime.onConnect.addListener(port => {
       case 'resetCache':
         resetCache(::port.postMessage);
         break;
+      default:
+        // do nothing
       }
   });
 });

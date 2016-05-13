@@ -1,7 +1,7 @@
 {
   "name": "tumblr-fox",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "author": "Ian Delairre",
   "scripts": {
@@ -24,6 +24,7 @@
     "babel-eslint": "^6.0.0-beta.6",
     "babel-loader": "^6.2.4",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-regenerator": "^6.8.0",
     "babel-polyfill": "^6.7.4",
     "babel-preset-es2015": "^6.6.0",
     "babel-preset-stage-0": "^6.5.0",
@@ -41,6 +42,7 @@
     "gulp": "^3.9.1",
     "gulp-bump": "^2.0.1",
     "gulp-cache": "^0.4.3",
+    "gulp-crx-pack": "git+https://github.com/PavelVanecek/gulp-crx.git",
     "gulp-filter": "^4.0.0",
     "gulp-git": "^1.2.4",
     "gulp-if": "^2.0.0",
@@ -92,7 +94,9 @@
       "babel/object-curly-spacing": [
         0
       ],
-      "babel/new-cap": [0],
+      "babel/new-cap": [
+        0
+      ],
       "no-new": [
         0
       ],

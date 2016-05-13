@@ -41,6 +41,7 @@ const bar = new ProgressBar.Line(container, {
 const Options = Backbone.View.extend({
   initialize() {
     this.$status = this.$('#status');
+    this.props = {};
     this.$bar = bar;
     this.$progress = progress;
     this.$tooltip = this.$('i.note');
@@ -57,7 +58,18 @@ const Options = Backbone.View.extend({
     'click #cacheFollowing': 'cacheFollowing',
     'click #cacheTags': 'cacheTags',
     'click #cacheLikes': 'cacheLikes',
-    'click #resetCache': 'resetCache'
+    'click #resetCache': 'resetCache',
+    'click #logging': 'toggleLogging'
+  },
+  toggleLogging(e) {
+    const logging = $(e.target).prop('checked');
+    chrome.storage.local.set({ logging });
+    this.props.logging = logging;
+    if (this.props.logging) {
+      this.$('.debug').show();
+    } else {
+      this.$('.debug').hide();
+    }
   },
   showTooltip(e) {
     const position = $(e.target).position();
@@ -109,7 +121,8 @@ const Options = Backbone.View.extend({
     const storageSlug = {
       cachedPostsCount: 0,
       cachedFollowingCount: 0,
-      cachedTagsCount: 0
+      cachedTagsCount: 0,
+      logging: false
     };
     chrome.storage.sync.get(syncSlug, items => {
       this.$('#consumerKey').val(items.consumerKey);
@@ -118,11 +131,17 @@ const Options = Backbone.View.extend({
       this.$('#totalLikes').text(items.totalPostsCount);
       this.$('#totalFollowing').text(items.totalFollowingCount);
       this.$('#totalTags').text(items.totalTagsCount);
+      this.props = Object.assign(this.props, items);
     });
     chrome.storage.local.get(storageSlug, items => {
       this.$('#following').text(items.cachedFollowingCount);
       this.$('#likes').text(items.cachedPostsCount);
       this.$('#tags').text(items.cachedTagsCount);
+      this.$('#logging').attr('checked', items.logging);
+      this.props = Object.assign(this.props, items);
+      if (this.props.logging) {
+        this.$('.debug').show();
+      }
     });
   },
   cacheTags() {

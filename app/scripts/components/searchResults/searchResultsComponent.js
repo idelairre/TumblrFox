@@ -15,6 +15,7 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
     bindEvents() {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', this.hide);
       this.listenTo(Tumblr.Events, 'indashblog:search:results-end', this.update);
+      this.listenTo(Tumblr.Events, 'fox:filterFetch:started', this.hide);
       this.listenTo(Tumblr.Events, 'fox:searchLikes:finished', this.update);
       this.listenTo(Tumblr.Events, 'fox:postFetch:empty', this.update);
     },

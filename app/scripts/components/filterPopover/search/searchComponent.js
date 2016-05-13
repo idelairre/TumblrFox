@@ -28,7 +28,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     tagSearchAutocompleteModel: TagSearchAutocompleteModel,
     fetchResults(query) {
       // console.log('[USER QUERY]', query);
-      return Conversations.fetch({ data: { q: query, limit: 8 }});
+      return Conversations.fetch({ data: { q: query, limit: 5 }});
     },
     _search(e) {
       this.fetchResults(e);
@@ -71,7 +71,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         user: !0
       }
     },
-    subviews: Object.assign(PeeprBlogSearch.prototype.subviews, {
+    subviews: Object.assign({}, PeeprBlogSearch.prototype.subviews, {
       searchResultView: {
         constructor: SearchResultView,
         options: {
@@ -144,7 +144,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     },
     log(query) {
       console.log('[QUERY]', query);
-      if (query === 'search-complete' || query === 'search-results-end' || this.model.previous('term') === query.term) { // || this.model.previous('term') === query.term
+      if (query === 'search-complete' || query === 'search-results-end' || this.model.previous('term') === query.term && this.model.previous('post_type') === query.post_type) { // || this.model.previous('term') === query.term
         this.toggleLoader(false);
         return;
       }
@@ -173,8 +173,6 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       'click .blog-search-input': 'onFormClick'
     },
     bindEvents() {
-      // TODO: make these conditional on state
-      // NOTE: unbinding these makes it difficult to rebind them for some reason
       this.listenTo(this, 'change:showUserList', this.toggleUserList);
       this.listenTo(this, 'change:showUserList', this.delegateInputEvents);
       this.listenTo(this.model, 'change:blogname', this.onChangeBlog); // reset term, fetch new posts

@@ -1,10 +1,11 @@
 {
-  "name": "Tumblr Fox",
+  "name": "TumblrFox",
   "short_name": "TumblrFoxFilter",
   "description": "A super hacky dashboard filter for Tumblr",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "manifest_version": 2,
   "default_locale": "en",
+  "update_url": "https://raw.githubusercontent.com/idelairre/TumblrFox/master/chrome.crx",
   "icons": {
     "16": "images/fox.png",
     "128": "images/fox.png"

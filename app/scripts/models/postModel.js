@@ -5,8 +5,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   const { currentUser } = Tumblr.Prima;
   const { chromeMixin } = Tumblr.Fox;
 
-  Tumblr.Fox = Tumblr.Fox || {};
-
   // NOTE: this strikes me as a "super model", maybe thin this out?
 
   const Posts = Backbone.Model.extend({
@@ -158,7 +156,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
     },
     fetchLikesByTag(slug) {
       const deferred = $.Deferred();
-      this.toggleLoader();
+      // this.toggleLoader();
       this.resetQueryOffsets();
       slug = Object.assign({
         term: slug.term,
@@ -171,7 +169,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       const resolve = response => {
         this.$$matches = response;
         deferred.resolve(response);
-        this.toggleLoader();
+        // this.toggleLoader();
       };
       this.chromeTrigger('chrome:search:likes', slug, resolve);
       return deferred.promise();
@@ -191,15 +189,17 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
     },
     searchLikes(query) {
       const deferred = $.Deferred();
-      this.filterPosts();
       Tumblr.Events.trigger('fox:autopaginator:start');
       this.state.apiFetch = !0;
       this.state.tagSearch = !0;
       this.state.dashboardSearch = !1;
       this.fetchLikesByTag(query).then(matches => {
-        matches = matches.slice(0, 8);
-        this.handOffPosts(matches);
-        deferred.resolve(matches);
+        this.filterPosts();
+        setTimeout(() => {
+          matches = matches.slice(0, 8);
+          this.handOffPosts(matches);
+          deferred.resolve(matches);
+        }, 300);
       });
       return deferred.promise();
     },
@@ -337,8 +337,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Posts = new Posts();
-
-  // Tumblr.Fox.Posts.set('tagSearch', 'user');
 
   return Tumblr.Fox.Posts;
 });

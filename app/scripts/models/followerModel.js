@@ -4,7 +4,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
-  let FollowerModel = Backbone.Model.extend({
+  const FollowerModel = Backbone.Model.extend({
     defaults: {
       offset: 0,
       limit: 25
@@ -34,7 +34,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       $.ajax({
         type: 'GET',
         url: `https://www.tumblr.com/following/${offset}`,
-        success: (data) => {
+        success: data => {
           let response = $(data).find('.follower');
           response = response.slice(1, response.length);
           this.options.offset += this.options.limit;
@@ -42,7 +42,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
           // console.log('[RESPONSE]', response);
           deferred.resolve(response);
         },
-        fail: (error) => {
+        fail: error => {
           console.error(error);
           deferred.reject(error);
         }
