@@ -122,8 +122,8 @@ function cacheLikeTags(callback) {
         console.log('[ADDING]', response[i].tag);
         db.tags.put(response[i]);
         items.total = response.length;
+        i += 1;
         log('tags', i, items, response => {
-          i += 1;
           callback(response);
         });
       }

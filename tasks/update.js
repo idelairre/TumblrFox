@@ -4,12 +4,12 @@ import gulp from 'gulp';
 let manifest = require('../app/manifest.json');
 
 gulp.task('crx', () => {
-  return gulp.src('.')
+  return gulp.src('./dist/chrome')
     .pipe(crx({
       privateKey: fs.readFileSync('./key.pem', 'utf8'),
-      filename: './app/' + manifest.name + '.crx',
+      filename: 'chrome.crx',
       codebase: manifest.update_url,
       updateXmlFilename: 'update.xml'
     }))
-    .pipe(gulp.dest('./dist'));
+    .pipe(gulp.dest('.'));
 });
