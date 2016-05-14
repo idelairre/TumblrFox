@@ -4,16 +4,17 @@ import { debounce, differenceBy } from 'lodash';
 import Dexie, { spawn } from 'dexie';
 import db from '../lib/db';
 import { log } from '../utils/loggingUtil';
-import constants, { CONSUMER_KEY } from '../constants';
+import constants from '../constants';
 import 'babel-polyfill';
 
 export default class Likes {
   static fetchLikedPosts(slug, callback) {
     console.log('[SLUG]', slug);
     const data = {
-      api_key: constants.consumerKey || CONSUMER_KEY,
+      api_key: constants.consumerKey,
       limit: slug.limit || 8
     };
+    console.log('[DATA]', data);
     Object.assign(data, slug);
     ajax({
       type: 'GET',

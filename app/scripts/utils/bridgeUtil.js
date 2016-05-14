@@ -61,6 +61,6 @@ module.exports = {
     });
     this.listenTo('chrome:update:following');
     this.listenTo('chrome:update:likes');
-    this.listenTo('chrome:sendData');
+    this.listenTo('chrome:initialize');
   }
 };

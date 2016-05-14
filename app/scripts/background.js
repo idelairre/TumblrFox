@@ -7,40 +7,51 @@ import { oauthRequest } from './lib/oauthRequest';
 import './lib/livereload';
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log(request);
-  switch (request.type) {
-    case 'sendData':
-      constants.currentUser = request.payload.currentUser;
-      break;
-    case 'fetchConstants':
-    console.log(constants.debug);
-      sendResponse(constants.debug);
-      return true;
-    case 'fetchPosts':
-      oauthRequest(request.payload, sendResponse);
-      return true;
-    case 'fetchFollowing':
-      Following.fetchFollowing(request.payload, sendResponse);
-      return true;
-    case 'updateFollowing':
-      Following.syncFollowing(sendResponse);
-      return true;
-    case 'fetchLikes':
-      Likes.fetchLikedPosts(request.payload, sendResponse);
-      return true;
-    case 'fetchTags':
-      Tags.fetchLikeTags(sendResponse);
-      return true;
-    case 'searchLikes':
-      Likes.searchLikes(request.payload, sendResponse);
-      return true;
-    case 'updateLikes':
-      Likes.syncLikes(request.payload);
-      return true;
-    default:
-      // do nothing
+  if (request.type === 'initialize') {
+    constants.userName = request.payload.currentUser;
+    chrome.storage.sync.get({ userName: '' }, items => {
+      if (items.userName === '') {
+        chrome.storage.sync.set({ userName: constants.userName });
+      }
+    });
+    initializeListeners();
   }
 });
+
+function initializeListeners() {
+  console.log('[INITIALIZED]', constants);
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log('[REQUEST]', request);
+    switch (request.type) {
+      case 'fetchConstants':
+        sendResponse(constants.debug);
+        return true;
+      case 'fetchPosts':
+        oauthRequest(request.payload, sendResponse);
+        return true;
+      case 'fetchFollowing':
+        Following.fetchFollowing(request.payload, sendResponse);
+        return true;
+      case 'updateFollowing':
+        Following.syncFollowing(sendResponse);
+        return true;
+      case 'fetchLikes':
+        Likes.fetchLikedPosts(request.payload, sendResponse);
+        return true;
+      case 'fetchTags':
+        Tags.fetchLikeTags(sendResponse);
+        return true;
+      case 'searchLikes':
+        Likes.searchLikes(request.payload, sendResponse);
+        return true;
+      case 'updateLikes':
+        Likes.syncLikes(request.payload);
+        return true;
+      default:
+        // do nothing
+    }
+  });
+}
 
 chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(request => {
@@ -57,6 +68,8 @@ chrome.runtime.onConnect.addListener(port => {
       case 'resetCache':
         resetCache(::port.postMessage);
         break;
+      case 'updateSettings':
+        Object.assign(constants, request.payload);
       default:
         // do nothing
       }

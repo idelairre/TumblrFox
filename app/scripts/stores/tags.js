@@ -3,7 +3,6 @@ import db from '../lib/db';
 import { log } from '../utils/loggingUtil';
 
 export default class Tags {
-  // TODO: break this up so that it can report progress to front end
   // NOTE: this had a tendency to crash the browser
   static parseTags(tags, callback) {
     const parsedTags = [];
@@ -34,11 +33,9 @@ export default class Tags {
       }));
       this.parseTags(tags, response => {
         console.log('[TAGS]', tags.length);
-        let i = 0;
-        while (response.length > i) {
+        for (let i = 0; response.length > i; i += 1) {
           db.tags.put(response[i]);
           items.total = response.length;
-          i += 1;
           log('tags', i, items, response => {
             callback(response);
           });
@@ -48,9 +45,8 @@ export default class Tags {
   }
 
   static fetchLikeTags(callback) {
-    console.log(db);
     db.tags.orderBy('count').reverse().toArray(tags => {
-      console.log('[STORED TAGS]', tags);
+      // console.log('[STORED TAGS]', tags);
       callback(tags);
     });
   }

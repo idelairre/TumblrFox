@@ -11,13 +11,21 @@
 
 A Chrome extension that adds a new navigation tab and dropdown that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag.
 
+## In action
+
+![TumblrFox](http://66.media.tumblr.com/a8557aa9708ca846b2f16cd124e646b9/tumblr_inline_o76peloRJ81qcc1rk_540.png)
+
+![TumblrFox](http://66.media.tumblr.com/70bd5f3ed882614080cc155a062129ea/tumblr_inline_o76p4h28oB1qcc1rk_500.png)
+
+![TumblrFox](http://66.media.tumblr.com/2a68911844e64558c31a59b91cba5e2e/tumblr_inline_o76p32BskA1qcc1rk_500.png)
+
+![TumblrFox](http://66.media.tumblr.com/ee05005d616b2614768cac0b6f2c3a4b/tumblr_inline_o76p3tU1Vx1qcc1rk_500.png)
+
 ## The idea
 
 + Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
 + Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier.
 + Leverage es6 + es7 features while maintaining a code style consistent with Tumblr's code base
-+ Tag search on enter keypress
-+ Update readme with pictures
 
 ## Note
 
@@ -25,21 +33,19 @@ This is liable to break as Tumblr updates and is not by any means official or fu
 
 ## To do
 
-+ Get Webpack build to preserve filepaths
-+ Refactor caching functions so that they reflect actual post/followers count not cached count
 + Get app to work on another computer (HEUH)
-+ Speed up init time (maybe pre-fetch scripts and pull from local cache instead of when the site initializes?)
-+ Use generators for dexie queries in background.js
 + Find a way to speed up queries and caching/improve user experience for initial caching functions
 + Add more filter options to leverage dexie query methods
++ Tag search on enter keypress
++ Update readme with pictures
 
 ## Relevant development posts
 
-1. http://seveneyedfox.tumblr.com/post/142342782841/tumblr-notes-pt-1
-2. http://seveneyedfox.tumblr.com/post/142392103991/tumblr-notes-pt-2
-3. http://seveneyedfox.tumblr.com/post/142476902926/tumblr-notes-pt-3
-4. http://seveneyedfox.tumblr.com/post/142659709101/tumblr-notesthotz-pt-4
-5. http://seveneyedfox.tumblr.com/post/143001544861/tumblr-notes-pt-5
+1. http://luxfoks.tumblr.com/post/142342782841/tumblr-notes-pt-1
+2. http://luxfoks.tumblr.com/post/142392103991/tumblr-notes-pt-2
+3. http://luxfoks.tumblr.com/post/142476902926/tumblr-notes-pt-3
+4. http://luxfoks.tumblr.com/post/142659709101/tumblr-notesthotz-pt-4
+5. http://luxfoks.tumblr.com/post/143001544861/tumblr-notes-pt-5
 
 ## Installation
 

@@ -2,6 +2,7 @@ import ProgressBar from 'progressbar.js';
 import Backbone from 'backbone';
 import { camelCase } from 'lodash';
 import $ from 'jquery';
+import constants from './constants';
 
 const progress = $('#container');
 const bar = new ProgressBar.Line(container, {
@@ -102,15 +103,15 @@ const Options = Backbone.View.extend({
     });
   },
   setProps(model) {
-    for (const key in model.attributes) {
-      let keyElem = this.$(`#${key}`);
+    for (const key in this.props.attributes) {
+      const keyElem = this.$(`#${key}`);
       const tag = keyElem.prop('tagName');
       if (tag === 'INPUT' && keyElem.attr('type') === 'text') {
-        keyElem.val(model.get(key));
+        keyElem.val(this.props.get(key));
       } else if (tag === 'INPUT' && keyElem.attr('type') === 'checkbox') {
-        keyElem.attr('checked', model.get(key));
+        keyElem.attr('checked', this.props.get(key));
       } else if (tag === 'SPAN') {
-        keyElem.text(model.get(key));
+        keyElem.text(this.props.get(key));
       }
     }
     this.setAuthDivState();
@@ -170,39 +171,28 @@ const Options = Backbone.View.extend({
     }
   },
   saveOptions() {
+    console.log(this.props);
     const consumerKey = this.$('#consumerKey').val();
     const consumerSecret = this.$('#consumerSecret').val();
     const userName = this.$('#userName').val();
-    chrome.storage.sync.set({ consumerKey, consumerSecret, userName }, () => {
+    const syncSlug = {
+      consumerKey: consumerKey !== '' ? consumerKey : this.props.get('consumerKey'),
+      consumerSecret: consumerSecret !== '' ? consumerSecret : this.props.get('consumerSecret'),
+      userName: userName !== '' ? userName : this.props.get('userName')
+    };
+    chrome.storage.sync.set(syncSlug, () => {
       this.$status.text('Options saved.');
       setTimeout(() => {
         this.$status.text('');
       }, 750);
     });
+    this.port.postMessage({ type: 'updateSettings', payload: this.props.attributes });
   },
   restoreOptions() {
-    const syncSlug = {
-      consumerKey: '',
-      consumerSecret: '',
-      userName: ''
-    };
-    const storageSlug = {
-      cachedPostsCount: 0,
-      cachedFollowingCount: 0,
-      cachedTagsCount: 0,
-      totalPostsCount: 0,
-      totalFollowingCount: 0,
-      totalTagsCount: 0,
-      debug: false,
-      defaultKeys: true,
-      setUser: false
-    };
-    chrome.storage.sync.get(syncSlug, items => {
-      this.props.set(items);
-    });
-    chrome.storage.local.get(storageSlug, items => {
-      this.props.set(items);
-    });
+    setTimeout(() => {
+      console.log(constants);
+      this.props.set(constants);
+    }, 1);
   },
   cacheTags() {
     this.resetBar();

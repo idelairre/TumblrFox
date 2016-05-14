@@ -7,7 +7,7 @@ module.exports = (function init(Tumblr, Backbone, _) {
     test: false
   };
 
-  const dataReq = new CustomEvent('chrome:sendData', { detail: {
+  const dataReq = new CustomEvent('chrome:initialize', { detail: {
     currentUser: Tumblr.Prima.currentUser().id
   }});
   window.dispatchEvent(dataReq);
