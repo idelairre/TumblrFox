@@ -1,4 +1,4 @@
-import { ChromeExOAuth } from './chrome_ex_oauth';
+import { ChromeExOAuth } from './chromeExOauth';
 
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be

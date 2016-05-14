@@ -34,12 +34,6 @@ module.exports = (function main() {
     Object.assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
     // Object.assign(Backbone.View, Tumblr.Fox.get('TumblrView'));
 
-    Tumblr.Fox.options = {
-      rendered: false,
-      logging: true,
-      test: false
-    };
-
     Tumblr.Fox.constants = {
       attachNode,
       formKey

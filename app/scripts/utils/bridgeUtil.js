@@ -14,7 +14,7 @@ module.exports = {
     console.log('[BRIDGE LISTEN]', eventName);
     const eventSlug = this.camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
-      let req = {};
+      const req = {};
       if (e.detail) {
         req.payload = e.detail;
       }
@@ -25,8 +25,8 @@ module.exports = {
     });
   },
   trigger(eventName, payload) {
-    let req;
-    if (payload) {
+    let req = {};
+    if (typeof payload !== 'undefined') {
       req = new CustomEvent(eventName, {
         detail: payload
       });
@@ -55,6 +55,9 @@ module.exports = {
     });
     this.listenTo('chrome:fetch:tags', response => {
       this.trigger('chrome:response:tags', response);
+    });
+    this.listenTo('chrome:fetch:constants', response => {
+      this.trigger('chrome:response:constants', response);
     });
     this.listenTo('chrome:update:following');
     this.listenTo('chrome:update:likes');

@@ -203,7 +203,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       }
     },
     updateSearchSettings(state) {
-      console.log('[UPDATE SEARCH SETTINGS] called', this);
+      // console.log('[UPDATE SEARCH SETTINGS] called', this);
       if (state === 'dashboard') {
         this.showUserList ? this.setUserList() : null;
         this.input.$el.find('input').attr('placeholder', 'Search dashboard');
