@@ -10,7 +10,6 @@ gulp.task('build', gulpSequence(
     'locales',
     'images',
     'fonts',
-    'crx',
     'livereload'
   ]
 ));

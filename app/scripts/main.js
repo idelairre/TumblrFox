@@ -25,14 +25,14 @@ module.exports = (function main() {
     Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
     Tumblr.Fox.getComponent('Mixin', 'this.mixins=u.filter');
     Tumblr.Fox.getComponent('TumblrModel', '.Model.extend({})');
-    Tumblr.Fox.getComponent('TumblrView', 's.uniqueId("view")');
+    Tumblr.Fox.getComponent('TumblrView', 'uniqueId("view")');
     Tumblr.Fox.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
     Tumblr.Fox.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
     Tumblr.Fox.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
     Tumblr.Fox.getComponent('SearchFilters', '[data-filter]');
 
     Object.assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
-    Object.assign(Backbone.View, Tumblr.Fox.get('TumblrView'));
+    // Object.assign(Backbone.View, Tumblr.Fox.get('TumblrView'));
 
     Tumblr.Fox.options = {
       rendered: false,

@@ -5,7 +5,6 @@
   "version": "0.0.3",
   "manifest_version": 2,
   "default_locale": "en",
-  "update_url": "https://raw.githubusercontent.com/idelairre/TumblrFox/master/chrome.crx",
   "icons": {
     "16": "images/fox.png",
     "128": "images/fox.png"

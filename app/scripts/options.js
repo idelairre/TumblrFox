@@ -41,14 +41,26 @@ const bar = new ProgressBar.Line(container, {
 const Options = Backbone.View.extend({
   initialize() {
     this.$status = this.$('#status');
-    this.props = {};
+    this.props = new Backbone.Model();
     this.$bar = bar;
     this.$progress = progress;
     this.$tooltip = this.$('i.note');
-    this.restoreOptions();
+    this.bindEvents();
+    this.initializePort();
+  },
+  initializePort() {
     this.port = chrome.runtime.connect({
       name: 'options'
     });
+    this.port.onMessage.addListener(message => {
+      if (message === 'initialized') {
+        this.afterInitialize();
+      }
+    });
+    this.restoreOptions();
+  },
+  afterInitialize() {
+    $('button').prop('disabled', false);
     this.port.onMessage.addListener(::this.animateProgress);
   },
   events: {
@@ -59,17 +71,73 @@ const Options = Backbone.View.extend({
     'click #cacheTags': 'cacheTags',
     'click #cacheLikes': 'cacheLikes',
     'click #resetCache': 'resetCache',
-    'click #logging': 'toggleLogging'
+    'click #debug': 'toggleDebug',
+    'click #defaultKeys': 'toggleKeys',
+    'click #setUser': 'setUser'
   },
-  toggleLogging(e) {
-    const logging = $(e.target).prop('checked');
-    chrome.storage.local.set({ logging });
-    this.props.logging = logging;
-    if (this.props.logging) {
-      this.$('.debug').show();
-    } else {
-      this.$('.debug').hide();
+  bindEvents() {
+    this.listenTo(this.props, 'change', ::this.setProps);
+    this.listenTo(this.props, 'change:defaultKeys', model => {
+      if (model.get('defaultKeys')) {
+        this.$('.consumer-secret').hide();
+        this.$('.consumer-key').hide();
+      } else {
+        this.$('.consumer-secret').show();
+        this.$('.consumer-key').show();
+      }
+    });
+    this.listenTo(this.props, 'change:setUser', model => {
+      if (model.get('setUser')) {
+        this.$('.user').show();
+      } else {
+        this.$('.user').hide();
+      }
+    });
+    this.listenTo(this.props, 'change:debug', model => {
+      if (model.get('debug')) {
+        this.$('section.debug').show();
+      } else {
+        this.$('section.debug').hide();
+      }
+    });
+  },
+  setProps(model) {
+    for (const key in model.attributes) {
+      let keyElem = this.$(`#${key}`);
+      const tag = keyElem.prop('tagName');
+      if (tag === 'INPUT' && keyElem.attr('type') === 'text') {
+        keyElem.val(model.get(key));
+      } else if (tag === 'INPUT' && keyElem.attr('type') === 'checkbox') {
+        keyElem.attr('checked', model.get(key));
+      } else if (tag === 'SPAN') {
+        keyElem.text(model.get(key));
+      }
     }
+    this.setAuthDivState();
+  },
+  setAuthDivState() {
+    if (!this.props.get('setUser') && this.props.get('defaultKeys')) {
+      this.$('.authentication').hide();
+    }
+    if (!this.props.get('defaultKeys') || this.props.get('setUser')) {
+      this.$('.authentication').show();
+    }
+  },
+  setUser(e) {
+    const setUser = $(e.target).prop('checked');
+    this.props.set('setUser', setUser);
+    chrome.storage.local.set({ setUser });
+  },
+  toggleDebug(e) {
+    const debug = e.target.checked;
+    chrome.storage.local.set({ debug });
+    this.props.set('debug', debug);
+    console.log('[TOGGLE DEBUG]', this.props.get('debug', debug));
+  },
+  toggleKeys(e) {
+    const defaultKeys = e.target.checked;
+    chrome.storage.local.set({ defaultKeys });
+    this.props.set('defaultKeys', defaultKeys);
   },
   showTooltip(e) {
     const position = $(e.target).position();
@@ -87,14 +155,17 @@ const Options = Backbone.View.extend({
     if (database.toLowerCase() === 'posts') { // this is to account for a poor naming choice
       database = 'likes';
     }
-    this.$(camelCase(`#total${database}`)).text(total);
-    this.$(`#${database}`).text(total - itemsLeft);
-    this.$('#debug').text(JSON.stringify(response));
+    const totalKey = camelCase(`total${database}`);
+    const section = $(`.${database}`).children();
+    section.last().text(total);
+    section.first().text(total - itemsLeft);
+    this.$('#debugConsole').text(JSON.stringify(response));
     // this.$status.text(`items left: ${itemsLeft}`);
     this.$bar.animate(percentComplete / 100);
     if (itemsLeft === 0) {
       this.$status.text('done');
       this.$progress.hide();
+      this.$('buttons').prop('disabled', false);
       return;
     }
   },
@@ -113,35 +184,24 @@ const Options = Backbone.View.extend({
     const syncSlug = {
       consumerKey: '',
       consumerSecret: '',
-      userName: '',
-      totalPostsCount: 0,
-      totalFollowingCount: 0,
-      totalTagsCount: 0
+      userName: ''
     };
     const storageSlug = {
       cachedPostsCount: 0,
       cachedFollowingCount: 0,
       cachedTagsCount: 0,
-      logging: false
+      totalPostsCount: 0,
+      totalFollowingCount: 0,
+      totalTagsCount: 0,
+      debug: false,
+      defaultKeys: true,
+      setUser: false
     };
     chrome.storage.sync.get(syncSlug, items => {
-      this.$('#consumerKey').val(items.consumerKey);
-      this.$('#consumerSecret').val(items.consumerSecret);
-      this.$('#userName').val(items.userName);
-      this.$('#totalLikes').text(items.totalPostsCount);
-      this.$('#totalFollowing').text(items.totalFollowingCount);
-      this.$('#totalTags').text(items.totalTagsCount);
-      this.props = Object.assign(this.props, items);
+      this.props.set(items);
     });
     chrome.storage.local.get(storageSlug, items => {
-      this.$('#following').text(items.cachedFollowingCount);
-      this.$('#likes').text(items.cachedPostsCount);
-      this.$('#tags').text(items.cachedTagsCount);
-      this.$('#logging').attr('checked', items.logging);
-      this.props = Object.assign(this.props, items);
-      if (this.props.logging) {
-        this.$('.debug').show();
-      }
+      this.props.set(items);
     });
   },
   cacheTags() {
@@ -161,9 +221,12 @@ const Options = Backbone.View.extend({
   resetCache() {
     this.resetBar();
     this.$status.text('');
-    this.$('#following').text(0);
-    this.$('#likes').text(0);
-    this.$('#tags').text(0);
+    this.$('#cachedFollowing').text(0);
+    this.$('#cachedLikes').text(0);
+    this.$('#cachedTags').text(0);
+    this.$('#totalFollowing').text(0);
+    this.$('#totalLikes').text(0);
+    this.$('#totalTags').text(0);
     this.port.postMessage({ type: 'resetCache' });
   },
   resetBar() {

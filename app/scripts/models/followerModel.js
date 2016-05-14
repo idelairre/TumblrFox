@@ -14,7 +14,12 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       this.options = this.defaults;
       this.items = Tumblelog.collection;
       this.$views = new Backbone.Collection();
-      this.chromeTrigger('chrome:update:following');
+      this.bindEvents();
+    },
+    bindEvents() {
+      this.listenTo(Tumblr.Events, 'post:follow:success', () => {
+        this.chromeTrigger('chrome:update:following');
+      });
     },
     fetch(query) {
       // console.log('[QUERY]', query, this);
@@ -51,7 +56,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.FollowerModel = FollowerModel;
+  Tumblr.Fox.FollowerModel = new FollowerModel();
 
   return Tumblr.Fox.FollowerModel;
 });

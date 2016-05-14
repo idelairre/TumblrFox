@@ -16,8 +16,6 @@ module.exports = (function loader(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'indashblog:search:results-end', ::this.setLoading);
     },
     setLoading(e) {
-      // console.log('[LOADING?]', e);
-      // this.loading = !!e.loading;
       if (e && e.loading) {
         this.show();
       } else {

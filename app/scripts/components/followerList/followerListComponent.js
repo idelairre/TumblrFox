@@ -24,7 +24,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
     initialize() {
       this.options = this.defaults;
       this.state = this.defaults.state;
-      this.model = new FollowerModel();
+      this.model = FollowerModel;
       this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
       this.$followerSearch = new FollowerSearch({

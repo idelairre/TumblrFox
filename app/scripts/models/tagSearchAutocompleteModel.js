@@ -37,7 +37,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     },
     // NOTE: doesn't fetch new tags after API fetch and having initially fetched dashboard tags
     // need a trigger to flush tags
-    dashboardFetch() { // called on popover open, this leads to problems of where to pull tags from...
+    dashboardFetch() {
       const tagArray = [];
       const deferred = $.Deferred();
       deferred.resolve(this.items);

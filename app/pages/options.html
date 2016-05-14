@@ -3,9 +3,6 @@
 <head>
   <title>Tumblr Fox Extension Options</title>
   <style>
-    body: {
-      padding: 10px;
-    }
     input {
       width: 100%;
     }
@@ -27,14 +24,14 @@
     #container {
       margin: 20px;
       margin-bottom: 30px;
-      width: 400px;
+      width: 95%;
       height: 8px;
       position: relative;
     }
     #debug {
-      font-family: 'Courier New', Courier, 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
+      span-family: 'Courier New', Courier, 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
     }
-    #logging {
+    section.options input {
       float: right;
     }
     #status {
@@ -46,20 +43,20 @@
 <body>
   <div class="container">
     <section class="authentication">
-      <h1>Authentication</h1>
-      <div class="input-option">
+      <h1 class="authenticatication">Authentication</h1>
+      <div class="input-option user">
         <label>
           User name:<br>
           <input type="text" id="userName">
         </label>
       </div>
-      <div class="input-option">
+      <div class="input-option consumer-key">
         <label>
           Consumer key:<br>
           <input type="text" id="consumerKey">
         </label>
       </div>
-      <div class="input-option">
+      <div class="input-option consumer-secret">
         <label>
           Consumer secret:<br>
           <input type="text" id="consumerSecret">
@@ -70,30 +67,40 @@
       <div class="input-option">
         <h1>Logging</h1>
         <label>
-          Enable Logging: <input type="checkbox" id="logging">
+          Enable Logging: <input type="checkbox" id="debug" checked="false">
+        </label>
+      </div>
+      <div class="input-option">
+        <label>
+          Use default Keys: <input type="checkbox" id="defaultKeys" checked="true">
+        </label>
+      </div>
+      <div class="input-option">
+        <label>
+          Set user: <input type="checkbox" id="setUser" checked="false">
         </label>
       </div>
     </section>
     <section class="cache">
       <h1 class="cache-header">Cache*</h1>
-      <p>Likes: <font id="likes"></font> out of <font id="totalLikes"></font></p>
-      <p>Following: <font id="following"></font> out of <font id="totalFollowing"></font></p>
-      <p>Tags: <font id="tags"></font> out of <font id="totalTags"></font></p>
+      <p class="likes">Likes: <span id="cachedPostsCount"></span> out of <span id="totalPostsCount"></span></p>
+      <p class="following">Following: <span id="cachedFollowingCount"></span> out of <span id="totalFollowingCount"></span></p>
+      <p class="tags">Tags: <span id="cachedTagsCount"></span> out of <span id="totalTagsCount"></span></p>
       <i class="note" style="display: none">note: some posts and blogs you are following may have been deleted, it is sometimes not possible to fetch 100% of your likes or followed blogs.</i>
     </section>
     <div id="container" style="display: none"></div>
     <section class="status">
-      <font id="status"></font>
+      <span id="status"></span>
     </section>
-    <section class="debug" style="display: none">
-      <p>debug: <span id="debug" style="background-color: #EEEEEE; overflow: hidden"></span></p>
+    <section class="debug">
+      <p>debug: <span id="debugConsole" style="background-color: #EEEEEE; overflow: hidden"></span></p>
     </section>
     <section class="buttons">
-      <button id="save">Save</button>
-      <button id="cacheFollowing">Cache Following</button>
-      <button id="cacheLikes">Cache likes</button>
-      <button id="cacheTags">Cache Tags</button>
-      <button id="resetCache">Reset cache</button>
+      <button id="save" disabled="true">Save</button>
+      <button id="cacheFollowing" disabled="true">Cache Following</button>
+      <button id="cacheLikes" disabled="true">Cache likes</button>
+      <button id="cacheTags" disabled="true">Cache Tags</button>
+      <button id="resetCache" disabled="true">Reset cache</button>
     </section>
   </div>
   <script src="../scripts/options.js"></script>

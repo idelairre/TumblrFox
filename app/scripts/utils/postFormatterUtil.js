@@ -73,8 +73,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       const reblogFollowButton = postHeader.find('.reblog_follow_button').detach();
       postHeader.find('.post_info_fence').prepend(postInfoLink);
       if (postHeader.find('.reblog_info').length) {
-        postHeader.find('.reblog_info')
-          .wrap('<span class="reblog_source"></span>');
+        postHeader.find('.reblog_info').wrap('<span class="reblog_source"></span>');
         if (postInfoLink) {
           postHeader.find('.post_info_fence').addClass('has_follow_button').after(reblogFollowButton);
         }
@@ -124,7 +123,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
   };
 
   Tumblr.Fox.createPostView = function (postElement, postModel) {
-    const postView = new Tumblr.PostView({
+    let postView = new Tumblr.PostView({
       el: postElement,
       model: postModel
     });
@@ -134,10 +133,19 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       postView.$reblog_list = postView.$el.find('.reblog-list');
     }
 
+    postView.modelForTinyGreyFollowButton = postView.model;
+
     Tumblr.postsView.postViews.push(postView);
 
     Tumblr.Events.trigger('postsView:createPost', postView);
     Tumblr.Events.trigger('DOMEventor:updateRect');
+
+    console.log(postView);
+
+    postView.$el.find('.reblog_follow_button').click(e => {
+      console.log(e);
+      postView.prototype.handle_tiny_grey_plus_follow_button.apply(postView, e);
+    });
   };
 
   return Tumblr.Fox;
