@@ -7,9 +7,7 @@ module.exports = (function init(Tumblr, Backbone, _) {
     test: false
   };
 
-  const dataReq = new CustomEvent('chrome:initialize', { detail: {
-    currentUser: Tumblr.Prima.currentUser().id
-  }});
+  const dataReq = new CustomEvent('chrome:initialize', { detail: Tumblr.Prima.currentUser().attributes });
   window.dispatchEvent(dataReq);
 
   const constReq = new Event('chrome:fetch:constants');
@@ -17,7 +15,9 @@ module.exports = (function init(Tumblr, Backbone, _) {
   window.dispatchEvent(constReq);
 
   function initializeConstants(e) {
-    Tumblr.Fox.options.logging =  e.detail;
+    const constants = e.detail;
+    Tumblr.Fox.options.logging = constants.debug;
+    Tumblr.Fox.options.cachedTags = constants.cachedTagsCount !== 0;
     setTimeout(() => {
       window.removeEventListener('chrome:constants:response', initializeConstants);
     }, 1);

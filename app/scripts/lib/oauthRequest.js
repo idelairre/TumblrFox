@@ -1,6 +1,12 @@
 import { Deferred } from 'jquery';
-import { AUTHORIZATION_BASE_URL, ACCESS_TOKEN_URL, CONSUMER_KEY, CONSUMER_SECRET, REQUEST_TOKEN_URL } from '../constants';
+import constants from '../constants';
 import { ChromeExOAuth } from './chromeExOauth';
+
+const ACCESS_TOKEN_URL = constants.accessTokenUrl;
+const CONSUMER_KEY = constants.consumerKey
+const CONSUMER_SECRET = constants.consumerSecret;
+const REQUEST_TOKEN_URL = constants.requestTokenUrl;
+const AUTHORIZATION_BASE_URL = constants.authorizationBaseUrl;
 
 const oauth = ChromeExOAuth.initBackgroundPage({
   request_url: REQUEST_TOKEN_URL,

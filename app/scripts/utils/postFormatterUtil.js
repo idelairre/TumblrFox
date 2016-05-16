@@ -59,6 +59,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     const postView = new Tumblr.IndashBlog.PostView({
       model: postModel
     });
+    console.log(postModel);
     postView.render();
 
     const postDiv = $(postView.$el).find('.post_chrome');
@@ -118,9 +119,22 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     postControls.find('.reply_container').replaceWith(postReply);
     const postElement = $(`${postWrapper}${postAvatar}${postView.$el.html()}</div>`).attr('data-json', JSON.stringify(postData));
     const postContainer = $(`<li class="post_container" data-pageable="post_${postModel.id}"></li>`).append(postElement);
+    postView.remove();
 
     return { postContainer, postElement, postModel };
   };
+
+  Tumblr.Fox.renderPostFromHtml = function(post) {
+    console.log(post);
+    if (typeof $.parseHTML(post.html) !== 'undefined') {
+      const postElement = $($.parseHTML(post.html));
+      const postModel = new Tumblr.Prima.Models.Post($(postElement).data('json'));
+      const postContainer = $(`<li class="post_container" data-pageable="post_${postModel.get('id')}"></li>`).append(postElement);
+      Tumblr.Fox.constants.attachNode.before(postContainer);
+      Tumblr.Fox.createPostView(postElement, postModel);
+      Tumblr.Posts.add(postModel);
+    }
+  }
 
   Tumblr.Fox.createPostView = function (postElement, postModel) {
     let postView = new Tumblr.PostView({
@@ -133,20 +147,28 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       postView.$reblog_list = postView.$el.find('.reblog-list');
     }
 
-    postView.modelForTinyGreyFollowButton = postView.model;
-
     Tumblr.postsView.postViews.push(postView);
 
     Tumblr.Events.trigger('postsView:createPost', postView);
     Tumblr.Events.trigger('DOMEventor:updateRect');
-
-    console.log(postView);
-
-    postView.$el.find('.reblog_follow_button').click(e => {
-      console.log(e);
-      postView.prototype.handle_tiny_grey_plus_follow_button.apply(postView, e);
-    });
   };
+
+  Tumblr.Fox.renderPosts = function(response) {
+    if (!response) {
+      return;
+    }
+    const posts = response.posts || response;
+    for (let i = 0; posts.length > i; i += 1) { // NOTE: posts do not come out in order due to different formatting times
+      Tumblr.Fox.renderPost(posts[i]);
+    }
+  }
+
+  Tumblr.Fox.renderPost = function(post) {
+    const { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
+    Tumblr.Fox.constants.attachNode.before(postContainer);
+    Tumblr.Fox.createPostView(postElement, postModel);
+    Tumblr.Posts.add(postModel);
+  }
 
   return Tumblr.Fox;
 });

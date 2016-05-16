@@ -17,18 +17,21 @@ module.exports = (function settings(Tumblr, Backbone, _) {
         likes: !1,
         dashboard: !1,
         user: !0
-      }
+      },
+      popoverOptions: [{
+        listItems: [
+          { icon: 'none', name: 'Search likes', checked: false },
+          { icon: 'none', name: 'Search by user', checked: true },
+          { icon: 'none', name: 'Search dashboard', checked: false }
+        ]
+      }]
     },
-    popoverOptions: [{
-      listItems: [
-        { icon: 'none', name: 'Search likes', checked: false },
-        { icon: 'none', name: 'Search by user', checked: true },
-        { icon: 'none', name: 'Search dashboard', checked: false }
-      ]
-    }],
     template: $(settingsPopoverTemplate).html(),
     initialize(e) {
-      return this.options = Object.assign(e, {});
+      this.options = Object.assign({}, this.defaults, e);
+      if (!Tumblr.Fox.options.cachedTags) {
+        this.options.popoverOptions[0].listItems.splice(0, 1);
+      }
     },
     render() {
       return this.$el.html(this.template);
@@ -43,7 +46,7 @@ module.exports = (function settings(Tumblr, Backbone, _) {
         class: 'popover--settings-popover',
         selection: 'checkmark',
         multipleSelection: false,
-        items: this.popoverOptions,
+        items: this.options.popoverOptions,
         onSelect: this.onSelect
       }),
       this.popover.render(),

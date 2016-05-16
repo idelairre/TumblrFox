@@ -22,7 +22,6 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.$$dashboardTags = [];
       this.$$likesTags = [];
       this.bindEvents();
-      this.fetch();
     },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
@@ -35,7 +34,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
         return this.chromeFetch();
       }
     },
-    // NOTE: doesn't fetch new tags after API fetch and having initially fetched dashboard tags
+    // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
     // need a trigger to flush tags
     dashboardFetch() {
       const tagArray = [];
@@ -100,6 +99,9 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
          this.set('typeAheadMatches', this.items.toJSON());
        }
       omit(e, 'tags');
+      if (tags.length === 0) {
+        Tumblr.Events.trigger('fox:noTags');
+      }
     }
   });
 

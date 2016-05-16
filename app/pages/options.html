@@ -64,15 +64,15 @@
       </div>
     </section>
     <section class="options">
-      <div class="input-option">
-        <h1>Logging</h1>
+      <h1>Options</h1>
+      <div class="input-option" data-tooltip-key="clientCaching">
         <label>
-          Enable Logging: <input type="checkbox" id="debug" checked="false">
+          Cache likes via client*: <input type="checkbox" id="clientCaching" checked="false">
         </label>
       </div>
       <div class="input-option">
         <label>
-          Use default Keys: <input type="checkbox" id="defaultKeys" checked="true">
+          Enable Logging: <input type="checkbox" id="debug" checked="false">
         </label>
       </div>
       <div class="input-option">
@@ -80,13 +80,17 @@
           Set user: <input type="checkbox" id="setUser" checked="false">
         </label>
       </div>
+      <div class="input-option">
+        <label>
+          Use default api keys: <input type="checkbox" id="defaultKeys" checked="true">
+        </label>
+      </div>
     </section>
     <section class="cache">
-      <h1 class="cache-header">Cache*</h1>
+      <h1 class="cache-header" data-tooltip-key="caching">Cache*</h1>
       <p class="likes">Likes: <span id="cachedPostsCount"></span> out of <span id="totalPostsCount"></span></p>
       <p class="following">Following: <span id="cachedFollowingCount"></span> out of <span id="totalFollowingCount"></span></p>
       <p class="tags">Tags: <span id="cachedTagsCount"></span> out of <span id="totalTagsCount"></span></p>
-      <i class="note" style="display: none">note: some posts and blogs you are following may have been deleted, it is sometimes not possible to fetch 100% of your likes or followed blogs.</i>
     </section>
     <div id="container" style="display: none"></div>
     <section class="status">
@@ -96,11 +100,11 @@
       <p>debug: <span id="debugConsole" style="background-color: #EEEEEE; overflow: hidden; width: 100%"></span></p>
     </section>
     <section class="buttons">
-      <button id="save" disabled="true">Save</button>
-      <button id="cacheFollowing" disabled="true">Cache Following</button>
-      <button id="cacheLikes" disabled="true">Cache likes</button>
-      <button id="cacheTags" disabled="true">Cache Tags</button>
-      <button id="resetCache" disabled="true">Reset cache</button>
+      <button id="save">Save</button>
+      <button id="cacheFollowing">Cache Following</button>
+      <button id="cacheLikes">Cache likes</button>
+      <button id="cacheTags">Cache Tags</button>
+      <button id="resetCache">Reset cache</button>
     </section>
   </div>
   <script src="../scripts/options.js"></script>

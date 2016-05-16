@@ -2,7 +2,22 @@ import ProgressBar from 'progressbar.js';
 import Backbone from 'backbone';
 import { camelCase } from 'lodash';
 import $ from 'jquery';
-import constants from './constants';
+import Tipped from './lib/tipped';
+import '../styles/tipped.less';
+
+const clientCachingTooltip = {
+  template: `
+  <div class="note tooltip" style="position: absolute" data-tooltip="clientCaching">
+    * Toggles experimental caching through client rather than api.
+    <li>Advantages: faster post rendering, actual Tumblr html instead of reconstituted html via jquery, native/predictable Tumblr behavior, you don't have to reveal your likes to other users.</li>
+    <li>Drawbacks: significantly slower cache time than fetching from the API.</li>
+  </div>`
+};
+
+const cachingTooltip = {
+  template: `<i class="note tooltip" style="position: absolute" data-tooltip="caching">* some posts and blogs you are following may have been deleted, it is sometimes not possible to fetch 100% of your likes or followed blogs.</i>`,
+};
+
 
 const progress = $('#container');
 const bar = new ProgressBar.Line(container, {
@@ -40,37 +55,46 @@ const bar = new ProgressBar.Line(container, {
 });
 
 const Options = Backbone.View.extend({
+  defaults: {
+    props: {
+      cachedPostsCount: 0,
+      cachedFollowingCount: 0,
+      cachedTagsCount: 0,
+    }
+  },
   initialize() {
     this.$status = this.$('#status');
     this.props = new Backbone.Model();
     this.$bar = bar;
     this.$progress = progress;
-    this.$tooltip = this.$('i.note');
+    Tipped.create('[data-tooltip-key="clientCaching"]', $(clientCachingTooltip.template).html(), { skin: 'light', position: 'topleft' });
+    Tipped.create('[data-tooltip-key="caching"]', $(cachingTooltip.template).html(), { skin: 'light', position: 'topleft' });
     this.bindEvents();
     this.initializePort();
+
+    console.log('[tooltips]', Tipped);
   },
   initializePort() {
     this.port = chrome.runtime.connect({
       name: 'options'
     });
-    this.port.onMessage.addListener(message => {
-      if (message === 'initialized') {
+    this.port.onMessage.addListener(response => {
+      if (response.message === 'initialized') {
+        this.restoreOptions(response.payload);
         this.afterInitialize();
       }
     });
-    this.restoreOptions();
   },
   afterInitialize() {
-    $('button').prop('disabled', false);
     this.port.onMessage.addListener(::this.animateProgress);
+    this.$('buttons').prop('disabled', false);
   },
   events: {
-    'mouseover h1.cache-header': 'showTooltip',
-    'mouseout h1.cache-header': 'hideTooltip',
     'click #save': 'saveOptions',
     'click #cacheFollowing': 'cacheFollowing',
     'click #cacheTags': 'cacheTags',
     'click #cacheLikes': 'cacheLikes',
+    'click #clientCaching': 'toggleClientCaching',
     'click #resetCache': 'resetCache',
     'click #debug': 'toggleDebug',
     'click #defaultKeys': 'toggleKeys',
@@ -101,9 +125,17 @@ const Options = Backbone.View.extend({
         this.$('section.debug').hide();
       }
     });
+    this.listenTo(this.props, 'change:clientCaching', model => {
+      if (!model.get('clientCaching') && !model.get('canGetApiLikes')) {
+        this.$('#cacheLikes').prop('disabled', true);
+      } else {
+        this.$('#cacheLikes').prop('disabled', false);
+      }
+    });
   },
   setProps(model) {
-    for (const key in this.props.attributes) {
+    console.log(this.props);
+    for (const key in model.changed) {
       const keyElem = this.$(`#${key}`);
       const tag = keyElem.prop('tagName');
       if (tag === 'INPUT' && keyElem.attr('type') === 'text') {
@@ -129,40 +161,36 @@ const Options = Backbone.View.extend({
     this.props.set('setUser', setUser);
     chrome.storage.local.set({ setUser });
   },
+  toggleClientCaching(e) {
+    const clientCaching = e.target.checked;
+    chrome.storage.local.set({ clientCaching });
+    this.props.set('clientCaching', clientCaching);
+    console.log('[TOGGLE CLIENT CACHING]', this.props.get('clientCaching'));
+  },
   toggleDebug(e) {
     const debug = e.target.checked;
     chrome.storage.local.set({ debug });
     this.props.set('debug', debug);
-    console.log('[TOGGLE DEBUG]', this.props.get('debug', debug));
+    console.log('[TOGGLE DEBUG]', this.props.get('debug'));
   },
   toggleKeys(e) {
     const defaultKeys = e.target.checked;
     chrome.storage.local.set({ defaultKeys });
     this.props.set('defaultKeys', defaultKeys);
   },
-  showTooltip(e) {
-    const position = $(e.target).position();
-    this.$tooltip.css({
-      top: position.top + 40,
-      left: position.left + 30
-    });
-    this.$tooltip.fadeIn(100);
-  },
-  hideTooltip() {
-    this.$tooltip.fadeOut(100);
-  },
   animateProgress(response) {
     let { database, percentComplete, itemsLeft, total } = response;
-    if (database.toLowerCase() === 'posts') { // this is to account for a poor naming choice
-      database = 'likes';
-    }
-    const totalKey = camelCase(`total${database}`);
+    const totalKey = camelCase(`total-${database}-count`);
+    const cachedKey = camelCase(`cached-${database}-count`);
     const section = $(`.${database}`).children();
     section.last().text(total);
-    section.first().text(total - itemsLeft);
     this.$('#debugConsole').text(JSON.stringify(response));
     // this.$status.text(`items left: ${itemsLeft}`);
     this.$bar.animate(percentComplete / 100);
+    this.props.set(`${cachedKey}`, total - itemsLeft);
+    if (this.props.get(`${totalKey}`) === 0) {
+      this.props.set(`${totalKey}`, total);
+    }
     if (itemsLeft === 0) {
       this.$status.text('done');
       this.$progress.hide();
@@ -186,38 +214,58 @@ const Options = Backbone.View.extend({
         this.$status.text('');
       }, 750);
     });
-    this.port.postMessage({ type: 'updateSettings', payload: this.props.attributes });
+    this.port.postMessage({
+      type: 'updateSettings',
+      payload: this.props.attributes
+    });
   },
-  restoreOptions() {
+  restoreOptions(constants) {
     setTimeout(() => {
-      console.log(constants);
       this.props.set(constants);
+      $.ajax({
+        type: 'GET',
+        url: `https://www.tumblr.com/liked/by/${this.props.get('userName')}`,
+        success: () => {
+          this.props.set('canGetApiLikes', true);
+        },
+        error: (error) => {
+          if (error) {
+            this.props.set('canGetApiLikes', false);
+            if (!this.props.get('clientCaching')) {
+              console.log(this.$('button#cacheLikes'));
+              $('button#cacheLikes').prop('disabled', true);
+            }
+          }
+        }
+      });
     }, 1);
   },
   cacheTags() {
     this.resetBar();
-    this.port.postMessage({ type: 'cacheTags'});
+    this.port.postMessage({
+      type: 'cacheTags'
+    });
   },
   cacheLikes() {
     this.resetBar();
-    this.port.postMessage({ type: 'cacheLikes'});
+    this.port.postMessage({
+      type: 'cacheLikes',
+      clientCaching: this.props.get('clientCaching')
+    });
   },
   cacheFollowing() {
     this.resetBar();
     this.$progress.show();
     this.$status.text('');
-    this.port.postMessage({ type: 'cacheFollowing'});
+    this.port.postMessage({
+      type: 'cacheFollowing'
+    });
   },
   resetCache() {
     this.resetBar();
     this.$status.text('');
-    this.$('#cachedFollowing').text(0);
-    this.$('#cachedLikes').text(0);
-    this.$('#cachedTags').text(0);
-    this.$('#totalFollowing').text(0);
-    this.$('#totalLikes').text(0);
-    this.$('#totalTags').text(0);
     this.port.postMessage({ type: 'resetCache' });
+    this.props.set(this.defaults.props);
   },
   resetBar() {
     this.$bar.set(0);

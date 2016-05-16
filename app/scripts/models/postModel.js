@@ -43,13 +43,13 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.bindEvents();
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'fox:postFetch:finished', ::this.renderPosts);
+      this.listenTo(Tumblr.Events, 'fox:postFetch:finished', Tumblr.Fox.renderPosts);
       this.listenTo(Tumblr.Events, 'fox:filterFetch:started', ::this.initialBlogFetch); // update query, fetch post data
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.initialApiFetch); // filter posts, fetch posts from api
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.setTerm);
       this.listenTo(Tumblr.Events, 'indashblog:search:started', ::this.toggleLoader);
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
-      this.listenTo(Tumblr.Events, 'indashblog:search:post-added', ::this.renderPost);
+      this.listenTo(Tumblr.Events, 'indashblog:search:post-added', Tumblr.Fox.renderPost);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
       this.listenTo(Tumblr.Events, 'post:like:set', this.updateLikesCache.bind(this, 'like'));
       this.listenTo(Tumblr.Events, 'post:unlike:set', this.updateLikesCache.bind(this, 'unlike'));
@@ -98,6 +98,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         limit: this.apiSlug.limit
       };
       const matches = this.$$matches.slice(opts.offset, opts.offset + opts.limit);
+      console.log('[MATCHES]', matches);
       if (matches.length > 0) {
          this.toggleLoader();
        }
@@ -150,7 +151,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         posts = posts.filter(post => {
           return post.post_html;
         });
-        this.renderPosts(posts);
+        Tumblr.Fox.renderPosts(posts);
         this.toggleLoader();
       }, 300);
     },
@@ -313,26 +314,15 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.apiSlug.offset += length;
       for (let i = 0; length > i; i += 1) {
         const post = posts[i];
-        this.clientFetchPosts({
-          blogNameOrId: post.blog_name || post.model.attributes.tumblelog || post.get('blog_name'),
-          postId: post.id || post.model.get('id')
-        });
+        if (post.hasOwnProperty('html') && $.parseHTML(post.html)) {
+          Tumblr.Fox.renderPostFromHtml(posts[i]);
+        } else {
+          this.clientFetchPosts({
+            blogNameOrId: post.blog_name || post.model.attributes.tumblelog || post.get('blog_name'),
+            postId: post.id || post.model.get('id')
+          });
+        }
       }
-    },
-    renderPosts(response) {
-      if (!response) {
-        return;
-      }
-      const posts = response.posts || response;
-      for (let i = 0; posts.length > i; i += 1) { // NOTE: posts do not come out in order due to different formatting times
-        this.renderPost(posts[i]);
-      }
-    },
-    renderPost(post) {
-      const { postContainer, postElement, postModel } = Tumblr.Fox.formatDashboardPost(post);
-      Tumblr.Fox.constants.attachNode.before(postContainer);
-      Tumblr.Fox.createPostView(postElement, postModel);
-      this.items.add(postModel);
     }
   });
 

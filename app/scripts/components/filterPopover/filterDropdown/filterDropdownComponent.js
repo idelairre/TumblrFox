@@ -9,9 +9,11 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
   const PopoverComponent = get('PopoverComponent');
   const popover = get('PopoverMixin');
 
+  // TODO: apply popover mixin to this class
+
   const FilterComponent = PopoverComponent.extend({
     className: 'popover--blog-search blog-search-filters-popover',
-    mixins: Object.assign([popover], SearchFiltersPopover.prototype.mixins),
+    mixins: [].concat(SearchFiltersPopover.prototype.mixins),
     template: $('#filterTemplate').html(),
     events: {
       'change input.date-filter-input': 'contentChanged',
@@ -23,11 +25,10 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
     initialize() {
       mapKeys(SearchFilters.prototype, (val, key) => {
         if (typeof val === 'function' && key !== 'template' && key !== 'render' && key !== 'initialize' && key !== 'bindEvents' && key !== 'events') {
-          this[key] = val;
+          this.__proto__[key] = val;
         }
       });
       this.state = this.model.attributes.state;
-      console.log(this.state);
       this.bindEvents();
     },
     render() {
@@ -35,7 +36,6 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       this.$main = this.$('.popover_menu');
       this.$date = this.$('.date-filter');
       this.$toggleItems = this.$('.toggle_items');
-      console.log(this.$toggleItems);
       if (this.state.likes) {
         this.$date.find('input').val(new Date().toDateInputValue());
         this.$toggleItems.hide();
