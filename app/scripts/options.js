@@ -125,11 +125,11 @@ const Options = Backbone.View.extend({
         this.$('section.debug').hide();
       }
     });
-    this.listenTo(this.props, 'change:clientCaching', model => {
-      if (!model.get('clientCaching') && !model.get('canGetApiLikes')) {
-        this.$('#cacheLikes').prop('disabled', true);
-      } else {
-        this.$('#cacheLikes').prop('disabled', false);
+    this.listenTo(this.props, 'change:canGetApiLikes', model => {
+      if (model.get('canGetApiLikes')) {
+        this.$('button#cacheLikes').prop('disabled', false);
+      } else if (!model.get('canGetApiLikes') && !model.get('clientCaching')) {
+        this.$('button#cacheLikes').prop('disabled', true);
       }
     });
   },
@@ -228,14 +228,8 @@ const Options = Backbone.View.extend({
         success: () => {
           this.props.set('canGetApiLikes', true);
         },
-        error: (error) => {
-          if (error) {
-            this.props.set('canGetApiLikes', false);
-            if (!this.props.get('clientCaching')) {
-              console.log(this.$('button#cacheLikes'));
-              $('button#cacheLikes').prop('disabled', true);
-            }
-          }
+        error: error => {
+          this.props.set('canGetApiLikes', false);
         }
       });
     }, 1);

@@ -34,10 +34,10 @@ This is liable to break as Tumblr updates and is not by any means official or fu
 ## To do
 
 + Get app to work on another computer (HEUH)
-+ Find a way to speed up queries and caching/improve user experience for initial caching functions
++ Improve user experience for initial caching functions
 + Add more filter options to leverage dexie query methods
-+ Tag search on enter keypress
-+ Update readme with pictures
++ Tag search on enter
++ Add warning modal or popover when user switches caching strategy and they have cached posts
 
 ## Relevant development posts
 

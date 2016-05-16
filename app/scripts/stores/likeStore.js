@@ -159,7 +159,7 @@ export default class Likes {
 
   static fetchLikedPosts(slug) {
     const deferred = Deferred();
-    console.log('[SLUG]', slug);
+    // console.log('[SLUG]', slug);
     const data = {
       api_key: constants.consumerKey,
       limit: slug.limit || 8
@@ -279,7 +279,7 @@ export default class Likes {
   }
 
   static async syncLikes(payload) {
-    console.log(payload);
+    // console.log(payload);
     const { action, postId } = payload;
     if (action === 'like') {
       const slug = {
