@@ -125,6 +125,13 @@ const Options = Backbone.View.extend({
         this.$('section.debug').hide();
       }
     });
+    this.listenTo(this.props, 'change:cachedPostsCount', model => {
+      if (model.get('cachedPostsCount') === 0) {
+        this.$('button#cacheTags').prop('disabled', true);
+      } else {
+        this.$('button#cacheTags').prop('disabled', false);
+      }
+    });
     this.listenTo(this.props, 'change:canGetApiLikes', model => {
       if (model.get('canGetApiLikes')) {
         this.$('button#cacheLikes').prop('disabled', false);
