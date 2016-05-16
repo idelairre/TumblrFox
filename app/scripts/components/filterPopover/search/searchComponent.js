@@ -11,16 +11,16 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
 
   const Conversations = new ConversationsCollection();
 
-  // TODO: handle if there are no results in the tag search, i.e., if the next offset is -1
-
-  /* states:
-      initial load => default user => post model loads unfiltered dashboard posts from tumblr client
-         select user (has tags) => post model loads unfiltered blog posts from tumblr client
-           select tag / filter => post model loads filtered blog posts from tumblr client
-            no tag => post model loads filtered posts from tumblr api
-         select user (no tags) => post model loads unfiltered blog posts from tumblr client
-            select filter => post model loads filtered blog posts from tumblr api
-         select user (no tags) => select liked posts filter => post model fetches user likes from api */
+/**
+ * NB: component states:
+ *    initial load => default user => post model loads unfiltered dashboard posts from tumblr client
+ *     1. select user (has tags) => post model loads unfiltered blog posts from tumblr client =>
+ *       a. select tag / filter => post model loads filtered blog posts from tumblr client
+ *       b. (TODO) doesn't select tag => post model loads filtered posts from tumblr api
+ *     2. select user (no tags) => post model loads unfiltered blog posts from tumblr client =>
+ *       a. (TODO) select filter => post model loads filtered blog posts from tumblr api
+ *       b. (TODO) select user (no tags) => select liked posts filter => post model fetches user likes from api
+ */
 
   const defaultFilter = clone(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype);
 

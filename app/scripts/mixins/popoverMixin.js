@@ -5,7 +5,7 @@ module.exports = (function popoverMixin(Tumblr, Backbone, _) {
   const transition = get('animation').transition;
   const ClickHandler = get('ClickHandler');
 
-  let PopoverMixin = new Mixin({
+  const PopoverMixin = new Mixin({
     afterRender() {
       this.initialized = !1,
       this.$main = this.$('.popover_menu'),

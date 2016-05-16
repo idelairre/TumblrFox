@@ -1,7 +1,7 @@
 {
   "name": "tumblr-fox",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "author": "Ian Delairre",
   "scripts": {
@@ -86,6 +86,9 @@
   },
   "dependencies": {},
   "xo": {
+    "env": {
+      "browser": true
+    },
     "esnext": true,
     "rules": {
       "indent": [

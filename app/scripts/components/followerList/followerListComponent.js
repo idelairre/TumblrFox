@@ -24,14 +24,20 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
     initialize() {
       this.options = this.defaults;
       this.state = this.defaults.state;
+      this.attachNode = this.$el.find('.left_column');
       this.model = FollowerModel;
+      this.$el.find('.left_column').addClass('ui_notes');
       this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
       this.$followerSearch = new FollowerSearch({
         el: $('#invite_someone')
       });
       this.$pagination = this.$('#pagination'); // insert followers before pagination element
-      this.$pagination.hide();
+      this.$pagination.remove();
+      this.$loader = new Tumblr.Prima.KnightRiderLoader({ variation: 'leviathan', className: 'Knight-Rider-loader centered' });
+      this.$loader.render();
+      this.$el.find('.left_column').prepend('<div class="load_cont"></div>');
+      this.$('.load_cont').append(this.$loader.$el);
       this.bindEvents();
     },
     events: {
@@ -45,6 +51,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
     },
     togglePopover(e) {
       e.preventDefault();
+      // TODO: make this component actually useful
       console.log('[AUTOCOMPLETE POPOVER]', e);
     },
     fetch(option) {
@@ -78,13 +85,17 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
     },
     onScroll() {
       if (this.state.followed) {
+        this.$loader.set('loading', true);
         this.model.fetch(this.options.query).then(followers => {
           this.renderFollowerViews(followers);
+          this.$loader.set('loading', false);
         });
       } else {
         const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
+        this.$loader.set('loading', true);
         followers.map(follower => {
-          return this.renderFollower(follower);
+          this.$loader.set('loading', false);
+          this.renderFollower(follower);
         });
       }
     },
@@ -102,12 +113,12 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
     renderFollower(model) {
       const follower = new FollowerItem({ model });
       follower.render();
-      this.$el.find('.left_column').append(follower.$el);
+      this.attachNode.append(follower.$el);
       return follower.$el[0];
     },
     renderFollowerViews(response) {
       each(response, view => {
-        this.$el.find('.left_column').append(view); // use the tumblr follower init code to append snowmen
+        this.attachNode.append(view); // use the tumblr follower init code to append snowmen
         this.renderSnowman(this.$(view));
       });
       this.$followers = this.$('.follower');

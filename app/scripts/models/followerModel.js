@@ -47,7 +47,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
           // console.log('[RESPONSE]', response);
           deferred.resolve(response);
         },
-        fail: error => {
+        error: error => {
           console.error(error);
           deferred.reject(error);
         }

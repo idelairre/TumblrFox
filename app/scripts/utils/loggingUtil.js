@@ -2,7 +2,6 @@ import { camelCase } from 'lodash';
 import db from '../lib/db';
 
 export function log(database, items, callback) {
-  console.log('[LOG]', arguments);
   try {
     db[database].toCollection().count(itemCount => {
       const cachedKey = camelCase(`cached-${database}-count`);
@@ -17,6 +16,7 @@ export function log(database, items, callback) {
     });
   } catch (e) {
     console.error(e);
+    callback({ error: e });
   }
 }
 

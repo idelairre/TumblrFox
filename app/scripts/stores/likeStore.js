@@ -1,3 +1,6 @@
+/* global chrome:true */
+/* eslint no-undef: "error" */
+
 import $, { ajax, Deferred } from 'jquery';
 import async from 'async';
 import { differenceBy, isEmpty } from 'lodash';
@@ -90,18 +93,17 @@ export default class Likes {
       deferred.resolve({ nextSlug, postsJson });
     } catch (e) {
       deferred.reject(e);
-    } finally {
-      return deferred.promise();
     }
+    return deferred.promise();
   }
 
   static async testPreloadLikes(port) {
-    const slug = {
-      blogname: constants.userName
-    };
     const items = {
       cachedPostsCount: constants.cachedPostsCount,
       totalPostsCount: constants.totalPostsCount
+    };
+    const slug = {
+      blogname: constants.userName
     };
     chrome.storage.local.set({
       totalPostsCount: constants.totalPostsCount
@@ -129,9 +131,25 @@ export default class Likes {
         });
       } catch (e) {
         console.error(e);
+        port({ error: `${e}`});
         next(e);
       }
     });
+  }
+
+  static async checkLikes() {
+    const deferred = Deferred();
+    ajax({
+      type: 'GET',
+      url: `https://www.tumblr.com/liked/by/${constants.userName}`,
+      success: () => {
+        deferred.resolve(true);
+      },
+      error: error => {
+        deferred.resolve(false, error);
+      }
+    });
+    return deferred.promise();
   }
 
   static initialSyncLikes(posts) {
@@ -171,13 +189,13 @@ export default class Likes {
       data,
       success: data => {
         if (data.response.liked_posts.length === 0) {
-          deferred.reject('Response was empty');
+          deferred.reject(new Error('Response was empty'));
         } else {
           deferred.resolve(data.response);
         }
       },
-      fail: error => {
-        console.error('[FAIL]', error);
+      error: error => {
+        console.error('[ERROR]', error);
         deferred.reject(error);
       }
     });
@@ -213,10 +231,7 @@ export default class Likes {
         });
         next(null);
       } catch (e) {
-        console.log('[RESPONSE EMPTY. DONE CACHING]', e);
-        log('posts', items, data => {
-          port(data);
-        });
+        port({ error: `${e}` });
         next(e);
       }
     });

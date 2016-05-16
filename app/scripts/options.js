@@ -1,6 +1,6 @@
 import ProgressBar from 'progressbar.js';
 import Backbone from 'backbone';
-import { camelCase } from 'lodash';
+import { camelCase, isError } from 'lodash';
 import $ from 'jquery';
 import Tipped from './lib/tipped';
 import '../styles/tipped.less';
@@ -8,7 +8,7 @@ import '../styles/tipped.less';
 const clientCachingTooltip = {
   template: `
   <div class="note tooltip" style="position: absolute" data-tooltip="clientCaching">
-    * Toggles experimental caching through client rather than api.
+    * WARNING: this will reset your cache! Toggles caching via Tumblr's frontend.<br>
     <li>Advantages: faster post rendering, actual Tumblr html instead of reconstituted html via jquery, native/predictable Tumblr behavior, you don't have to reveal your likes to other users.</li>
     <li>Drawbacks: significantly slower cache time than fetching from the API.</li>
   </div>`
@@ -18,12 +18,11 @@ const cachingTooltip = {
   template: `<i class="note tooltip" style="position: absolute" data-tooltip="caching">* some posts and blogs you are following may have been deleted, it is sometimes not possible to fetch 100% of your likes or followed blogs.</i>`,
 };
 
-
 const progress = $('#container');
 const bar = new ProgressBar.Line(container, {
     strokeWidth: 4,
     easing: 'easeInOut',
-    duration: 1400,
+    duration: 100,
     color: '#FFEA82',
     trailColor: '#eee',
     trailWidth: 1,
@@ -59,7 +58,7 @@ const Options = Backbone.View.extend({
     props: {
       cachedPostsCount: 0,
       cachedFollowingCount: 0,
-      cachedTagsCount: 0,
+      cachedTagsCount: 0
     }
   },
   initialize() {
@@ -83,6 +82,9 @@ const Options = Backbone.View.extend({
         this.restoreOptions(response.payload);
         this.afterInitialize();
       }
+      if (response.message === 'canFetchApiLikesStatus') {
+        this.props.set('canFetchApiLikes', response.payload);
+      }
     });
   },
   afterInitialize() {
@@ -102,6 +104,7 @@ const Options = Backbone.View.extend({
   },
   bindEvents() {
     this.listenTo(this.props, 'change', ::this.setProps);
+    this.listenTo(this.props, 'change:status', ::this.setStatus);
     this.listenTo(this.props, 'change:defaultKeys', model => {
       if (model.get('defaultKeys')) {
         this.$('.consumer-secret').hide();
@@ -132,13 +135,11 @@ const Options = Backbone.View.extend({
         this.$('button#cacheTags').prop('disabled', false);
       }
     });
-    this.listenTo(this.props, 'change:canGetApiLikes', model => {
-      if (model.get('canGetApiLikes')) {
-        this.$('button#cacheLikes').prop('disabled', false);
-      } else if (!model.get('canGetApiLikes') && !model.get('clientCaching')) {
-        this.$('button#cacheLikes').prop('disabled', true);
-      }
-    });
+    this.listenTo(this.props, 'change:clientCaching', ::this.setCacheLikesButton);
+    this.listenTo(this.props, 'change:canFetchApiLikes', ::this.setCacheLikesButton);
+  },
+  setCacheLikesButton() {
+    this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));
   },
   setProps(model) {
     console.log(this.props);
@@ -163,6 +164,9 @@ const Options = Backbone.View.extend({
       this.$('.authentication').show();
     }
   },
+  setStatus(props) {
+    this.$status.text(props.get('status'));
+  },
   setUser(e) {
     const setUser = $(e.target).prop('checked');
     this.props.set('setUser', setUser);
@@ -172,6 +176,9 @@ const Options = Backbone.View.extend({
     const clientCaching = e.target.checked;
     chrome.storage.local.set({ clientCaching });
     this.props.set('clientCaching', clientCaching);
+    this.port.postMessage({
+      type: 'checkLikes'
+    });
     console.log('[TOGGLE CLIENT CACHING]', this.props.get('clientCaching'));
   },
   toggleDebug(e) {
@@ -186,23 +193,28 @@ const Options = Backbone.View.extend({
     this.props.set('defaultKeys', defaultKeys);
   },
   animateProgress(response) {
-    let { database, percentComplete, itemsLeft, total } = response;
-    const totalKey = camelCase(`total-${database}-count`);
-    const cachedKey = camelCase(`cached-${database}-count`);
-    const section = $(`.${database}`).children();
-    section.last().text(total);
-    this.$('#debugConsole').text(JSON.stringify(response));
-    // this.$status.text(`items left: ${itemsLeft}`);
-    this.$bar.animate(percentComplete / 100);
-    this.props.set(`${cachedKey}`, total - itemsLeft);
-    if (this.props.get(`${totalKey}`) === 0) {
-      this.props.set(`${totalKey}`, total);
-    }
-    if (itemsLeft === 0) {
-      this.$status.text('done');
-      this.$progress.hide();
-      this.$('buttons').prop('disabled', false);
+    if (response.hasOwnProperty('error')) {
+      this.props.set('status', response.error);
       return;
+    } else if (response.hasOwnProperty('percentComplete')) {
+      let { database, percentComplete, itemsLeft, total } = response;
+      const totalKey = camelCase(`total-${database}-count`);
+      const cachedKey = camelCase(`cached-${database}-count`);
+      const section = $(`.${database}`).children();
+      console.log(percentComplete);
+      section.last().text(total);
+      this.$('#debugConsole').text(JSON.stringify(response));
+      // this.$status.text(`items left: ${itemsLeft}`);
+      this.$bar.animate(percentComplete * 0.01);
+      this.props.set(`${cachedKey}`, total - itemsLeft);
+      if (this.props.get(`${totalKey}`) === 0) {
+        this.props.set(`${totalKey}`, total);
+      }
+      if (itemsLeft === 0) {
+        // this.$status.text('done');
+        this.$progress.hide();
+        return;
+      }
     }
   },
   saveOptions() {
@@ -229,16 +241,6 @@ const Options = Backbone.View.extend({
   restoreOptions(constants) {
     setTimeout(() => {
       this.props.set(constants);
-      $.ajax({
-        type: 'GET',
-        url: `https://www.tumblr.com/liked/by/${this.props.get('userName')}`,
-        success: () => {
-          this.props.set('canGetApiLikes', true);
-        },
-        error: error => {
-          this.props.set('canGetApiLikes', false);
-        }
-      });
     }, 1);
   },
   cacheTags() {

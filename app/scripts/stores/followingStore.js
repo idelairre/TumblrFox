@@ -29,7 +29,6 @@ export default class Following {
     }, async next => {
       try {
         let response = await oauthRequest(slug);
-        console.log('[RESPONSE]', response);
         const nextSlug = { slug, response, items };
         await this.processFollowing(nextSlug);
         log('following', items, data => {
@@ -38,27 +37,21 @@ export default class Following {
         });
       } catch (e) {
         console.error(e);
-        log('following', items, data => {
-          next(e);
-          port(data);
-        });
+        port({ error: `${e}` });
+        next(e);
       }
     });
   }
 
   static processFollowing({ slug, response, items }) {
     const deferred = Deferred();
-    slug.offset += response.blogs.length;
-    items.cachedFollowingCount += response.blogs.length;
     if (response.blogs && response.blogs.length) {
       resetOauthSlug(slug);
+      slug.offset += response.blogs.length;
+      items.cachedFollowingCount += response.blogs.length;
       const transaction = db.following.bulkPut(response.blogs);
       transaction.then(() => {
         deferred.resolve();
-      });
-      transaction.catch(Dexie.BulkError, error => {
-        console.log('[DB ERROR]', error.message);
-        deferred.reject(error);
       });
     } else {
       resetOauthSlug(slug);

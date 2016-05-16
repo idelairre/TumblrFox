@@ -1,4 +1,5 @@
 import jQuery from 'jquery';
+
 /*!
  * Tipped - A Complete Javascript Tooltip Solution - v4.5.7
  * (c) 2012-2016 Nick Stakenburg

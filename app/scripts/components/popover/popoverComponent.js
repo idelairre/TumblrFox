@@ -4,6 +4,55 @@ module.exports = (function popover(Tumblr, Backbone, _) {
   const { get, PopoverMixin } = Tumblr.Fox;
   const PopoverComponent = get('PopoverComponent');
 
+  /**
+   * Constructor - passed in through controller component
+   * @constructor
+   * @param {HTML Element} pinnedTarget Element to pin popover to
+   * @param {String} pinnedSide Direction popover will appear from
+   * @param {String} class Optional css class of the popover.
+   * @param {String} selection Optional selection indicator. Recognized parameters"
+   *     "checkmark" {String} Displays checkmark
+   *     "none" {String} Displays nothing
+   * @param {String} multipleSelection The OAuth consumer secret.
+   * @param {Array} items Html list items and headers to display. Recognized parameters:
+   *     "header" {String} Optional name of the current application
+   *     "listItems" {Array} Li tags and their properties. Recognized parameters:
+            "icon" {String} Optional css class of the icon to prepend to list item
+            "name" {String} Optional text body of the list item
+            "checked" {Boolean} Optional default checked state
+   * @param {Function} onSelect Optional function to perform on list item selection.
+   */
+
+   /**
+   * Component API:
+   * In your controller component set the following in defaults or wherever:
+   *   ...
+   *   popoverOptions: [{
+   *     header: 'Whatever',
+   *     listItems: [
+   *       { icon: 'none', name: 'Search likes', checked: false },
+   *       { icon: 'none', name: 'Search by user', checked: true },
+   *       { icon: 'none', name: 'Search dashboard', checked: false }
+   *     ]
+   *   }]
+   *
+   * Then in the body of the Backbone.View class set a method like the following:
+   *   ...
+   *   togglePopover() {
+   *     this.popover || (this.popover = new Popover({
+   *       pinnedTarget: this.$el,
+   *       pinnedSide: 'bottom',
+   *       class: 'popover--settings-popover',
+   *       selection: 'checkmark',
+   *       multipleSelection: false,
+   *       items: this.options.popoverOptions,
+   *       onSelect: this.onSelect
+   *     }),
+   *     this.popover.render(),
+   *     this.listenTo(this.popover, 'close', this.onPopoverClose));
+   *   },
+   */
+
   const Popover = PopoverComponent.extend({
     mixins: [PopoverMixin],
     template: template($('#popoverTemplate').html()),
@@ -12,6 +61,7 @@ module.exports = (function popover(Tumblr, Backbone, _) {
     },
     initialize(e) {
       this.options = Object.assign({}, e);
+      console.log('[POPOVER CONSTRUCTOR]', this.options);
       this.initialized = !1;
     },
     render() {

@@ -1,4 +1,5 @@
 import { Deferred } from 'jquery';
+import { isError } from 'lodash';
 import constants from '../constants';
 import { ChromeExOAuth } from './chromeExOauth';
 
@@ -29,13 +30,14 @@ function onAuthorized(slug, callback) {
 
   const url = slug.url || 'https://api.tumblr.com/v2/user/dashboard';
 
-  oauth.sendSignedRequest(url, (data, xhr) => {
-    // console.log('[XHR]', xhr);
-    if (xhr.response !== '') {
+  oauth.sendSignedRequest(url, function(data, xhr) {
+    // console.log('[OAUTH]', arguments);
+    if (data !== '') {
+      // console.log('[RESPONSE BYTES]', (encodeURI(data).split(/%..|./).length - 1)/ 1024);
       const response = JSON.parse(data).response;
-      callback(response);
+      callback(null, response);
     } else {
-      callback(data);
+      callback(new Error('Response was empty'));
     }
   }, request);
 }
@@ -43,11 +45,11 @@ function onAuthorized(slug, callback) {
 export function oauthRequest(slug) {
   const deferred = Deferred();
   oauth.authorize(() => {
-    onAuthorized(slug, response => {
-      if (response !== '') {
-        deferred.resolve(response);
+    onAuthorized(slug, (error, response) => {
+      if (error) {
+        deferred.reject(error);
       } else {
-        deferred.reject(response);
+        deferred.resolve(response);
       }
     });
   });

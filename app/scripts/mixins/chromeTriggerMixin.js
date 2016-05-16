@@ -3,12 +3,13 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
   const { get } = Tumblr.Fox;
   const Mixin = get('Mixin');
 
+  /**
+   * @param {String} eventName The name of the window event corresponding to a chrome action
+   * @param {String} payload The data to send to the extension backend
+   * @param {String} callback Optional function to perform on response
+   */
+
   const chromeMixin = new Mixin({
-    /**
-     * @param {String} eventName The name of the window event corresponding to a chrome action
-     * @param {String} payload The data to send to the extension backend
-     * @param {String} callback Optional function to perform on response
-     */
     chromeTrigger(eventName, payload, callback) {
       console.log('[CHROME TRIGGER]', arguments);
       let req = {};

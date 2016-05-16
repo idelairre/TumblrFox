@@ -7,7 +7,7 @@ export default class Tags {
   static parseTagsArray(tagArrays) {
     console.log('[CACHING TAGS...]', tagArrays.length);
     const deferred = Deferred();
-    let tags = {};
+    const tags = {};
     let total = 0;
     for (let i = 0; tagArrays.length > i; i += 1) {
       if (tagArrays[i].length > 0) {
@@ -29,22 +29,24 @@ export default class Tags {
     return deferred.resolve({ tags, total });
   }
 
-  static processTags(tags, items, callback) {
+  static async processTags(tags, items, callback) {
     for (const key in tags) {
-      db.tags.put(tags[key]);
+      await db.tags.put(tags[key]);
       items.cachedTagsCount += 1;
-      callback();
+      console.log(items);
+      callback({ items });
     }
   }
 
   static async cacheLikeTags(port) {
-    let tagArrays = await db.posts.orderBy('tags').keys();
-    let { tags, total } = await this.parseTagsArray(tagArrays);
-    const items = {
+    const tagArrays = await db.posts.orderBy('tags').keys();
+    const { tags, total } = await this.parseTagsArray(tagArrays);
+    let items = {
       totalTagsCount: total,
       cachedTagsCount: 0
     };
-    this.processTags(tags, items, () => {
+    this.processTags(tags, items, response => {
+      items = response.items;
       log('tags', items, data => {
         port(data);
       });
@@ -52,7 +54,7 @@ export default class Tags {
   }
 
   static async fetchLikeTags(port) {
-    const tags = await db.tags.orderBy('count').reverse().toArray() ;
+    const tags = await db.tags.orderBy('count').reverse().toArray();
     port(tags);
   }
 }
