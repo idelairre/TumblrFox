@@ -49,7 +49,6 @@ let config = {
 };
 
 if (args.watch) {
-
   let bundleStart = null;
   let compiler = webpack(config);
 
