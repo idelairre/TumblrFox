@@ -10,6 +10,8 @@ import args from './lib/args';
 
 let path = appRoot.resolve('test/index.js');
 
+console.log(args.watch);
+
 let config = {
   entry: 'mocha!./test/index.js',
   output: {
@@ -20,7 +22,7 @@ let config = {
   },
   devtool: args.sourcemaps ? 'eval' : null,
   target: 'web',
-  watch: true,
+  watch: args.watch,
   plugins: [
     new webpack.DefinePlugin({
       '__ENV__': JSON.stringify('test'),
@@ -46,32 +48,35 @@ let config = {
   }
 };
 
-let bundleStart = null;
-let compiler = webpack(config);
+if (args.watch) {
 
-compiler.plugin('compile', () => {
-  console.log('Bundling...');
-  bundleStart = Date.now();
-});
+  let bundleStart = null;
+  let compiler = webpack(config);
 
-compiler.plugin('done', () => {
-  console.log(`Bundled in ${Date.now() - bundleStart} ms.`);
-});
+  compiler.plugin('compile', () => {
+    console.log('Bundling...');
+    bundleStart = Date.now();
+  });
 
-let bundler = new WebpackDevServer(compiler, {
-  entry: 'mocha!./test/index',
-  publicPath: appRoot.resolve('./test'),
-  hot: true,
-  quiet: false,
-  noInfo: true,
-  stats: {
-    colors: true
-  }
-});
+  compiler.plugin('done', () => {
+    console.log(`Bundled in ${Date.now() - bundleStart} ms.`);
+  });
 
-bundler.listen(8000, 'localhost', () => {
-  console.log('listening on port 8000');
-});
+  let bundler = new WebpackDevServer(compiler, {
+    entry: 'mocha!./test/index',
+    publicPath: appRoot.resolve('./test'),
+    hot: true,
+    quiet: false,
+    noInfo: true,
+    stats: {
+      colors: true
+    }
+  });
+
+  bundler.listen(8000, 'localhost', () => {
+    console.log('listening on port 8000');
+  });
+}
 
 gulp.task('tests', (cb) => {
   return gulp.src(path)

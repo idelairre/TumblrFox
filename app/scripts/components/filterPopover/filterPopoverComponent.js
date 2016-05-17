@@ -88,7 +88,6 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
     setState(state) { // NOTE: this is terrible, maybe make a mixin to manage state?
-      // console.log('[SET STATE]', state);
       try {
         for (const key in this.state) {
           if ({}.hasOwnProperty.call(this.state, key)) {
