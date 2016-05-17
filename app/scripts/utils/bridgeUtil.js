@@ -54,7 +54,6 @@ module.exports = {
       this.trigger('chrome:response:following', response);
     });
     this.listenTo('chrome:fetch:tags', response => {
-      console.log('[TAGS]', response);
       this.trigger('chrome:response:tags', response);
     });
     this.listenTo('chrome:fetch:constants', response => {

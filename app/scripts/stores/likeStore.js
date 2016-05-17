@@ -41,7 +41,7 @@ export default class Likes {
       success: data => {
         deferred.resolve(data);
       },
-      fail: error => {
+      error: error => {
         console.error('[FAIL]', error);
         deferred.reject(error);
       }
@@ -152,32 +152,56 @@ export default class Likes {
     return deferred.promise();
   }
 
-  static initialSyncLikes(posts) {
+  static async initialSyncLikes() {
     console.log('[SYNCING LIKES]');
-    if (!posts || posts.length === 0) {
-      return;
+    const deferred = Deferred();
+    let slug = {};
+    if (constants.clientCaching) {
+      // do nothing
+    } else {
+      slug = {
+        blogname: constants.userName,
+        offset: 0,
+        limit: 8
+      };
     }
-    const slug = {
-      blogname: constants.userName,
-      offset: 0,
-      limit: 50
+    const callback = async (slug, response) => {
+      const posts = await db.posts.toCollection().toArray();
+      let difference = {};
+      if (constants.clientCaching) {
+        const { nextSlug, postsJson } = await this.testProcessPosts(slug, response);
+        slug = nextSlug;
+        difference = differenceBy(postsJson, posts, 'id');
+      } else {
+        slug.offset += response.liked_posts.length;
+        difference = differenceBy(response.liked_posts, posts, 'id');
+      }
+      if (difference.length !== 0) {
+        console.log('[ADDING NEW LIKES]', difference);
+        await db.posts.bulkPut(difference);
+      } else {
+        const count = await db.posts.toCollection().count();
+        deferred.resolve(count);
+      }
+      console.log('[SYNC DONE]');
     };
-    const callback = response => {
-      posts.toArray(items => {
-        const difference = differenceBy(response.liked_posts, items, 'id');
-        if (difference.length !== 0) {
-          console.log('[ADDING NEW LIKES]', difference);
-          posts.bulkPut(difference);
-        }
-        console.log('[SYNC DONE]');
-      });
-    };
-    this.fetchLikedPosts(slug, callback);
+    try {
+      if (constants.clientCaching) {
+        let response = await this.testFetchLikedPosts(slug);
+        callback(slug, response);
+      } else {
+        let response = await this.fetchLikedPosts(slug);
+        callback(slug, response);
+      }
+    } catch (e) {
+      console.error(e);
+      deferred.reject(e);
+    }
+    return deferred.promise();
   }
 
   static fetchLikedPosts(slug) {
     const deferred = Deferred();
-    // console.log('[SLUG]', slug);
     const data = {
       api_key: constants.consumerKey,
       limit: slug.limit || 8
@@ -244,11 +268,23 @@ export default class Likes {
       return deferred.resolve(matches);
     } catch (e) {
       console.error(e);
+      return deferred.reject(e);
     }
   }
 
   static async getLikesByType(type) {
     await db.posts.where('type').anyOfIgnoreCase(type).toArray();
+  }
+
+  static async filterByDate(args, posts) {
+    const deferred = Deferred();
+    const date = args.before / 1000;
+    posts = posts.filter(post => {
+      if (date >= post.liked_timestamp) {
+        return post;
+      }
+    });
+    return deferred.resolve(posts);
   }
 
   static filterByType(args, posts) {
@@ -284,6 +320,9 @@ export default class Likes {
     }
     if (args.post_type !== 'ANY') {
       matches = await this.filterByType(args, matches);
+    }
+    if (args.before) {
+      matches = await this.filterByDate(args, matches);
     }
     if (args.offset && args.limit) {
       const { offset, limit } = args;

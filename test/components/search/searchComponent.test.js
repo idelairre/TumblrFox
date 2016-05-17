@@ -15,5 +15,13 @@ describe('SearchComponent', () => {
       expect(searchComponent).to.exist;
       expect(searchComponent.model).to.exist;
     });
+    it('should extend the input subview with the tagSearchAutocompleteModel', () => {
+    });
+    it('should extend the filter subview with custom popover code', () => {
+    });
+  });
+  describe('#updateSearchSettings()', () => {
+    it('should update its subview functionality on state change', () => {
+    });
   });
 });

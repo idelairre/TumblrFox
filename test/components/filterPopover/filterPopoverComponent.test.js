@@ -10,4 +10,9 @@ describe('FilterPopoverComponent', () => {
       expect(FilterPopoverComponent).to.exist;
     });
   });
+  describe('#setState()', () => {
+    it('should set all subviews and components to the same state', () => {
+
+    });
+  });
 });

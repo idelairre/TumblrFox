@@ -14,7 +14,7 @@ describe('FilterPopoverIcon', () => {
     FilterPopoverIcon.render();
   });
   after(() => {
-    // $fixture.empty();
+    $fixture.empty();
   });
   describe('#render()', () => {
     it('should show the popover when clicked', () => {

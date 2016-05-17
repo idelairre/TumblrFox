@@ -21,7 +21,6 @@ chrome.runtime.onInstalled.addListener(async details => {
 
 chrome.runtime.onMessage.addListener(request => {
   if (request.type === 'initialize') {
-    console.log(request.payload);
     constants.userName = request.payload.id;
     constants.currentUser = request.payload;
     initializeConstants(constants);
@@ -54,9 +53,15 @@ chrome.runtime.onConnect.addListener(port => {
       case 'checkLikes':
         Likes.checkLikes().then(response => {
           constants.canFetchApiLikes = response;
-          chrome.storage.local.set({ canFetchApiLikes: response });
-          port.postMessage({ message: 'canFetchApiLikesStatus', payload: constants.canFetchApiLikes });
-        })
+          chrome.storage.local.set({
+            canFetchApiLikes: response
+          });
+          port.postMessage({
+            message: 'canFetchApiLikesStatus',
+            payload: constants.canFetchApiLikes
+          });
+        });
+        return true;
       case 'resetCache':
         resetCache(::port.postMessage);
         return true;
@@ -75,21 +80,41 @@ chrome.tabs.onUpdated.addListener(tabId => {
 });
 
 function initializeConstants(constants) {
-  chrome.storage.sync.get({ userName: '' }, items => {
+  chrome.storage.sync.get({
+    userName: ''
+  }, items => {
     if (items.userName === '') {
-      chrome.storage.sync.set({ userName: constants.userName });
+      chrome.storage.sync.set({
+        userName: constants.userName
+      });
     }
   });
-  chrome.storage.local.get({ canFetchApiLikes: false, currentUser: {}, totalPostsCount: 0, totalFollowingCount: 0 }, items => {
-    if (items.currentUser === {}) {
-      chrome.storage.sync.set({ currentUser: constants.currentUser.attributes });
-    } else if (items.totalPostsCount === 0) {
-      chrome.storage.local.set({ totalPostsCount: constants.currentUser.liked_post_count || constants.totalPostsCount });
-    } else if (items.totalFollowingCount === 0) {
-      chrome.storage.local.set({ totalFollowingCount: constants.currentUser.friend_count || constants.totalFollowingCount });
+  chrome.storage.local.get({
+    canFetchApiLikes: false,
+    currentUser: {},
+    totalPostsCount: 0,
+    totalFollowingCount: 0
+  }, async items => {
+    if (items.currentUser === {} || items.currentUser !== constants.currentUser) {
+      chrome.storage.sync.set({
+        currentUser: constants.currentUser.attributes
+      });
+    } else if (items.totalPostsCount === 0 || items.totalPostsCount !== constants.totalPostsCount) {
+      const count = await Likes.initialSyncLikes();
+      constants.totalPostsCount = count;
+      chrome.storage.local.set({
+        totalPostsCount: constants.currentUser.liked_post_count || constants.totalPostsCount
+      });
+    } else if (items.totalFollowingCount === 0 || items.totalFollowingCount !== constants.totalFollowingCount) {
+      // sync followers
+      chrome.storage.local.set({
+        totalFollowingCount: constants.currentUser.friend_count || constants.totalFollowingCount
+      });
     }
   });
-  chrome.storage.local.set({ canFetchApiLikes: constants.canFetchApiLikes });
+  chrome.storage.local.set({
+    canFetchApiLikes: constants.canFetchApiLikes
+  });
 }
 
 function initializeListeners() {

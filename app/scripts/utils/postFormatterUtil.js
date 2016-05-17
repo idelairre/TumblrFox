@@ -59,7 +59,6 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     const postView = new Tumblr.IndashBlog.PostView({
       model: postModel
     });
-    console.log(postModel);
     postView.render();
 
     const postDiv = $(postView.$el).find('.post_chrome');

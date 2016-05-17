@@ -61,7 +61,6 @@ module.exports = (function popover(Tumblr, Backbone, _) {
     },
     initialize(e) {
       this.options = Object.assign({}, e);
-      console.log('[POPOVER CONSTRUCTOR]', this.options);
       this.initialized = !1;
     },
     render() {

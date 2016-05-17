@@ -13,8 +13,7 @@
     "dev:opera": "gulp --watch --vendor=opera",
     "start": "npm run dev:chrome",
     "build": "npm run build:chrome",
-    "test": "gulp tests",
-    "package": "tar -zcvf tumblrFox.tar.gz dist/chrome"
+    "test": "gulp tests"
   },
   "devDependencies": {
     "app-root-path": "^1.0.0",

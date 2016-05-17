@@ -22,6 +22,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.$$dashboardTags = [];
       this.$$likesTags = [];
       this.bindEvents();
+      this.chromeTrigger('chrome:fetch:tags', ::this.parse);
     },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
@@ -99,9 +100,6 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
          this.set('typeAheadMatches', this.items.toJSON());
        }
       omit(e, 'tags');
-      if (tags.length === 0) {
-        Tumblr.Events.trigger('fox:noTags');
-      }
     }
   });
 

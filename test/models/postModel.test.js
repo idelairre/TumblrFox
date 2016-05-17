@@ -26,8 +26,8 @@ describe('Posts', () => {
       });
       let eventCallback = sinon.spy();
       sinon.stub(Tumblr.Fox, 'formatDashboardPost');
-      sinon.stub(Posts, 'renderPosts'); // not sure why these aren't called
-      sinon.stub(Posts, 'renderPost');
+      sinon.stub(Tumblr.Fox, 'renderPosts'); // not sure why these aren't called
+      sinon.stub(Tumblr.Fox, 'renderPost');
       Tumblr.Events.on('fox:postFetch:finished', eventCallback);
       const slug = { blogNameOrId: Tumblr.Prima.currentUser().id };
       Posts.clientFetchPosts(slug);

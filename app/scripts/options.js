@@ -70,7 +70,6 @@ const Options = Backbone.View.extend({
     Tipped.create('[data-tooltip-key="caching"]', $(cachingTooltip.template).html(), { skin: 'light', position: 'topleft' });
     this.bindEvents();
     this.initializePort();
-
     console.log('[tooltips]', Tipped);
   },
   initializePort() {
