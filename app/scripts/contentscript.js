@@ -16,8 +16,9 @@ import FollowerModel from './models/followerModel';
 import FollowerSearch from './components/followerList/followerSearch/followerSearchComponent';
 import Events from './utils/eventsUtil';
 import Init from './init';
+import LikesModel from './models/likesModel';
 import Main from './main';
-import postFormatter from './utils/postFormatterUtil';
+import PostFormatter from './utils/postFormatterUtil';
 import PostModel from './models/postModel';
 import PopoverMixin from './mixins/popoverMixin';
 import PopoverTemplate from './components/popover/popoverTemplate.html';
@@ -64,15 +65,16 @@ if (window.location.href.includes('https://www.tumblr.com')) {
 
   inject([
     Init,
-    postFormatter,
     componentFetcher,
     Events,
     Time,
     Main,
+    PostFormatter,
     ChromeMixin,
     LoaderMixin,
     PopoverMixin,
     FollowerModel,
+    LikesModel,
     PostModel,
     PopoverComponent,
     AutopaginatorComponent, // depends on PostModel

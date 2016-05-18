@@ -1,7 +1,7 @@
 import { camelCase } from 'lodash';
 import db from '../lib/db';
 
-export function log(database, items, callback) {
+export function log(database, items, callback, save) {
   try {
     db[database].toCollection().count(itemCount => {
       const cachedKey = camelCase(`cached-${database}-count`);
@@ -10,7 +10,9 @@ export function log(database, items, callback) {
       const storageSlug = {};
       storageSlug[cachedKey] = items[cachedKey];
       storageSlug[totalKey] = items[totalKey];
-      chrome.storage.local.set(storageSlug);
+      if (typeof save === 'undefined' || save) {
+        chrome.storage.local.set(storageSlug);
+      }
       console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
       callback({ database, percentComplete, itemsLeft, total });
     });

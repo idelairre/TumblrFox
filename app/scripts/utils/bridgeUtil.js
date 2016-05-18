@@ -59,8 +59,10 @@ module.exports = {
     this.listenTo('chrome:fetch:constants', response => {
       this.trigger('chrome:response:constants', response);
     });
+    this.listenTo('chrome:refresh:following');
     this.listenTo('chrome:update:following');
     this.listenTo('chrome:update:likes');
+    this.listenTo('chrome:sync:likes');
     this.listenTo('chrome:initialize');
   }
 };

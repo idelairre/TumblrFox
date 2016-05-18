@@ -15,6 +15,7 @@ module.exports = (function init(Tumblr, Backbone, _) {
   window.dispatchEvent(constReq);
 
   function initializeConstants(e) {
+    console.log('[CONSTANTS]', e);
     const constants = e.detail;
     Tumblr.Fox.options.logging = constants.debug;
     Tumblr.Fox.options.cachedTags = constants.cachedTagsCount !== 0;

@@ -9,6 +9,9 @@
     div.container {
       min-width: 474px;
     }
+    .cache button {
+      float: right;
+    }
     .debug p span {
       background-color: #EEEEEE;
     }
@@ -65,6 +68,12 @@
     </section>
     <section class="options">
       <h1>Options</h1>
+      <!-- <div class="input-option">
+        <label>
+          Automatically cache likes:
+        </label>
+        <input type="checkbox" id="automaticCaching" checked="true">
+      </div> -->
       <div class="input-option">
         <label data-tooltip-key="clientCaching">
           Cache likes via client*:
@@ -92,25 +101,26 @@
     </section>
     <section class="cache">
       <h1 class="cache-header" data-tooltip-key="caching">Cache*</h1>
-      <p class="likes">Likes: <span id="cachedPostsCount"></span> out of <span id="totalPostsCount"></span></p>
-      <p class="following">Following: <span id="cachedFollowingCount"></span> out of <span id="totalFollowingCount"></span></p>
-      <p class="tags">Tags: <span id="cachedTagsCount"></span> out of <span id="totalTagsCount"></span></p>
+      <p class="likes">Likes: <span id="cachedPostsCount"></span> out of <span id="totalPostsCount"></span><button id="cacheLikes">Cache likes</button></p>
+      <p class="following">Following: <span id="cachedFollowingCount"></span> out of <span id="totalFollowingCount"></span><button id="cacheFollowing">Cache following</button></p>
+      <p class="tags">Tags: <span id="cachedTagsCount"></span> out of <span id="totalTagsCount"></span><button id="cacheTags">Cache tags</button></p>
     </section>
     <div id="container" style="display: none"></div>
     <section class="status">
       <span id="status"></span>
     </section>
     <section class="debug">
-      <p>debug: <span id="debugConsole" style="background-color: #EEEEEE; overflow: hidden; width: 100%"></span></p>
+      <p><span id="debugConsole" style="background-color: #EEEEEE; overflow: hidden; width: 100%"></span></p>
     </section>
     <section class="buttons">
       <button id="save">Save</button>
-      <button id="cacheFollowing">Cache Following</button>
-      <button id="cacheLikes">Cache likes</button>
-      <button id="cacheTags">Cache Tags</button>
+      <button id="downloadCache">Save cache</button>
+      <button id="restoreCache">Restore cache</button>
+      <input type="file" id="file" name="file" style="display: none" accept=".json"/>
       <button id="resetCache">Reset cache</button>
     </section>
   </div>
+  <a id="cache" style="display: none">download</a>
   <script src="../scripts/options.js"></script>
 </body>
 </html>

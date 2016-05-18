@@ -22,6 +22,6 @@ describe('FilterComponent', () => {
     it('should share all the methods of Tumblr\'s peepr filter', () => {
     });
     it('should successfully set the date input value to today\'s date', () => {
-    })
+    });
   });
 });

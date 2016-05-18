@@ -26,15 +26,15 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       }]
     },
     initialize() {
-      this.state = this.defaults.state,
-      this.popoverOptions = this.defaults.popoverOptions,
-      this.$form = this.$('form'),
-      this.$form.css('display', 'inline-block'),
-      this.$form.css('width', '89%'),
-      this.$el.css('background', '#f8f8f8 11px 5px no-repeat'),
-      this.$el.css('padding', '5px 10px 5px 0px'),
-      this.$el.prepend('<div class="follower-filter"><i class="icon_filter"></i></div>'),
-      this.$followerFilter = this.$('.follower-filter'),
+      this.state = this.defaults.state;
+      this.popoverOptions = this.defaults.popoverOptions;
+      this.$form = this.$('form');
+      this.$form.css('display', 'inline-block');
+      this.$form.css('width', '89%');
+      this.$el.css('background', '#f8f8f8 11px 5px no-repeat');
+      this.$el.css('padding', '5px 10px 5px 0px');
+      this.$el.prepend('<div class="follower-filter"><i class="icon_filter"></i></div>');
+      this.$followerFilter = this.$('.follower-filter');
       this.$input = this.$el.find('input.text_field');
     },
     events: {
@@ -59,7 +59,7 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       this.listenTo(this.popover, 'close', this.onPopoverClose));
     },
     hidePopover() {
-      this.popover && this.popover.hide();
+      this.popover && this.popoSettingsPopoverComponentver.hide();
     },
     onPopoverClose() {
       defer(() => {

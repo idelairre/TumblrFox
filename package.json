@@ -1,8 +1,10 @@
 {
   "name": "tumblr-fox",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "",
+  "homepage": "https://chrome.google.com/webstore/detail/tumblrfox/feeecimccgpgmajhebcelhofijkdngkf",
+  "repository": "https://github.com/idelairre/TumblrFox",
   "author": "Ian Delairre",
   "scripts": {
     "build:chrome": "gulp --production --vendor=chrome && gulp pack --vendor=chrome",

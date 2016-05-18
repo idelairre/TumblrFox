@@ -37,6 +37,8 @@ This is liable to break as Tumblr updates and is not by any means official or fu
 + Improve user experience for initial caching functions
 + Add more filter options to leverage dexie query methods
 + Tag search on enter
++ Sync followers on follow/unfollow events
++ Refresh follower data when user sorts by updated timestamp
 + Add warning modal or popover when user switches caching strategy and they have cached posts
 
 ## Relevant development posts

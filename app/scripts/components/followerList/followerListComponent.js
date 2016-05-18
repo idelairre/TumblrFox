@@ -25,7 +25,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       this.options = this.defaults;
       this.state = this.defaults.state;
       this.attachNode = this.$el.find('.left_column');
-      this.model = FollowerModel;
+      this.model = new FollowerModel();
       this.$el.find('.left_column').addClass('ui_notes');
       this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
@@ -74,7 +74,6 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
           this.model.fetch(option);
         });
       }
-      console.log('[OPTON]', option, this.state);
     },
     clearElements() {
       const deferred = $.Deferred();
@@ -94,7 +93,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
         const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
         this.$loader.set('loading', true);
         followers.map(follower => {
-          this.$loader.set('loading', false);
+          // this.$loader.set('loading', false);
           this.renderFollower(follower);
         });
       }

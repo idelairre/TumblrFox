@@ -14,6 +14,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       this.options = this.defaults;
       this.items = Tumblelog.collection;
       this.$views = new Backbone.Collection();
+      this.chromeTrigger('chrome:refresh:following');
       this.bindEvents();
     },
     bindEvents() {
@@ -56,7 +57,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.FollowerModel = new FollowerModel();
+  Tumblr.Fox.FollowerModel = FollowerModel;
 
   return Tumblr.Fox.FollowerModel;
 });

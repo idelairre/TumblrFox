@@ -14,7 +14,7 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
       </span>
     </script>`;
 
-  let FilterIcon = Backbone.View.extend({
+  const FilterIcon = Backbone.View.extend({
     template: $(filterIconTemplate).html(),
     className: 'tab iconic tab_filtered_posts',
     id: 'filter_button',
@@ -22,7 +22,7 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
       'click button': 'togglePopover'
     },
     render() {
-      this.$el.html(this.template),
+      this.$el.html(this.template);
       $('.tab_bar').append(this.$el);
       this.popover = new FilterPopoverContainer();
     },
@@ -36,7 +36,7 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
     }
   });
 
-  let filterPopoverIcon = new FilterIcon();
+  const filterPopoverIcon = new FilterIcon();
 
   if (!Tumblr.Fox.options.test) {
     filterPopoverIcon.render();

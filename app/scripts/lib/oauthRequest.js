@@ -4,7 +4,7 @@ import constants from '../constants';
 import { ChromeExOAuth } from './chromeExOauth';
 
 const ACCESS_TOKEN_URL = constants.accessTokenUrl;
-const CONSUMER_KEY = constants.consumerKey
+const CONSUMER_KEY = constants.consumerKey;
 const CONSUMER_SECRET = constants.consumerSecret;
 const REQUEST_TOKEN_URL = constants.requestTokenUrl;
 const AUTHORIZATION_BASE_URL = constants.authorizationBaseUrl;
@@ -30,7 +30,7 @@ function onAuthorized(slug, callback) {
 
   const url = slug.url || 'https://api.tumblr.com/v2/user/dashboard';
 
-  oauth.sendSignedRequest(url, function(data, xhr) {
+  oauth.sendSignedRequest(url, function (data, xhr) {
     // console.log('[OAUTH]', arguments);
     if (data !== '') {
       // console.log('[RESPONSE BYTES]', (encodeURI(data).split(/%..|./).length - 1)/ 1024);

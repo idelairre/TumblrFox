@@ -1,3 +1,6 @@
+/* global window:true */
+/* eslint no-undef: "error" */
+
 import { ChromeExOAuth } from './chromeExOauth';
 
 // Copyright (c) 2012 The Chromium Authors. All rights reserved.
