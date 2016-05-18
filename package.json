@@ -76,6 +76,7 @@
     "require-dir": "^0.3.0",
     "sinon": "^2.0.0-pre",
     "sinon-chai": "^2.8.0",
+    "sinon-chrome": "^1.1.2",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "vinyl-named": "^1.1.0",

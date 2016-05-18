@@ -1,7 +1,7 @@
 <script id="popoverTemplate" type="text/template">
   <div class="popover popover_menu popover_gradient">
     <div class="popover_inner">
-      <ul class="popover_inner_list">
+      <ul class="popover_inner_list search_filter_items">
         <% _.each(items, function(item, key, index) { %>
           <% if (item.header) { %>
           <li class="popover_subsection">
@@ -16,21 +16,27 @@
             <% if (item.header) { %>
             </div>
             <% } %>
-            <ul class="popover_menu_list search_filter_items">
+            <ul class="popover_inner_list search_filter_items" id="<%= item.name %>" data-multiple-selection="<%= item.multipleSelection %>">
             <% var listItems = item.listItems %>
             <% _.each(listItems, function(listItem, key, index) { %>
               <% var hasIcon = listItem.icon !== '' ? '_icon' : '' %>
-              <li class="popover_menu_item <%= listItem.name.toLowerCase().replace(/\s/g, '_') %>" data-js-menu-item>
+              <li class="popover_menu_item sort_filter <%= listItem.name.toLowerCase().replace(/\s/g, '_') %>" data-js-menu-item="<%= listItem.data %>">
+                <span class="popover_menu_item_anchor">
                 <% if (listItem.icon && listItem.icon !== 'none') { %>
-                  <i class="popover_menu_item_anchor_icon <%= listItem.icon %>"></i>
+                  <i class="popover_menu_item_anchor_icon <%= listItem.icon %>" data-check="<%= item.data %>"></i>
                 <% } %>
                 <% if (selection === 'checkmark') { %>
                   <% var checked = listItem.checked ? 'inline' : 'none'; %>
-                  <i class="icon icon_checkmark" style="float: right; display: <%= checked %>;" data-check="<%= listItem.name.toLowerCase() %>"></i>
+                  <i class="icon icon_checkmark" style="float: right; display: <%= checked %>;" data-check="<%= listItem.data %>"></i>
                 <% } %>
-                <a class="popover_menu_item_anchor<%= hasIcon %>" data-js-menu-item-link="<%= listItem.name.toLowerCase() %>">
+                <% if (listItem.icon && listItem.icon !== 'none') { %>
+                  <a class="popover_menu_item_anchor<%= hasIcon %>" data-js-menu-item-link="<%= listItem.data %>">
+                    <%= listItem.name %>
+                  </a>
+                <% } else { %>
                   <%= listItem.name %>
-                </a>
+                <% } %>
+              </span>
               </li>
             <% });%>
             </ul>

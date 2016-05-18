@@ -88,31 +88,27 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
     setState(state) { // NOTE: this is terrible, maybe make a mixin to manage state?
-      try {
-        for (const key in this.state) {
-          if ({}.hasOwnProperty.call(this.state, key)) {
-            this.state[key] = !1;
-            if (key.includes(state)) {
-              this.state[key] = !0;
-            }
+      for (const key in this.state) {
+        if ({}.hasOwnProperty.call(this.state, key)) {
+          this.state[key] = !1;
+          if (key.includes(state)) {
+            this.state[key] = !0;
           }
         }
-        each(this._subviews, subview => {
-          // console.log('[CHANGE STATE?]', subview.state !== this.state);
-          if (subview.state !== this.state) {
-            subview.state = this.state;
-            if (subview._subviews) {
-              // console.log('[SUBVIEW]', subview);
-              this.setState.call(subview, state);
-            }
-            if (subview.model) {
-              subview.model.set('state', this.state);
-            }
-          }
-        });
-      } catch (e) {
-        console.error(e);
       }
+      each(this._subviews, subview => {
+        // console.log('[CHANGE STATE?]', subview.state !== this.state);
+        if (subview.state !== this.state) {
+          subview.state = this.state;
+          if (subview._subviews) {
+            // console.log('[SUBVIEW]', subview);
+            this.setState.call(subview, state);
+          }
+          if (subview.model) {
+            subview.model.set('state', this.state);
+          }
+        }
+      });
     },
     hide() {
       Tumblr.Events.trigger('popover:close', this);

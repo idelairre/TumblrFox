@@ -74,8 +74,8 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     LoaderMixin,
     PopoverMixin,
     FollowerModel,
-    LikesModel,
     PostModel,
+    LikesModel,
     PopoverComponent,
     AutopaginatorComponent, // depends on PostModel
     LoaderComponent, // must be loaded after PostModel or doesn't listen correctly

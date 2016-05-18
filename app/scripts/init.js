@@ -24,5 +24,11 @@ module.exports = (function init(Tumblr, Backbone, _) {
     }, 1);
   }
 
+  _.mixin({
+    capitalize(string) {
+      return string.charAt(0).toUpperCase() + string.substring(1).toLowerCase();
+    }
+  });
+
   return Tumblr.Fox;
 });

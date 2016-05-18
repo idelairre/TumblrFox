@@ -1,6 +1,6 @@
 module.exports = (function searchComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { clone, debounce, each, isEmpty } = _;
+  const { capitalize, clone, debounce, each, isEmpty } = _;
   const { get, loaderMixin, TagSearchAutocompleteModel, Filters, Posts, Settings } = Tumblr.Fox;
   const PeeprBlogSearch = get('PeeprBlogSearch');
   const SearchResultView = get('SearchResultView');
@@ -122,10 +122,8 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.set('showUserList', false);
     },
     evalItems(data) {
-      console.log('[TAGS]', data);
       if (isEmpty(data.tags)) {
         console.log('[INPUT]', this.input);
-        // this.input.blogSearchAutocompleteModel.items.reset([]);
         this.input.$el.find('input').attr('placeholder', `${this.model.get('blogname')} has no tags`);
       }
     },
@@ -185,10 +183,14 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
       this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
+      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOption);
       // this.listenTo(Tumblr.Events, 'DOMEventor:keyup:enter', ::this.search);
     },
     unbindEvents() {
       // unbind shit
+    },
+    setSearchOption(setting) {
+      this.$el.find('.popover_header').find('span.header_title').text(`${setting} search`);
     },
     setFilter(model) {
       if (!this.state.likesSearch) {

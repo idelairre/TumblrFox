@@ -39,7 +39,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.apiSlug = this.defaults.apiSlug;
       this.state = this.defaults.state;
       this.items = Tumblr.Posts;
-      this.fetchedLikes = !1;
       this.loading = !1;
       this.bindEvents();
     },
@@ -146,26 +145,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         this.toggleLoader();
       }, 300);
     },
-    fetchLikesByTag(slug) {
-      const deferred = $.Deferred();
-      // this.toggleLoader();
-      this.resetQueryOffsets();
-      slug = Object.assign({
-        term: slug.term,
-        post_role: slug.post_role,
-        post_type: slug.post_type,
-        sort: slug.sort,
-        filter_nsfw: slug.filter_nsfw,
-        before: slug.before
-      });
-      const resolve = response => {
-        this.$$matches = response;
-        deferred.resolve(response);
-        // this.toggleLoader();
-      };
-      this.chromeTrigger('chrome:search:likes', slug, resolve);
-      return deferred.promise();
-    },
     filterPosts(filterType) {
       if (filterType && filterType !== this.apiSlug.type) {
         this.apiSlug.type = filterType;
@@ -178,22 +157,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         $('.standalone-ad-container').remove();
         $('li[data-pageable]').remove();
       });
-    },
-    searchLikes(query) {
-      const deferred = $.Deferred();
-      Tumblr.Events.trigger('fox:autopaginator:start');
-      this.state.apiFetch = !0;
-      this.state.tagSearch = !0;
-      this.state.dashboardSearch = !1;
-      this.fetchLikesByTag(query).then(matches => {
-        this.filterPosts();
-        setTimeout(() => {
-          matches = matches.slice(0, 8);
-          this.handOffPosts(matches);
-          deferred.resolve(matches);
-        }, 300);
-      });
-      return deferred.promise();
     },
     parseTags(postViews) {
       return postViews.map(post => {
