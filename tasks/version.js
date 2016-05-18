@@ -24,7 +24,7 @@ function inc(importance) {
       'package.json',
       'app/manifest.json'
     ], {
-      base: "./"
+      base: './'
     })
     // bump the version number in those files
     .pipe(bump({

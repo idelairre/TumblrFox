@@ -7,7 +7,7 @@ module.exports = (function events(Tumblr, Backbone, _) {
       'DOMEventor:updateRect',
       'DOMEventor:keyup:backspace',
       'posts:destroyed',
-      'postsView:createPost',
+      // 'postsView:createPost',
       'Header:mouseenter',
       'Header:mouseleave',
       'VideoPlayer:timeupdate',

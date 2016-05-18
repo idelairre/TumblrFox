@@ -30,6 +30,7 @@ module.exports = (function main() {
     Tumblr.Fox.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
     Tumblr.Fox.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
     Tumblr.Fox.getComponent('SearchFilters', '[data-filter]');
+    // Tumblr.Fox.getComponent('ModelForTinyGreyButton', '_updateSubscriptionStatus');
 
     Object.assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
     // Object.assign(Backbone.View, Tumblr.Fox.get('TumblrView'));

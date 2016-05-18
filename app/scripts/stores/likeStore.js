@@ -62,6 +62,17 @@ export default class Likes {
     }
   }
 
+  static testProcessPost(postHtml, timestamp) {
+    const post = $(postHtml).data('json');
+    post.id = parseInt(post.id, 10);
+    post.html = $(postHtml).prop('outerHTML');
+    post.liked_timestamp = parseInt(timestamp, 10);
+    post.tags = this.testProcessTags(postHtml) || [];
+    post.note_count = $(postHtml).find('.note_link_current').data('count') || 0;
+    post.blog_name = post.tumblelog;
+    return post;
+  }
+
   static testProcessPosts(slug, data) {
     const deferred = Deferred();
     try {
@@ -77,13 +88,7 @@ export default class Likes {
       console.log('[FETCHING BEFORE]', new Date(next * 1000));
       const posts = $(data).find('[data-json]');
       posts.each(function () {
-        const post = $(this).data('json');
-        post.id = parseInt(post.id, 10);
-        post.html = $(this).prop('outerHTML');
-        post.liked_timestamp = parseInt(slug.timestamp, 10);
-        post.tags = Likes.testProcessTags(this) || [];
-        post.note_count = $(this).find('.note_link_current').data('count') || 0;
-        post.blog_name = post.tumblelog;
+        const post = Likes.testProcessPost(this, slug.timestamp);
         if (post.id) {
           postsJson.push(post);
         }
@@ -255,7 +260,8 @@ export default class Likes {
         });
         next(null);
       } catch (e) {
-        port({ error: `${e}` });
+        console.error(e);
+        port({ error: e });
         next(e);
       }
     });
@@ -333,21 +339,49 @@ export default class Likes {
   }
 
   static async syncLikes(payload) {
-    // console.log(payload);
-    const { action, postId } = payload;
+    let count = await db.posts.toCollection().count();
+    console.log('[POSTS BEFORE]', count);
+    const cachedPost = await db.posts.get(payload.id);
+    if (cachedPost && !cachedPost.hasOwnProperty('html')) {
+      const postData = this.testProcessPost(payload.html, cachedPost.liked_timestamp);
+      await db.posts.put(postData);
+    }
+    count = await db.posts.toCollection().count();
+    console.log('[POSTS AFTER]', count);
+  }
+
+  static async updateLikes(payload) {
+    const { action, html, postId, timestamp } = payload;
     if (action === 'like') {
-      const slug = {
-        blogname: constants.userName,
-        offset: 0,
-        limit: 1
-      };
-      const response = await this.fetchLikedPosts(slug);
+      const postData = this.testProcessPost(html, timestamp);
+      await db.posts.put(postData);
       const count = await db.posts.toCollection().count();
-      db.posts.add(response.liked_posts[0]);
+      constants.totalPostsCount = count;
       console.log('[ADDED LIKE]', count);
     } else {
       await db.posts.delete(postId);
       console.log('[REMOVED LIKE]');
     }
+  }
+
+  static async restoreCache(cache, port) {
+    const posts = JSON.parse(decodeURIComponent(cache));
+    const items = {};
+    items.totalPostsCount = posts.length;
+    console.log('[RESTORING CACHE]');
+    let i = 0;
+    async.whilst(() => {
+      return posts.length > i;
+    }, async next => {
+      await db.posts.put(posts[i]);
+      console.log('[ADDED]', posts[i].id);
+      i += 1;
+      items.cachedPostsCount = await db.posts.toCollection().count();
+      chrome.storage.local.set({ cachedPostsCount: items.cachedPostsCount })
+      log('posts', items, data => {
+        port(data);
+        next(null);
+      }, false);
+    });
   }
 }

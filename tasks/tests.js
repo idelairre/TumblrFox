@@ -1,6 +1,5 @@
 import appRoot from 'app-root-path';
 import gulp from 'gulp';
-import gulpif from 'gulp-if';
 import named from 'vinyl-named';
 import webpack from 'webpack';
 import gulpWebpack from 'webpack-stream';
@@ -8,11 +7,9 @@ import WebpackDevServer from 'webpack-dev-server';
 import plumber from 'gulp-plumber';
 import args from './lib/args';
 
-let path = appRoot.resolve('test/index.js');
+const path = appRoot.resolve('test/index.js');
 
-console.log(args.watch);
-
-let config = {
+const config = {
   entry: 'mocha!./test/index.js',
   output: {
     path: '/test',
@@ -27,7 +24,7 @@ let config = {
     new webpack.DefinePlugin({
       '__ENV__': JSON.stringify('test'),
       '__VENDOR__': JSON.stringify(args.vendor)
-    }),
+    })
   ],
   module: {
     noParse: /node_modules\/json-schema\/lib\/validate\.js/,
@@ -50,7 +47,7 @@ let config = {
 
 if (args.watch) {
   let bundleStart = null;
-  let compiler = webpack(config);
+  const compiler = webpack(config);
 
   compiler.plugin('compile', () => {
     console.log('Bundling...');
@@ -61,7 +58,7 @@ if (args.watch) {
     console.log(`Bundled in ${Date.now() - bundleStart} ms.`);
   });
 
-  let bundler = new WebpackDevServer(compiler, {
+  const bundler = new WebpackDevServer(compiler, {
     entry: 'mocha!./test/index',
     publicPath: appRoot.resolve('./test'),
     hot: true,
@@ -77,7 +74,7 @@ if (args.watch) {
   });
 }
 
-gulp.task('tests', (cb) => {
+gulp.task('tests', () => {
   return gulp.src(path)
     .pipe(plumber())
     .pipe(named())

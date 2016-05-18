@@ -1,31 +1,35 @@
 /* global chrome:true */
 /* eslint no-undef: "error" */
-
+import async from 'async';
 import constants from './constants';
 import db from './lib/db';
 import Following from './stores/followingStore';
 import Likes from './stores/likeStore';
 import Tags from './stores/tagStore';
+import { escape } from 'lodash';
 import { oauthRequest } from './lib/oauthRequest';
 import './lib/livereload';
+import 'babel-polyfill';
 
-chrome.runtime.onInstalled.addListener(async details => {
+chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
-  const response = await oauthRequest({ url: 'https://api.tumblr.com/v2/user/info' });
-  constants.canFetchApiLikes = await Likes.checkLikes();
-  constants.userName = response.user.name;
-  constants.totalFollowingCount = response.user.following;
-  constants.totalPostsCount = response.user.likes;
-  initializeConstants(constants);
 });
 
 chrome.runtime.onMessage.addListener(request => {
   if (request.type === 'initialize') {
-    constants.userName = request.payload.id;
-    constants.currentUser = request.payload;
-    initializeConstants(constants);
     initializeListeners();
   }
+});
+
+oauthRequest({ url: 'https://api.tumblr.com/v2/user/info' }).then(response => {
+  console.log('[USER]', response);
+  Likes.checkLikes().then(canFetchApiLikes => {
+    constants.canFetchApiLikes = canFetchApiLikes;
+    constants.userName = response.user.name;
+    constants.totalFollowingCount = response.user.following;
+    constants.totalPostsCount = response.user.likes;
+    initializeConstants(constants);
+  });
 });
 
 /**
@@ -62,8 +66,14 @@ chrome.runtime.onConnect.addListener(port => {
           });
         });
         return true;
+      case 'downloadCache':
+        downloadCache(::port.postMessage);
+        return true;
       case 'resetCache':
         resetCache(::port.postMessage);
+        return true;
+      case 'restoreCache':
+        Likes.restoreCache(request.payload, ::port.postMessage);
         return true;
       case 'updateSettings':
         Object.assign(constants, request.payload);
@@ -72,7 +82,10 @@ chrome.runtime.onConnect.addListener(port => {
         // do nothing
       }
   });
-  port.postMessage({ message: 'initialized', payload: constants });
+  port.postMessage({
+    message: 'initialized',
+    payload: constants
+  });
 });
 
 chrome.tabs.onUpdated.addListener(tabId => {
@@ -95,20 +108,20 @@ function initializeConstants(constants) {
     totalPostsCount: 0,
     totalFollowingCount: 0
   }, async items => {
-    if (items.currentUser === {} || items.currentUser !== constants.currentUser) {
+    if (items.currentUser !== constants.currentUser) {
       chrome.storage.sync.set({
         currentUser: constants.currentUser.attributes
       });
-    } else if (items.totalPostsCount === 0 || items.totalPostsCount !== constants.totalPostsCount) {
-      const count = await Likes.initialSyncLikes();
-      constants.totalPostsCount = count;
+    }
+    if (items.totalPostsCount !== constants.totalPostsCount) {
       chrome.storage.local.set({
-        totalPostsCount: constants.currentUser.liked_post_count || constants.totalPostsCount
+        totalPostsCount: constants.totalPostsCount
       });
-    } else if (items.totalFollowingCount === 0 || items.totalFollowingCount !== constants.totalFollowingCount) {
+    }
+    if (items.totalFollowingCount !== constants.totalFollowingCount) {
       // sync followers
       chrome.storage.local.set({
-        totalFollowingCount: constants.currentUser.friend_count || constants.totalFollowingCount
+        totalFollowingCount: constants.totalFollowingCount
       });
     }
   });
@@ -131,6 +144,9 @@ function initializeListeners() {
       case 'fetchFollowing':
         Following.fetchFollowing(request.payload, sendResponse);
         return true;
+      case 'refreshFollowing':
+        Following.refreshFollowing(sendResponse);
+        return true;
       case 'updateFollowing':
         Following.syncFollowing(sendResponse);
         return true;
@@ -143,13 +159,27 @@ function initializeListeners() {
       case 'searchLikes':
         Likes.searchLikes(request.payload, sendResponse);
         return true;
-      case 'updateLikes':
+      case 'syncLikes':
         Likes.syncLikes(request.payload);
+        return true;
+      case 'updateLikes':
+        Likes.updateLikes(request.payload);
         return true;
       default:
         // do nothing
     }
   });
+}
+
+function downloadCache(callback) {
+  console.log('[CACHING DATABASE]');
+  db.posts.toCollection().toArray(posts => {
+    const payload = encodeURIComponent(JSON.stringify(posts));
+    callback({
+      message: 'cache',
+      payload
+    });
+  })
 }
 
 function resetCache(callback) {

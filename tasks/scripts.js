@@ -38,7 +38,7 @@ gulp.task('scripts', (cb) => {
         new webpack.DefinePlugin({
           '__ENV__': JSON.stringify(args.production ? 'production' : 'development'),
           '__VENDOR__': JSON.stringify(args.vendor)
-        }),
+        })
       ].concat(args.production ? [
         new webpack.optimize.UglifyJsPlugin()
       ] : []),

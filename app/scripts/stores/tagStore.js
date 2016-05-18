@@ -31,10 +31,12 @@ export default class Tags {
 
   static async processTags(tags, items, callback) {
     for (const key in tags) {
-      await db.tags.put(tags[key]);
-      items.cachedTagsCount += 1;
-      console.log(items);
-      callback({ items });
+      if ({}.hasOwnProperty.call(tags, key)) {
+        await db.tags.put(tags[key]);
+        items.cachedTagsCount += 1;
+        console.log(items);
+        callback({ items });
+      }
     }
   }
 

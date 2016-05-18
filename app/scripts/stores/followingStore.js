@@ -8,7 +8,7 @@ import constants from '../constants';
 import 'babel-polyfill';
 
 export default class Following {
-  static async preloadFollowing(port) {
+  static preloadFollowing(port) {
     const slug = {
       url: `https://api.tumblr.com/v2/user/following`,
       limit: 20,
@@ -22,8 +22,20 @@ export default class Following {
     this.populateFollowing(slug, items, port);
   }
 
+  static refreshFollowing(port){
+    const slug = {
+      url: `https://api.tumblr.com/v2/user/following`,
+      limit: 20,
+      offset: 0
+    };
+    const items = {
+      totalFollowingCount: constants.totalFollowingCount,
+      cachedFollowingCount: 0
+    };
+    this.populateFollowing(slug, items, port);
+  }
+
   static populateFollowing(slug, items, port) {
-    console.log(items.totalFollowingCount > items.cachedFollowingCount);
     async.whilst(() => {
       return items.totalFollowingCount > items.cachedFollowingCount;
     }, async next => {
@@ -55,7 +67,7 @@ export default class Following {
       });
     } else {
       resetOauthSlug(slug);
-      deferred.reject('Response was empty');
+      deferred.reject('Response was empty, yo');
     }
     return deferred.promise();
   }

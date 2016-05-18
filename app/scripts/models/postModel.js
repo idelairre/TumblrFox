@@ -6,6 +6,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   const { chromeMixin } = Tumblr.Fox;
 
   // NOTE: this strikes me as a "super model", maybe thin this out?
+  // TODO: redirect to dashboard if the route is other than the dashboard
 
   const Posts = Backbone.Model.extend({
     mixins: [chromeMixin],
@@ -51,8 +52,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
       this.listenTo(Tumblr.Events, 'indashblog:search:post-added', Tumblr.Fox.renderPost);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
-      this.listenTo(Tumblr.Events, 'post:like:set', this.updateLikesCache.bind(this, 'like'));
-      this.listenTo(Tumblr.Events, 'post:unlike:set', this.updateLikesCache.bind(this, 'unlike'));
     },
     unbindEvents() {
       this.stopListening();
@@ -80,14 +79,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.apiSlug.offset = 0;
       this.query.loggingData.offset = 0;
       this.query.loggingData.next_offset = 0;
-    },
-    updateLikesCache(action, postId) {
-      console.log('[UPDATE LIKES]', action, postId);
-      const slug = {
-        postId,
-        action
-      };
-      this.chromeTrigger('chrome:update:likes', slug);
     },
     renderSearchResults() {
       if (this.loading) {
@@ -227,7 +218,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         this.$$matches = Tumblr.postsView.postViews;
         this.parseTags(this.$$matches);
       }
-      console.log('[QUERY]', query, this.$$matches);
+      // console.log('[QUERY]', query, this.$$matches);
       Tumblr.Events.trigger('fox:disablePagination');
       this.state.apiFetch = !0;
       this.state.tagSearch = !0;

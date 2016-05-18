@@ -1,16 +1,15 @@
 module.exports = (function settings(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { defer } = _;
-  const { get, SettingsPopoverComponent, Popover } = Tumblr.Fox;
+  const { get, Popover } = Tumblr.Fox;
   const PopoverComponent = get('PopoverComponent');
-  const SearchFilters = get('SearchFilters');
 
   const settingsPopoverTemplate = `
     <script id="settingsPopoverTemplate" type="text/template">
       <i class="icon_search toggle-search nav_icon"></i>
     </script>`;
 
-  let Settings = PopoverComponent.extend({
+  const Settings = PopoverComponent.extend({
     className: 'search-settings',
     defaults: {
       state: {
@@ -34,7 +33,7 @@ module.exports = (function settings(Tumblr, Backbone, _) {
       }
     },
     render() {
-      return this.$el.html(this.template);
+      this.$el.html(this.template);
     },
     events: {
       'click .toggle-search': 'togglePopover'
