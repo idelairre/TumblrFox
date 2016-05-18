@@ -43,7 +43,6 @@
     "gulp": "^3.9.1",
     "gulp-bump": "^2.0.1",
     "gulp-cache": "^0.4.3",
-    "gulp-crx-pack": "git+https://github.com/PavelVanecek/gulp-crx.git",
     "gulp-filter": "^4.0.0",
     "gulp-git": "^1.2.4",
     "gulp-if": "^2.0.0",
