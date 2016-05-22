@@ -3,13 +3,14 @@ import Bridge from './utils/bridgeUtil';
 import componentFetcher from './utils/componentFetcherUtil';
 import ChromeMixin from './mixins/chromeTriggerMixin';
 import TagSearchAutocompleteModel from './models/tagSearchAutocompleteModel';
+import TextSearchAutocompleteModel from './models/textSearchAutocompleteModel';
 import FilterDropdownTemplate from './components/filterPopover/filterDropdown/filterDropdownTemplate.html';
 import FilterDropdownComponent from './components/filterPopover/filterDropdown/filterDropdownComponent';
 import FilterIcon from './components/filterPopover/filterPopoverIcon';
-import filterMenuComponent from './components/filterPopover/filterMenu/filterMenuComponent';
+import FilterMenuComponent from './components/filterPopover/filterMenu/filterMenuComponent';
 import FilterMenuTemplate from './components/filterPopover/filterMenu/filterMenuTemplate.html';
-import filterPopoverComponent from './components/filterPopover/filterPopoverComponent';
-import filterPopoverContainer from './components/filterPopover/filterPopoverContainer';
+import FilterPopoverComponent from './components/filterPopover/filterPopoverComponent';
+import FilterPopoverContainer from './components/filterPopover/filterPopoverContainer';
 import FollowerItem from './components/followerList/followerItem/followerItemComponent';
 import FollowerList from './components/followerList/followerListComponent';
 import FollowerModel from './models/followerModel';
@@ -80,13 +81,14 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     AutopaginatorComponent, // depends on PostModel
     LoaderComponent, // must be loaded after PostModel or doesn't listen correctly
     TagSearchAutocompleteModel,
+    TextSearchAutocompleteModel,
     FilterDropdownComponent,
     SettingsComponent,
     SearchComponent,
     SearchResultsComponent,
-    filterMenuComponent,
-    filterPopoverComponent,
-    filterPopoverContainer,
+    FilterMenuComponent,
+    FilterPopoverComponent,
+    FilterPopoverContainer,
     FilterIcon,
     FollowerItem,
     FollowerSearch,

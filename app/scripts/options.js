@@ -1,16 +1,25 @@
 import ProgressBar from 'progressbar.js';
 import Backbone from 'backbone';
 import { camelCase, isError } from 'lodash';
-import $ from 'jquery';
 import Tipped from './lib/tipped';
+import $ from 'jquery';
 import '../styles/tipped.less';
 
 const clientCachingTooltip = {
   template: `
   <div class="note tooltip" style="position: absolute" data-tooltip="clientCaching">
     * WARNING: this will reset your cache! Toggles caching via Tumblr's frontend.<br>
-    <li>Advantages: faster post rendering, actual Tumblr html instead of reconstituted html via jquery, native/predictable Tumblr behavior, you don't have to reveal your likes to other users.</li>
-    <li>Drawbacks: significantly slower cache time than fetching from the API, timestamps are less accurate.</li>
+    <li>Advantages: faster post rendering, actual Tumblr html instead of reconstituted html via jquery, native/predictable Tumblr behavior, you don't have to reveal your likes to other users</li>
+    <li>Drawbacks: significantly slower cache time than fetching from the API, timestamps are less accurate</li>
+  </div>`
+};
+
+const saveViaFirebase = {
+  template: `
+  <div class="note tooltip" style="position: absolute" data-tooltip="saveViaBFirebase">
+    * Enabling will cause clicking "Save cache" to upload your cached data to Firebase temporarily before downloading it in your browser. Otherwise it will assemble the file in your browser.<br>
+    <li>Advantages: Much more stable than assembling in the browser</li>
+    <li>Drawbacks: Slow/sometimes unavailable due to data limits</li>
   </div>`
 };
 
@@ -53,6 +62,40 @@ const bar = new ProgressBar.Line(container, {
     }
 });
 
+function parseFile(file, callback) {
+  const fileSize = file.size;
+  const chunkSize = 64 * 1024; // bytes
+  let offset = 0;
+  let chunkReaderBlock = null;
+
+  const readEventHandler = e => {
+    if (e.target.error === null) {
+      offset += e.target.result.length;
+      callback(e.target.result); // callback for handling read chunk
+    } else {
+      console.log(`Read error: ${e.target.error}`);
+      return;
+    }
+    if (offset >= fileSize) {
+      console.log('Done reading file');
+      return;
+    }
+    // off to the next chunk
+    chunkReaderBlock(offset, chunkSize, file);
+  }
+
+  chunkReaderBlock = (_offset, length, _file) => {
+    let r = new FileReader();
+    console.log(_file);
+    let blob = _file.slice(_offset, length + _offset);
+    r.onload = readEventHandler;
+    r.readAsText(blob);
+  }
+
+  // now let's start the read with the first block
+  chunkReaderBlock(offset, chunkSize, file);
+}
+
 const Options = Backbone.View.extend({
   defaults: {
     props: {
@@ -62,14 +105,22 @@ const Options = Backbone.View.extend({
     }
   },
   initialize() {
+    this.initialized = !1;
     this.$debug = this.$('#debugConsole');
     this.$download = $('a#cache');
     this.$status = this.$('#status');
     this.props = new Backbone.Model();
     this.$bar = bar;
     this.$progress = progress;
-    Tipped.create('[data-tooltip-key="clientCaching"]', $(clientCachingTooltip.template).html(), { skin: 'light', position: 'topleft' });
-    Tipped.create('[data-tooltip-key="caching"]', $(cachingTooltip.template).html(), { skin: 'light', position: 'topleft' });
+    Tipped.create('[data-tooltip-key="clientCaching"]', $(clientCachingTooltip.template).html(), {
+      skin: 'light', position: 'topleft'
+    });
+    Tipped.create('[data-tooltip-key="caching"]', $(cachingTooltip.template).html(), {
+      skin: 'light', position: 'topleft'
+    });
+    Tipped.create('[data-tooltip-key="saveViaFirebase"]', $(saveViaFirebase.template).html(), {
+      skin: 'light', position: 'topleft'
+    });
     this.bindEvents();
     this.initializePort();
     // console.log('[tooltips]', Tipped);
@@ -79,6 +130,9 @@ const Options = Backbone.View.extend({
       name: 'options'
     });
     this.port.onMessage.addListener(response => {
+      if (response.message === 'processDone') {
+        this.$progress.hide();
+      }
       if (response.message === 'initialized') {
         this.restoreOptions(response.payload);
         this.afterInitialize();
@@ -88,16 +142,19 @@ const Options = Backbone.View.extend({
       }
       if (response.message === 'cache') {
         this.$debug.text('Done');
-        const url = URL.createObjectURL(new Blob([response.payload], {
-          type: 'application/json,charset=utf-8'
-        }));
-        this.$download.prop('href', url);
-        this.$download.prop('download','tumblrData.json');
+        if (this.props.get('saveViaFirebase')) {
+          this.$download.prop('href', response.url);
+        } else {
+          const url = URL.createObjectURL(new Blob([response.payload], {
+            type: 'application/csv,charset=utf-8'
+          }));
+          this.$download.prop('href', url);
+        }
+        this.$download.prop('download','tumblrData.csv');
         setTimeout(() => {
           document.getElementById('cache').click();
-          this.$download.prop('href', '');
           this.$debug.text('');
-        }, 500);
+        }, 1);
       }
     });
   },
@@ -106,17 +163,8 @@ const Options = Backbone.View.extend({
     this.$('buttons').prop('disabled', false);
   },
   events: {
-    'click #save': 'saveOptions',
-    'click #cacheFollowing': 'cacheFollowing',
-    'click #cacheTags': 'cacheTags',
-    'click #cacheLikes': 'cacheLikes',
-    'click #clientCaching': 'toggleClientCaching',
-    'click #resetCache': 'resetCache',
-    'click #debug': 'toggleDebug',
-    'click #defaultKeys': 'toggleKeys',
-    'click #setUser': 'setUser',
-    'click #downloadCache': 'downloadCache',
-    'click #restoreCache': 'restoreCache'
+    'click button': 'toggleButton',
+    'click [type=checkbox]': 'toggleCheck'
   },
   bindEvents() {
     this.listenTo(this.props, 'change', ::this.setProps);
@@ -137,6 +185,14 @@ const Options = Backbone.View.extend({
         this.$('.user').hide();
       }
     });
+    this.listenTo(this.props, 'change:clientCaching', model => {
+      if (this.initialized) {
+        this.port.postMessage({
+          type: 'checkLikes',
+          payload: this.props.get('userName')
+        });
+      }
+    })
     this.listenTo(this.props, 'change:debug', model => {
       if (model.get('debug')) {
         this.$('section.debug').show();
@@ -158,17 +214,24 @@ const Options = Backbone.View.extend({
     this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));
   },
   setProps(model) {
+    console.log('[PROPS]', model.changed);
     for (const key in model.changed) {
-      const keyElem = this.$(`#${key}`);
-      const tag = keyElem.prop('tagName');
-      if (tag === 'INPUT' && keyElem.attr('type') === 'text') {
-        keyElem.val(this.props.get(key));
-      } else if (tag === 'INPUT' && keyElem.attr('type') === 'checkbox') {
-        keyElem.attr('checked', this.props.get(key));
-      } else if (tag === 'SPAN') {
-        keyElem.text(this.props.get(key));
+      if ({}.hasOwnProperty.call(model.changed, key)) {
+        const keyElem = this.$(`#${key}`);
+        const tag = keyElem.prop('tagName');
+        if (tag === 'INPUT' && keyElem.attr('type') === 'text') {
+          keyElem.val(this.props.get(key));
+        } else if (tag === 'INPUT' && keyElem.attr('type') === 'checkbox') {
+          keyElem.attr('checked', this.props.get(key));
+        } else if (tag === 'SPAN') {
+          keyElem.text(this.props.get(key));
+        }
       }
     }
+    this.port.postMessage({
+      type: 'updateSettings',
+      payload: this.props.attributes
+    });
     this.setAuthDivState();
   },
   setAuthDivState() {
@@ -182,30 +245,23 @@ const Options = Backbone.View.extend({
   setStatus(props) {
     this.$status.text(props.get('status'));
   },
-  setUser(e) {
-    const setUser = $(e.target).prop('checked');
-    this.props.set('setUser', setUser);
-    chrome.storage.local.set({ setUser });
+  toggleButton(e) {
+    const key = this.$(e.currentTarget).prop('id');
+    this.resetBar();
+    this.$progress.show();
+    this.$status.text('');
+    if (key === 'restoreCache') {
+      this.restoreCache();
+    } else {
+      this.port.postMessage({
+        type: key
+      });
+    }
   },
-  toggleClientCaching(e) {
-    const clientCaching = e.target.checked;
-    chrome.storage.local.set({ clientCaching });
-    this.props.set('clientCaching', clientCaching);
-    this.port.postMessage({
-      type: 'checkLikes'
-    });
-    console.log('[TOGGLE CLIENT CACHING]', this.props.get('clientCaching'));
-  },
-  toggleDebug(e) {
-    const debug = e.target.checked;
-    chrome.storage.local.set({ debug });
-    this.props.set('debug', debug);
-    console.log('[TOGGLE DEBUG]', this.props.get('debug'));
-  },
-  toggleKeys(e) {
-    const defaultKeys = e.target.checked;
-    chrome.storage.local.set({ defaultKeys });
-    this.props.set('defaultKeys', defaultKeys);
+  toggleCheck(e) {
+    const check = e.target.checked;
+    const key = this.$(e.currentTarget).prop('id');
+    this.props.set(key, check);
   },
   animateProgress(response) {
     if (response.hasOwnProperty('error')) {
@@ -213,21 +269,13 @@ const Options = Backbone.View.extend({
       this.$debug.text(`Error: ${JSON.stringify(response.error)}`);
       return;
     } else if (response.hasOwnProperty('percentComplete')) {
-      let { database, percentComplete, itemsLeft, total } = response;
+      let { constants, database, percentComplete, itemsLeft, total } = response;
       const totalKey = camelCase(`total-${database}-count`);
       const cachedKey = camelCase(`cached-${database}-count`);
       this.$(`span#${totalKey}`).text(total);
       this.$debug.text(`Response: ${JSON.stringify(response)}`);
-      // this.$status.text(`items left: ${itemsLeft}`);
       this.$bar.animate(percentComplete * 0.01);
-      this.props.set(`${cachedKey}`, total - itemsLeft);
-      if (this.props.get(`${totalKey}`) === 0) {
-        this.props.set(`${totalKey}`, total);
-      }
-      if (itemsLeft === 0) {
-        this.$progress.hide();
-        return;
-      }
+      this.props.set(constants);
     }
   },
   saveOptions() {
@@ -252,15 +300,11 @@ const Options = Backbone.View.extend({
     });
   },
   restoreOptions(constants) {
+    this.$debug.text(`Constants: ${JSON.stringify(constants)}`);
     setTimeout(() => {
       this.props.set(constants);
+      this.initialized = !0;
     }, 1);
-  },
-  cacheTags() {
-    this.resetBar();
-    this.port.postMessage({
-      type: 'cacheTags'
-    });
   },
   cacheLikes() {
     this.resetBar();
@@ -269,45 +313,23 @@ const Options = Backbone.View.extend({
       clientCaching: this.props.get('clientCaching')
     });
   },
-  cacheFollowing() {
-    this.resetBar();
-    this.$progress.show();
-    this.$status.text('');
-    this.port.postMessage({
-      type: 'cacheFollowing'
-    });
-  },
-  downloadCache(e) {
-    e.preventDefault();
-    this.port.postMessage({
-      type: 'downloadCache'
-    });
-    this.$debug.text('Caching database...');
-  },
   restoreCache(e) {
-    e.preventDefault();
     this.$progress.show();
+    this.$debug.text('Assembing file blob: ', file.size);
     document.getElementById('file').click();
     document.getElementById('file').addEventListener('change', e => {
-      const files = e.target.files;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const content = e.target.result;
+      const file = e.target.files[0];
+      const fileSize = file.size;
+      parseFile(file, parsedFile => {
         this.port.postMessage({
           type: 'restoreCache',
-          payload: content
+          payload: {
+            fileSize,
+            parsedFile
+          }
         });
-      }
-      reader.readAsText(files[0], "UTF-8");
+      });
     }, false);
-  },
-  resetCache() {
-    this.resetBar();
-    this.$status.text('');
-    this.port.postMessage({
-      type: 'resetCache'
-    });
-    this.props.set(this.defaults.props);
   },
   resetBar() {
     this.$bar.set(0);
@@ -319,3 +341,12 @@ const Options = Backbone.View.extend({
 const options = new Options({
   el: $('.container')
 });
+
+// 'click #save': 'saveOptions',
+// 'click #cacheFollowing': 'cacheFollowing',
+// 'click #cacheTags': 'cacheTags',
+// 'click #cacheLikes': 'cacheLikes',
+// 'click #resetCache': 'resetCache',
+// 'click #defaultKeys': 'toggleKeys',
+// 'click #setUser': 'setUser',
+// 'click #downloadCache': 'downloadCache',

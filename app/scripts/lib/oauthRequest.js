@@ -1,13 +1,14 @@
 import { Deferred } from 'jquery';
 import { isError } from 'lodash';
-import constants from '../constants';
 import { ChromeExOAuth } from './chromeExOauth';
+import tokens from '../tokens.json';
 
-const ACCESS_TOKEN_URL = constants.accessTokenUrl;
-const CONSUMER_KEY = constants.consumerKey;
-const CONSUMER_SECRET = constants.consumerSecret;
-const REQUEST_TOKEN_URL = constants.requestTokenUrl;
-const AUTHORIZATION_BASE_URL = constants.authorizationBaseUrl;
+const REQUEST_TOKEN_URL = 'https://www.tumblr.com/oauth/request_token';
+const AUTHORIZATION_BASE_URL = 'https://www.tumblr.com/oauth/authorize';
+const ACCESS_TOKEN_URL = 'https://www.tumblr.com/oauth/access_token';
+
+const CONSUMER_KEY = tokens.consumerKey;
+const CONSUMER_SECRET = tokens.consumerSecret;
 
 const oauth = ChromeExOAuth.initBackgroundPage({
   request_url: REQUEST_TOKEN_URL,

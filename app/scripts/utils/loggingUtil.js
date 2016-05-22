@@ -1,21 +1,23 @@
+/* global chrome:true */
+/* eslint no-undef: "error" */
+
 import { camelCase } from 'lodash';
-import db from '../lib/db';
+import constants from '../constants';
 
 export function log(database, items, callback, save) {
   try {
-    db[database].toCollection().count(itemCount => {
-      const cachedKey = camelCase(`cached-${database}-count`);
-      const totalKey = camelCase(`total-${database}-count`);
-      const { percentComplete, itemsLeft, total } = calculatePercent(items[cachedKey], items[totalKey]);
+    const cachedKey = camelCase(`cached-${database}-count`);
+    const totalKey = camelCase(`total-${database}-count`);
+    const { percentComplete, itemsLeft, total } = calculatePercent(items[cachedKey], items[totalKey]);
+    if (typeof save === 'undefined' || save) {
       const storageSlug = {};
       storageSlug[cachedKey] = items[cachedKey];
       storageSlug[totalKey] = items[totalKey];
-      if (typeof save === 'undefined' || save) {
-        chrome.storage.local.set(storageSlug);
-      }
-      console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
-      callback({ database, percentComplete, itemsLeft, total });
-    });
+      chrome.storage.local.set(storageSlug);
+      constants.set(storageSlug);
+    }
+    console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
+    callback({ constants, database, percentComplete, itemsLeft, total });
   } catch (e) {
     console.error(e);
     callback({ error: e });

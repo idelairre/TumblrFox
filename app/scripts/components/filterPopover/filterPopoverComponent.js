@@ -52,7 +52,6 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       this.state = this.defaults.state;
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setState);
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);
-      // this.listenTo(this, 'all', console.log.bind(console, '[FILTER POPOVER]'));
     },
     render() {
       this.$el.html(this.template);
@@ -87,7 +86,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       this.clickOutside = null;
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
-    setState(state) { // NOTE: this is terrible, maybe make a mixin to manage state?
+    setState(state) {
       for (const key in this.state) {
         if ({}.hasOwnProperty.call(this.state, key)) {
           this.state[key] = !1;
@@ -96,19 +95,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
           }
         }
       }
-      each(this._subviews, subview => {
-        // console.log('[CHANGE STATE?]', subview.state !== this.state);
-        if (subview.state !== this.state) {
-          subview.state = this.state;
-          if (subview._subviews) {
-            // console.log('[SUBVIEW]', subview);
-            this.setState.call(subview, state);
-          }
-          if (subview.model) {
-            subview.model.set('state', this.state);
-          }
-        }
-      });
+      Tumblr.Fox.state.set(this.state);
     },
     hide() {
       Tumblr.Events.trigger('popover:close', this);

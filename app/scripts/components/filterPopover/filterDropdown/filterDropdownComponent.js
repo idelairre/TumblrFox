@@ -28,7 +28,7 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
           this.__proto__[key] = val;
         }
       });
-      this.state = this.model.attributes.state;
+      this.state = Tumblr.Fox.state;
       this.bindEvents();
     },
     render() {

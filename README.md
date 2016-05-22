@@ -2,9 +2,9 @@
 
 ## Features
 
-+ Filter and search your dashboard posts, liked posts and user posts by type, reblog status (original or reblog), popularity, recentness, tag or by date
-+ Filter and search through tumblelogs you're following, order alphabetically or by how recently they were updated
-+ Download and cache your posts and users you are following
++ Filter and search your dashboard posts, liked posts and tumblog posts by type, reblog status, popularity, tag or date
++ Filter and search through tumblelogs you're following
++ Download and cache your liked posts
 + Tumblr client-side data (primarily Backbone models and collections) are used where possible to benefit from improved performance and richer data over the public api.
 
 ## tl:dr
@@ -27,19 +27,22 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 + Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier.
 + Leverage es6 + es7 features while maintaining a code style consistent with Tumblr's code base
 
-## Note
+## Problems
 
-This is liable to break as Tumblr updates and is not by any means official or fully supported by me. This is pretty much an experiment in using the objects floating around the Tumblr window to try and make new components using Tumblr's custom Backbone code.
++ Since TumblrFox makes heavy use of local resources, clearing your browser cache can wipeout TumblrFox's database!
+
+## The future
+
++ Use Firebase to store data server side and speed up initial caching (in development)
 
 ## To do
 
-+ Get app to work on another computer (HEUH)
 + Improve user experience for initial caching functions
-+ Add more filter options to leverage dexie query methods
 + Tag search on enter
++ Fix Tumblr popover so term search can take advantages of multiple queries (right now it only takes one and is stupid)
++ Find a way to speed up caching process
 + Sync followers on follow/unfollow events
-+ Refresh follower data when user sorts by updated timestamp
-+ Add warning modal or popover when user switches caching strategy and they have cached posts
++ Indicate that tag caching is done when ajax response is empty
 
 ## Relevant development posts
 

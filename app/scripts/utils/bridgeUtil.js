@@ -1,3 +1,9 @@
+/* global chrome:true */
+/* global window:true */
+/* global CustomEvent:true */
+/* global Event:true */
+/* eslint no-undef: "error" */
+
 module.exports = {
   initialize() {
     this.bindEvents();
@@ -25,6 +31,7 @@ module.exports = {
     });
   },
   trigger(eventName, payload) {
+    console.log('[EVENT NAME]: ', eventName, '[PAYLOAD]: ', payload);
     let req = {};
     if (typeof payload !== 'undefined') {
       req = new CustomEvent(eventName, {
@@ -36,19 +43,18 @@ module.exports = {
     window.dispatchEvent(req);
   },
   bindEvents() {
-    // NOTE: maybe wrap the callback in the trigger and automatically create and remove the listener?
-    // this way the api will resemble a normal request
+    // NOTE: the trigger event must resemble the list to event! eg. chrome:search:likesByTag MUST have the response chrome:response:likesByTag
     this.listenTo('chrome:fetch:posts', response => {
-      this.trigger('chrome:response:posts', response);
-    });
-    this.listenTo('chrome:fetch:blogPosts', response => {
       this.trigger('chrome:response:posts', response);
     });
     this.listenTo('chrome:fetch:likes', response => {
       this.trigger('chrome:response:posts', response);
     });
-    this.listenTo('chrome:search:likes', response => {
-      this.trigger('chrome:response:likes', response);
+    this.listenTo('chrome:search:likesByTag', response => {
+      this.trigger('chrome:response:likesByTag', response);
+    });
+    this.listenTo('chrome:search:likesByTerm', response => {
+      this.trigger('chrome:response:likesByTerm', response);
     });
     this.listenTo('chrome:fetch:following', response => {
       this.trigger('chrome:response:following', response);
@@ -58,6 +64,9 @@ module.exports = {
     });
     this.listenTo('chrome:fetch:constants', response => {
       this.trigger('chrome:response:constants', response);
+    });
+    this.listenTo('chrome:fetch:keys', response => {
+      this.trigger('chrome:response:keys', response);
     });
     this.listenTo('chrome:refresh:following');
     this.listenTo('chrome:update:following');

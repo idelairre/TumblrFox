@@ -94,7 +94,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
        }
       if (isEmpty(matches)) {
         console.log('[NO MATCHES]');
-        Tumblr.Events.trigger('fox:searchLikes:finished', this.query.loggingData);
+        Tumblr.Events.trigger('fox:search:finished', this.query.loggingData);
         if (Tumblr.Fox.AutoPaginator.enabled) {
            Tumblr.Events.trigger('fox:autopaginator:stop');
          }
@@ -203,7 +203,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
     apiFetchPosts(slug) {
       const deferred = $.Deferred();
       if (this.loading) {
-        return deferred.reject(); // remember this shit
+        deferred.reject(); // remember this shit
       }
       const resolve = response => {
         deferred.resolve(response);
@@ -284,11 +284,3 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
 
   return Tumblr.Fox.Posts;
 });
-
-// apiBlogFetchPosts(slug) {
-//   if (Tumblr.Fox.Loader.options.loading) {
-//     return;
-//   }
-//   const req = new CustomEvent('chrome:fetch:blogPosts', { detail: slug });
-//   window.dispatchEvent(req);
-// },

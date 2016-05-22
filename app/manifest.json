@@ -36,10 +36,8 @@
     "storage",
     "unlimitedStorage",
     "http://api.tumblr.com/*",
-    "https://tumblr.com/*",
-    "https://www.tumblr.com/oauth/request_token",
-    "https://www.tumblr.com/oauth/authorize",
-    "https://www.tumblr.com/oauth/access_token"
+    "https://tumblr.com/*"
   ],
+  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",
   "web_accessible_resources": ["pages/chrome_ex_oauth.html"]
 }

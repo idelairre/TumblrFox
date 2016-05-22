@@ -11,15 +11,6 @@ import path from 'path';
 import fs from 'fs';
 import { snakeCase } from 'lodash';
 
-// function clean() {
-//   function transform(file, cb) {
-//     file.contents = new Buffer(String(file.contents) + ' some modified content');
-//     console.log(file);
-//     cb(null, file);
-//   }
-//   return require('event-stream').map(transform);
-// }
-
 gulp.task('scripts', (cb) => {
   let tmp = {};
   return gulp.src(['app/scripts/*.js', 'app/scripts/**/*.js'])
@@ -60,7 +51,8 @@ gulp.task('scripts', (cb) => {
           loader: 'html'
         }, {
           test: /\.js$/,
-          loader: 'babel?cacheDirectory'
+          loader: 'babel?cacheDirectory',
+          exclude: /node_modules/
         }, {
           test: /\.json$/,
           loader: 'json'

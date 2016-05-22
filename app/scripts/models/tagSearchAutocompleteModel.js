@@ -8,16 +8,11 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     defaults: {
       matchTerm: '',
       maxRender: 20,
-      typeAheadMatches: [],
-      state: {
-        likes: !1,
-        dashboard: !1,
-        user: !0
-      }
+      typeAheadMatches: []
     },
     initialize() {
       this.fetched = !1;
-      this.state = this.defaults.state;
+      this.state = Tumblr.Fox.state;
       this.items = new Backbone.Collection();
       this.$$dashboardTags = [];
       this.$$likesTags = [];
@@ -25,8 +20,23 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.chromeTrigger('chrome:fetch:tags', ::this.parse);
     },
     bindEvents() {
+      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
       this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
       this.listenTo(this, 'change:matchTerm', ::this.setMatches);
+    },
+    unbindEvents() {
+      this.stopListening(Tumblr.Events, 'peeprsearch:change:unsetTerm');
+      this.stopListening(this, 'change:matchTerm');
+    },
+    setState(state) {
+      switch (state) {
+        case 'text':
+          this.unbindEvents();
+          break;
+        case 'tag':
+          this.bindEvents();
+          break;
+      }
     },
     fetch() {
       if (this.state.dashboard) {

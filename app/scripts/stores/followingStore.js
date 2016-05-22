@@ -1,6 +1,8 @@
+/* global alert:true */
+/* eslint no-undef: "error" */
+
 import { Deferred } from 'jquery';
 import async from 'async';
-import Dexie, { spawn } from 'dexie';
 import db from '../lib/db';
 import { oauthRequest, resetOauthSlug } from '../lib/oauthRequest';
 import { log } from '../utils/loggingUtil';
@@ -8,58 +10,82 @@ import constants from '../constants';
 import 'babel-polyfill';
 
 export default class Following {
-  static preloadFollowing(port) {
-    const slug = {
-      url: `https://api.tumblr.com/v2/user/following`,
-      limit: 20,
-      offset: constants.cachedFollowingCount
-    };
-    const items = {
-      totalFollowingCount: constants.totalFollowingCount,
-      cachedFollowingCount: constants.cachedFollowingCount
-    };
-    console.log('[CACHED FOLLOWING]', items.cachedFollowingCount, constants.totalFollowingCount);
-    this.populateFollowing(slug, items, port);
+  static async fetch(query, callback) {
+    if (query === 'alphabetically') {
+      const followers = await db.following.orderBy('name').toArray();
+      console.log('[FOLLOWERS]', followers);
+      return callback(followers);
+    } else {
+      const followers = await db.following.orderBy('updated').reverse().toArray();
+      console.log('[FOLLOWERS]', followers);
+      return callback(followers);
+    }
   }
 
-  static refreshFollowing(port){
+  static preload(port) {
     const slug = {
-      url: `https://api.tumblr.com/v2/user/following`,
       limit: 20,
+      offset: constants.get('cachedFollowingCount') || 0
+    };
+    const items = {
+      totalFollowingCount: constants.get('totalFollowingCount') || 0,
+      cachedFollowingCount: constants.get('cachedFollowingCount') || 0
+    };
+    this._populateFollowing(slug, items, port);
+  }
+
+  static async sync() {
+    const slug = {
+      limit: 1,
       offset: 0
     };
-    const items = {
-      totalFollowingCount: constants.totalFollowingCount,
-      cachedFollowingCount: 0
-    };
-    this.populateFollowing(slug, items, port);
+    const response = await this._getFollowing(slug);
+    db.following.put(response.blogs[0]);
   }
 
-  static populateFollowing(slug, items, port) {
+  static _getFollowing(slug) {
+    slug.url = `https://api.tumblr.com/v2/user/following`;
+    return oauthRequest(slug);
+  }
+
+  static _populateFollowing(slug, items, port) {
+    if (items.totalFollowingCount === items.cachedFollowingCount) {
+      alert('Done caching followers');
+      port({
+        message: 'processDone'
+      });
+    }
     async.whilst(() => {
-      return items.totalFollowingCount > items.cachedFollowingCount;
+      return items.totalFollowingCount === 0 || items.totalFollowingCount > items.cachedFollowingCount;
     }, async next => {
       try {
-        let response = await oauthRequest(slug);
-        const nextSlug = { slug, response, items };
-        await this.processFollowing(nextSlug);
+        const response = await this._getFollowing(slug);
+        const nextSlug = {
+          slug,
+          response,
+          items
+        };
+        await this._processFollowing(nextSlug);
         log('following', items, data => {
-          next(null);
+          constants.set('cachedFollowingCount', items.cachedFollowingCount);
+          data.constants = constants;
           port(data);
+          next(null);
         });
       } catch (e) {
-        console.error(e);
-        port({ error: `${e}` });
+        alert(e);
+        port({ error: e });
         next(e);
       }
     });
   }
 
-  static processFollowing({ slug, response, items }) {
+  static _processFollowing({ slug, response, items }) {
     const deferred = Deferred();
     if (response.blogs && response.blogs.length) {
       resetOauthSlug(slug);
       slug.offset += response.blogs.length;
+      items.totalFollowingCount = response.total_blogs;
       items.cachedFollowingCount += response.blogs.length;
       const transaction = db.following.bulkPut(response.blogs);
       transaction.then(() => {
@@ -70,27 +96,5 @@ export default class Following {
       deferred.reject('Response was empty, yo');
     }
     return deferred.promise();
-  }
-
-  static async syncFollowing() {
-    const slug = {
-      url: `https://api.tumblr.com/v2/user/following`,
-      limit: 1,
-      offset: 0
-    };
-    const response = await oauthRequest(slug);
-    db.following.put(response.blogs[0]);
-  }
-
-  static async fetchFollowing(query, callback) {
-    if (query === 'alphabetically') {
-      const followers = await db.following.orderBy('name').toArray();
-      console.log('[FOLLOWERS]', followers);
-      return callback(followers);
-    } else {
-      const followers = await db.following.orderBy('updated').reverse().toArray();
-      console.log('[FOLLOWERS]', followers);
-      return callback(followers);
-    }
   }
 }

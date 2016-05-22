@@ -15,38 +15,64 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
     },
     fetchLikesByTag(slug) {
       const deferred = $.Deferred();
-      // this.toggleLoader();
-      this.resetQueryOffsets();
-      slug = Object.assign({
-        term: slug.term,
-        post_role: slug.post_role,
-        post_type: slug.post_type,
-        sort: slug.sort,
-        filter_nsfw: slug.filter_nsfw,
-        before: slug.before
-      });
       const resolve = response => {
-        Posts.$$matches = response;
         deferred.resolve(response);
-        // this.toggleLoader();
       };
       this.chromeTrigger('chrome:search:likes', slug, resolve);
       return deferred.promise();
     },
-    searchLikes(query) {
+    fetchLikesByTerm(slug) {
+      const deferred = $.Deferred();
+      const resolve = response => {
+        console.log(response);
+        deferred.resolve(response);
+      };
+      this.chromeTrigger('chrome:search:likesByTerm', slug, resolve);
+      return deferred.promise();
+    },
+    search(query) {
       const deferred = $.Deferred();
       Tumblr.Events.trigger('fox:autopaginator:start');
-      this.state.apiFetch = !0;
-      this.state.tagSearch = !0;
-      this.state.dashboardSearch = !1;
-      this.fetchLikesByTag(query).then(matches => {
-        Posts.filterPosts();
-        setTimeout(() => {
-          matches = matches.slice(0, 8);
-          Posts.handOffPosts(matches);
-          deferred.resolve(matches);
-        }, 300);
+      Posts.state.apiFetch = !0;
+      Posts.state.tagSearch = !0;
+      Posts.state.dashboardSearch = !1;
+      const slug = Object.assign({
+        term: query.term,
+        post_role: query.post_role,
+        post_type: query.post_type,
+        sort: query.sort,
+        filter_nsfw: query.filter_nsfw,
+        before: query.before
       });
+      Posts.resetQueryOffsets();
+      console.log('[STATE]', Tumblr.Fox.searchOptions.getState());
+      switch (Tumblr.Fox.searchOptions.getState()) {
+        case 'tag':
+          this.fetchLikesByTag(slug).then(matches => {
+            console.log('[MATCHES]', matches);
+            Posts.filterPosts();
+            setTimeout(() => {
+              matches = matches.slice(0, 8);
+              Posts.handOffPosts(matches);
+              deferred.resolve(matches);
+            }, 300);
+          });
+          break;
+        case 'text':
+        console.log('[CALLED]');
+          this.fetchLikesByTerm(slug).then(matches => {
+            console.log('[MATCHES]', matches);
+            Posts.filterPosts();
+            setTimeout(() => {
+              matches = matches.slice(0, 8);
+              Posts.handOffPosts(matches);
+              deferred.resolve(matches);
+            }, 300);
+          });
+          break;
+        default:
+          // do nothing
+      }
       return deferred.promise();
     },
     sendLike(post) {
@@ -60,12 +86,11 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
     updateLikesCache(action, postId) {
       console.log('[UPDATE LIKES]', action, postId);
       const html = $(`[data-pageable="post_${postId}"]`).html();
-      const timestamp = Tumblr.Thoth.get('start_timestamp');
+      // const timestamp = Tumblr.Thoth.get('start_timestamp');
       const slug = {
         postId,
         action,
-        html,
-        timestamp
+        html
       };
       this.chromeTrigger('chrome:update:likes', slug);
     }

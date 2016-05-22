@@ -13,14 +13,14 @@ module.exports = (function popover(Tumblr, Backbone, _) {
    * @param {String} selection Optional selection indicator. Recognized parameters"
    *     "checkmark" {String} Displays checkmark
    *     "none" {String} Displays nothing
-   * @param {String} multipleSelection The OAuth consumer secret.
    * @param {Array} items Html list items and headers to display. Recognized parameters:
    *     "header" {String} Optional section title
    *     "suffix" {String} Optional secondary text
+   *     "multipleSelection" {Boolean} Optional toggles multiple selection
    *     "listItems" {Array} Li tags and their properties. Recognized parameters:
-            "icon" {String} Optional css class of the icon to prepend to list item
-            "name" {String} Optional text body of the list item
-            "checked" {Boolean} Optional default checked state
+   *        "icon" {String} Optional css class of the icon to prepend to list item
+   *         "name" {String} Optional text body of the list item
+   *         "checked" {Boolean} Optional default checked state
    * @param {Function} onSelect Optional function to perform on list item selection.
    */
 
@@ -45,7 +45,6 @@ module.exports = (function popover(Tumblr, Backbone, _) {
    *       pinnedSide: 'bottom',
    *       class: 'popover--settings-popover',
    *       selection: 'checkmark',
-   *       multipleSelection: false,
    *       items: this.options.popoverOptions,
    *       onSelect: this.onSelect
    *     }),
@@ -89,23 +88,24 @@ module.exports = (function popover(Tumblr, Backbone, _) {
             }
             return li;
           });
+        } else if (sectionName === section.name) {
+          if (li.data === option) {
+            li.checked = li.checked ? false : true;
+          }
         }
-        // else {
-        //   if (li.data === option) {
-        //     li.checked = true;
-        //   } else {
-        //     li.checked = false;
-        //   }
-        // }
         return section;
       });
-      this.setSelected(option, sectionName);
+      this.setSelected(this.options.items);
+      return this.options.onSelect.call(this, option);
     },
-    setSelected(option, section) {
-      const sectionList = this.$(`ul#${section}`);
-      sectionList.find(`i.icon[data-check]`).hide();
-      sectionList.find(`i.icon[data-check="${option}"]`).show();
-      return this.options.onSelect.apply(this, arguments);
+    setSelected(listItems) {
+      listItems.map(li => {
+        if (li.checked) {
+          this.$el.find(`i.icon[data-check="${li.data}"]`).show();
+        } else {
+          this.$el.find(`i.icon[data-check="${li.data}"]`).hide();
+        }
+      });
     }
   });
 

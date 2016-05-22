@@ -1,11 +1,52 @@
 import { Deferred } from 'jquery';
+import constants from '../constants';
 import db from '../lib/db';
 import { log } from '../utils/loggingUtil';
 import 'babel-polyfill';
 
 export default class Tags {
-  static parseTagsArray(tagArrays) {
-    console.log('[CACHING TAGS...]', tagArrays.length);
+  static async process(tags, items, callback) {
+    const keys = Object.keys(tags);
+    const promises = keys.map(async key => {
+      await db.tags.put(tags[key]);
+      items.cachedTagsCount = await db.tags.toCollection().count();
+      constants.set('cachedTagsCount', items.cachedTagsCount);
+      callback({
+        constants,
+        items
+      });
+    });
+    const resolve = Promise.all(promises);
+    await resolve;
+  }
+
+  static async cache(port) {
+    const tagArrays = await db.posts.orderBy('tags').keys();
+    const { tags, total } = await Tags._parse(tagArrays);
+    const items = {
+      totalTagsCount: total,
+      cachedTagsCount: await db.tags.toCollection().count()
+    };
+    Tags.process(tags, items, response => {
+      const { constants, items } = response;
+      log('tags', items, data => {
+        data.constants = constants;
+        port(data);
+      });
+    });
+  }
+
+  static async fetch(port) {
+    const tags = await db.tags.orderBy('count').reverse().toArray();
+    port(tags);
+  }
+
+  static async add(tags) {
+    const promises = tags.map(Tags._putAndIncrementTags);
+    return Promise.all(promises);
+  }
+
+  static _parse(tagArrays) {
     const deferred = Deferred();
     const tags = {};
     let total = 0;
@@ -25,38 +66,25 @@ export default class Tags {
         // }
       }
     }
-    console.log('[DONE]');
+    constants.set('totalTagsCount', total);
     return deferred.resolve({ tags, total });
   }
 
-  static async processTags(tags, items, callback) {
-    for (const key in tags) {
-      if ({}.hasOwnProperty.call(tags, key)) {
-        await db.tags.put(tags[key]);
-        items.cachedTagsCount += 1;
-        console.log(items);
-        callback({ items });
+  static async _putAndIncrementTags(tagName) {
+    const tagSlug = {
+      tag: tagName,
+      count: 1
+    };
+    try { // getting the tag first to see if it exists doesn't reliably work for some reason, hence this try/catch closure
+      await db.tags.add(tagSlug);
+    } catch (e) {
+      tagSlug.count += 1;
+      await db.tags.put(tagSlug);
+    } finally {
+      const count = await db.tags.toCollection().count();
+      if (constants.get('cachedTagsCount') !== count) {
+        constants.set('cachedTagsCount', count);
       }
     }
-  }
-
-  static async cacheLikeTags(port) {
-    const tagArrays = await db.posts.orderBy('tags').keys();
-    const { tags, total } = await this.parseTagsArray(tagArrays);
-    let items = {
-      totalTagsCount: total,
-      cachedTagsCount: 0
-    };
-    this.processTags(tags, items, response => {
-      items = response.items;
-      log('tags', items, data => {
-        port(data);
-      });
-    });
-  }
-
-  static async fetchLikeTags(port) {
-    const tags = await db.tags.orderBy('count').reverse().toArray();
-    port(tags);
   }
 }

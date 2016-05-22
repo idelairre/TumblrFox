@@ -1,6 +1,6 @@
 module.exports = (function searchResults(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { template } = _;
+  const { template, isObject } = _;
 
   const SearchResults = Backbone.View.extend({
     defaults: {
@@ -16,7 +16,7 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', this.hide);
       this.listenTo(Tumblr.Events, 'indashblog:search:results-end', this.update);
       this.listenTo(Tumblr.Events, 'fox:filterFetch:started', this.hide);
-      this.listenTo(Tumblr.Events, 'fox:searchLikes:finished', this.update);
+      this.listenTo(Tumblr.Events, 'fox:search:finished', this.update);
       this.listenTo(Tumblr.Events, 'fox:postFetch:empty', this.update);
     },
     hide() {
@@ -30,11 +30,14 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       this.$el.show();
     },
     update(query) {
-      query = query || Tumblr.Fox.Posts.query.loggingData;
+      let term = '';
+      if (isObject(query)) {
+        term = query.model.get('term');
+      }
       if (!this.initialized) {
-        this.render(query);
+        this.render({ term });
       } else {
-        this.$('span.search_query_highlight').text(query.term);
+        this.$('span.search_query_highlight').text(term);
         this.show();
       }
     },

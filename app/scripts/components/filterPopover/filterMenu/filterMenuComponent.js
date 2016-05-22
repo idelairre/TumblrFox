@@ -4,16 +4,11 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
   const FilterMenuComponent = Backbone.View.extend({
     defaults: {
       disabled: !1,
-      state: {
-        likes: !1,
-        dashboard: !1,
-        user: !0
-      }
     },
     className: 'popover--filter-select-dropdown',
     template: $('#filterMenuTemplate').html(),
     initialize() {
-      this.state = this.defaults.state;
+      this.state = Tumblr.Fox.state;
       this.disabled = this.defaults.disabled;
     },
     render() {

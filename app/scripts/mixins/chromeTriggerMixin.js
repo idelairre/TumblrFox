@@ -24,6 +24,7 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
       let responseEvent = eventName.split(':');
       responseEvent[1] = 'response';
       responseEvent = responseEvent.join(':');
+      console.log('[CHROME RESPONSE]', responseEvent);
       const onFinish = ((response) => {
         callback ? callback(response.detail) : null;
         setTimeout(() => {

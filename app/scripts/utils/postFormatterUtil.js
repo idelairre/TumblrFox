@@ -1,7 +1,21 @@
 module.exports = (function postFormatter(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  // const { get } = Tumblr.Fox;
-  // const ModelForTinyGreyButton = get('ModelForTinyGreyButton');
+
+  function formatPostHeader(postData, postHeader, postDiv) {
+    console.log('[POST DATA]', postData);
+    postHeader.attr('class', 'post_header').wrapInner('<div class="post_info"><div class="post_info_fence"></div></div>');
+    const postInfoLink = `<a class="post_info_link" href="http://${postData.blog.uuid}" data-tumblog-popover="${escape(JSON.stringify(postData.blog))}">${postData.blog.name}</a>`;
+    const reblogFollowButton = postHeader.find('.reblog_follow_button').detach();
+    postHeader.find('.post_info_fence').prepend(postInfoLink);
+    if (postHeader.find('.reblog_info').length) {
+      postHeader.find('.reblog_info').wrap('<span class="reblog_source"></span>');
+      if (postInfoLink) {
+        postHeader.find('.post_info_fence').addClass('has_follow_button').after(reblogFollowButton);
+      }
+    } else {
+      postDiv.find('.post_info').append(reblogFollowButton);
+    }
+  }
 
   Tumblr.Fox.formatType = function (postData) {
     if (postData.type === 'text') {
@@ -34,7 +48,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
               data-use-channel-avatar="1"
               data-use-sub-avatar=""></a>
           </div>
-        </div>`
+        </div>`;
 
     // NOTE: pt is probably premium_tracked, don't need to set that
     const postWrapper = `<div
@@ -70,22 +84,6 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       .find('.post_content').wrapInner('<div class="post_content_inner clearfix"></div>')
       .addClass('clearfix');
 
-    function formatPostHeader(postData, postHeader, postDiv) {
-      console.log('[POST DATA]', postData);
-      postHeader.attr('class', 'post_header').wrapInner('<div class="post_info"><div class="post_info_fence"></div></div>');
-      const postInfoLink = `<a class="post_info_link" href="http://${postData.blog.uuid}" data-tumblog-popover="${escape(JSON.stringify(postData.blog))}">${postData.blog.name}</a>`;
-      const reblogFollowButton = postHeader.find('.reblog_follow_button').detach();
-      postHeader.find('.post_info_fence').prepend(postInfoLink);
-      if (postHeader.find('.reblog_info').length) {
-        postHeader.find('.reblog_info').wrap('<span class="reblog_source"></span>');
-        if (postInfoLink) {
-          postHeader.find('.post_info_fence').addClass('has_follow_button').after(reblogFollowButton);
-        }
-      } else {
-        postDiv.find('.post_info').append(reblogFollowButton);
-      }
-    }
-
     if (postData.type === 'note') {
       const askButton = `<a class="post_tag ask post_ask_me_link" href="http://${postData.blog.name}.tumblr.com/ask" data-tumblelog-name="${postData.blog.name}">Ask ${postData.blog.name} a question</a>`;
       if (!postDiv.find('.post_tags_inner').length && postDiv.find('.note_wrapper').length < 2) {
@@ -106,9 +104,11 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       .find('.post_notes').wrapInner('<div class="post_notes_inner"></div>');
 
     const postControls = postFooter.find('.post_controls');
+
     postControls.attr('role', 'toolbar')
       .attr('data-subview', 'controls')
       .wrapInner('<div class="post_controls_inner"></div>');
+
     postFooter.find('.note_link_current').replaceWith(function () {
       const notes = $(this);
       if (notes.data('count') !== 0) {
@@ -120,8 +120,8 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
 
     const postReply = postControls.find('.reply');
     postControls.find('.reply_container').replaceWith(postReply);
+
     const postElement = $(`${postWrapper}${postAvatar}${postView.$el.html()}</div>`).attr('data-json', JSON.stringify(postData));
-    // postElement.find('.post_avatar').attr('data-tumblelog-popover', JSON.stringify(postData.blog));
     const postContainer = $(`<li class="post_container" data-pageable="post_${postModel.id}"></li>`).append(postElement);
     postView.remove();
 
@@ -140,7 +140,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
   };
 
   Tumblr.Fox.createPostView = function (postElement, postModel) {
-    let postView = new Tumblr.PostView({
+    const postView = new Tumblr.PostView({
       el: postElement,
       model: postModel
     });
@@ -153,10 +153,9 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     }
 
     Tumblr.postsView.postViews.push(postView);
-
     Tumblr.Events.trigger('postsView:createPost', postView);
-    console.log(postView);
     Tumblr.Events.trigger('DOMEventor:updateRect');
+    console.log(postView);
   };
 
   Tumblr.Fox.renderPosts = function (response) {

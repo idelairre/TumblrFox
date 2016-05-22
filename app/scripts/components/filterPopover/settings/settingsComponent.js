@@ -12,11 +12,6 @@ module.exports = (function settings(Tumblr, Backbone, _) {
   const Settings = PopoverComponent.extend({
     className: 'search-settings',
     defaults: {
-      state: {
-        likes: !1,
-        dashboard: !1,
-        user: !0
-      },
       popoverOptions: [{
         multipleSelection: false,
         name: 'searchTarget',
@@ -37,20 +32,37 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     template: $(settingsPopoverTemplate).html(),
     initialize(e) {
       this.options = Object.assign({}, this.defaults, e);
-      this.state = this.defaults.state;
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', () => {
-        if (!Tumblr.Fox.options.cachedTags && this.state.likes) {
-          this.initialized = !0;
-          this.options.popoverOptions[1].listItems.splice(0, 1);
-        } else {
-          if (this.options.popoverOptions[1].listItems[0].name !== 'Tag') {
-            this.options.popoverOptions[1].listItems.unshift({ icon: 'none', name: 'Tag', data: 'tag', checked: true });
-          }
+      this.state = Tumblr.Fox.state;
+      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setSearchStateMenu);
+      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOptionMenu);
+    },
+    setSearchStateMenu() {
+      if (!Tumblr.Fox.options.cachedTags && this.state.likes) {
+        this.options.popoverOptions[1].listItems.splice(0, 1);
+      } else {
+        if (this.options.popoverOptions[1].listItems[0].name !== 'Tag') {
+          this.options.popoverOptions[1].listItems.unshift({ icon: 'none', name: 'Tag', data: 'tag', checked: false });
         }
-      });
+      }
+    },
+    setSearchOptionMenu(state) {
+      if (state === 'text') {
+        if (this.options.popoverOptions[0].listItems[1].data !== 'user') {
+          return;
+        }
+        this.options.popoverOptions[0].listItems[0].checked = true;
+        this.options.popoverOptions[0].listItems.splice(1, 1);
+      } else {
+        const item = { icon: 'none', name: 'Search by user', data: 'user', checked: false };
+        const shift = this.options.popoverOptions[0].listItems[1];
+        this.options.popoverOptions[0].listItems[0].checked = true;
+        this.options.popoverOptions[0].listItems.push(shift);
+        this.options.popoverOptions[0].listItems[1] = item;
+      }
     },
     render() {
       this.$el.html(this.template);
+      this.initialized = !0;
     },
     events: {
       'click .toggle-search': 'togglePopover'

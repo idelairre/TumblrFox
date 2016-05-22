@@ -1,12 +1,13 @@
 /* global chrome:true */
 /* eslint no-undef: "error" */
-import async from 'async';
+
 import constants from './constants';
 import db from './lib/db';
+import Cache from './lib/cache';
 import Following from './stores/followingStore';
+import Keys from './stores/keyStore';
 import Likes from './stores/likeStore';
 import Tags from './stores/tagStore';
-import { escape } from 'lodash';
 import { oauthRequest } from './lib/oauthRequest';
 import './lib/livereload';
 import 'babel-polyfill';
@@ -21,17 +22,6 @@ chrome.runtime.onMessage.addListener(request => {
   }
 });
 
-oauthRequest({ url: 'https://api.tumblr.com/v2/user/info' }).then(response => {
-  console.log('[USER]', response);
-  Likes.checkLikes().then(canFetchApiLikes => {
-    constants.canFetchApiLikes = canFetchApiLikes;
-    constants.userName = response.user.name;
-    constants.totalFollowingCount = response.user.following;
-    constants.totalPostsCount = response.user.likes;
-    initializeConstants(constants);
-  });
-});
-
 /**
  * NOTE: do not remove these "return true"'s
  * Chrome docs: "This function becomes invalid when the event listener returns,
@@ -42,24 +32,21 @@ chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(request => {
     switch (request.type) {
       case 'cacheLikes':
-        if (request.clientCaching) {
-          Likes.testPreloadLikes(::port.postMessage);
+        if (constants.get('clientCaching')) {
+          Likes.testPreload(::port.postMessage);
         } else {
-          Likes.preloadLikes(::port.postMessage);
+          Likes.preload(::port.postMessage);
         }
         return true;
       case 'cacheTags':
-        Tags.cacheLikeTags(::port.postMessage);
+        Tags.cache(::port.postMessage);
         return true;
       case 'cacheFollowing':
-        Following.preloadFollowing(::port.postMessage);
+        Following.preload(::port.postMessage);
         return true;
       case 'checkLikes':
-        Likes.checkLikes().then(response => {
-          constants.canFetchApiLikes = response;
-          chrome.storage.local.set({
-            canFetchApiLikes: response
-          });
+        Likes.check(constants.get('userName')).then(response => {
+          constants.set('canFetchApiLikes', response);
           port.postMessage({
             message: 'canFetchApiLikesStatus',
             payload: constants.canFetchApiLikes
@@ -67,68 +54,36 @@ chrome.runtime.onConnect.addListener(port => {
         });
         return true;
       case 'downloadCache':
-        downloadCache(::port.postMessage);
+        if (constants.get('saveViaFirebase')) {
+          Cache.uploadCache(::port.postMessage);
+        } else {
+          Cache.assembleCache(::port.postMessage);
+        }
         return true;
       case 'resetCache':
-        resetCache(::port.postMessage);
+        Cache.resetCache(::port.postMessage);
         return true;
       case 'restoreCache':
-        Likes.restoreCache(request.payload, ::port.postMessage);
+        Cache.restoreCache(request.payload, ::port.postMessage);
         return true;
       case 'updateSettings':
-        Object.assign(constants, request.payload);
+        constants.set(request.payload);
         return true;
       default:
         // do nothing
       }
   });
-  port.postMessage({
-    message: 'initialized',
-    payload: constants
-  });
+  setTimeout(() => {
+    port.postMessage({
+      message: 'initialized',
+      payload: constants
+    });
+  }, 2);
 });
 
 chrome.tabs.onUpdated.addListener(tabId => {
   console.log('[TAB ID]', tabId);
 });
-
-function initializeConstants(constants) {
-  chrome.storage.sync.get({
-    userName: ''
-  }, items => {
-    if (items.userName === '') {
-      chrome.storage.sync.set({
-        userName: constants.userName
-      });
-    }
-  });
-  chrome.storage.local.get({
-    canFetchApiLikes: false,
-    currentUser: {},
-    totalPostsCount: 0,
-    totalFollowingCount: 0
-  }, async items => {
-    if (items.currentUser !== constants.currentUser) {
-      chrome.storage.sync.set({
-        currentUser: constants.currentUser.attributes
-      });
-    }
-    if (items.totalPostsCount !== constants.totalPostsCount) {
-      chrome.storage.local.set({
-        totalPostsCount: constants.totalPostsCount
-      });
-    }
-    if (items.totalFollowingCount !== constants.totalFollowingCount) {
-      // sync followers
-      chrome.storage.local.set({
-        totalFollowingCount: constants.totalFollowingCount
-      });
-    }
-  });
-  chrome.storage.local.set({
-    canFetchApiLikes: constants.canFetchApiLikes
-  });
-}
 
 function initializeListeners() {
   console.log('[INITIALIZED]', constants);
@@ -136,90 +91,49 @@ function initializeListeners() {
     console.log('[REQUEST]', request);
     switch (request.type) {
       case 'fetchConstants':
-        sendResponse(constants);
+        setTimeout(() => {
+          sendResponse(constants);
+        }, 1);
+        return true;
+      case 'fetchKeys':
+        if (request.payload) {
+          Keys.fetch(request.payload).then(sendResponse);
+        } else {
+          Keys.fetch().then(sendResponse);
+        }
         return true;
       case 'fetchPosts':
-        oauthRequest(request.payload, sendResponse);
+        oauthRequest(request.payload).then(sendResponse);
         return true;
       case 'fetchFollowing':
-        Following.fetchFollowing(request.payload, sendResponse);
+        Following.fetch(request.payload, sendResponse);
         return true;
       case 'refreshFollowing':
-        Following.refreshFollowing(sendResponse);
+        Following.preload(sendResponse);
         return true;
       case 'updateFollowing':
-        Following.syncFollowing(sendResponse);
+        Following.sync(sendResponse);
         return true;
       case 'fetchLikes':
-        Likes.fetchLikedPosts(request.payload, sendResponse);
+        Likes.fetch(request.payload, sendResponse);
         return true;
       case 'fetchTags':
-        Tags.fetchLikeTags(sendResponse);
+        Tags.fetch(sendResponse);
         return true;
-      case 'searchLikes':
-        Likes.searchLikes(request.payload, sendResponse);
+      case 'searchLikesByTag':
+        Likes.searchByTag(request.payload, sendResponse);
+        return true;
+      case 'searchLikesByTerm':
+        Likes.searchByTerm(request.payload, sendResponse);
         return true;
       case 'syncLikes':
-        Likes.syncLikes(request.payload);
+        Likes.sync(request.payload);
         return true;
       case 'updateLikes':
-        Likes.updateLikes(request.payload);
+        Likes.update(request.payload);
         return true;
       default:
         // do nothing
     }
-  });
-}
-
-function downloadCache(callback) {
-  console.log('[CACHING DATABASE]');
-  db.posts.toCollection().toArray(posts => {
-    const payload = encodeURIComponent(JSON.stringify(posts));
-    callback({
-      message: 'cache',
-      payload
-    });
-  })
-}
-
-function resetCache(callback) {
-  const response = {
-    percentComplete: 0,
-    itemsLeft: 0,
-    total: 0,
-    database: 'all'
-  };
-  callback(response);
-  chrome.storage.local.set({
-    cachedPostsCount: 0,
-    cachedFollowingCount: 0,
-    cachedTagsCount: 0
-  });
-  chrome.storage.local.get({
-    cachedPostsCount: 0,
-    cachedFollowingCount: 0,
-    cachedTagsCount: 0,
-    totalFollowingCount: 0,
-    totalPostsCount: 0,
-    totalTagsCount: 0
-  }, items => {
-    Object.assign(constants, items);
-    console.log('[CONSTANTS RESET]', constants);
-  });
-  db.delete().then(() => {
-    console.log('[DB] deleted');
-    const response = {
-      percentComplete: 100,
-      itemsLeft: 0,
-      total: 0,
-      database: 'all'
-    };
-    db.open().then(() => {
-      console.log('[CONSTANTS]', constants);
-      callback(response);
-    });
-  }).catch(error => {
-    console.error('[DB]', error);
-    callback(error);
   });
 }

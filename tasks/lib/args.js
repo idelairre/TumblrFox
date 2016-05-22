@@ -27,6 +27,11 @@ const args = yargs
     choices: ['chrome', 'firefox', 'opera']
   })
 
+  .option('test', {
+    boolean: true,
+    default: 'chrome'
+  })
+
   .option('sourcemaps', {
     describe: 'Force the creation of sourcemaps'
   })
@@ -40,4 +45,3 @@ if (typeof args.sourcemaps === 'undefined') {
 }
 
 export default args;
-
