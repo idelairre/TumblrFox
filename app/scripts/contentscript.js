@@ -35,7 +35,7 @@ import Time from './utils/timeUtil';
 
 // NOTE: reblog follow button is broken
 
-function inject(modules) {
+const inject = modules => {
   for (let i = 0; modules.length > i; i += 1) {
     const module = modules[i];
     const app = document.createElement('script');
@@ -45,7 +45,7 @@ function inject(modules) {
   }
 }
 
-function injectTemplates(templates) {
+const injectTemplates = templates => {
   for (let i = 0; templates.length > i; i += 1) {
     document.body.insertAdjacentHTML('beforeend', templates[i]);
   }

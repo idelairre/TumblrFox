@@ -23,6 +23,15 @@ const saveViaFirebase = {
   </div>`
 };
 
+const fullTextSearch = {
+  template: `
+  <div class="note tooltip" style="position: absolute" data-tooltip="saveViaBFirebase">
+    * Enabling will allow you to switch between tag and text search using the Okapi BM25 matching algorithm via the settings popover.<br>
+    <li>Advantages: Will have to rehash the post database. Fetching liked posts from scratch will be slower</li>
+    <li>Drawbacks: None</li>
+  </div>`
+};
+
 const cachingTooltip = {
   template: `<i class="note tooltip" style="position: absolute" data-tooltip="caching">* some posts and blogs you are following may have been deleted, it is sometimes not possible to fetch 100% of your likes or followed blogs.</i>`
 };
@@ -113,13 +122,16 @@ const Options = Backbone.View.extend({
     this.$bar = bar;
     this.$progress = progress;
     Tipped.create('[data-tooltip-key="clientCaching"]', $(clientCachingTooltip.template).html(), {
-      skin: 'light', position: 'topleft'
+      skin: 'light', position: 'topleft', behavior: 'hide'
     });
     Tipped.create('[data-tooltip-key="caching"]', $(cachingTooltip.template).html(), {
-      skin: 'light', position: 'topleft'
+      skin: 'light', position: 'topleft', behavior: 'hide'
     });
     Tipped.create('[data-tooltip-key="saveViaFirebase"]', $(saveViaFirebase.template).html(), {
-      skin: 'light', position: 'topleft'
+      skin: 'light', position: 'bottomleft', behavior: 'hide'
+    });
+    Tipped.create('[data-tooltip-key="fullTextSearch"]', $(saveViaFirebase.template).html(), {
+      skin: 'light', position: 'bottomleft', behavior: 'hide'
     });
     this.bindEvents();
     this.initializePort();

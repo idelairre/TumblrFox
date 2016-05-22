@@ -1,3 +1,8 @@
+/* global FileBlob:true */
+/* global worker:true */
+/* global alert:true */
+/* eslint no-undef: "error" */
+
 import async from 'async';
 import { ajax, Deferred } from 'jquery';
 import { maxBy, union } from 'lodash';
@@ -18,15 +23,15 @@ function JsonToCsvConverter(jsonData, ReportTitle, ShowLabel) {
     jsonData = (typeof jsonData !== 'object' ? JSON.parse(jsonData) : jsonData);
     let csv = '';
     let headers = [];
-    csv += ReportTitle + '\r\n\n';
+    csv += `${ReportTitle}\r\n\n`;
     if (ShowLabel) {
       const keys = [];
       for (let i = 0; jsonData.length > i; i += 1) {
         const item = jsonData[i];
         headers = union(keys, Object.keys(item));
       }
-      let row = headers.join('Ꮂ').replace(/[\[\]']+/g, '');
-      csv += row + '\r\n'; // append Label row with line break
+      const row = headers.join('Ꮂ').replace(/[\[\]']+/g, '');
+      csv += `${row}\r\n`; // append Label row with line break
     }
     for (let i = 0; i < jsonData.length; i += 1) { // 1st loop is to extract each row
       let row = Array(headers.length).fill(null);
@@ -73,7 +78,7 @@ export default class Cache {
       constants.reset();
       console.log('[DB] deleted');
       response.constants = constants;
-      response.percentComplete = 100,
+      response.percentComplete = 100;
       await db.open();
       port(response);
       setTimeout(() => {
@@ -124,32 +129,31 @@ export default class Cache {
           error: e
         });
         next(e);
-
       }
     });
   }
 
-  static parseBlob(file, port) {
-    let i = 0;
-    const posts = JSON.parse(file);
-    async.whilst(() => {
-      return posts.length > i;
-    }, async next => {
-      await db.posts.put(posts[i]);
-      console.log('[ADDED]', posts[i].id);
-      i += 1;
-      items.cachedPostsCount = await db.posts.toCollection().count();
-      constants.set('cachedPostsCount', items.cachedPostsCount);
-      log('posts', items, data => {
-        port(data);
-        next(null);
-      }, false);
-    });
-  }
+  // static parseBlob(file, port) {
+  //   let i = 0;
+  //   const posts = JSON.parse(file);
+  //   async.whilst(() => {
+  //     return posts.length > i;
+  //   }, async next => {
+  //     await db.posts.put(posts[i]);
+  //     console.log('[ADDED]', posts[i].id);
+  //     i += 1;
+  //     items.cachedPostsCount = await db.posts.toCollection().count();
+  //     constants.set('cachedPostsCount', items.cachedPostsCount);
+  //     log('posts', items, data => {
+  //       port(data);
+  //       next(null);
+  //     }, false);
+  //   });
+  // }
 
   static async restoreCache(fileSlug, port) {
     const { parsedFile, fileSize } = fileSlug;
-    const blobSize = getBinarySize(parsedFile);
+    // const blobSize = getBinarySize(parsedFile);
     worker.onmessage = e => {
       FileBlob = e.data;
       const blobSize = getBinarySize(FileBlob);

@@ -101,7 +101,7 @@ export default class BM25 {
         _terms[term] = {
           count: 0,
           freq: 0,
-          term: term
+          term
         };
         _terms[term].count += 1;
       }
@@ -119,7 +119,7 @@ export default class BM25 {
         this.terms[term] = {
           n: 0,
           idf: 0,
-          term: term
+          term
         };
       }
       this.terms[term].n += 1;

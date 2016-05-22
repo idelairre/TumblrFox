@@ -1,4 +1,4 @@
-import { escape, isElement, keyBy, maxBy, toArray } from 'lodash';
+import { keyBy, toArray } from 'lodash';
 import { ajax, Deferred } from 'jquery';
 import constants from '../constants';
 import 'babel-polyfill';
@@ -20,7 +20,7 @@ export default class Firebase {
         deferred.resolve(toArray(data));
       },
       error: error => {
-        console.log(error)
+        console.log(error);
         deferred.reject(error);
       }
     });
