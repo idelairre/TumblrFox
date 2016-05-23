@@ -2,137 +2,29 @@
 <html>
 <head>
   <title>Tumblr Fox Extension Options</title>
-  <style>
-    body {
-      font-size: 12px;
-    }
-    input {
-      width: 100%;
-    }
-    div.container {
-      min-width: 474px;
-    }
-    .cache button {
-      float: right;
-    }
-    .debug p span {
-      background-color: #EEEEEE;
-    }
-    .input-option {
-      margin-top: 5px;
-    }
-    .note {
-      position: absolute;
-      background: white;
-      box-shadow: 1px 1px 1px #888888;
-      width: 70%;
-    }
-    #container {
-      margin: 20px;
-      margin-bottom: 30px;
-      width: 95%;
-      height: 8px;
-      position: relative;
-    }
-    #debug {
-      span-family: 'Courier New', Courier, 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
-    }
-    section.options input {
-      float: right;
-    }
-    #status {
-      padding-left: 5px;
-    }
-  </style>
 </head>
 
 <body>
   <div class="container">
-    <section class="authentication">
-      <h1 class="authenticatication">Authentication</h1>
-      <div class="input-option user">
-        <label>
-          User name:<br>
-          <input type="text" id="userName">
-        </label>
-      </div>
-      <div class="input-option consumer-key">
-        <label>
-          Consumer key:<br>
-          <input type="text" id="consumerKey">
-        </label>
-      </div>
-      <div class="input-option consumer-secret">
-        <label>
-          Consumer secret:<br>
-          <input type="text" id="consumerSecret">
-        </label>
-      </div>
+    <section class="authentication" data-subview="authentication">
     </section>
-    <section class="options">
-      <h1>Options</h1>
-      <div class="input-option">
-        <label>
-          Enable Logging:
-        </label>
-        <input type="checkbox" id="debug" checked="false">
-      </div>
-      <div class="input-option">
-        <label>
-          Set user:
-        </label>
-        <input type="checkbox" id="setUser" checked="false">
-      </div>
-      <div class="input-option">
-        <label>
-          Use default api keys:
-        </label>
-        <input type="checkbox" id="defaultKeys" checked="true">
-      </div>
+    <section class="options" data-subview="settings">
     </section>
-    <section class="options">
-      <h1>Experimental</h1>
-      <div class="input-option">
-        <label data-tooltip-key="clientCaching">
-          Cache likes via client*:
-        </label>
-        <input type="checkbox" id="clientCaching" checked="false">
-      </div>
-      <div class="input-option">
-        <label data-tooltip-key="fullTextSearch">
-          Enable full text search*:
-        </label>
-        <input type="checkbox" id="fullTextSearch" checked="false">
-      </div>
-      <div class="input-option">
-        <label data-tooltip-key="saveViaFirebase">
-          Save cache via Firebase*:
-        </label>
-        <input type="checkbox" id="saveViaFirebase" checked="false">
-      </div>
+    <section class="options" data-subview="experimental">
     </section>
-    <section class="cache">
-      <h1 class="cache-header" data-tooltip-key="caching">Cache*</h1>
-      <p class="likes">Likes: <span id="cachedPostsCount"></span> out of <span id="totalPostsCount"></span><button id="cacheLikes">Cache likes</button></p>
-      <p class="following">Following: <span id="cachedFollowingCount"></span> out of <span id="totalFollowingCount"></span><button id="cacheFollowing">Cache following</button></p>
-      <p class="tags">Tags: <span id="cachedTagsCount"></span></p>
+    <section class="cache" data-subview="cache">
     </section>
-    <div id="container" style="display: none"></div>
+    <section data-subview="progressBar">
+    </section>
     <section class="status">
       <span id="status"></span>
     </section>
-    <section class="debug" style="width: 474px; overflow: hidden">
-      <p><code><span id="debugConsole" style="background-color: #EEEEEE"></span></code></p>
+    <section class="debug" data-subview="debug">
     </section>
-    <section class="buttons">
-      <button id="save">Save</button>
-      <button id="downloadCache">Save cache</button>
-      <button id="restoreCache">Restore cache</button>
-      <input type="file" id="file" name="file" style="display: none" accept=".json"/>
-      <button id="resetCache">Reset cache</button>
+    <section class="buttons" data-subview="buttons">
     </section>
   </div>
   <a id="cache" style="display: none">download</a>
-  <script src="../scripts/options.js"></script>
+  <script src="../scripts/components/options/options.js"></script>
 </body>
 </html>

@@ -52,7 +52,7 @@ export default class Following {
     if (items.totalFollowingCount === items.cachedFollowingCount) {
       alert('Done caching followers');
       port({
-        message: 'processDone'
+        action: 'processDone'
       });
     }
     async.whilst(() => {
@@ -73,8 +73,10 @@ export default class Following {
           next(null);
         });
       } catch (e) {
-        alert(e);
-        port({ error: e });
+        port({
+          action: 'error',
+          payload: e
+        });
         next(e);
       }
     });

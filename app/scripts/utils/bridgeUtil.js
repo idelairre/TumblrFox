@@ -31,7 +31,7 @@ module.exports = {
     });
   },
   trigger(eventName, payload) {
-    console.log('[EVENT NAME]: ', eventName, '[PAYLOAD]: ', payload);
+    // console.log('[EVENT NAME]: ', eventName, '[PAYLOAD]: ', payload);
     let req = {};
     if (typeof payload !== 'undefined') {
       req = new CustomEvent(eventName, {

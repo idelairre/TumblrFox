@@ -19,9 +19,6 @@ module.exports = (function init(Tumblr, Backbone, _) {
           return key;
         }
       }
-    },
-    set(key, value) {
-      Backbone.Model.prototype.set.apply(this, arguments);
     }
   });
 
@@ -45,9 +42,10 @@ module.exports = (function init(Tumblr, Backbone, _) {
   window.addEventListener('chrome:response:constants', initializeConstants);
   window.dispatchEvent(constReq);
 
-  function initializeConstants(e) {
+  const initializeConstants = e => {
     console.log('[CONSTANTS]', e);
     const constants = e.detail;
+    Tumblr.Fox.options.fullTextSearch = constants.fullTextSearch;
     Tumblr.Fox.options.logging = constants.debug;
     Tumblr.Fox.options.cachedTags = constants.cachedTagsCount !== 0;
     setTimeout(() => {

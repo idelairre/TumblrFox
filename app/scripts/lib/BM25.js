@@ -165,12 +165,11 @@ export default class BM25 {
   async _updateIdf() {
     try {
       const keys = await db.terms.toCollection().keys();
-      console.log(keys);
       const promises = keys.map(async term => {
         const num = (this.totalDocuments - this.terms[term].n + 0.5);
         const denom = (this.terms[term].n + 0.5);
         this.terms[term].idf = Math.max(Math.log10(num / denom), 0.01);
-        console.log(this.terms[term]);
+        // console.log(this.terms[term]);
         await db.terms.put(this.terms[term]);
       });
       return Promise.all(promises);

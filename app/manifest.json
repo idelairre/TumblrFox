@@ -32,12 +32,13 @@
     "all_frames": false
   }],
   "permissions": [
+    "downloads",
     "tabs",
     "storage",
     "unlimitedStorage",
     "http://api.tumblr.com/*",
     "https://tumblr.com/*"
   ],
-  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",
   "web_accessible_resources": ["pages/chrome_ex_oauth.html"]
 }

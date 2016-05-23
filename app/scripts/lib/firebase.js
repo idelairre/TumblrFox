@@ -6,17 +6,18 @@ import 'babel-polyfill';
 export default class Firebase {
   static get(endPoint, item) {
     const deferred = Deferred();
-    let url = `https://tumblrfox.firebaseio.com/${constants.userName}/${endPoint}`;
+    let url = `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}`;
     if (typeof item !== 'undefined') {
       url = `${url}/${item.id}.json`;
     } else {
       url = `${url}.json`;
     }
+    console.log('[URL]', url);
     ajax({
       type: 'GET',
       url,
       success: data => {
-        console.log(Object.keys(data));
+        console.log(data);
         deferred.resolve(toArray(data));
       },
       error: error => {
@@ -31,7 +32,7 @@ export default class Firebase {
     const deferred = Deferred();
     ajax({
       type: 'DELETE',
-      url: `https://tumblrfox.firebaseio.com/${constants.userName}/${endPoint}.json`,
+      url: `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}.json`,
       success: () => {
         deferred.resolve();
       },
@@ -48,7 +49,7 @@ export default class Firebase {
     ajax({
       type: 'PUT',
       accept: 'application/json',
-      url: `https://tumblrfox.firebaseio.com/${constants.userName}/${endPoint}/${item[key]}.json?print=silent`,
+      url: `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}/${item[key]}.json?print=silent`,
       dataType: 'json',
       beforeSend: request => {
         request.setRequestHeader('Keep-Alive', true);
@@ -78,7 +79,7 @@ export default class Firebase {
         request.setRequestHeader('Keep-Alive', true);
       },
       dataType: 'json',
-      url: `https://tumblrfox.firebaseio.com/${constants.userName}/${endPoint}.json?print=silent`,
+      url: `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}.json?print=silent`,
       data: JSON.stringify(items),
       success: data => {
         console.log('[UPLOAD COMPLETE]');

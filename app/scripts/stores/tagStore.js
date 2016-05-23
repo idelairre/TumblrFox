@@ -21,19 +21,27 @@ export default class Tags {
   }
 
   static async cache(port) {
-    const tagArrays = await db.posts.orderBy('tags').keys();
-    const { tags, total } = await Tags._parse(tagArrays);
-    const items = {
-      totalTagsCount: total,
-      cachedTagsCount: await db.tags.toCollection().count()
-    };
-    Tags.process(tags, items, response => {
-      const { constants, items } = response;
-      log('tags', items, data => {
-        data.constants = constants;
-        port(data);
+    try {
+      const tagArrays = await db.posts.orderBy('tags').keys();
+      const { tags, total } = await Tags._parse(tagArrays);
+      const items = {
+        totalTagsCount: total,
+        cachedTagsCount: await db.tags.toCollection().count()
+      };
+      Tags.process(tags, items, response => {
+        const { constants, items } = response;
+        log('tags', items, data => {
+          data.constants = constants;
+          port(data);
+        });
       });
-    });
+    } catch (e) {
+      console.error(e);
+      port({
+        action: 'error',
+        payload: e
+      });
+    }
   }
 
   static async fetch(port) {

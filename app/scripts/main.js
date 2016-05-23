@@ -1,4 +1,7 @@
-module.exports = (function main() {
+/* global window:true */
+/* eslint no-undef: "error" */
+
+module.exports = (function main(Tumblr, Backbone, _) {
   window.webpackJsonp(0, [function (module, exports, require) {
     Tumblr.Fox = Tumblr.Fox || {};
     Tumblr.Fox.require = require;

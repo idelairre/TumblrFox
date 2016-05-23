@@ -123,8 +123,10 @@ export default class Likes {
         });
       } catch (e) {
         console.error(e);
-        alert(`Error: ${JSON.stringify(e)}`);
-        port({ error: e });
+        port({
+          action: 'error',
+          payload: e
+        });
         next(e);
       }
     });
@@ -266,7 +268,10 @@ export default class Likes {
         next(null);
       } catch (e) {
         console.error(e);
-        port({ error: e });
+        port({
+          action: 'error',
+          payload: e
+        });
         next(e);
       }
     });

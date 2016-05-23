@@ -3,7 +3,7 @@
 
 import constants from './constants';
 import db from './lib/db';
-import Cache from './lib/cache';
+import Cache from './stores/cache';
 import Following from './stores/followingStore';
 import Keys from './stores/keyStore';
 import Likes from './stores/likeStore';
@@ -77,7 +77,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 chrome.runtime.onConnect.addListener(port => {
   port.onMessage.addListener(request => {
-    switch (request.type) {
+    console.log('[REQUEST]', request);
+    switch (request.action) {
+      case 'fetchConstants':
+        port.postMessage({
+          action: 'replyConstants',
+          payload: constants
+        });
+        return true;
       case 'cacheLikes':
         if (constants.get('clientCaching')) {
           Likes.testPreload(::port.postMessage);
@@ -104,7 +111,11 @@ chrome.runtime.onConnect.addListener(port => {
         if (constants.get('saveViaFirebase')) {
           Cache.uploadCache(::port.postMessage);
         } else {
-          Cache.assembleCache(::port.postMessage);
+          if (constants.get('saveAsCsv')) {
+            Cache.assembleCacheAsCsv(::port.postMessage);
+          } else {
+            Cache.assembleCacheAsJson(::port.postMessage);
+          }
         }
         return true;
       case 'resetCache':
@@ -120,12 +131,6 @@ chrome.runtime.onConnect.addListener(port => {
         // do nothing
       }
   });
-  setTimeout(() => {
-    port.postMessage({
-      message: 'initialized',
-      payload: constants
-    });
-  }, 2);
 });
 
 chrome.tabs.onUpdated.addListener(tabId => {
