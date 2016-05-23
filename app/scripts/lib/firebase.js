@@ -51,9 +51,9 @@ export default class Firebase {
       accept: 'application/json',
       url: `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}/${item[key]}.json?print=silent`,
       dataType: 'json',
-      beforeSend: request => {
-        request.setRequestHeader('Keep-Alive', true);
-      },
+      // beforeSend: request => {
+      //   request.setRequestHeader('Keep-Alive', true);
+      // },
       data: JSON.stringify(item),
       success: data => {
         console.log(data);
@@ -75,9 +75,9 @@ export default class Firebase {
       type: 'PATCH',
       accept: 'application/json',
       contentType: 'application/json; charset=utf-8',
-      beforeSend: request => {
-        request.setRequestHeader('Keep-Alive', true);
-      },
+      // beforeSend: request => {
+      //   request.setRequestHeader('Keep-Alive', true);
+      // },
       dataType: 'json',
       url: `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}.json?print=silent`,
       data: JSON.stringify(items),

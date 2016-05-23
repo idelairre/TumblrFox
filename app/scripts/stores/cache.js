@@ -172,6 +172,7 @@ export default class Cache {
               url: `https://tumblrfox.firebaseio.com/${constants.userName}.json`
             }
           });
+          return;
         }
         log('posts', items, response => {
           port(response);
@@ -190,12 +191,12 @@ export default class Cache {
 
   static restoreCache(fileSlug, port) {
     console.log('[ARGUMENTS]', fileSlug);
-    cacheWorker.parseJson(rawFile, parsedFile => {
+    cacheWorker.parseJson(fileSlug.file, parsedFile => {
       const keys = Object.keys(parsedFile.posts);
       const posts = keys.map(key => {
         return parsedFile[key];
       });
-      console.log(isArray(posts), posts[0]);
+      // console.log(isArray(posts), posts[0]);
       let i = 0;
       const items = {
         cachedPostsCount: 0

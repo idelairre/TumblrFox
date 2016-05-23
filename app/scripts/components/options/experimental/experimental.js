@@ -30,7 +30,8 @@ const Experimental = Backbone.View.extend({
   },
   bindEvents() {
     this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', this.setProps);
+    this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
+    this.listenTo(this.props, 'change', ::this.renderProps);
   },
   afterRender() {
     setTimeout(() => {

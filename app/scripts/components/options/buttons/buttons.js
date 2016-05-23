@@ -14,7 +14,6 @@ const Buttons = Backbone.View.extend({
     this.initialized = true;
     this.rendered = true;
     this.$download = $('#cache');
-    console.log(this.$download);
     this.$el.html(this.template);
     Backbone.View.prototype.render.apply(this, arguments);
     this.bindEvents();
@@ -108,6 +107,7 @@ const Buttons = Backbone.View.extend({
   },
   createDownload(response) {
     this.$download.prop('href', response.payload.url);
+    this.$download.prop('download', 'tumblrData.json');
     setTimeout(() => {
       document.getElementById('cache').click();
     }, 1);

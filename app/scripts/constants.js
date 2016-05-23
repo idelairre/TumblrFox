@@ -134,9 +134,6 @@ class Constants {
       });
     }
     chrome.storage.local.set(key);
-    // chrome.storage.local.get(key, items => {
-    //   console.log('[ITEMS]:', items);
-    // });
   }
 
   _initializeStorageValues() {

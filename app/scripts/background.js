@@ -19,7 +19,7 @@ chrome.runtime.onInstalled.addListener(details => {
 // Tumblr/dropdown listeners
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('[REQUEST]', request);
+  // console.log('[REQUEST]', request);
   switch (request.type) {
     case 'fetchConstants':
       setTimeout(() => {
@@ -108,6 +108,7 @@ chrome.runtime.onConnect.addListener(port => {
         });
         return true;
       case 'downloadCache':
+      console.log(constants.get('saveAsCsv'));
         if (constants.get('saveViaFirebase')) {
           Cache.uploadCache(::port.postMessage);
         } else {
