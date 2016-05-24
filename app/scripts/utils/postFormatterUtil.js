@@ -1,8 +1,9 @@
 module.exports = (function postFormatter(Tumblr, Backbone, _) {
   const $ = Backbone.$;
+  const { escape } = _;
+  const JSON = JSON || window.JSON; // not sure what happened here, but I need this
 
-  function formatPostHeader(postData, postHeader, postDiv) {
-    console.log('[POST DATA]', postData);
+  const formatPostHeader = (postData, postHeader, postDiv) => {
     postHeader.attr('class', 'post_header').wrapInner('<div class="post_info"><div class="post_info_fence"></div></div>');
     const postInfoLink = `<a class="post_info_link" href="http://${postData.blog.uuid}" data-tumblog-popover="${escape(JSON.stringify(postData.blog))}">${postData.blog.name}</a>`;
     const reblogFollowButton = postHeader.find('.reblog_follow_button').detach();
@@ -155,7 +156,6 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     Tumblr.postsView.postViews.push(postView);
     Tumblr.Events.trigger('postsView:createPost', postView);
     Tumblr.Events.trigger('DOMEventor:updateRect');
-    console.log(postView);
   };
 
   Tumblr.Fox.renderPosts = function (response) {

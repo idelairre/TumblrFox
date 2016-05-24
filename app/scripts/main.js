@@ -8,6 +8,7 @@ module.exports = (function main(Tumblr, Backbone, _) {
     Tumblr.Fox.getComponent = Tumblr.Fox.getComponent.bind(this, Array.prototype.slice.call(arguments));
 
     const $ = Backbone.$;
+    const { assign } = _;
     const listItems = $('#posts').find('li');
     const attachNode = $(listItems[listItems.length - 1]);
     const formKey = $('#tumblr_form_key').attr('content');
@@ -35,7 +36,7 @@ module.exports = (function main(Tumblr, Backbone, _) {
     Tumblr.Fox.getComponent('SearchFilters', '[data-filter]');
     // Tumblr.Fox.getComponent('ModelForTinyGreyButton', '_updateSubscriptionStatus');
 
-    Object.assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
+    assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
     // Object.assign(Backbone.View, Tumblr.Fox.get('TumblrView'));
 
     Tumblr.Fox.constants = {

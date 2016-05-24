@@ -11,6 +11,7 @@
   },
   "background": {
     "scripts": [
+      "scripts/vendor.bundle.js",
       "scripts/background.js"
     ]
   },
@@ -26,6 +27,7 @@
       "styles/popover.css"
     ],
     "js": [
+      "scripts/vendor.bundle.js",
       "scripts/contentscript.js"
     ],
     "run_at": "document_end",

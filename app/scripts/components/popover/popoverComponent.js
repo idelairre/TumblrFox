@@ -1,6 +1,6 @@
 module.exports = (function popover(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { template } = _;
+  const { assign, template } = _;
   const { get, PopoverMixin } = Tumblr.Fox;
   const PopoverComponent = get('PopoverComponent');
 
@@ -60,7 +60,7 @@ module.exports = (function popover(Tumblr, Backbone, _) {
       'click li.popover_menu_item': 'toggleSelected'
     },
     initialize(e) {
-      this.options = Object.assign({}, e);
+      this.options = assign({}, e);
       this.initialized = !1;
     },
     render() {

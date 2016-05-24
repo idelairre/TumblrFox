@@ -4,9 +4,9 @@ module.exports = (function loaderMixin(Tumblr, Backbone, _) {
   const Mixin = get('Mixin');
   const Loader = get('Loader');
 
-  let loader = new Mixin({
+  const loader = new Mixin({
     toggleLoader(e) {
-      // console.log('[TOGGLE LOADER]', e);
+      console.log('[TOGGLE LOADER]', e);
       e === !0 ? this.loader ? this.loader.set('loading', !0) : this.loader = new Loader({ // I hate this
           $container: this.$el,
           type: 'bar',

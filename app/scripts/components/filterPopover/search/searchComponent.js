@@ -1,6 +1,6 @@
 module.exports = (function searchComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { capitalize, clone, debounce, each, isEmpty, isString } = _;
+  const { assign, capitalize, clone, debounce, each, isEmpty, isString } = _;
   const { get, loaderMixin, TagSearchAutocompleteModel, TextSearchAutocompleteModel, Filters, Posts, Likes, Settings } = Tumblr.Fox;
   const PeeprBlogSearch = get('PeeprBlogSearch');
   const SearchResultView = get('SearchResultView');
@@ -56,7 +56,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.listenTo(this.popover, 'close', this.onPopoverClose));
     },
     onPopoverClose() {
-      Object.assign(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype, defaultFilter);
+      assign(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype, defaultFilter);
       PeeprBlogSearch.prototype.subviews.filters.constructor.prototype.onPopoverClose.call(this);
     }
   };
@@ -65,7 +65,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     className: 'filter-search',
     template: $('#searchFilterTemplate').html(),
     mixins: [loaderMixin],
-    subviews: Object.assign({}, PeeprBlogSearch.prototype.subviews, {
+    subviews: assign({}, PeeprBlogSearch.prototype.subviews, {
       searchResultView: {
         constructor: SearchResultView,
         options: {
@@ -84,7 +84,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       }
     }),
     initialize(e) {
-      this.options = Object.assign({}, e);
+      this.options = assign({}, e);
       this.state = Tumblr.Fox.state;
       this.searchActive = !1;
       this.blog = e.blog;
@@ -93,10 +93,11 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         blogname: Tumblr.Prima.currentUser().id,
         themeParams: this.blog.get('global_theme_params')
       });
+      console.log('[BLOG SEARCH MODEL]', this.model);
       this.initializeSubviews();
     },
     initializeSubviews() {
-      Object.assign(this.subviews.filters.constructor.prototype, FiltersPopover);
+      assign(this.subviews.filters.constructor.prototype, FiltersPopover);
       each(this.subviews, subview => {
         subview.options = subview.options || {};
         subview.options.model = this.model;
@@ -112,7 +113,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.$settings = this.settings.$el;
       this.input.model.set(this.options); // this enables the nsfw filter
       this.input.$el.find('input').attr('data-js-textinput', '');
-      Object.assign(this.input, InputExtension);
+      assign(this.input, InputExtension);
       this.set('showUserList', false);
     },
     evalItems(data) {
@@ -180,6 +181,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.listenTo(this.model, 'change:next_offset', ::this.onOffsetChange);
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', this.log);
       this.listenTo(Tumblr.Events, 'indashblog:search:fetch-requested', ::this.onFetchRequested);
+      this.listenTo(Tumblr.Events, 'indashblog:search:complete', this.toggleLoader.bind(this, false));
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOption);
@@ -265,8 +267,8 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       console.log('[UPDATE LOG]', response);
       this.searchStarted = !1;
       this.model.set(response.loggingData);
-      Object.assign(this.filters.model, response.loggingData);
-      Object.assign(Tumblr.Fox.Posts.query, response);
+      assign(this.filters.model, response.loggingData);
+      assign(Tumblr.Fox.Posts.query, response);
     }
   });
 

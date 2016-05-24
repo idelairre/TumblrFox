@@ -1,4 +1,5 @@
 module.exports = (function loader(Tumblr, Backbone, _) {
+  const { assign } = _;
   const $ = Backbone.$;
 
   const Loader = Backbone.View.extend({
@@ -7,7 +8,7 @@ module.exports = (function loader(Tumblr, Backbone, _) {
       error: false
     },
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e);
+      this.options = assign({}, this.defaults, e);
       this.model = Tumblr.Fox.Posts;
       this.bindEvents();
     },

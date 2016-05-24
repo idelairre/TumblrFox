@@ -1,4 +1,5 @@
 module.exports = (function popoverMixin(Tumblr, Backbone, _) {
+  const { assign } = _;
   const { get } = Tumblr.Fox;
   const Popover = get('PopoverMixin');
   const Mixin = get('Mixin');
@@ -49,7 +50,7 @@ module.exports = (function popoverMixin(Tumblr, Backbone, _) {
     }
   });
 
-  Object.assign(PopoverMixin.properties, Popover.properties);
+  assign(PopoverMixin.properties, Popover.properties);
 
   Tumblr.Fox.PopoverMixin = PopoverMixin;
 

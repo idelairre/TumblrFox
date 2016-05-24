@@ -1,6 +1,6 @@
 module.exports = (function settings(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { clone, defer } = _;
+  const { assign, clone, defer } = _;
   const { get, Popover } = Tumblr.Fox;
   const PopoverComponent = get('PopoverComponent');
 
@@ -31,7 +31,7 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     },
     template: $(settingsPopoverTemplate).html(),
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e);
+      this.options = assign({}, this.defaults, e);
       this.state = Tumblr.Fox.state;
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setSearchStateMenu);
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOptionMenu);

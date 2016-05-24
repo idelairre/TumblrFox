@@ -128,7 +128,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
        Tumblr.Events.trigger('fox:autopaginator:start');
       }
       this.resetQueryOffsets();
-      this.query.loggingData = Object.assign({ offset: 0 }, e); // this is weird and I don't want to touch it
+      this.query.loggingData = assign({ offset: 0 }, e); // this is weird and I don't want to touch it
       this.clientFetchPosts(this.query.loggingData);
     },
     initialIndashSearch(posts) {
@@ -248,7 +248,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
             this.toggleLoader();
           }
           Tumblr.Events.trigger('fox:postFetch:finished', data.response);
-          Object.assign(this.query.loggingData, slug);
+          assign(this.query.loggingData, slug);
           this.query.loggingData.offset += data.response.posts.length;
           return data;
         },

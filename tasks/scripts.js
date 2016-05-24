@@ -9,7 +9,6 @@ import livereload from 'gulp-livereload';
 import args from './lib/args';
 import path from 'path';
 import fs from 'fs';
-import { snakeCase } from 'lodash';
 
 gulp.task('scripts', (cb) => {
   let tmp = {};
@@ -20,6 +19,15 @@ gulp.task('scripts', (cb) => {
       tmp[path.basename] = path;
     }))
     .pipe(gulpWebpack({
+      entry: {
+        chromeExOauth: ['./app/scripts/lib/chromeExOauth.js'],
+        chromeExOauthsimple: ['./app/scripts/lib/chromeExOauthsimple.js'],
+        onload: ['./app/scripts/lib/onload.js'],
+        options: './app/scripts/components/options/options.js',
+        contentscript: './app/scripts/contentscript.js',
+        background: './app/scripts/background.js',
+        vendor: ['jquery', 'lodash', 'backbone']
+      },
       devtool: args.sourcemaps ? 'source-map' : null,
       watch: args.watch,
       output: {
@@ -29,9 +37,10 @@ gulp.task('scripts', (cb) => {
         new webpack.DefinePlugin({
           '__ENV__': JSON.stringify(args.production ? 'production' : 'development'),
           '__VENDOR__': JSON.stringify(args.vendor)
-        })
+        }),
+        new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js', Infinity)
       ].concat(args.production ? [
-        new webpack.optimize.UglifyJsPlugin()
+        new webpack.optimize.UglifyJsPlugin(), new webpack.optimize.DedupePlugin()
       ] : []),
       module: {
         noParse: /node_modules\/json-schema\/lib\/validate\.js/,

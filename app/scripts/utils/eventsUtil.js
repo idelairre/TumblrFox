@@ -1,5 +1,6 @@
 module.exports = (function events(Tumblr, Backbone, _) {
-  const tumblr = Object.assign({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events);
+  const { assign } = _;
+  const tumblr = assign({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events);
 
   Tumblr.Fox.Events = {
     ignore: [

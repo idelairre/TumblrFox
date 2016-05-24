@@ -1,6 +1,6 @@
 module.exports = (function searchResults(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { template, isObject } = _;
+  const { assign, template, isObject } = _;
 
   const SearchResults = Backbone.View.extend({
     defaults: {
@@ -9,7 +9,7 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
     template: template($('#searchResultsTemplate').html()),
     className: 'search_posts_bottom',
     initialize(e) {
-      this.options = Object.assign({}, e, this.defaults);
+      this.options = assign({}, e, this.defaults);
       this.bindEvents();
     },
     bindEvents() {
@@ -30,9 +30,11 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       this.$el.show();
     },
     update(query) {
-      let term = '';
-      if (isObject(query)) {
+      let term = ''
+      if (query instanceof Backbone.Model) {
         term = query.model.get('term');
+      } else {
+        term = query.term;
       }
       if (!this.initialized) {
         this.render({ term });

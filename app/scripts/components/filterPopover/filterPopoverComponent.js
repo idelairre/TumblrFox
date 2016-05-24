@@ -1,6 +1,6 @@
 module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { each } = _;
+  const { assign, each } = _;
   const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
@@ -48,7 +48,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       }
     },
     initialize(e) {
-      this.options = Object.assign({}, this.defaults, e);
+      this.options = assign({}, this.defaults, e);
       this.state = this.defaults.state;
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setState);
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);

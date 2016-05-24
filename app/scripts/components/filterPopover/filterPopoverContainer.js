@@ -1,5 +1,6 @@
 module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
   const $ = Backbone.$;
+  const { assign } = _;
   const { get } = Tumblr.Fox;
   const { FilterPopoverComponent } = Tumblr.Fox;
   const PrimaComponent = get('PrimaComponent');
@@ -7,7 +8,7 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
   const FilterPopoverContainer = PrimaComponent.extend({
     name: 'FilterPopover',
     view(e) {
-      Object.assign(e, {
+      assign(e, {
         pinnedTarget: $('#filter_button'),
         isFixedPosition: !0,
         autoTeardown: !1,

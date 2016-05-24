@@ -1,5 +1,6 @@
 module.exports = (function init(Tumblr, Backbone, _) {
   Tumblr.Fox = Tumblr.Fox || {};
+  const { assign } = _;
 
   Tumblr.Fox.options = {
     rendered: false,
@@ -9,13 +10,11 @@ module.exports = (function init(Tumblr, Backbone, _) {
 
   const State = Backbone.Model.extend({
     initialize(e) {
-      Object.assign(this, e);
+      assign(this, e);
     },
     getState() {
-      console.log('[GETTING STATE...]');
       for (const key in this.attributes) {
         if (this.attributes[key]) {
-          console.log(key);
           return key;
         }
       }

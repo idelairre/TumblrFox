@@ -1,11 +1,5 @@
-/* global FileBlob:true */
-/* global worker:true */
-/* global alert:true */
-/* eslint no-undef: "error" */
-
 import async from 'async';
-import { ajax, Deferred } from 'jquery';
-import { defer, maxBy, isArray, toArray } from 'lodash';
+import { maxBy } from 'lodash';
 import constants from '../constants';
 import { log, calculatePercent } from '../utils/loggingUtil';
 import db from '../lib/db';
@@ -16,14 +10,13 @@ import 'operative';
 
 const getBinarySize = string => {
   return Buffer.byteLength(string, 'utf8');
-}
+};
 
 const cacheWorker = operative({
-  convertJsonToCsv(jsonData, reportTitle, showLabel, callback) {
+  convertJsonToCsv(jsonData, showLabel, callback) {
     try {
       let csv = '';
-      let headers = [];
-      csv += `${reportTitle}\r\n\n`;
+      const headers = [];
       if (showLabel) {
         const keys = [];
         for (let i = 0; jsonData.length > i; i += 1) {
@@ -52,8 +45,19 @@ const cacheWorker = operative({
       callback(e);
     }
   },
-  convertCsvToJson() {
-    // yep
+  convertCsvToJson(csvData) {
+    const lines = csvData.split('\n');
+    const colNames = lines[0].split('Ꮂ');
+    const records = [];
+    for (let i = 1; i < lines.length; i++) {
+      const record = {};
+      const bits = lines[i].split('Ꮂ');
+      for (let j = 0; j < bits.length; j++) {
+        record[colNames[j]] = bits[j];
+      }
+      records.push(record);
+    }
+    return records;
   },
   assembleFileBlob(file, callback) {
     try {
@@ -78,8 +82,8 @@ const cacheWorker = operative({
     r.onload = e => {
       const rawFile = e.target.result;
       callback(rawFile);
-    }
-    r.readAsText(file)
+    };
+    r.readAsText(file);
   }
 });
 
@@ -88,7 +92,7 @@ export default class Cache {
     console.log('[CACHING DATABASE]');
     const posts = await db.posts.toCollection().toArray();
     console.time('[CONVERT TO CSV]');
-    cacheWorker.convertJsonToCsv(posts, 'posts', true, (error, fileString) => {
+    cacheWorker.convertJsonToCsv(posts, true, (error, fileString) => {
       console.timeEnd('[CONVERT TO CSV]');
       cacheWorker.assembleFileBlob(fileString, (error, payload) => {
         port({
@@ -196,7 +200,6 @@ export default class Cache {
       const posts = keys.map(key => {
         return parsedFile[key];
       });
-      // console.log(isArray(posts), posts[0]);
       let i = 0;
       const items = {
         cachedPostsCount: 0
@@ -219,10 +222,6 @@ export default class Cache {
         }
       });
     });
-  }
-
-  static async parseCsv() {
-
   }
 
   static async validateCache(port) {

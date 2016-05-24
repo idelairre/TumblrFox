@@ -8,7 +8,6 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
    * @param {String} payload The data to send to the extension backend
    * @param {String} callback Optional function to perform on response
    */
-
   const chromeMixin = new Mixin({
     chromeTrigger(eventName, payload, callback) {
       console.log('[CHROME TRIGGER]', arguments);

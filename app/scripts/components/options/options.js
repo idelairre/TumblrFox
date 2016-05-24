@@ -72,7 +72,7 @@ const Options = Backbone.View.extend({
       const subview = new this.subviews[subviewName].constructor();
       const view = new subview.constructor(this.props);
       view.render();
-      $(`[data-subview="${subviewName}"]`).replaceWith(view.$el);
+      this.$(`[data-subview="${subviewName}"]`).replaceWith(view.$el);
       return view;
     });
   },
