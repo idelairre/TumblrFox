@@ -63,38 +63,42 @@ const Buttons = Backbone.View.extend({
   restoreCache() {
     document.getElementById('file').click();
     document.getElementById('file').addEventListener('change', e => {
-      const rawFile = e.target.files[0];
       Backbone.Events.trigger('ASSEMBLE_FILE', { fileSize: file.size });
-      const fileSize = file.size;
-      const r = new FileReader();
-      r.onload = e => {
-        const file = e.target.result;
-        Backbone.Events.trigger('RESTORE_CACHE', { action: 'restoreCache', payload: { fileSize, file }});
-      }
-      r.readAsText(rawFile)
+      this.parseFile(e.target.files[0], response => {
+        Backbone.Events.trigger('RESTORE_CACHE', {
+          action: 'restoreCache',
+          payload: response
+        });
+      });
     }, false);
   },
   parseFile(file, callback) {
     const fileSize = file.size;
-    const chunkSize = 64 * 1024; // bytes
+    let chunkSize = (64 * 1024); // bytes
     let offset = 0;
     let chunkReaderBlock = null;
 
     const readEventHandler = e => {
-      if (e.target.error === null) {
-        offset += e.target.result.length;
-        callback(e.target.result); // callback for handling read chunk
-      } else {
-        console.log(`Read error: ${e.target.error}`);
+      Backbone.Events.trigger('CREATING_FILE_BLOB', { offset, fileSize });
+      if (e.target.error) {
         return;
       }
-      if (offset >= fileSize) {
-        console.log('Done reading file');
+      offset += chunkSize;
+      callback({
+        fileFragment: e.target.result,
+        fileSize,
+        offset
+      });
+      if (chunkSize === 0) {
         return;
       }
+      if (offset + chunkSize > fileSize) {
+        chunkSize = fileSize - offset;
+      }
+      // callback for handling read chunk
       // off to the next chunk
       chunkReaderBlock(offset, chunkSize, file);
-    };
+    }
 
     chunkReaderBlock = (_offset, length, _file) => {
       const r = new FileReader();

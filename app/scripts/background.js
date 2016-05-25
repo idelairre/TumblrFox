@@ -19,7 +19,7 @@ chrome.runtime.onInstalled.addListener(details => {
 // Tumblr/dropdown listeners
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('[REQUEST]', request);
+  // console.log('[REQUEST]', request);
   switch (request.type) {
     case 'fetchConstants':
       setTimeout(() => {

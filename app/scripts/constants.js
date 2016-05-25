@@ -5,11 +5,10 @@ import { Deferred } from 'jquery';
 import { oauthRequest } from './lib/oauthRequest';
 import db from './lib/db';
 import Likes from './stores/likeStore';
-import tokens from './tokens.json';
 import 'babel-polyfill';
 
-const CONSUMER_KEY = tokens.consumerKey;
-const CONSUMER_SECRET = tokens.consumerSecret;
+const CONSUMER_KEY = 'MSEqUjnLQa5MF7pNWFDEcBudr4smA7eLkotu3FONriSZlh1Ez2';
+const CONSUMER_SECRET = 'k5ucZBzvHYIfMuKXYZ2m3bJwB5AmSnU5kA9pcSMoelTvtIn1ok';
 
 class Constants {
   defaults = {

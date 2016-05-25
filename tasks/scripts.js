@@ -12,12 +12,12 @@ import fs from 'fs';
 
 gulp.task('scripts', (cb) => {
   let tmp = {};
-  return gulp.src(['app/scripts/*.js', 'app/scripts/**/*.js'])
+  return gulp.src('app/scripts/**/*.js')
     .pipe(plumber())
     .pipe(named())
-    .pipe(rename((path) => {
-      tmp[path.basename] = path;
-    }))
+    // .pipe(rename((path) => {
+    //   tmp[path.basename] = path;
+    // }))
     .pipe(gulpWebpack({
       entry: {
         chromeExOauth: ['./app/scripts/lib/chromeExOauth.js'],
@@ -90,11 +90,11 @@ gulp.task('scripts', (cb) => {
         configFile: '.eslintrc'
       }
     }))
-    .pipe(rename((path) => {
-      if (tmp[path.basename] && tmp[path.basename].dirname) {
-        path.dirname = tmp[path.basename].dirname;
-      }
-    }))
+    // .pipe(rename((path) => {
+    //   if (tmp[path.basename] && tmp[path.basename].dirname) {
+    //     path.dirname = tmp[path.basename].dirname;
+    //   }
+    // }))
     // .pipe(clean())
     .pipe(gulp.dest(`dist/${args.vendor}/scripts`))
     .pipe(gulpif(args.watch, livereload()));

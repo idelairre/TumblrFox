@@ -4,11 +4,10 @@
 
 import $, { ajax, Deferred } from 'jquery';
 import async from 'async';
-import { differenceBy } from 'lodash';
+import { differenceBy, isString } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import { log } from '../utils/loggingUtil';
-import tokens from '../tokens.json';
 import Tags from './tagStore';
 import Keys from './keyStore';
 import 'babel-polyfill';
@@ -53,7 +52,7 @@ export default class Likes {
   static _testProcessPost(postHtml, timestamp) {
     const post = $(postHtml).data('json');
     post.id = parseInt(post.id, 10);
-    post.html = $(postHtml).prop('outerHTML');
+    post.html = $(postHtml).prop('outerHTML').replace(/"/g, '\\\"');
     post.liked_timestamp = parseInt(timestamp, 10);
     post.tags = Likes._testProcessTags(postHtml) || [];
     post.note_count = $(postHtml).find('.note_link_current').data('count') || 0;
@@ -132,8 +131,20 @@ export default class Likes {
     });
   }
 
+  static escapeHtmlAndFormat(post) {
+    const keys = Object.keys(post);
+    keys.map(key => {
+      if (isString(post[key])) {
+        return post[key] = post[key].replace(/"/g, '\\\"');
+      }
+    });
+    // delete post.trail;
+    return post;
+  }
+
   static async put(post) {
     await Keys.parsePost(post);
+    Likes.escapeHtmlAndFormat(post);
     await db.posts.put(post);
     if (post.tags.length > 0) {
       await Tags.add(post.tags);
@@ -215,7 +226,7 @@ export default class Likes {
   static fetch(slug) {
     const deferred = Deferred();
     const data = {
-      api_key: tokens.consumerKey,
+      api_key: constants.get('consumerKey'),
       limit: slug.limit || 8
     };
     Object.assign(data, slug);
@@ -242,7 +253,7 @@ export default class Likes {
     console.log('[PRELOADING LIKES]');
     const slug = {
       blogname: constants.get('userName'),
-      limit: 50
+      limit: 1
     };
     // fetch farthest back cached like
     if (constants.get('cachedPostsCount') !== 0) {

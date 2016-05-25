@@ -16,6 +16,7 @@ export default class Firebase {
     ajax({
       type: 'GET',
       url,
+      accept: 'application/json',
       success: data => {
         console.log(data);
         deferred.resolve(toArray(data));
