@@ -2,6 +2,8 @@ import $ from 'jquery';
 import { isNumber, mapKeys, snakeCase, toUpper } from 'lodash';
 import Backbone from 'backbone';
 import cacheTemplate from './cache.html';
+import cacheTooltip from './tooltips/cacheTooltip.html';
+import Tipped from '../tipped';
 
 const Cache = Backbone.View.extend({
   template: $(cacheTemplate).html(),
@@ -16,6 +18,14 @@ const Cache = Backbone.View.extend({
     Backbone.View.prototype.render.apply(this, arguments);
     this.setProps();
     this.bindEvents();
+    this.afterRender();
+  },
+  afterRender() {
+    setTimeout(() => {
+      Tipped.create('[data-tooltip-key="caching"]', $(cacheTooltip).html(), {
+        skin: 'light', position: 'topleft', behavior: 'hide'
+      });
+    });
   },
   events: {
     'click button': 'toggleButton'
@@ -24,7 +34,9 @@ const Cache = Backbone.View.extend({
     console.log('[BUTTON PRESS]');
     const key = this.$(e.currentTarget).prop('id');
     const event = toUpper(snakeCase(key));
-    Backbone.Events.trigger(event, { action: key });
+    Backbone.Events.trigger(event, {
+      action: key
+    });
   },
   bindEvents() {
     this.listenTo(this.props, 'change', ::this.renderProps);

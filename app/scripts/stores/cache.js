@@ -1,20 +1,18 @@
 import async from 'async';
 import { escape, maxBy, once, trim } from 'lodash';
 import constants from '../constants';
-import { log, calculatePercent } from '../utils/loggingUtil';
+import { log, calculatePercent } from '../services/logging';
 import db from '../lib/db';
-import Firebase from '../lib/firebase';
+import Firebase from '../services/firebase';
 import Likes from './likeStore';
+import Parser from '../services/parser';
 import 'babel-polyfill';
 import 'operative';
 
-const getBinarySize = string => {
-  return Buffer.byteLength(string, 'utf8');
-};
+class CacheWorker extends operative {
+  static fileBlob = '';
 
-const cacheWorker = operative({
-  fileBlob: '',
-  assembleFile({ fileFragment, offset, fileSize }, callback) {
+  static assembleFile({ fileFragment, offset, fileSize }, callback) {
     if (fileFragment.length === 0) {
       console.log('[DONE ASSEMBLING FILE]');
       callback(this.fileBlob);
@@ -24,8 +22,9 @@ const cacheWorker = operative({
       this.fileBlob += fileFragment;
       console.log(`[ASSEMBLING FILE]: ${offset} out of ${fileSize}`);
     }
-  },
-  convertJsonToCsv(jsonData, showLabel, callback) {
+  }
+
+  static convertJsonToCsv(jsonData, showLabel, callback) {
     try {
       let csv = '';
       const headers = [];
@@ -56,66 +55,83 @@ const cacheWorker = operative({
     } catch (e) {
       callback(e);
     }
-  },
-  convertCsvToJson(csvData) {
+  }
+
+  static convertCsvToJson(csvData) {
     const lines = csvData.split('\n');
     const colNames = lines[0].split('Ꮂ');
     const records = [];
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = 1; i < lines.length; i += 1) {
       const record = {};
       const bits = lines[i].split('Ꮂ');
-      for (let j = 0; j < bits.length; j++) {
+      for (let j = 0; j < bits.length; j += 1) {
         record[colNames[j]] = bits[j];
       }
       records.push(record);
     }
     return records;
-  },
-  assembleFileBlob(file, type, callback) {
+  }
+
+  static assembleFileBlob(posts, type, callback) {
     try {
+      post.map(post => {
+        post.html = post.html.replace(/"/g, '\\"');
+      });
       if (type === 'json') {
         file = JSON.stringify(file, null, '\t');
       }
-      const url = URL.createObjectURL(new Blob([file], {
+      const url = URL.createObjectURL(new Blob([posts], {
         type: `application/${type},charset=utf-8`
       }));
       callback(null, url);
     } catch (e) {
       callback(e);
     }
-  },
-  parsePosts(posts, callback) {
-    const parsedPosts = JSON.parse(posts);
-    callback(parsedPosts);
   }
-});
+
+  static parsePosts(posts, callback) {
+    try {
+      const parsedPosts = JSON.parse(posts);
+      callback(null, parsedPosts);
+    } catch (e) {
+      callback(e);
+    }
+  }
+}
 
 export default class Cache {
   static async assembleCacheAsCsv(port) {
     console.log('[CACHING DATABASE]');
     const posts = await db.posts.toCollection().toArray();
-    console.time('[CONVERT TO CSV]');
     cacheWorker.convertJsonToCsv(posts, true, (error, fileString => {
       console.timeEnd('[CONVERT TO CSV]');
       cacheWorker.assembleFileBlob(fileString, 'csv', (error, payload) => {
-        port({ action: 'cacheConverted', payload: { type: 'csv', file: payload } });
-      });
-    }));
-  }
-
-  static async assembleCacheAsJson(port) {
-    const posts = await db.posts.toCollection().toArray();
-    // cacheWorker.stringifyPosts(posts, (error, stringifiedPosts) => {
-      cacheWorker.assembleFileBlob(posts, 'json', (error, payload) => {
         port({
           action: 'cacheConverted',
           payload: {
-            type: 'json',
+            type: 'csv',
             file: payload
           }
         });
       });
-    // });
+    }));
+  }
+
+  /**
+  *  Escapes html, stringifies posts and converts result to fileBlob 
+  */
+
+  static async assembleCacheAsJson(port) {
+    const posts = await db.posts.toCollection().toArray();
+    CacheWorker.assembleFileBlob(posts, 'json', (error, payload) => {
+      port({
+        action: 'cacheConverted',
+        payload: {
+          type: 'json',
+          file: payload
+        }
+      });
+    });
   }
 
   static async resetCache(port) {
@@ -190,45 +206,54 @@ export default class Cache {
     });
   }
 
-  static restoreCache(fileSlug, port) {
-    try {
-      cacheWorker.assembleFile(fileSlug, fileString => {
-        console.log(JSON.parse(fileString));
-        // cacheWorker.parsePosts(fileString, (error, parsedPosts) => {
-        //   console.log(parsedPosts);
-        // });
-      });
-    } catch (e) {
-      console.error(e);
+  static parseCache(fileSlug, port) {
+    if (fileSlug.fileFragment.length === 0) {
+      console.log('[DONE ASSEMBLING FILE]');
+      port({ action: 'done' });
       return;
     }
-    // cacheWorker.parseJson(fileSlug.file, parsedFile => {
-    //   const keys = Object.keys(parsedFile.posts);
-    //   const posts = keys.map(key => {
-    //     return parsedFile[key];
-    //   });
-    //   let i = 0;
-    //   const items = {
-    //     cachedPostsCount: 0
-    //   };
-    //   async.whilst(() => {
-    //     return posts.length > i;
-    //   }, async next => {
-    //     try {
-    //       await Likes.put(posts[i]);
-    //       console.log('[ADDED]', posts[i].id);
-    //       i += 1;
-    //       items.cachedPostsCount = await db.posts.toCollection().count();
-    //       constants.set('cachedPostsCount', items.cachedPostsCount);
-    //       log('posts', items, data => {
-    //         port(data);
-    //         next(null);
-    //       }, false);
-    //     } catch (e) {
-    //       console.error(e);
-    //     }
-    //   });
-    // });
+    parser.write(fileSlug.fileFragment).close();
+  }
+
+  static restoreCache(fileSlug, port) { // this only works for files < 100 mb
+    cacheWorker.assembleFile(fileSlug, fileString => {
+      console.log('[PARSING FILE...]');
+      const file = JSON.parse(fileString)
+      const posts = file.posts || file;
+      cacheWorker.parsePosts(fileString, (error, file) => {
+        const posts = file.posts || file
+        if (error) {
+          return port({
+            action: 'error',
+            payload: error
+          });
+        }
+        console.log('[FILE PARSED]', file);
+        let i = 0;
+        const items = {
+          cachedPostsCount: 0,
+          totalPostsCount: posts.length
+        };
+        async.whilst(() => {
+          return posts.length > i;
+        }, async next => {
+          try {
+            await Likes.put(posts[i]);
+            console.log('[ADDED]', posts[i].id);
+            i += 1;
+            items.cachedPostsCount = i;
+            // constants.set('cachedPostsCount', items.cachedPostsCount);
+            log('posts', items, data => {
+              port(data);
+              next(null);
+            }, false);
+          } catch (e) {
+            console.error(e);
+            next(e);
+          }
+        });
+      });
+    });
   }
 
   static async validateCache(port) {

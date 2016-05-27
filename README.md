@@ -43,6 +43,7 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 + Find a way to speed up caching process
 + Sync followers on follow/unfollow events
 + Indicate that tag caching is done when ajax response is empty
++ Wrap utils in a module, split utils between front-end and back-end
 
 ## Relevant development posts
 

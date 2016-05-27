@@ -121,6 +121,4 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.FilterPopoverComponent = FilterPopoverComponent;
-
-  return Tumblr.Fox.FilterPopoverComponent;
 });

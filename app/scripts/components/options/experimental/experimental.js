@@ -2,7 +2,6 @@ import $ from 'jquery';
 import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
 import experimentalTemplate from './experimental.html';
-import cacheTooltip from './tooltips/cacheTooltip.html';
 import clientCachingTooltip from './tooltips/clientCachingTooltip.html';
 import fullTextSearchTooltip from './tooltips/fullTextSearchTooltip.html';
 import saveViaFirebaseTooltip from './tooltips/saveViaFirebaseTooltip.html';
@@ -35,9 +34,6 @@ const Experimental = Backbone.View.extend({
   },
   afterRender() {
     setTimeout(() => {
-      Tipped.create('[data-tooltip-key="clientCaching"]', $(cacheTooltip).html(), {
-        skin: 'light', position: 'topleft', behavior: 'hide'
-      });
       Tipped.create('[data-tooltip-key="fullTextSearch"]', $(fullTextSearchTooltip).html(), {
         skin: 'light', position: 'bottomleft', behavior: 'hide'
       });

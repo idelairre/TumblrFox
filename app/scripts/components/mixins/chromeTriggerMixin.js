@@ -32,6 +32,12 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
       });
       window.dispatchEvent(req);
       window.addEventListener(responseEvent, onFinish);
+    },
+    chromeListenTo(eventName, callback) {
+      window.addEventListener(eventName, callback);
+    },
+    chromeRemoveListener(eventName) {
+      window.removeEventListener(eventName, callback);
     }
   });
 

@@ -19,7 +19,7 @@ const oauth = ChromeExOAuth.initBackgroundPage({
 });
 
 // TODO: better error logging
-function onAuthorized(slug, callback) {
+const onAuthorized = (slug, callback) => {
   console.log('[SLUG]', slug);
   const request = {
     method: 'GET',
@@ -31,10 +31,8 @@ function onAuthorized(slug, callback) {
 
   const url = slug.url || 'https://api.tumblr.com/v2/user/dashboard';
 
-  oauth.sendSignedRequest(url, function (data, xhr) {
-    // console.log('[OAUTH]', arguments);
+  oauth.sendSignedRequest(url, (data, xhr) => {
     if (data !== '') {
-      // console.log('[RESPONSE BYTES]', (encodeURI(data).split(/%..|./).length - 1)/ 1024);
       const response = JSON.parse(data).response;
       callback(null, response);
     } else {
@@ -43,7 +41,7 @@ function onAuthorized(slug, callback) {
   }, request);
 }
 
-export function oauthRequest(slug) {
+export const oauthRequest = slug => {
   const deferred = Deferred();
   oauth.authorize(() => {
     onAuthorized(slug, (error, response) => {
@@ -57,7 +55,7 @@ export function oauthRequest(slug) {
   return deferred.promise();
 }
 
-export function resetOauthSlug(slug) {
+export const resetOauthSlug = slug => {
   for (const key in slug) {
     if ({}.hasOwnProperty.call(slug, key)) {
       if (key.includes('oauth')) {

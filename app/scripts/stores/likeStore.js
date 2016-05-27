@@ -7,10 +7,14 @@ import async from 'async';
 import { differenceBy, isString } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
-import { log } from '../utils/loggingUtil';
+import { log } from '../services/logging';
 import Tags from './tagStore';
 import Keys from './keyStore';
 import 'babel-polyfill';
+
+const escapeQuotes = string => {
+  return string.replace(/"/g, '\\"');
+}
 
 export default class Likes {
   static testFetchLikedPosts(slug) {
@@ -52,7 +56,7 @@ export default class Likes {
   static _testProcessPost(postHtml, timestamp) {
     const post = $(postHtml).data('json');
     post.id = parseInt(post.id, 10);
-    post.html = $(postHtml).prop('outerHTML').replace(/"/g, '\\\"');
+    post.html = $(postHtml).prop('outerHTML') //.replace(/"/g, '\\\"');
     post.liked_timestamp = parseInt(timestamp, 10);
     post.tags = Likes._testProcessTags(postHtml) || [];
     post.note_count = $(postHtml).find('.note_link_current').data('count') || 0;
@@ -131,20 +135,7 @@ export default class Likes {
     });
   }
 
-  static escapeHtmlAndFormat(post) {
-    const keys = Object.keys(post);
-    keys.map(key => {
-      if (isString(post[key])) {
-        return post[key] = post[key].replace(/"/g, '\\\"');
-      }
-    });
-    // delete post.trail;
-    return post;
-  }
-
   static async put(post) {
-    await Keys.parsePost(post);
-    Likes.escapeHtmlAndFormat(post);
     await db.posts.put(post);
     if (post.tags.length > 0) {
       await Tags.add(post.tags);

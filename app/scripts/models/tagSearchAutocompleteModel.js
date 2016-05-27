@@ -3,8 +3,6 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   const { countBy, identity, invoke, omit } = _;
   const { chromeMixin } = Tumblr.Fox;
 
-  console.log(chromeMixin);
-
   const TagSearchAutocompleteModel = Backbone.Model.extend({
     mixins: [chromeMixin],
     defaults: {
@@ -19,7 +17,6 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.$$dashboardTags = [];
       this.$$likesTags = [];
       this.bindEvents();
-      console.log(this);
       this.chromeTrigger('chrome:fetch:tags', ::this.parse);
     },
     bindEvents() {
@@ -54,7 +51,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       const tagArray = [];
       const deferred = $.Deferred();
       deferred.resolve(this.items);
-      if (Tumblr.Fox.Posts.state.dashboardSearch) {
+      if (Tumblr.Fox.Posts.state.dashboardSearch) { // return early
         return deferred.promise();
       }
       Tumblr.postsView.postViews.filter(post => {
@@ -117,6 +114,4 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.TagSearchAutocompleteModel = new TagSearchAutocompleteModel();
-
-  return Tumblr.Fox.TagSearchAutocompleteModel;
 });

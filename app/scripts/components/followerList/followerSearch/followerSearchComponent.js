@@ -73,6 +73,4 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.FollowerSearch = FollowerSearch;
-
-  return Tumblr.Fox.FollowerSearch;
 });

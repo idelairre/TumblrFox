@@ -66,11 +66,17 @@ module.exports = (function popover(Tumblr, Backbone, _) {
     render() {
       this.$el = this.$el.html(this.template(this.options));
       this.$el.addClass(this.options.class);
+      this.options.items.map(item => {
+        item.listItems.map(li => {
+          if (li.hidden) {
+            this.$(`[data-js-menu-item="${li.data}"]`).hide();
+          }
+        });
+      });
     },
     toggleSelected(e) {
       const target = $(e.currentTarget);
       const sectionName = $(e.currentTarget).parent('ul').attr('id');
-      console.log('[SECTION]', sectionName);
       const tag = target.prop('tagName');
       let option = {};
       if (tag === 'LI') {
@@ -110,6 +116,4 @@ module.exports = (function popover(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Popover = Popover;
-
-  return Tumblr.Fox.Popover;
 });

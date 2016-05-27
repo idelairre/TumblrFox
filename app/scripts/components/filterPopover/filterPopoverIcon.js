@@ -43,6 +43,4 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
   }
 
   Tumblr.Fox.FilterPopoverIcon = filterPopoverIcon;
-
-  return Tumblr.Fox.FilterPopoverMenu;
 });

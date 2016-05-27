@@ -93,4 +93,4 @@ db.open().then(() => {
   console.error(error);
 });
 
-module.exports = db;
+export default db;

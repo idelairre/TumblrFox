@@ -9,11 +9,11 @@ if (__ENV__ === 'development') {
     const LIVERELOAD_PORT = 35729;
     const connection = new WebSocket(`ws://${LIVERELOAD_HOST}:${LIVERELOAD_PORT}/livereload`);
 
-    connection.onerror = function (error) {
+    connection.onerror = error => {
       console.error('reload connection got error:', error);
     };
 
-    connection.onmessage = function (e) {
+    connection.onmessage = e => {
       if (e.data) {
         const data = JSON.parse(e.data);
         if (data && data.command === 'reload') {

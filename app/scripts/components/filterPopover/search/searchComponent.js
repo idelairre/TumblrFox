@@ -1,7 +1,7 @@
 module.exports = (function searchComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { assign, capitalize, clone, debounce, each, isEmpty, isString } = _;
-  const { get, loaderMixin, TagSearchAutocompleteModel, TextSearchAutocompleteModel, Filters, Posts, Likes, Settings } = Tumblr.Fox;
+  const { assign, capitalize, clone, debounce, each, extend, isEmpty, isString } = _;
+  const { get, chromeMixin, loaderMixin, TagSearchAutocompleteModel, TextSearchAutocompleteModel, Filters, Posts, Likes, Settings, Input, Toggle } = Tumblr.Fox;
   const PeeprBlogSearch = get('PeeprBlogSearch');
   const SearchResultView = get('SearchResultView');
   const EventBus = get('EventBus');
@@ -24,26 +24,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
 
   const defaultFilter = clone(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype);
 
-  const InputExtension = {
-    tagSearchAutocompleteModel: TagSearchAutocompleteModel,
-    textSearchAutocompleteModel: TextSearchAutocompleteModel,
-    fetchResults(query) {
-      // console.log('[USER QUERY]', query);
-      return Conversations.fetch({ data: { q: query, limit: 5 }});
-    },
-    _search(e) {
-      this.fetchResults(e);
-    },
-    _debouncedSearch(query) {
-      return debounce(this._search, 250).call(this, query);
-     },
-    _onTextInputChange(e) {
-      this._debouncedSearch(this.$(e.target).val());
-    },
-    _onTextInputBlur(e) {
-      this._debouncedSearch(this.$(e.target).val());
-    }
-  };
+  extend(PeeprBlogSearch.prototype.subviews.input.constructor.prototype, Input);
 
   const FiltersPopover = {
     showPopover() {
@@ -56,7 +37,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.listenTo(this.popover, 'close', this.onPopoverClose));
     },
     onPopoverClose() {
-      assign(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype, defaultFilter);
+      PeeprBlogSearch.prototype.subviews.filters.constructor.prototype = defaultFilter;
       PeeprBlogSearch.prototype.subviews.filters.constructor.prototype.onPopoverClose.call(this);
     }
   };
@@ -64,7 +45,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
   const SearchComponent = PeeprBlogSearch.extend({
     className: 'filter-search',
     template: $('#searchFilterTemplate').html(),
-    mixins: [loaderMixin],
+    mixins: [chromeMixin, loaderMixin],
     subviews: assign({}, PeeprBlogSearch.prototype.subviews, {
       searchResultView: {
         constructor: SearchResultView,
@@ -81,11 +62,18 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
           autoTeardown: !1,
           teardownOnEscape: !1
         }
+      },
+      toggle: {
+        constructor: Toggle,
+        options: {
+          name: 'users'
+        }
       }
     }),
     initialize(e) {
       this.options = assign({}, e);
       this.state = Tumblr.Fox.state;
+      this.searchOptions = Tumblr.Fox.searchOptions;
       this.searchActive = !1;
       this.blog = e.blog;
       // this is the crazy filter dropdown
@@ -93,8 +81,8 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         blogname: Tumblr.Prima.currentUser().id,
         themeParams: this.blog.get('global_theme_params')
       });
-      console.log('[BLOG SEARCH MODEL]', this.model);
       this.initializeSubviews();
+      console.log('[SEARCH]', this);
     },
     initializeSubviews() {
       assign(this.subviews.filters.constructor.prototype, FiltersPopover);
@@ -111,33 +99,31 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.$userList = this.searchResultView.$el;
       this.$filters = this.filters.$el;
       this.$settings = this.settings.$el;
+      this.input.conversations = Conversations;
+      this.input.conversations.fetchFavorites({ data: { limit: 4 } });
       this.input.model.set(this.options); // this enables the nsfw filter
       this.input.$el.find('input').attr('data-js-textinput', '');
-      assign(this.input, InputExtension);
       this.set('showUserList', false);
+      console.log('[INPUT]', this.input);
     },
-    evalItems(data) {
-      if (isEmpty(data.tags)) {
-        console.log('[INPUT]', this.input);
-        this.input.$el.find('input').attr('placeholder', `${this.model.get('blogname')} has no tags`);
-      }
-    },
+    // TODO: send a message to the backend if text search is enabled to only query posts from this blog
     selectBlog(e) {
       e.preventDefault();
       const tumblelog = this.$(e.target).parent().find('h3').text();
       this.model.set('blogname', tumblelog);
-      this.input.blogSearchAutocompleteModel.set('blogname', tumblelog);
-      this.input.$el.find('input').attr('placeholder', `Search ${tumblelog}`);
-      this.input.$el.find('input').val('');
-      this.input.blogSearchAutocompleteModel.fetch().then(::this.evalItems);
+      this.input.model.set('blogname', tumblelog);
       this.set('showUserList', this.showUserList = !this.showUserList);
-      this.trigger(Tumblr.Events, 'fox:setSearchState', 'user');
+      Tumblr.Events.trigger('fox:setSearchState', 'user');
+      if (this.searchOptions.get('text')) { // working on this
+        this.chromeTrigger('chrome:search:setBlog', tumblelog);
+        this.toggle.state.set('toggled', false);
+      }
       Tumblr.AutoPaginator.stop();
       Posts.state.apiFetch = !1;
     },
     log(query) {
-      console.log('[QUERY]', Tumblr.Fox.state, query, isString(query), this.model.previous('term') === query.term && this.model.previous('post_type') === query.post_type);
-      if (isString(query) || this.model.previous('term') === query.term && this.model.previous('post_type') === query.post_type) {
+      console.log('[LOG QUERY]', query);
+      if (isString(query)) {
         return;
       }
       switch (Tumblr.Fox.state.getState()) {
@@ -156,7 +142,6 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
           });
           break;
         default:
-          // go to weird default Tumblr behavior
           this.toggleLoader(true);
           this.searchStarted = !0;
           this.model.set(query);
@@ -166,7 +151,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     },
     events: {
       'submit .dashboard-search-form': 'formSubmitHandler',
-      'click .toggle-user': 'setUserList',
+      'click .toggle-users': 'setUserList',
       'click [data-start-conversation]': 'selectBlog',
       'click .post_type_filter': 'onFormClick',
       'click .blog-search-input': 'onFormClick'
@@ -194,53 +179,41 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.$el.find('.popover_header').find('span.header_title').text(`${setting} search`);
       for (const key in Tumblr.Fox.searchOptions.attributes) {
         if ({}.hasOwnProperty.call(Tumblr.Fox.searchOptions.attributes, key)) {
-          Tumblr.Fox.searchOptions.attributes[key] = !1;
+          Tumblr.Fox.searchOptions.set(key, !1);
           if (key === setting) {
-            Tumblr.Fox.searchOptions.attributes[key] = !0;
+            Tumblr.Fox.searchOptions.set(key, !0);
           }
         }
       }
-      Tumblr.Fox.searchOptions.set(Tumblr.Fox.searchOptions.attributes);
       Tumblr.Events.trigger('fox:setSearchState', 'likes');
     },
     updateSearchSettings(state) {
       // console.log('[UPDATE SEARCH SETTINGS] called', this);
       if (state === 'dashboard') {
         this.showUserList ? this.setUserList() : null;
-        this.input.$el.find('input').attr('placeholder', 'Search dashboard');
-        this.input.$el.find('input').val('');
-        this.input.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.attributes.tag ? this.input.tagSearchAutocompleteModel : this.input.textSearchAutocompleteModel);
-        this.input.blogSearchAutocompleteHelper.model.fetch();
-      } else if (state === 'likes') {
-        this.input.$el.find('input').attr('placeholder', 'Search likes');
-        this.input.$el.find('input').val('');
-        this.input.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.attributes.tag ? this.input.tagSearchAutocompleteModel : this.input.textSearchAutocompleteModel);
-        this.input.blogSearchAutocompleteHelper.model.fetch();
-      } else {
-        this.input.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`);
-        this.input.$el.find('input').val('');
-        this.input.blogSearchAutocompleteHelper.model = this.input.blogSearchAutocompleteModel;
       }
     },
     delegateInputEvents(e) {
-      if (e.showUserList) {
+      if (e.showUserList) { // if the list is showing, reassign these events
         this.input.undelegateEvents();
         this.filters.undelegateEvents();
         this.input.blogSearchAutocompleteHelper.undelegateEvents();
         this.input.delegateEvents(InboxCompose.prototype.events);
         this.searchResultView.delegateEvents();
-      } else {
-        this.input.undelegateEvents();
-        this.input.delegateEvents();
-        this.filters.delegateEvents();
-        this.input.blogSearchAutocompleteHelper.delegateEvents();
+      } else { // otherwise unassign and reassign delegated events
+        // if (this.state.get('text')) {
+          this.input.undelegateEvents();
+          this.input.delegateEvents();
+          this.filters.delegateEvents();
+          this.input.blogSearchAutocompleteHelper.delegateEvents();
+        // }
       }
     },
-    onChangeBlog(e) {
-      e.attributes.term = '';
-      e.attributes.next_offset = 0;
-      console.log('[BLOG CHANGE]', e);
-      Tumblr.Events.trigger('fox:filterFetch:started', e.attributes);
+    onChangeBlog(model) {
+      model.set('term', '');
+      model.set('next_offset', 0);
+      console.log('[BLOG CHANGE]', model);
+      Tumblr.Events.trigger('fox:filterFetch:started', model.attributes);
     },
     setUserList(e) {
       console.log('[SET USERLIST] called', this.get('showUserList'));
@@ -254,13 +227,11 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         this.$userList.show();
         this.$settings.hide();
         this.$filters.find('i').hide();
-        this.$el.find('.indicator').text('-');
-        Tumblr.Fox.Posts.set('tagSearch', 'user');
+        Posts.set('tagSearch', 'user');
       } else {
         this.$userList.hide();
         this.$settings.show();
         this.$filters.find('i').show();
-        this.$el.find('.indicator').text('+');
       }
     },
     updateLog(response) {
@@ -273,6 +244,4 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.SearchComponent = SearchComponent;
-
-  return Tumblr.Fox.SearchComponent;
 });

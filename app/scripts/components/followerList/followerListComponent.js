@@ -1,6 +1,6 @@
 module.exports = (function followerList(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { debounce, each } = _;
+  const { assign, debounce, each } = _;
   const { FollowerModel, FollowerItem, FollowerSearch } = Tumblr.Fox;
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
@@ -21,8 +21,8 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       },
       query: 'followed'
     },
-    initialize() {
-      this.options = this.defaults;
+    initialize(e) {
+      this.options = assign({}, e, this.defaults);
       this.state = this.defaults.state;
       this.attachNode = this.$el.find('.left_column');
       this.model = new FollowerModel();
@@ -144,7 +144,10 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
         }
       };
       new Tumblr.Prima.Snowman(snowman);
-      new FollowerItem({ model: tumblelogModel, el: view });
+      new FollowerItem({
+        model: tumblelogModel,
+        el: view
+      });
     }
   });
 
@@ -153,6 +156,4 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       el: $('#following')
     });
   }
-
-  return Tumblr.Fox.FollowerList;
 });

@@ -1,5 +1,6 @@
 module.exports = (function init(Tumblr, Backbone, _) {
   Tumblr.Fox = Tumblr.Fox || {};
+
   const { assign } = _;
 
   Tumblr.Fox.options = {
@@ -7,30 +8,6 @@ module.exports = (function init(Tumblr, Backbone, _) {
     logging: true,
     test: false
   };
-
-  const State = Backbone.Model.extend({
-    initialize(e) {
-      assign(this, e);
-    },
-    getState() {
-      for (const key in this.attributes) {
-        if (this.attributes[key]) {
-          return key;
-        }
-      }
-    }
-  });
-
-  Tumblr.Fox.state = new State({
-    dashboard: !1,
-    user: !0,
-    likes: !1
-  });
-
-  Tumblr.Fox.searchOptions = new State({
-    tag: !0,
-    text: !1
-  });
 
   const dataReq = new CustomEvent('chrome:initialize', {
     detail: Tumblr.Prima.currentUser().attributes

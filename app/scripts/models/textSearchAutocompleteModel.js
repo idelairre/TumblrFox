@@ -91,6 +91,4 @@ module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.TextSearchAutocompleteModel = new TextSearchAutocompleteModel();
-
-  return Tumblr.Fox.TextSearchAutocompleteModel;
 });

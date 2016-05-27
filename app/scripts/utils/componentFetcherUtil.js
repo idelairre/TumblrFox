@@ -1,5 +1,7 @@
 module.exports = (function componentFetcher(Tumblr, Backbone, _) {
-  Tumblr.Fox.getComponent = function (args, object, searchTerm) {
+  Tumblr.Fox.Utils = Tumblr.Fox.Utils || {};
+
+  Tumblr.Fox.Utils.getComponent = (args, object, searchTerm) => {
     const modules = args[2].m;
     let putFlag = true;
     if (typeof searchTerm === 'undefined') {
@@ -20,17 +22,15 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
     }
     console.log('[GET COMPONENT]', object, results);
     return results;
-  };
+  }
 
   Tumblr.Fox.$$componentCache = {};
 
-  Tumblr.Fox.get = function (componentName) {
+  Tumblr.Fox.Utils.get = componentName => {
     return Tumblr.Fox.$$componentCache[componentName];
-  };
+  }
 
-  Tumblr.Fox.put = function (name, component) {
+  Tumblr.Fox.Utils.put = (name, component) => {
     Tumblr.Fox.$$componentCache[name] = component;
-  };
-
-  return Tumblr.Fox;
+  }
 });

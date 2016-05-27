@@ -4,21 +4,15 @@
 /* global Event:true */
 /* eslint no-undef: "error" */
 
-module.exports = {
+import { camelCase } from 'lodash';
+
+const Bridge = {
   initialize() {
     this.bindEvents();
   },
-  camelCase(str) {
-    return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) => {
-      if (Number(match) === 0) {
-        return '';
-      } // or if (/\s+/.test(match)) for white spaces
-      return index === 0 ? match.toLowerCase() : match.toUpperCase();
-    });
-  },
   listenTo(eventName, callback) {
     console.log('[BRIDGE LISTEN]', eventName);
-    const eventSlug = this.camelCase(eventName.split(':').splice(1).join(' '));
+    const eventSlug = camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
       const req = {};
       if (e.detail) {
@@ -44,6 +38,7 @@ module.exports = {
   },
   bindEvents() {
     // NOTE: the trigger event must resemble the list to event! eg. chrome:search:likesByTag MUST have the response chrome:response:likesByTag
+    // find a way to automatically generate these events
     this.listenTo('chrome:fetch:posts', response => {
       this.trigger('chrome:response:posts', response);
     });
@@ -73,5 +68,8 @@ module.exports = {
     this.listenTo('chrome:update:likes');
     this.listenTo('chrome:sync:likes');
     this.listenTo('chrome:initialize');
+    this.listenTo('chrome:search:setBlog');
   }
-};
+}
+
+export default Bridge;

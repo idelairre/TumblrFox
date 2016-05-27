@@ -58,6 +58,4 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.FollowerModel = FollowerModel;
-
-  return Tumblr.Fox.FollowerModel;
 });

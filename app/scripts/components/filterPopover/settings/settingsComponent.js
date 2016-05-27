@@ -18,7 +18,7 @@ module.exports = (function settings(Tumblr, Backbone, _) {
         listItems: [
           { icon: 'none', name: 'Search likes', data: 'likes', checked: false },
           { icon: 'none', name: 'Search by user', data: 'user', checked: true },
-          { icon: 'none', name: 'Search dashboard', data: 'dashboard', checked: false }
+          { icon: 'none', name: 'Search dashboard', data: 'dashboard', checked: false, hidden: false }
         ]
       }, {
         multipleSelection: false,
@@ -47,17 +47,9 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     },
     setSearchOptionMenu(state) {
       if (state === 'text') {
-        if (this.options.popoverOptions[0].listItems[1].data !== 'user') {
-          return;
-        }
-        this.options.popoverOptions[0].listItems[0].checked = true;
-        this.options.popoverOptions[0].listItems.splice(1, 1);
+        this.options.popoverOptions[0].listItems[2].hidden = true;
       } else {
-        const item = { icon: 'none', name: 'Search by user', data: 'user', checked: false };
-        const shift = this.options.popoverOptions[0].listItems[1];
-        this.options.popoverOptions[0].listItems[0].checked = true;
-        this.options.popoverOptions[0].listItems.push(shift);
-        this.options.popoverOptions[0].listItems[1] = item;
+        this.options.popoverOptions[0].listItems[2].hidden = false;
       }
     },
     render() {
@@ -100,6 +92,4 @@ module.exports = (function settings(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Settings = Settings;
-
-  return Tumblr;
 });

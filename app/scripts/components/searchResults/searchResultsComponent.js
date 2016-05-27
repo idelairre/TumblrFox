@@ -4,7 +4,8 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
 
   const SearchResults = Backbone.View.extend({
     defaults: {
-      initialized: !1
+      initialized: !1,
+      term: ''
     },
     template: template($('#searchResultsTemplate').html()),
     className: 'search_posts_bottom',
@@ -13,14 +14,15 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       this.bindEvents();
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'peeprsearch:change:term', this.hide);
+      this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.setTerm)
+      this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.hide);
       this.listenTo(Tumblr.Events, 'indashblog:search:results-end', this.update);
       this.listenTo(Tumblr.Events, 'fox:filterFetch:started', this.hide);
       this.listenTo(Tumblr.Events, 'fox:search:finished', this.update);
       this.listenTo(Tumblr.Events, 'fox:postFetch:empty', this.update);
     },
-    hide() {
-      console.log('[SEARCH RESULTS HIDE]');
+    hide(e) {
+      console.log('[SEARCH RESULTS HIDE]', e);
       if (this.initialized) {
         this.$el.hide();
       }
@@ -30,12 +32,22 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       this.$el.show();
     },
     update(query) {
+      console.log('[QUERY]', query);
       let term = ''
       if (query instanceof Backbone.Model) {
         term = query.model.get('term');
+      } else if (query === null) {
+        term = this.options.term;
       } else {
         term = query.term;
       }
+      this.renderTerm(term);
+    },
+    setTerm(e) {
+      this.options.term = e.term;
+      console.log(this.options, e, this.term);
+    },
+    renderTerm(term) {
       if (!this.initialized) {
         this.render({ term });
       } else {
@@ -51,6 +63,4 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.SearchResults = new SearchResults();
-
-  return Tumblr.Fox.SearchResults;
 });

@@ -46,44 +46,38 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
         before: query.before
       });
       Posts.resetQueryOffsets();
-      console.log(slug, Tumblr.Fox.searchOptions.getState());
       switch (Tumblr.Fox.searchOptions.getState()) {
         case 'tag':
           this.fetchLikesByTag(slug).then(matches => {
-            console.log('[MATCHES]', matches);
-            Posts.$$matches = matches;
-            Posts.filterPosts();
-            setTimeout(() => {
-              matches = matches.slice(0, 8);
-              Posts.handOffPosts(matches);
-              deferred.resolve(matches);
-            }, 300);
+            ::this.setMatches(matches);
+            deferred.resolve(matches);
           });
           break;
         case 'text':
-        console.log('[CALLED]');
           this.fetchLikesByTerm(slug).then(matches => {
-            console.log('[MATCHES]', matches);
-            Posts.filterPosts();
-            setTimeout(() => {
-              matches = matches.slice(0, 8);
-              Posts.handOffPosts(matches);
-              deferred.resolve(matches);
-            }, 300);
+            ::this.setMatches(matches);
+            deferred.resolve(matches);
           });
           break;
-        default:
-          // do nothing
       }
       return deferred.promise();
     },
-    sendLike(post) {
+    sendLike(post) { // NOTE: major problems: 1. this sends the like while the heart animation is still playing, 2. no timestamp
       const slug = {
         id: $(post.el).data('id'),
         html: $(post.el).prop('outerHTML')
       };
       // console.log('[LIKED POST]', slug);
       this.chromeTrigger('chrome:sync:likes', slug);
+    },
+    setMatches(matches) {
+      console.log('[MATCHES]', matches);
+      Posts.$$matches = matches;
+      Posts.filterPosts();
+      setTimeout(() => {
+        matches = matches.slice(0, 8);
+        Posts.handOffPosts(matches);
+      }, 300);
     },
     updateLikesCache(action, postId) {
       console.log('[UPDATE LIKES]', action, postId);
@@ -99,6 +93,4 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Likes = new Likes();
-
-  return Tumblr.Fox.Likes;
 });

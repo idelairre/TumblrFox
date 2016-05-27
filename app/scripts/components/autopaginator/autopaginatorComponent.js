@@ -59,6 +59,4 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.AutoPaginator = new AutoPaginator();
-
-  return Tumblr.Fox.AutoPaginator;
 });

@@ -79,21 +79,28 @@ const Buttons = Backbone.View.extend({
     let chunkReaderBlock = null;
 
     const readEventHandler = e => {
-      Backbone.Events.trigger('CREATING_FILE_BLOB', { offset, fileSize });
       if (e.target.error) {
         return;
       }
       offset += chunkSize;
+      Backbone.Events.trigger('CREATING_FILE_BLOB', {
+        offset,
+        fileSize
+      });
       callback({
         fileFragment: e.target.result,
         fileSize,
         offset
       });
       if (chunkSize === 0) {
+        Backbone.Events.trigger('DONE_CREATING_BLOB');
         return;
       }
       if (offset + chunkSize > fileSize) {
         chunkSize = fileSize - offset;
+      }
+      if (chunkSize <= 0) { // allows one more pass so that backend can detect when the stream is done
+        chunkSize = 0;
       }
       // callback for handling read chunk
       // off to the next chunk

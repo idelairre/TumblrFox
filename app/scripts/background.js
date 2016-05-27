@@ -19,7 +19,7 @@ chrome.runtime.onInstalled.addListener(details => {
 // Tumblr/dropdown listeners
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // console.log('[REQUEST]', request);
+  console.log('[REQUEST]', request);
   switch (request.type) {
     case 'fetchConstants':
       setTimeout(() => {
@@ -56,6 +56,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
     case 'searchLikesByTerm':
       Likes.searchByTerm(request.payload, sendResponse);
+      return true;
+    case 'searchSetBlog':
+      Keys.setBlog(request.payload);
       return true;
     case 'syncLikes':
       Likes.sync(request.payload);
@@ -123,14 +126,18 @@ chrome.runtime.onConnect.addListener(port => {
         Cache.resetCache(::port.postMessage);
         return true;
       case 'restoreCache':
-        Cache.restoreCache(request.payload, ::port.postMessage);
+        // if (request.payload.fileSize < 1000000) {
+          // Cache.restoreCache(request.payload, ::port.postMessage); // restore file, parse everything all at once, add posts one at a time
+        // } else {
+          Cache.parseCache(request.payload, ::port.postMessage); // use json parser to parse valid json as it comes in
+        // }
         return true;
       case 'updateSettings':
         constants.set(request.payload);
         return true;
       default:
         // do nothing
-      }
+    }
   });
 });
 

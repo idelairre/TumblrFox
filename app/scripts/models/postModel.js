@@ -1,9 +1,9 @@
 module.exports = (function postModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { isEmpty } = _;
+  const { assign, isEmpty } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
-  const { chromeMixin } = Tumblr.Fox;
+  const { chromeMixin, Utils } = Tumblr.Fox;
 
   // NOTE: this strikes me as a "super model", maybe thin this out?
   // TODO: redirect to dashboard if the route is other than the dashboard
@@ -43,13 +43,12 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.bindEvents();
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'fox:postFetch:finished', Tumblr.Fox.renderPosts);
+      this.listenTo(Tumblr.Events, 'fox:postFetch:finished', Utils.PostFormatter.renderPosts);
       this.listenTo(Tumblr.Events, 'fox:filterFetch:started', ::this.initialBlogFetch); // update query, fetch post data
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.initialApiFetch); // filter posts, fetch posts from api
       this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.setTerm);
-      this.listenTo(Tumblr.Events, 'indashblog:search:started', ::this.toggleLoader);
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
-      this.listenTo(Tumblr.Events, 'indashblog:search:post-added', Tumblr.Fox.renderPost);
+      this.listenTo(Tumblr.Events, 'indashblog:search:post-added', Utils.PostFormatter.renderPost);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
     },
     unbindEvents() {
@@ -90,7 +89,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       const matches = this.$$matches.slice(opts.offset, opts.offset + opts.limit);
       console.log('[MATCHES]', matches);
       if (matches.length > 0) {
-         this.toggleLoader();
+         this.toggleLoading();
        }
       if (isEmpty(matches)) {
         console.log('[NO MATCHES]');
@@ -99,14 +98,16 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
            Tumblr.Events.trigger('fox:autopaginator:stop');
          }
       } else if (matches.length > 0) {
-        this.handOffPosts({ posts: matches });
-        this.toggleLoader();
+        this.handOffPosts({
+          posts: matches
+        });
+        this.toggleLoading();
       }
     },
     setTerm(e) {
       this.query.loggingData.term = e.term;
     },
-    toggleLoader() {
+    toggleLoading() {
       this.set('loading', this.loading = !this.loading);
     },
     initialApiFetch(type) {
@@ -141,8 +142,8 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         posts = posts.filter(post => {
           return post.post_html;
         });
-        Tumblr.Fox.renderPosts(posts);
-        this.toggleLoader();
+        Utils.PostFormatter.renderPosts(posts);
+        this.toggleLoading();
       }, 300);
     },
     filterPosts(filterType) {
@@ -186,7 +187,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.state.apiFetch = !0;
       this.state.tagSearch = !0;
       this.filterPosts();
-      this.toggleLoader();
+      this.toggleLoading();
       setTimeout(() => {
         results = this.$$matches.filter(post => { // TODO: make sure to filter by other query parameters
           if (post.tags.includes(query.term)) {
@@ -195,7 +196,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         });
         console.log(this.$$matches, results);
         this.handOffPosts(results);
-        this.toggleLoader();
+        this.toggleLoading();
       }, 300);
       deferred.resolve(this.items);
       return deferred.promise();
@@ -207,9 +208,9 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       }
       const resolve = response => {
         deferred.resolve(response);
-        this.toggleLoader();
+        this.toggleLoading();
       };
-      this.toggleLoader();
+      this.toggleLoading();
       if (this.apiSlug.type === 'likes') {
         this.chromeTrigger('chrome:fetch:likes', slug, resolve);
       } else {
@@ -226,7 +227,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         return;
       }
       if (this.state.tagSearch && this.query.loggingData.term === '') {
-        this.toggleLoader();
+        this.toggleLoading();
       }
       $.ajax({
         url: 'https://www.tumblr.com/svc/indash_blog/posts',
@@ -245,7 +246,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
             Tumblelog.collection.add(new Tumblelog(data.response.tumblelog));
           }
           if (this.state.tagSearch && this.query.loggingData.term === '') {
-            this.toggleLoader();
+            this.toggleLoading();
           }
           Tumblr.Events.trigger('fox:postFetch:finished', data.response);
           assign(this.query.loggingData, slug);
@@ -269,7 +270,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       for (let i = 0; length > i; i += 1) {
         const post = posts[i];
         if (post.hasOwnProperty('html') && $.parseHTML(post.html)) {
-          Tumblr.Fox.renderPostFromHtml(posts[i]);
+          Utils.PostFormatter.renderPostFromHtml(posts[i]);
         } else {
           this.clientFetchPosts({
             blogNameOrId: post.blog_name || post.model.attributes.tumblelog || post.get('blog_name'),
@@ -281,6 +282,4 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Posts = new Posts();
-
-  return Tumblr.Fox.Posts;
 });

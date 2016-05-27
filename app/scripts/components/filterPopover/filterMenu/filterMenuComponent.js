@@ -23,7 +23,6 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       this.$('i[data-check="any"]').show();
       this.rendered = !0;
       this.trigger('rendered', this);
-      console.log(this);
     },
     events: {
       'click [data-js-menu-item]': 'toggleSelection'
@@ -65,6 +64,4 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.FilterMenuComponent = FilterMenuComponent;
-
-  return Tumblr.Fox.FilterMenuComponent;
 });

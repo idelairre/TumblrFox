@@ -1,7 +1,7 @@
 module.exports = (function followerItem(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { template } = _;
-  const { constants } = Tumblr.Fox;
+  const { constants, Utils } = Tumblr.Fox;
 
   $.fn.removeAttributes = function (args) {
     const ignore = args.ignore;
@@ -55,7 +55,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
         this.$el.addClass('alt');
       }
       this.model.attributes.avatar = this.model.attributes.avatar[1];
-      this.model.attributes.updated = Tumblr.Fox.prettyDate(Tumblr.Fox.fromTumblrTime(this.model.attributes.updated));
+      this.model.attributes.updated = Utils.prettyDate(Utils.fromTumblrTime(this.model.attributes.updated));
       this.model.attributes.can_subscribe = this.model.attributes.can_subscribe || true; // TODO: findout how to get this data
       this.model.attributes.formkey = constants.formkey;
       this.$el = this.$el.html(this.template(this.model));
@@ -134,6 +134,4 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.FollowerItem = FollowerItem;
-
-  return Tumblr.Fox.FollowerItem;
 });

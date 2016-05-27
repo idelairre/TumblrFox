@@ -5,7 +5,7 @@ import { Deferred } from 'jquery';
 import async from 'async';
 import db from '../lib/db';
 import { oauthRequest, resetOauthSlug } from '../lib/oauthRequest';
-import { log } from '../utils/loggingUtil';
+import { log } from '../services/logging';
 import constants from '../constants';
 import 'babel-polyfill';
 

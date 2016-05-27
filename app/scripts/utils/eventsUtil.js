@@ -46,7 +46,5 @@ module.exports = (function events(Tumblr, Backbone, _) {
     stop() {
       tumblr.off('all', this.log);
     }
-  };
-
-  return Tumblr.Events;
+  }
 });

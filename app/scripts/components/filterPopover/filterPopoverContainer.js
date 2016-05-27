@@ -26,6 +26,4 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.FilterPopoverContainer = FilterPopoverContainer;
-
-  return Tumblr.Fox.FilterPopoverMenu;
 });

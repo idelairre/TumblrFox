@@ -3,37 +3,39 @@
 
 module.exports = (function main(Tumblr, Backbone, _) {
   window.webpackJsonp(0, [function (module, exports, require) {
-    Tumblr.Fox = Tumblr.Fox || {};
     Tumblr.Fox.require = require;
-    Tumblr.Fox.getComponent = Tumblr.Fox.getComponent.bind(this, Array.prototype.slice.call(arguments));
+    Tumblr.Fox.Utils.getComponent = Tumblr.Fox.Utils.getComponent.bind(this, Array.prototype.slice.call(arguments));
+    Tumblr.Fox.get = Tumblr.Fox.Utils.get;
+    Tumblr.Fox.put = Tumblr.Fox.Utils.put;
 
     const $ = Backbone.$;
+    const { Utils } = Tumblr.Fox;
     const { assign } = _;
     const listItems = $('#posts').find('li');
     const attachNode = $(listItems[listItems.length - 1]);
     const formKey = $('#tumblr_form_key').attr('content');
 
     // cache components
-    Tumblr.Fox.getComponent('PrimaComponent', '.uniqueId("component")');
-    Tumblr.Fox.getComponent('animation', 'webkitAnimationEnd');
-    Tumblr.Fox.getComponent('PopoverMixin', '_crossesView');
-    Tumblr.Fox.getComponent('PopoverComponent', 'this._beforeRender'); // this is more like an expanded Backbone view than specifically a popover
-    Tumblr.Fox.getComponent('ClickHandler', 'document.addEventListener("click",this._onClick,!0)}');
-    Tumblr.Fox.getComponent('NavSearch', 'nav-search');
-    Tumblr.Fox.getComponent('PeeprBlogSearch', 'peepr-blog-search');
-    Tumblr.Fox.getComponent('SearchResultView', 'inbox-recipients');
-    Tumblr.Fox.getComponent('EventBus', '_addEventHandlerByString');
-    Tumblr.Fox.getComponent('ConversationsCollection', '/svc/conversations/participant_suggestions');
-    Tumblr.Fox.getComponent('Loader', 'this.createBarLoader()');
-    Tumblr.Fox.getComponent('InboxCompose', '"inbox-compose"');
-    Tumblr.Fox.getComponent('BlogSearch', 'this.onTermSelect');
-    Tumblr.Fox.getComponent('Mixin', 'this.mixins=');
-    Tumblr.Fox.getComponent('TumblrModel', '.Model.extend({})');
-    Tumblr.Fox.getComponent('TumblrView', 'uniqueId("view")');
-    Tumblr.Fox.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
-    Tumblr.Fox.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
-    Tumblr.Fox.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
-    Tumblr.Fox.getComponent('SearchFilters', '[data-filter]');
+    Utils.getComponent('PrimaComponent', '.uniqueId("component")');
+    Utils.getComponent('animation', 'webkitAnimationEnd');
+    Utils.getComponent('PopoverMixin', '_crossesView');
+    Utils.getComponent('PopoverComponent', 'this._beforeRender'); // this is more like an expanded Backbone view than specifically a popover
+    Utils.getComponent('ClickHandler', 'document.addEventListener("click",this._onClick,!0)}');
+    Utils.getComponent('NavSearch', 'nav-search');
+    Utils.getComponent('PeeprBlogSearch', 'peepr-blog-search');
+    Utils.getComponent('SearchResultView', 'inbox-recipients');
+    Utils.getComponent('EventBus', '_addEventHandlerByString');
+    Utils.getComponent('ConversationsCollection', '/svc/conversations/participant_suggestions');
+    Utils.getComponent('Loader', 'this.createBarLoader()');
+    Utils.getComponent('InboxCompose', '"inbox-compose"');
+    Utils.getComponent('BlogSearch', 'this.onTermSelect');
+    Utils.getComponent('Mixin', 'this.mixins=');
+    Utils.getComponent('TumblrModel', '.Model.extend({})');
+    Utils.getComponent('TumblrView', 'uniqueId("view")');
+    Utils.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
+    Utils.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
+    Utils.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
+    Utils.getComponent('SearchFilters', '[data-filter]');
     // Tumblr.Fox.getComponent('ModelForTinyGreyButton', '_updateSubscriptionStatus');
 
     assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
