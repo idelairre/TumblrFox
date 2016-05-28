@@ -16,6 +16,7 @@ import Experimental from './experimental/experimental';
 import ProgressBar from './progressBar/progressBar';
 import Settings from './settings/settings';
 import optionsActions from './optionsActions';
+import Modal from './modal/modal';
 import '../../../styles/tipped.less';
 import '../../../styles/options.less';
 
@@ -61,8 +62,12 @@ const Options = Backbone.View.extend({
     this.renderSubviews();
   },
   initializePort() {
-    this.port = chrome.runtime.connect({ name: 'options' });
-    this.port.postMessage({ action: 'fetchConstants' });
+    this.port = chrome.runtime.connect({
+      name: 'options'
+    });
+    this.port.postMessage({
+      action: 'fetchConstants'
+    });
     this.port.onMessage.addListener(optionsActions);
   },
   renderSubviews() {
@@ -85,6 +90,25 @@ const Options = Backbone.View.extend({
     this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'SAVE_CACHE', ::this.postMessage);
+    this.listenTo(Backbone.Events, 'SHOW_ERROR', ::this.showError);
+  },
+  showError(error) {
+    this.$errorModal = new Modal({
+      parent: $('.container'),
+      header: 'Error',
+      message: `${JSON.stringify(error)}`
+    });
+    this.$errorModal.render();
+    this.$el.append(this.$errorModal.$el);
+  },
+  showDone(message) {
+    this.$doneModal = new Modal({
+      parent: $('.container'),
+      header: 'Done',
+      message: `${message}`
+    });
+    this.$doneModal.render();
+    this.$el.append(this.$doneModal.$el);
   },
   setCacheLikesButton() {
     this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));

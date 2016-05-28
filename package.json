@@ -77,6 +77,7 @@
     "striptags": "^2.1.1",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
+    "vex-js": "git+https://github.com/HubSpot/vex.git",
     "vinyl-named": "^1.1.0",
     "webpack": "^1.12.14",
     "webpack-dev-server": "^1.14.1",

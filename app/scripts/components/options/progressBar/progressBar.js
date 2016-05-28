@@ -62,7 +62,6 @@ const Progress = Backbone.View.extend({
     this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.$el.show);
     this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.$el.show);
     this.listenTo(Backbone.Events, 'HIDE_PROGRESS', ::this.$el.hide);
-    this.listenTo(Backbone.Events, 'SHOW_ERROR', ::this.showError);
     this.listenTo(Backbone.Events, 'ANIMATE_PROGRESS', ::this.animateProgress);
     this.listenTo(Backbone.Events, 'RESTORING_CACHE', ::this.animateProgress);
     this.listenTo(Backbone.Events, 'CHANGE_PROPS', this.setProps);

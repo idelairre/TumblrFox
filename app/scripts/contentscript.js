@@ -34,8 +34,8 @@ import SearchTemplate from './components/filterPopover/search/searchTemplate.htm
 import SettingsComponent from './components/filterPopover/settings/settingsComponent';
 import StateModel from './models/stateModel';
 import Time from './utils/timeUtil';
-import ToggleComponent from './components/toggle/toggle';
-import ToggleTemplate from './components/toggle/toggle.html';
+import ToggleComponent from './components/popover/toggle/toggle';
+import ToggleTemplate from './components/popover/toggle/toggle.html';
 
 // NOTE: reblog follow button is broken
 

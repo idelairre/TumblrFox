@@ -5,6 +5,7 @@ const optionsActions = response => {
       break;
     case 'done':
       Backbone.Events.trigger('HIDE_PROGRESS');
+      Backbone.Events.trigger('DONE');
       break;
     case 'error':
       Backbone.Events.trigger('SHOW_ERROR', response);
