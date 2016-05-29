@@ -24,7 +24,7 @@
       "*://*.tumblr.com/*"
     ],
     "css": [
-      "styles/popover.css"
+      "contentScripts/styles/popover.css"
     ],
     "js": [
       "scripts/vendor.bundle.js",
@@ -42,5 +42,5 @@
     "https://tumblr.com/*"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",
-  "web_accessible_resources": ["pages/chrome_ex_oauth.html", "images/*.png"]
+  "web_accessible_resources": ["background/pages/chrome_ex_oauth.html", "images/*.png"]
 }

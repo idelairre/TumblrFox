@@ -20,12 +20,10 @@ gulp.task('scripts', (cb) => {
     // }))
     .pipe(gulpWebpack({
       entry: {
-        chromeExOauth: ['./app/scripts/lib/chromeExOauth.js'],
-        chromeExOauthsimple: ['./app/scripts/lib/chromeExOauthsimple.js'],
-        onload: ['./app/scripts/lib/onload.js'],
-        options: './app/scripts/components/options/options.js',
-        contentscript: './app/scripts/contentscript.js',
-        background: './app/scripts/background.js',
+        onload: ['./app/background/lib/chromeExOauth.js', './app/background/lib/chromeExOauthsimple.js', './app/background/lib/onload.js'],
+        options: './app/background/options/options.js',
+        contentscript: './app/contentScripts/contentscript.js',
+        background: './app/background/background.js',
         vendor: ['jquery', 'lodash', 'backbone']
       },
       devtool: args.sourcemaps ? 'source-map' : null,
