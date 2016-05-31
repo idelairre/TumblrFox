@@ -1,24 +1,29 @@
 import $ from 'jquery';
 import { isNumber, mapKeys, snakeCase, toUpper } from 'lodash';
 import Backbone from 'backbone';
+import View from '../view/view';
 import cacheTemplate from './cache.html';
 import cacheTooltip from './tooltips/cacheTooltip.html';
-import Tipped from '../tipped';
+import Tipped from '../../lib/tipped';
 
-const Cache = Backbone.View.extend({
+const Cache = View.extend({
+  defaults: {
+    props: {
+      cachedPostsCount: 0,
+      cachedFollowingCount: 0,
+      cachedTagsCount: 0,
+      totalPostsCount: 0,
+      totalFollowingCount: 0,
+      totalTagsCount: 0
+    }
+  },
   template: $(cacheTemplate).html(),
   className: 'cache options',
   tagName: 'section',
-  initialize(e) {
-    this.props = e;
-  },
   render() {
-    this.rendered = true;
     this.$el.html(this.template);
-    Backbone.View.prototype.render.apply(this, arguments);
-    this.setProps();
-    this.bindEvents();
-    this.afterRender();
+    console.log(this);
+    return this;
   },
   afterRender() {
     setTimeout(() => {
@@ -38,15 +43,9 @@ const Cache = Backbone.View.extend({
       type: key
     });
   },
-  bindEvents() {
-    this.listenTo(this.props, 'change', ::this.renderProps);
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', this.setProps);
-  },
-  setProps(newProps) {
-    this.props.set(newProps);
-  },
-  renderProps() {
-    mapKeys(this.props.attributes, (value, key) => {
+  renderProps(props) {
+    console.log('[RENDER PROPS]', props, this);
+    mapKeys(props, (value, key) => {
       if (isNumber(value)) {
         this.$el.find(`span#${key}`).text(value);
       }

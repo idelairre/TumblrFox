@@ -20,6 +20,7 @@ const Modal = Backbone.View.extend({
     this.$content = this.$('#content');
     this.$close = this.$('#close');
     this.center();
+    return this;
   },
   center() {
     this.$el.css({

@@ -1,24 +1,19 @@
 import $ from 'jquery';
 import Backbone from 'backbone';
+import View from '../view/view';
 import progressBar from './progressBar.html';
 import ProgressBar from 'progressbar.js';
 
-const Progress = Backbone.View.extend({
+const Progress = View.extend({
   template: $(progressBar).html(),
   id: 'container',
   className: 'progress',
   tagName: 'div',
-  initialize(e) {
-    this.props = e;
-  },
   render() {
-    this.rendered = true;
     this.$el.html(this.template);
-    // const progress = $('#container');
-    Backbone.View.prototype.render.apply(this, arguments);
-    this.afterRender();
     this.bindEvents();
     this.$el.hide();
+    return this;
   },
   afterRender() {
     setTimeout(() => {
@@ -64,10 +59,6 @@ const Progress = Backbone.View.extend({
     this.listenTo(Backbone.Events, 'HIDE_PROGRESS', ::this.$el.hide);
     this.listenTo(Backbone.Events, 'ANIMATE_PROGRESS', ::this.animateProgress);
     this.listenTo(Backbone.Events, 'RESTORING_CACHE', ::this.animateProgress);
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', this.setProps);
-  },
-  setProps(newProps) {
-    this.props.set(newProps);
   },
   animateProgress(response) {
     const { constants, percentComplete } = response.payload;

@@ -23,11 +23,7 @@ export default class Likes {
   }
 
   static cache(sendResponse) {
-    if (constants.get('clientCaching')) {
-      Likes.testPreload(sendResponse);
-    } else {
-      Likes.preload(sendResponse);
-    }
+    Likes.testPreload(sendResponse);
   }
 
   static testFetchLikedPosts(slug) {
@@ -109,20 +105,20 @@ export default class Likes {
   }
 
   static async testPreload(port) {
-    const items = {
-      cachedPostsCount: constants.get('cachedPostsCount'),
-      totalPostsCount: constants.get('totalPostsCount')
-    };
     const slug = {
       blogname: constants.get('userName')
     };
     if (constants.get('nextSlug')) {
       Object.assign(slug, constants.get('nextSlug'));
     }
-    this.testPopulatePostCache(slug, items, port);
+    this.testPopulatePostCache(slug, port);
   }
 
-  static testPopulatePostCache(slug, items, port) {
+  static testPopulatePostCache(slug, port) {
+    const items = {
+      cachedPostsCount: constants.get('cachedPostsCount'),
+      totalPostsCount: constants.get('totalPostsCount')
+    };
     async.whilst(() => {
       return items.totalPostsCount > items.cachedPostsCount;
     }, async next => {
@@ -141,7 +137,9 @@ export default class Likes {
         console.error(e);
         port({
           type: 'error',
-          payload: e
+          payload: {
+            message: `${JSON.stringify(e)}`
+          }
         });
         next(e);
       }
@@ -182,27 +180,15 @@ export default class Likes {
   static async initialsync(userName) {
     console.log('[SYNCING LIKES]');
     const deferred = Deferred();
-    let slug = {};
-    if (constants.get('clientCaching')) {
-      // do nothing
-    } else {
-      slug = {
-        blogname: constants.get('userName') || userName,
-        offset: 0,
-        limit: 8
-      };
-    }
+    let slug = {
+      blogname: constants.get('userName') || userName,
+      offset: 0,
+      limit: 8
+    };
     const callback = async (slug, response) => {
       const posts = await db.posts.toCollection().toArray();
-      let difference = {};
-      if (constants.get('clientCaching')) {
-        const { nextSlug, postsJson } = await Likes._testProcessPosts(slug, response);
-        slug = nextSlug;
-        difference = differenceBy(postsJson, posts, 'id');
-      } else {
-        slug.offset += response.liked_posts.length;
-        difference = differenceBy(response.liked_posts, posts, 'id');
-      }
+      let difference = differenceBy(response.liked_posts, posts, 'id');
+      slug.offset += response.liked_posts.length;
       if (difference.length !== 0) {
         console.log('[ADDING NEW LIKES]', difference);
         await db.posts.bulkPut(difference);
@@ -213,83 +199,13 @@ export default class Likes {
       console.log('[SYNC DONE]');
     };
     try {
-      if (constants.get('clientCaching')) {
-        const response = await Likes.testFetchLikedPosts(slug);
-        callback(slug, response);
-      } else {
-        const response = await Likes.fetchLikedPosts(slug);
-        callback(slug, response);
-      }
+      const response = await Likes.testFetchLikedPosts(slug);
+      callback(slug, response);
     } catch (e) {
       console.error(e);
       deferred.reject(e);
     }
     return deferred.promise();
-  }
-
-  static fetch(slug) {
-    const deferred = Deferred();
-    const data = {
-      api_key: constants.get('consumerKey'),
-      limit: slug.limit || 8
-    };
-    Object.assign(data, slug);
-    ajax({
-      type: 'GET',
-      url: `https://api.tumblr.com/v2/blog/${slug.blogname}.tumblr.com/likes`,
-      data,
-      success: data => {
-        if (data.response.liked_posts.length === 0) {
-          deferred.reject(new Error('Response was empty'));
-        } else {
-          deferred.resolve(data.response);
-        }
-      },
-      error: error => {
-        console.error('[ERROR]', error);
-        deferred.reject(error);
-      }
-    });
-    return deferred.promise();
-  }
-
-  static async preload(callback) {
-    console.log('[PRELOADING LIKES]');
-    const slug = {
-      blogname: constants.get('userName'),
-      limit: 1
-    };
-    // fetch farthest back cached like
-    if (constants.get('cachedPostsCount') !== 0) {
-      const posts = await db.posts.orderBy('liked_timestamp').limit(1).toArray();
-      slug.before = posts[0].liked_timestamp;
-    }
-    this.populatePostCache(slug, constants, callback);
-  }
-
-  static populatePostCache(slug, items, port) {
-    async.whilst(() => {
-      return items.totalPostsCount === 0 || items.totalPostsCount > items.cachedPostsCount;
-    }, async next => {
-      try {
-        const response = await Likes.fetch(slug);
-        items.totalPostsCount = response.liked_count;
-        slug.before = response.liked_posts[response.liked_posts.length - 1].liked_timestamp;
-        await Likes.bulkPut(response.liked_posts);
-        items.cachedPostsCount += response.liked_posts.length;
-        log('posts', items, data => {
-          port(data);
-        });
-        next(null);
-      } catch (e) {
-        console.error(e);
-        port({
-          type: 'error',
-          payload: e
-        });
-        next(e);
-      }
-    });
   }
 
   static async searchLikesByTerm(query, port) {

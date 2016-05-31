@@ -1,4 +1,4 @@
-const optionsActions = response => {
+const events = response => {
   console.log(response);
   switch(response.type) {
     case 'replyConstants':
@@ -26,4 +26,4 @@ const optionsActions = response => {
   }
 }
 
-export default optionsActions;
+export default events;

@@ -1,33 +1,29 @@
 import $ from 'jquery';
 import { isString, mapKeys } from 'lodash';
 import Backbone from 'backbone';
+import View from '../view/view';
 import authenticationTemplate from './authentication.html';
 
-const Authentication = Backbone.View.extend({
+const Authentication = View.extend({
+  defaults: {
+    props: {
+      consumerKey: '',
+      consumerSecret: '',
+      userName: '',
+      defaultKeys: true,
+      setUser: false
+    }
+  },
   template: $(authenticationTemplate).html(),
   className: 'authentication options',
   tagName: 'section',
-  initialize(e) {
-    this.props = e;
-  },
   render() {
-    this.rendered = true;
     this.$el.html(this.template);
-    Backbone.View.prototype.render.apply(this, arguments);
-    this.bindEvents();
     this.$el.hide();
+    return this;
   },
-  bindEvents() {
-    this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', this.setProps);
-    this.listenTo(this.props, 'change', this.toggleState);
-  },
-  setProps(newProps) {
-    this.props.set(newProps);
-    console.log('[SETTING NEW PROPS]');
-  },
-  renderProps() {
-    mapKeys(this.props.attributes, (value, key) => {
+  renderProps(props) {
+    mapKeys(props, (value, key) => {
       if (isString(value)) {
         this.$el.find(`input#${key}`).val(value);
       }

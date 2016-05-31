@@ -2,11 +2,11 @@ import 'operative';
 
 const CacheWorker = operative({
   fileBlob: '',
-  assembleFile({ fileFragment, offset, fileSize }, callback) {
+  assembleFile({ fileFragment, offset, fileSize }) {
+    const deferred = this.deferred();
     if (fileFragment.length === 0) {
       console.log('[DONE ASSEMBLING FILE]');
-      callback(null, this.fileBlob);
-      return;
+      deferred.fulfill(this.fileBlob);
     }
     if (!this.fileBlob.includes(fileFragment)) {
       this.fileBlob += fileFragment;
@@ -14,6 +14,7 @@ const CacheWorker = operative({
     }
   },
   convertJsonToCsv(jsonData, callback) {
+    const deferred = this.deferred();
     try {
       let csv = '';
       const headers = [];
@@ -38,16 +39,18 @@ const CacheWorker = operative({
         row = row.join('Ꮂ');
         csv += `${row}\r\n`; // add a line break after each row
       }
-      callback(null, {
+      deferred.fulfill({
         type: 'csv',
         file: csv
       });
     } catch (e) {
-      callback(e);
+      deferred.reject(e);
     }
   },
   convertCsvToJson(csvData, callback) {
+    const deferred = this.deferred();
     try {
+      console.log('[CONVERTING CSV TO JSON]');
       const lines = csvData.split('\n');
       let colNames = lines[0].split('Ꮂ');
       const records = [];
@@ -65,13 +68,14 @@ const CacheWorker = operative({
         }
         records.push(record);
       }
-      callback(null, records);
+      deferred.fulfill(records);
     } catch (e) {
-      callback(e);
+      deferred.reject(e);
     }
   },
   assembleFileBlob({ file, type }, callback) {
     console.log('[ASSEMBLING FILE BLOB]');
+    const deferred = this.deferred();
     try {
       if (typeof type === 'undefined') { // defaults to csv
         type = 'csv';
@@ -85,17 +89,18 @@ const CacheWorker = operative({
       const url = URL.createObjectURL(new Blob([file], {
         type: `application/${type},charset=utf-8`
       }));
-      callback(null, url);
+      deferred.fulfill(url);
     } catch (e) {
-      callback(e);
+      deferred.reject(e);
     }
   },
   parsePosts(posts, callback) {
+    const deferred = this.deferred();
     try {
       const parsedPosts = JSON.parse(posts);
-      callback(null, parsedPosts);
+      deferred.resolve(parsedPosts);
     } catch (e) {
-      callback(e);
+      deferred.reject(e);
     }
   }
 });

@@ -17,7 +17,7 @@ export const log = (database, items, callback, save) => {
         constants.set(storageSlug);
       }
     }
-    console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
+    // console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
     callback({
       type: 'progress',
       payload: { constants, database, percentComplete, itemsLeft, total }
@@ -33,4 +33,19 @@ export const calculatePercent = (count, objects) => {
   const itemsLeft = objects - count;
   const total = objects;
   return { percentComplete, itemsLeft, total };
+}
+
+export const logError = (error, next, port) => {
+  let isAsync = true;
+  if (!port) {
+    port = next;
+    isAsync = false;
+  }
+  port({
+    type: 'error',
+    payload: error
+  });
+  if (isAsync) {
+    next(error);
+  }
 }

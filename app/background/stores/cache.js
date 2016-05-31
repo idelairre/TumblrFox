@@ -2,35 +2,18 @@ import async from 'async';
 import { escape, maxBy, once, trim } from 'lodash';
 import CacheWorker from '../services/cacheWorker';
 import constants from '../constants';
-import { log, calculatePercent } from '../services/logging';
+import { log, logError, calculatePercent } from '../services/logging';
 import db from '../lib/db';
 import Firebase from '../services/firebase';
 import Likes from './likeStore';
 import 'babel-polyfill';
 
 export default class Cache {
-  static send(data) {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, request, (response) => {
-        
-      });
-    });
-  }
-
   static async assembleCacheAsCsv(port) {
-    console.log('[CACHING DATABASE]');
-    const posts = await db.posts.toCollection().toArray();
-    async.waterfall([
-      async.apply(CacheWorker.convertJsonToCsv, posts),
-      CacheWorker.assembleFileBlob
-    ], (error, result) => {
-      if (error) {
-        console.error(error);
-        return port({
-          type: 'error',
-          payload: `${error}`
-        });
-      }
+    try {
+      const posts = await db.posts.toCollection().toArray();
+      const file = await CacheWorker.convertJsonToCsv(posts);
+      const result = await CacheWorker.assembleFileBlob(file);
       port({
         type: 'cacheConverted',
         payload: {
@@ -38,30 +21,12 @@ export default class Cache {
           file: result
         }
       });
-    });
+    } catch (e) {
+      logError(error, port);
+    }
   }
 
-  static async assembleCacheAsJson(port) {
-    const posts = await db.posts.toCollection().toArray();
-    CacheWorker.assembleFileBlob({ file: posts, type: 'json' }, (error, payload) => {
-      if (error) {
-        console.error(error);
-        return port({
-          type: 'error',
-          payload: error
-        });
-      }
-      port({
-        type: 'cacheConverted',
-        payload: {
-          type: 'json',
-          file: payload
-        }
-      });
-    });
-  }
-
-  static async resetCache(port) {
+  static async reset(port) {
     try {
       await db.delete();
       constants.reset();
@@ -74,8 +39,8 @@ export default class Cache {
           constants
         }
       });
-    } catch (e) {
-      port(e);
+    } catch(e) {
+      logError(e, port);
     }
   }
 
@@ -91,76 +56,54 @@ export default class Cache {
       return items.cachedPostsCount <= items.totalPostsCount;
     }, async next => {
       try {
-        console.log('[CACHING DATABASE] uploaded posts:', items.cachedPostsCount, 'total posts:', items.totalPostsCount, 'last:', last);
         const posts = await db.posts.where('id').aboveOrEqual(last.id).limit(limit).toArray();
         last = maxBy(posts, 'id');
         await Firebase.bulkPut('posts', posts);
         items.cachedPostsCount += posts.length;
-        if (items.cachedPostsCount >= count) {
-          console.log('[DONE UPLOADING]');
-          port({
-            type: 'cacheUploaded',
-            payload: {
-              url: `https://tumblrfox.firebaseio.com/${constants.userName}.json`
-            }
-          });
-          return;
-        }
         log('posts', items, response => {
           port(response);
           next(null);
         }, false);
       } catch (e) {
-        console.error(e);
-        port({
-          type: 'error',
-          payload: e
-        });
-        next(e);
+        logError(e, next, port);
       }
     });
   }
 
-  static restoreCache(fileSlug, port) { // this only works for files < 100 mb
-    async.waterfall([
-      async.apply(CacheWorker.assembleFile, fileSlug),
-      CacheWorker.convertCsvToJson,
-    ], (error, result) => {
-      if (error) {
-        return port({
-          type: 'error',
-          payload: error
-        });
-      }
-      Cache._addPostsToDb(result, port); // see if we can't move this into the waterfall
-    });
+  static async restoreCache(fileSlug, port) { // this only works for files < 100 mb
+    try {
+      const { offset, fileSize } = fileSlug;
+      const response = calculatePercent(offset, fileSize);
+      port({
+        type: 'progress',
+        payload: response
+      });
+      const file = await CacheWorker.assembleFile(fileSlug);
+      const postsJson = await CacheWorker.convertCsvToJson(file);
+      Cache._addPostsToDb(postsJson, port);
+    } catch (e) {
+      console.error(e);
+      logError(e, port);
+    }
   }
 
   static _addPostsToDb(posts, port) {
-    let i = 0;
     const items = {
       cachedPostsCount: 0,
       totalPostsCount: posts.length
     };
     async.whilst(() => {
-      return posts.length > i;
+      return posts.length > items.cachedPostsCount;
     }, async next => {
       try {
+        items.cachedPostsCount += 1;
         await Likes.put(posts[i]);
-        i += 1;
-        items.cachedPostsCount = i;
         log('posts', items, data => {
           port(data);
           next(null);
-          console.log(data);
         }, false);
       } catch (e) {
-        console.error(e);
-        next(e);
-        port({
-          type: 'error',
-          payload: `${e}`
-        });
+        logError(e, next, port);
       }
     });
   }
@@ -168,14 +111,9 @@ export default class Cache {
   static async restoreViaFirebase(port) {
     try {
        const posts = await Firebase.get('posts');
-       console.log(posts);
        Cache._addPostsToDb(posts, port);
      } catch (e) {
-       console.error(e);
-       port({
-         type: 'error',
-         payload: `${e}`
-       });
+       logError(e, port);
      }
   }
 }

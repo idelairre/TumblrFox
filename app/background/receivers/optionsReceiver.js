@@ -1,5 +1,6 @@
 import constants from '../constants';
 import portHandler from '../services/portHandler';
+import Cache from '../stores/cache';
 import Keys from '../stores/keyStore';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
@@ -9,8 +10,8 @@ const sendConstants = postMessage => {
   postMessage({ type: 'replyConstants', payload: constants });
 }
 
-const updateConstants = request => {
-  constants.set(request.payload);
+const updateConstants = (request, postMessage) => {
+  constants.set(request);
 }
 
 const checkLikes = postMessage => {
@@ -27,11 +28,7 @@ const downloadCache = postMessage => {
   if (constants.get('saveViaFirebase')) {
     Cache.uploadCache(postMessage);
   } else {
-    if (constants.get('saveAsCsv')) {
-      Cache.assembleCacheAsCsv(postMessage);
-    } else {
-      Cache.assembleCacheAsJson(postMessage);
-    }
+    Cache.assembleCacheAsCsv(postMessage);
   }
 }
 
@@ -39,7 +36,7 @@ const restoreCache = (request, postMessage) => {
   if (constants.get('saveViaFirebase')) {
     Cache.restoreViaFirebase(postMessage);
   } else {
-    Cache.restoreCache(request.payload, postMessage); // restore file, parse everything all at once, add posts one at a time
+    Cache.restoreCache(request, postMessage);
   }
 }
 
@@ -51,6 +48,7 @@ const optionsReceiver = portHandler({
   downloadCache: downloadCache,
   fetchConstants: sendConstants,
   resetCache: Cache.reset,
+  restoreCache: restoreCache,
   updateSettings: updateConstants
 });
 

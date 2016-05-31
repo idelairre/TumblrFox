@@ -1,14 +1,6 @@
 module.exports = (function followerSearch(Tumblr, Backbone, _) {
-  const { defer } = _;
+  const { assign, defer } = _;
   const { Popover } = Tumblr.Fox;
-
-  // {
-  //   header: 'Input',
-  //   listItems: [
-  //     { icon: 'icon_filter', name: 'Filter following', checked: false },
-  //     { icon: 'icon_search', name: 'Search for Tumblelog', checked: true }
-  //   ]
-  // }]
 
   const FollowerSearch = Backbone.View.extend({
     defaults: {
@@ -18,16 +10,18 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       },
       popoverOptions: [{
         header: 'Sort',
+        name: 'sort',
+        multipleSelection: false,
         listItems: [
-          { icon: 'icon_post_text', name: 'Alphabetically', checked: false },
-          { icon: 'icon_activity', name: 'Most recently updated', checked: false },
-          { icon: 'icon_followers', name: 'Order followed', checked: true }
+          { icon: 'icon_post_text', name: 'Alphabetically', data: 'alphabetically', checked: false },
+          { icon: 'icon_activity', name: 'Most recently updated', data: 'recentlyUpdated', checked: false },
+          { icon: 'icon_followers', name: 'Order followed', data: 'orderFollowed', checked: true }
         ]
       }]
     },
-    initialize() {
+    initialize(e) {
       this.state = this.defaults.state;
-      this.popoverOptions = this.defaults.popoverOptions;
+      this.options = assign({}, this.defaults, e);
       this.$form = this.$('form');
       this.$form.css('display', 'inline-block');
       this.$form.css('width', '89%');
@@ -49,9 +43,9 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
         pinnedSide: 'bottom',
         class: 'popover--follower-popover',
         selection: 'checkmark',
-        multipleSelection: false,
-        items: this.popoverOptions,
+        items: this.options.popoverOptions,
         onSelect: (e) => {
+          console.log('[SELECTION]', e);
           Tumblr.Events.trigger('fox:fetchFollowers', e);
         }
       }),
@@ -59,7 +53,7 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       this.listenTo(this.popover, 'close', this.onPopoverClose));
     },
     hidePopover() {
-      this.popover && this.popoSettingsPopoverComponentver.hide();
+      this.popover && this.popover.hide();
     },
     onPopoverClose() {
       defer(() => {

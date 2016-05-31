@@ -7,7 +7,7 @@ import 'babel-polyfill';
 
 const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
 
-export default class BM25 {
+export default class FuseSearch {
   fuse = {};
   options = {
     caseSensitive: false,

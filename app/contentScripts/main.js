@@ -1,4 +1,5 @@
 /* global window:true */
+/* global module:true */
 /* eslint no-undef: "error" */
 
 module.exports = (function main(Tumblr, Backbone, _) {

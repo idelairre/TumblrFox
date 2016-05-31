@@ -1,7 +1,6 @@
 const portHandler = handlers => {
-	return (port) => {
+	return port => {
     port.onMessage.addListener(request => {
-  		console.log(handlers, port, request);
   	  const { type } = request;
   	  if (handlers.hasOwnProperty(type)) {
         if (request.payload) {

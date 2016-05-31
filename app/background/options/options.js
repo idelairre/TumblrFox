@@ -15,18 +15,15 @@ import Debug from './debug/debug';
 import Experimental from './experimental/experimental';
 import ProgressBar from './progressBar/progressBar';
 import Settings from './settings/settings';
-import optionsActions from './optionsActions';
+import View from './view/view';
+import events from './events';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
 
 const Options = Backbone.View.extend({
   defaults: {
-    props: {
-      cachedPostsCount: 0,
-      cachedFollowingCount: 0,
-      cachedTagsCount: 0
-    }
+    initialized: false
   },
   subviews: {
     authentication: {
@@ -52,14 +49,9 @@ const Options = Backbone.View.extend({
     }
   },
   initialize() {
-    this.initialized = !1;
-    this.rendered = !0;
-    this.$debug = this.$('#debugConsole');
-    this.$download = $('a#cache');
     this.props = new Backbone.Model();
     this.bindEvents();
     this.initializePort();
-    this.renderSubviews();
   },
   initializePort() {
     this.port = chrome.runtime.connect({
@@ -68,18 +60,19 @@ const Options = Backbone.View.extend({
     this.port.postMessage({
       type: 'fetchConstants'
     });
-    this.port.onMessage.addListener(optionsActions);
+    this.port.onMessage.addListener(events);
   },
   renderSubviews() {
     this._subviews = Array.prototype.slice.call(this.$('[data-subview]'));
     this._subviews.map(el => {
       const subviewName = $(el).data('subview');
       const subview = new this.subviews[subviewName].constructor();
-      const view = new subview.constructor(this.props);
+      const view = new subview.constructor(this.props.attributes);
       view.render();
       this.$(`[data-subview="${subviewName}"]`).replaceWith(view.$el);
       return view;
     });
+    this.initialized = true;
   },
   bindEvents() {
     this.listenTo(Backbone.Events, 'INITIALIZED', ::this.restoreOptions);
@@ -97,7 +90,7 @@ const Options = Backbone.View.extend({
     this.$errorModal = new Modal({
       parent: $('.container'),
       header: `${capitalize(response.type)}`,
-      message: `${response.payload}`
+      message: `${response.payload.message}`
     });
     this.$errorModal.render();
     this.$el.append(this.$errorModal.$el);
@@ -106,7 +99,7 @@ const Options = Backbone.View.extend({
     this.$doneModal = new Modal({
       parent: $('.container'),
       header: 'Done',
-      message: response.payload.message
+      message: `${response.payload.message}`
     });
     this.setProps(response.payload.constants);
     this.$doneModal.render();
@@ -116,10 +109,9 @@ const Options = Backbone.View.extend({
     this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));
   },
   setProps(newProps) {
-    this.props.set(newProps);
     this.postMessage({
       type: 'updateSettings',
-      payload: this.props.attributes
+      payload: newProps
     });
   },
   postMessage(slug) { // signature: action: {String}, payload: {Object}
@@ -127,8 +119,12 @@ const Options = Backbone.View.extend({
   },
   restoreOptions(response) {
     const { payload } = response;
-    console.log(payload);
     this.props.set(payload);
+    console.log('[CONTROLLER INITIALIZED]', this.initialized);
+    if (!this.initialized) {
+      console.log('[RENDERING SUBVIEWS...]');
+      this.renderSubviews();
+    }
   }
 });
 
