@@ -62,10 +62,10 @@ const Progress = View.extend({
   },
   animateProgress(response) {
     const { constants, percentComplete } = response.payload;
+    this.$bar.animate(percentComplete * 0.01);
     if (parseInt(percentComplete) === 100) {
       Backbone.Events.trigger('DONE', constants);
     }
-    this.$bar.animate(percentComplete * 0.01);
     Backbone.Events.trigger('CHANGE_PROPS', constants);
   },
   resetBar() {

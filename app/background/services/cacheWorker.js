@@ -47,32 +47,6 @@ const CacheWorker = operative({
       deferred.reject(e);
     }
   },
-  convertCsvToJson(csvData, callback) {
-    const deferred = this.deferred();
-    try {
-      console.log('[CONVERTING CSV TO JSON]');
-      const lines = csvData.split('\n');
-      let colNames = lines[0].split('Ꮂ');
-      const records = [];
-      for (let i = 1; i < lines.length - 1; i += 1) {
-        const record = {};
-        const bits = lines[i].split('Ꮂ');
-        for (let j = 0; j < bits.length; j += 1) {
-          if (bits[j].length !== 0) {
-            let key = colNames[j];
-            if (key.includes('content')) {
-              key = 'tumblelog-content-rating'; // work around for a bug where this entry is always wrapped in quotes no matter what
-            }
-            record[key] = JSON.parse(bits[j]);
-          }
-        }
-        records.push(record);
-      }
-      deferred.fulfill(records);
-    } catch (e) {
-      deferred.reject(e);
-    }
-  },
   assembleFileBlob({ file, type }, callback) {
     console.log('[ASSEMBLING FILE BLOB]');
     const deferred = this.deferred();

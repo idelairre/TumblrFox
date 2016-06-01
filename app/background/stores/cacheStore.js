@@ -1,5 +1,6 @@
 import async from 'async';
 import { escape, maxBy, once, trim } from 'lodash';
+import Papa from '../lib/papaParse';
 import CacheWorker from '../services/cacheWorker';
 import constants from '../constants';
 import { log, logError, calculatePercent } from '../services/logging';
@@ -7,6 +8,8 @@ import db from '../lib/db';
 import Firebase from '../services/firebase';
 import Likes from './likeStore';
 import 'babel-polyfill';
+
+console.log(Papa);
 
 export default class Cache {
   static async assembleCacheAsCsv(port) {
@@ -22,7 +25,7 @@ export default class Cache {
         }
       });
     } catch (e) {
-      logError(error, port);
+      logError(e, port);
     }
   }
 
@@ -79,32 +82,50 @@ export default class Cache {
         payload: response
       });
       const file = await CacheWorker.assembleFile(fileSlug);
-      const postsJson = await CacheWorker.convertCsvToJson(file);
-      Cache._addPostsToDb(postsJson, port);
+      Papa.parse(file, {
+      	delimiter: 'Ꮂ',	// auto-detect
+      	newline: '',	// auto-detect
+      	header: true,
+      	dynamicTyping: true,
+      	worker: false,
+      	comments: false,
+      	complete: (results, parse) => {
+          Cache._addPostsToDb(results.data, port)
+        },
+      	error: e => {
+          console.error(e);
+          logError(e, port);
+        },
+      	download: false,
+      	skipEmptyLines: true,
+      	fastMode: undefined
+      });
     } catch (e) {
       console.error(e);
-      logError(e, port);
     }
-  }
+      // const postsJson = await CacheWorker.convertCsvToJson(file);
+    }
 
   static _addPostsToDb(posts, port) {
+    console.log(posts);
     const items = {
       cachedPostsCount: 0,
-      totalPostsCount: posts.length
+      totalPostsCount: posts.length - 1
     };
-    async.whilst(() => {
-      return posts.length > items.cachedPostsCount;
-    }, async next => {
+    async.doWhilst(async next => {
       try {
+        await Likes.put(posts[items.cachedPostsCount]);
         items.cachedPostsCount += 1;
-        await Likes.put(posts[i]);
         log('posts', items, data => {
           port(data);
-          next(null);
+          next(null, items.cachedPostsCount);
         }, false);
       } catch (e) {
+        console.error(e);
         logError(e, next, port);
       }
+    }, count => {
+      return count !== posts.length - 1;
     });
   }
 

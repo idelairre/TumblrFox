@@ -36,7 +36,9 @@ export const calculatePercent = (count, objects) => {
 }
 
 export const logError = (error, next, port) => {
-  console.log(error);
+  if (error.message) {
+    error = error.message;
+  }
   let isAsync = true;
   if (!port) {
     port = next;

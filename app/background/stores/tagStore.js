@@ -85,10 +85,10 @@ export default class Tags {
 
   static async _putAndIncrementTags(tagName) {
     try { // fetching the tag first to see if it exists doesn't reliably work for some reason, hence this try/catch closure
-    const tagSlug = {
-      tag: tagName,
-      count: 1
-    };
+      const tagSlug = {
+        tag: tagName,
+        count: 1
+      };
       await db.tags.add(tagSlug);
     } catch (e) {
       const tag = await db.tags.get(tagName);

@@ -42,11 +42,21 @@ export default class Likes {
   }
 
   static async put(post) {
-    await db.posts.put(post);
-    const count = await db.posts.toCollection().count();
-    constants.set('cachedPostsCount', count);
-    if (post.tags.length > 0) {
-      await Tags.add(post.tags);
+    try {
+      await db.posts.put(post);
+      const count = await db.posts.toCollection().count();
+      constants.set('cachedPostsCount', count);
+      console.log(post);
+      if (typeof post.tags === 'string') {
+        post.tags = JSON.parse(post.tags) || [];
+      } else if (typeof post.tags === 'undefined') {
+        post.tags = [];
+      }
+      if (post.tags.length > 0) {
+        await Tags.add(post.tags);
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
