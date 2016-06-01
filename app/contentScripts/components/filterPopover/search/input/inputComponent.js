@@ -5,7 +5,7 @@ module.exports = (function (Tumblr, Backbone, _) {
   const Input = {
     tagSearchAutocompleteModel: TagSearchAutocompleteModel,
     textSearchAutocompleteModel: TextSearchAutocompleteModel,
-    events: { // TODO: find a way to conditionally show tag popover
+    events: {
       'blur .blog-search-input': 'inputBlurHandler',
       'focus .blog-search-input': 'inputFocusHandler',
       'keyup .blog-search-input': 'inputKeyUpHandler',
@@ -49,19 +49,18 @@ module.exports = (function (Tumblr, Backbone, _) {
       switch (state) {
         case 'dashboard':
           this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
-          this.blogSearchAutocompleteHelper.model.getItems();
           break;
         case 'likes':
           this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
-          this.blogSearchAutocompleteHelper.model.getItems();
           break;
         case 'user':
           this.blogSearchAutocompleteHelper.model = this.blogSearchAutocompleteModel;
-          this.blogSearchAutocompleteHelper.model.getItems();
           break;
       }
+      this.blogSearchAutocompleteHelper.model.getItems();
     },
     fetchResults(query) {
+      console.log(this.conversations);
       return this.conversations.fetch({
         data: {
           q: query,

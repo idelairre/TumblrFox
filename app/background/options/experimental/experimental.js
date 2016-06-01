@@ -23,7 +23,6 @@ const Experimental = View.extend({
       name: 'options'
     });
     this.$el.html(this.template);
-    Backbone.View.prototype.render.apply(this, arguments);
     this.bindEvents();
     return this;
   },

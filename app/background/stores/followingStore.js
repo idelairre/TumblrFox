@@ -46,7 +46,7 @@ export default class Following {
       totalFollowingCount: constants.get('totalFollowingCount') || 0,
       cachedFollowingCount: constants.get('cachedFollowingCount') || 0
     };
-    async.doWhilst(async () => {
+    async.doWhilst(async next => {
       try {
         const response = await Following._getFollowing(slug);
         const nextSlug = { slug, response, items };
