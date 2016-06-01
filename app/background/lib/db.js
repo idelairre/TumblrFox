@@ -87,6 +87,13 @@ db.version(11).stores({
   tags: 'tag, count'
 });
 
+db.version(12).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: 'name, updated',
+  terms: null,
+  tags: 'tag, count'
+});
+
 db.open().then(() => {
   // port.postMessage('initialized');
 }).catch(error => {

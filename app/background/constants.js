@@ -4,14 +4,14 @@
 import { Deferred } from 'jquery';
 import { oauthRequest } from './lib/oauthRequest';
 import db from './lib/db';
-import Likes from './stores/likeStore';
+import Eventor from './lib/eventor';
 import tokens from './tokens.json';
 import 'babel-polyfill';
 
 const CONSUMER_KEY = tokens.consumerKey;
 const CONSUMER_SECRET = tokens.consumerSecret;
 
-class Constants {
+class Constants extends Eventor {
   defaults = {
     cachedPostsCount: 0,
     cachedFollowingCount: 0,
@@ -27,40 +27,18 @@ class Constants {
     saveViaFirebase: true,
     setUser: false,
     currentUser: {},
-    nextSlug: {},
+    nextSlug: null,
     userName: '',
     consumerKey: CONSUMER_KEY,
-    consumerSecret: CONSUMER_SECRET
+    consumerSecret: CONSUMER_SECRET,
+    initialized: false
   };
 
   constructor() {
+    super();
     this._events = {};
     this.initialize();
   }
-
-	addListener(event, fct) {
-		this._events = this._events || {};
-		this._events[event] = this._events[event]	|| [];
-		this._events[event].push(fct);
-	}
-
-	removeListener(event, fct) {
-		this._events = this._events || {};
-		if (event in this._events === false) {
-      return;
-    }
-		this._events[event].splice(this._events[event].indexOf(fct), 1);
-	}
-
-	trigger(event /* , args... */) {
-		this._events = this._events || {};
-		if (event in this._events === false) {
-      return;
-    }
-		for (let i = 0; i < this._events[event].length; i += 1) {
-			this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
-		}
-	}
 
   async initialize() {
     try {
@@ -69,12 +47,14 @@ class Constants {
         url: 'https://api.tumblr.com/v2/user/info'
       });
       const postsCount = await db.posts.toCollection().count();
-      const canFetchApiLikes = await Likes.check(response.user.name);
+      // const canFetchApiLikes = await Likes.check(response.user.name);
       this.set('userName', response.user.name);
-      this.set('canFetchApiLikes', canFetchApiLikes);
+      // this.set('canFetchApiLikes', canFetchApiLikes);
       this.set('cachedPostsCount', postsCount);
       this.set('totalPostsCount', response.user.likes);
       this.set('totalFollowingCount', response.user.following);
+      this.initialized = true;
+      this.trigger('ready');
     } catch (e) {
       console.error(e);
     }
@@ -106,7 +86,7 @@ class Constants {
     this.set('cachedTagsCount', 0);
     this.set('cachedPostsCount', 0);
     this.set('cachedFollowingCount', 0);
-    this.set('nextSlug', {});
+    this.set('nextSlug', null);
   }
 
   _assign(items) {
@@ -151,7 +131,7 @@ class Constants {
       saveViaFirebase: true,
       setUser: false,
       currentUser: {},
-      nextSlug: {}
+      nextSlug: null
     }, items => {
       this._assign(items);
     });

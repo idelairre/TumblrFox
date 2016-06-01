@@ -3,11 +3,6 @@
 
 import constants from './constants';
 import db from './lib/db';
-import Cache from './stores/cache';
-import Following from './stores/followingStore';
-import Keys from './stores/keyStore';
-import Likes from './stores/likeStore';
-import Tags from './stores/tagStore';
 import chromeReceiver from './receivers/chromeReceiver';
 import optionsReceiver from './receivers/optionsReceiver';
 import { oauthRequest } from './lib/oauthRequest';

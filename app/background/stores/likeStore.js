@@ -7,14 +7,11 @@ import async from 'async';
 import { differenceBy, isString } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
-import { log } from '../services/logging';
+import { log, logError } from '../services/logging';
 import Tags from './tagStore';
-import Keys from './keyStore';
+import FuseSearch from '../services/fuseSearch';
+import Source from '../source/source';
 import 'babel-polyfill';
-
-const escapeQuotes = string => {
-  return string.replace(/"/g, '\\"');
-}
 
 export default class Likes {
   static async send(request, sender, sendResponse) {
@@ -22,132 +19,32 @@ export default class Likes {
     sendResponse(response);
   }
 
-  static cache(sendResponse) {
-    Likes.testPreload(sendResponse);
-  }
-
-  static testFetchLikedPosts(slug) {
-    const deferred = Deferred();
-    let url = 'https://www.tumblr.com/likes';
-    if (slug && slug.page) {
-      url += `/page/${slug.page}`;
-    }
-    if (slug && slug.timestamp) {
-      url += `/${slug.timestamp}`;
-    }
-    ajax({
-      type: 'GET',
-      url,
-      success: data => {
-        deferred.resolve(data);
-      },
-      error: error => {
-        console.error('[FAIL]', error);
-        deferred.reject(error);
-      }
-    });
-    return deferred.promise();
-  }
-
-  static _testProcessTags(post) {
-    const tagElems = $(post).find('.post_tags');
-    if (tagElems && tagElems.length > 0) {
-      const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#').filter(tag => {
-        if (tag === '') {
-          return;
-        }
-        return tag;
-      });
-      return rawTags;
-    }
-  }
-
-  static _testProcessPost(postHtml, timestamp) {
-    const post = $(postHtml).data('json');
-    post.id = parseInt(post.id, 10);
-    post.html = $(postHtml).prop('outerHTML') //.replace(/"/g, '\\\"');
-    post.liked_timestamp = parseInt(timestamp, 10);
-    post.tags = Likes._testProcessTags(postHtml) || [];
-    post.note_count = $(postHtml).find('.note_link_current').data('count') || 0;
-    post.blog_name = post.tumblelog;
-    return post;
-  }
-
-  static _testProcessPosts(slug, data) {
-    const deferred = Deferred();
-    try {
-      const postsJson = [];
-      let next = $(data).find('#pagination').find('a#next_page_link').attr('href').split('/');
-      next = next[next.length - 1];
-      slug.timestamp = next;
-      if (slug.hasOwnProperty('page')) {
-        slug.page += 1;
-      } else {
-        slug.page = 1;
-      }
-      console.log('[FETCHING BEFORE]', new Date(next * 1000));
-      const posts = $(data).find('[data-json]');
-      posts.each(function () {
-        const post = Likes._testProcessPost(this, slug.timestamp);
-        if (post.id) {
-          postsJson.push(post);
-        }
-      });
-      const nextSlug = slug;
-      deferred.resolve({
-        nextSlug,
-        postsJson
-      });
-    } catch (e) {
-      deferred.reject(e);
-    }
-    return deferred.promise();
-  }
-
-  static async testPreload(port) {
-    const slug = {
-      blogname: constants.get('userName')
-    };
-    if (constants.get('nextSlug')) {
-      Object.assign(slug, constants.get('nextSlug'));
-    }
-    this.testPopulatePostCache(slug, port);
-  }
-
-  static testPopulatePostCache(slug, port) {
+  static async cache(sendResponse) {
     const items = {
       cachedPostsCount: constants.get('cachedPostsCount'),
       totalPostsCount: constants.get('totalPostsCount')
-    };
-    async.whilst(() => {
-      return items.totalPostsCount > items.cachedPostsCount;
-    }, async next => {
+    }
+    async.doWhilst(async next => {
       try {
-        const data = await Likes.testFetchLikedPosts(slug);
-        const { nextSlug, postsJson } = await Likes._testProcessPosts(slug, data);
-        items.cachedPostsCount = await db.posts.toCollection().count();
-        constants.set('nextSlug', nextSlug);
-        slug = nextSlug;
-        await Likes.bulkPut(postsJson);
+        const posts = await Source.start(sendResponse);
+        await Likes.bulkPut(posts);
+        items.cachedPostsCount = constants.get('cachedPostsCount');
         log('posts', items, response => {
-          port(response);
-          next(null);
+          sendResponse(response);
+          next(null, response);
         });
       } catch (e) {
-        console.error(e);
-        port({
-          type: 'error',
-          payload: {
-            message: `${JSON.stringify(e)}`
-          }
-        });
-        next(e);
+        logError(e, next, sendResponse)
       }
+    }, response => {
+      return response;
     });
   }
 
   static async put(post) {
     await db.posts.put(post);
+    const count = await db.posts.toCollection().count();
+    constants.set('cachedPostsCount', count);
     if (post.tags.length > 0) {
       await Tags.add(post.tags);
     }
@@ -162,56 +59,19 @@ export default class Likes {
     }
   }
 
-  static async check(userName) {
-    const deferred = Deferred();
-    ajax({
-      type: 'GET',
-      url: `https://www.tumblr.com/liked/by/${userName}`,
-      success: () => {
-        deferred.resolve(true);
-      },
-      error: error => {
-        deferred.resolve(false, error);
-      }
-    });
-    return deferred.promise();
-  }
-
-  static async initialsync(userName) {
-    console.log('[SYNCING LIKES]');
-    const deferred = Deferred();
-    let slug = {
-      blogname: constants.get('userName') || userName,
-      offset: 0,
-      limit: 8
-    };
-    const callback = async (slug, response) => {
-      const posts = await db.posts.toCollection().toArray();
-      let difference = differenceBy(response.liked_posts, posts, 'id');
-      slug.offset += response.liked_posts.length;
-      if (difference.length !== 0) {
-        console.log('[ADDING NEW LIKES]', difference);
-        await db.posts.bulkPut(difference);
-      } else {
-        const count = await db.posts.toCollection().count();
-        deferred.resolve(count);
-      }
-      console.log('[SYNC DONE]');
-    };
-    try {
-      const response = await Likes.testFetchLikedPosts(slug);
-      callback(slug, response);
-    } catch (e) {
-      console.error(e);
-      deferred.reject(e);
-    }
-    return deferred.promise();
-  }
-
   static async searchLikesByTerm(query, port) {
     try {
-      const results = await Keys.search(query);
-      return results;
+      let matches = await FuseSearch.search(query);
+      if (query.sort === 'POPULARITY_DESC') {
+        await Likes._sortByPopularity(matches);
+      }
+      if (query.post_type !== 'ANY') {
+        matches = await Likes._filterByType(query, matches);
+      }
+      if (query.before) {
+        matches = await Likes._filterByDate(query, matches);
+      }
+      return matches;
     } catch (e) {
       console.error(e);
     }
@@ -258,28 +118,28 @@ export default class Likes {
     return deferred.resolve(posts);
   }
 
-  static async searchLikesByTag(args) {
-    console.log('[SEARCH LIKES]', args);
+  static async searchLikesByTag(query) {
+    console.log('[SEARCH LIKES]', query);
     const deferred = Deferred();
     try {
-      const term = (typeof args === 'string' ? args : args.term);
+      const term = (typeof query === 'string' ? query : query.term);
       let matches = [];
       if (term.length > 0) {
-        matches = await Likes._getLikesByTag(args);
+        matches = await Likes._getLikesByTag(query);
       } else {
         matches = await db.posts.orderBy('tags').reverse().toArray(); // return all
       }
-      if (args.sort === 'POPULARITY_DESC') {
+      if (query.sort === 'POPULARITY_DESC') {
         await Likes._sortByPopularity(matches);
       }
-      if (args.post_type !== 'ANY') {
-        matches = await Likes._filterByType(args, matches);
+      if (query.post_type !== 'ANY') {
+        matches = await Likes._filterByType(query, matches);
       }
-      if (args.before) {
-        matches = await Likes._filterByDate(args, matches);
+      if (query.before) {
+        matches = await Likes._filterByDate(query, matches);
       }
-      if (args.offset && args.limit) {
-        const { offset, limit } = args;
+      if (query.offset && query.limit) {
+        const { offset, limit } = query;
         matches = matches.slice(offset, offset + limit);
       }
       deferred.resolve(matches);
@@ -305,7 +165,7 @@ export default class Likes {
   static async update(request) {
     const { type, html, postId, timestamp } = request.payload;
     if (type === 'like') {
-      const postData = Likes._testProcessPost(html, timestamp);
+      const postData = Source.processPost(html, timestamp);
       await db.posts.put(postData);
       const count = await db.posts.toCollection().count();
       constants.set('totalPostsCount', count);

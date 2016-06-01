@@ -20,7 +20,7 @@ const oauth = ChromeExOAuth.initBackgroundPage({
 
 // TODO: better error logging
 const onAuthorized = (slug, callback) => {
-  console.log('[SLUG]', slug);
+  // console.log('[SLUG]', slug);
   const request = {
     method: 'GET',
     headers: {

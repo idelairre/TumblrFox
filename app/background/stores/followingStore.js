@@ -46,28 +46,20 @@ export default class Following {
       totalFollowingCount: constants.get('totalFollowingCount') || 0,
       cachedFollowingCount: constants.get('cachedFollowingCount') || 0
     };
-    if (items.totalFollowingCount === items.cachedFollowingCount) {
-      port({
-        type: 'done',
-        payload: {
-          message: 'Done caching followers'
-        }
-      });
-    }
-    async.whilst(() => {
-      return items.totalFollowingCount === 0 || items.totalFollowingCount > items.cachedFollowingCount;
-    }, async next => {
+    async.doWhilst(async () => {
       try {
         const response = await Following._getFollowing(slug);
         const nextSlug = { slug, response, items };
         await Following._processFollowing(nextSlug);
         log('following', items, data => {
           port(data);
-          next(null);
+          next(null, response);
         });
       } catch (e) {
        logError(e, next, port)
       }
+    }, async response => {
+      return response;
     });
   }
 

@@ -96,12 +96,13 @@ const Options = Backbone.View.extend({
     this.$el.append(this.$errorModal.$el);
   },
   showDone(response) {
+    console.log(response);
     this.$doneModal = new Modal({
       parent: $('.container'),
       header: 'Done',
       message: `${response.payload.message}`
     });
-    this.setProps(response.payload.constants);
+    Backbone.Events.trigger('CHANGE_PROPS', response.payload.constants);
     this.$doneModal.render();
     this.$el.append(this.$doneModal.$el);
   },

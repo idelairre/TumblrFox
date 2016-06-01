@@ -7,7 +7,7 @@ import 'babel-polyfill';
 
 const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
 
-export default class FuseSearch {
+class FuseSearch {
   fuse = {};
   options = {
     caseSensitive: false,
@@ -28,7 +28,8 @@ export default class FuseSearch {
     });
   }
 
-  async setBlog(tumblelog) {
+  async setBlog(slug) {
+    const tumblelog = slug.payload;
     try {
       console.log('[SET BLOG]', tumblelog);
       const posts = await db.posts.where('blog_name').equalsIgnoreCase(tumblelog).toArray();
@@ -40,10 +41,11 @@ export default class FuseSearch {
   }
 
   async search(query) {
+    console.log(query);
     const deferred = Deferred();
     try {
       const posts = [];
-      const results = this.fuse.search(query);
+      const results = this.fuse.search(query.term);
       results.map(id => {
         posts.push(this.posts[id]);
       });
@@ -55,3 +57,7 @@ export default class FuseSearch {
     return deferred.promise();
   }
 }
+
+const fuseSearch = new FuseSearch();
+
+export default fuseSearch;
