@@ -19,7 +19,7 @@ export default class Firebase {
       accept: 'application/json',
       success: data => {
         console.log(data);
-        deferred.resolve(keyBy(data, 'id'));
+        deferred.resolve(toArray(data));
       },
       error: error => {
         console.log(error);
@@ -35,6 +35,7 @@ export default class Firebase {
       type: 'DELETE',
       url: `https://tumblrfox.firebaseio.com/${constants.get('userName')}/${endPoint}.json`,
       success: () => {
+        console.log('[DELETED CACHE]');
         deferred.resolve();
       },
       error: error => {
@@ -68,7 +69,6 @@ export default class Firebase {
   static bulkPut(endPoint, items, key) {
     const deferred = Deferred();
     items = keyBy(items, key || 'id');
-    console.log('[UPLOADING]');
     ajax({
       type: 'PATCH',
       accept: 'application/json',

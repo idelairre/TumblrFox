@@ -81,8 +81,8 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         blogname: Tumblr.Prima.currentUser().id,
         themeParams: this.blog.get('global_theme_params')
       });
+      console.log(this.model);
       this.initializeSubviews();
-      console.log('[SEARCH]', this);
     },
     initializeSubviews() {
       assign(this.subviews.filters.constructor.prototype, FiltersPopover);
@@ -104,25 +104,23 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.input.model.set(this.options); // this enables the nsfw filter
       this.input.$el.find('input').attr('data-js-textinput', '');
       this.set('showUserList', false);
-      console.log('[INPUT]', this.input);
     },
     // TODO: send a message to the backend if text search is enabled to only query posts from this blog
     selectBlog(e) {
-      e.preventDefault();
+      console.log(e);
       const tumblelog = this.$(e.target).parent().find('h3').text();
       this.model.set('blogname', tumblelog);
       this.input.model.set('blogname', tumblelog);
-      this.set('showUserList', this.showUserList = !this.showUserList);
+      this.setUserList();
       Tumblr.Events.trigger('fox:setSearchState', 'user');
-      if (this.searchOptions.get('text')) { // working on this
+      if (this.searchOptions.get('text')) {
         this.chromeTrigger('chrome:search:setBlog', tumblelog);
-        this.toggle.state.set('toggled', false);
       }
       Tumblr.AutoPaginator.stop();
       Posts.state.apiFetch = !1;
     },
     log(query) {
-      console.log('[LOG QUERY]', query);
+      // console.log('[LOG QUERY]', query);
       if (isString(query)) {
         return;
       }
@@ -188,25 +186,22 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       Tumblr.Events.trigger('fox:setSearchState', 'likes');
     },
     updateSearchSettings(state) {
-      // console.log('[UPDATE SEARCH SETTINGS] called', this);
       if (state === 'dashboard') {
         this.showUserList ? this.setUserList() : null;
       }
     },
     delegateInputEvents(e) {
-      if (e.showUserList) { // if the list is showing, reassign these events
+      if (e.showUserList) {
         this.input.undelegateEvents();
         this.filters.undelegateEvents();
         this.input.blogSearchAutocompleteHelper.undelegateEvents();
         this.input.delegateEvents(InboxCompose.prototype.events);
         this.searchResultView.delegateEvents();
-      } else { // otherwise unassign and reassign delegated events
-        // if (this.state.get('text')) {
-          this.input.undelegateEvents();
-          this.input.delegateEvents();
-          this.filters.delegateEvents();
-          this.input.blogSearchAutocompleteHelper.delegateEvents();
-        // }
+      } else {
+        this.input.undelegateEvents();
+        this.input.delegateEvents();
+        this.filters.delegateEvents();
+        this.input.blogSearchAutocompleteHelper.delegateEvents();
       }
     },
     onChangeBlog(model) {
@@ -219,6 +214,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       console.log('[SET USERLIST] called', this.get('showUserList'));
       e ? e.preventDefault() : null;
       this.set('showUserList', this.showUserList = !this.showUserList);
+      this.toggle.state.set('toggled', this.showUserList);
     },
     toggleUserList(e) {
       if (e.showUserList) {

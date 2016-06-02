@@ -3,7 +3,7 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
   const { assign } = _;
   const { chromeMixin, Posts } = Tumblr.Fox;
 
-  const Likes = Backbone.Model.extend({
+  const LikesModel = Backbone.Model.extend({
     mixins: [chromeMixin],
     initialize() {
       this.fetchedLikes = !1;
@@ -67,7 +67,6 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
         id: $(post.el).data('id'),
         html: $(post.el).prop('outerHTML')
       };
-      // console.log('[LIKED POST]', slug);
       this.chromeTrigger('chrome:sync:likes', slug);
     },
     setMatches(matches) {
@@ -92,5 +91,5 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Likes = new Likes();
+  Tumblr.Fox.Likes = new LikesModel();
 });

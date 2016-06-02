@@ -23,6 +23,7 @@ const downloadCache = postMessage => {
 
 const restoreCache = (request, postMessage) => {
   if (constants.get('saveViaFirebase')) {
+    postMessage = request;
     Cache.restoreViaFirebase(postMessage);
   } else {
     Cache.restoreCache(request, postMessage);
@@ -31,8 +32,7 @@ const restoreCache = (request, postMessage) => {
 
 const optionsReceiver = portHandler({
   cacheLikes: Likes.cache,
-  cacheTags: Tags.cache,
-  cacheFollowing: Following.preload,
+  cacheFollowing: Following.cache,
   downloadCache: downloadCache,
   fetchConstants: sendConstants,
   resetCache: Cache.reset,

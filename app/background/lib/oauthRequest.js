@@ -36,7 +36,8 @@ const onAuthorized = (slug, callback) => {
       const response = JSON.parse(data).response;
       callback(null, response);
     } else {
-      callback(new Error('Response was empty'));
+      // callback(new Error('Response was empty'));
+      callback(xhr);
     }
   }, request);
 }

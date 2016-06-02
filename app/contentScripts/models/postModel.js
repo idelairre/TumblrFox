@@ -8,7 +8,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   // NOTE: this strikes me as a "super model", maybe thin this out?
   // TODO: redirect to dashboard if the route is other than the dashboard
 
-  const Posts = Backbone.Model.extend({
+  const PostsModel = Backbone.Model.extend({
     mixins: [chromeMixin],
     defaults: {
       apiSlug: {
@@ -281,5 +281,5 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Posts = new Posts();
+  Tumblr.Fox.Posts = new PostsModel();
 });

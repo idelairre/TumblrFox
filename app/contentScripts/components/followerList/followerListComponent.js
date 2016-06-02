@@ -55,8 +55,6 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       console.log('[AUTOCOMPLETE POPOVER]', e);
     },
     fetch(option) {
-      option = option.split(' ');
-      option = option[option.length - 1];
       for (const key in this.state) {
         if (option !== key) {
           this.state[key] = false;

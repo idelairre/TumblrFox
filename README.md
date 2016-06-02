@@ -30,6 +30,7 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 ## Problems
 
 + Since TumblrFox makes heavy use of local resources, clearing your browser cache can wipeout TumblrFox's database!
++ Tumblr api is inconsistent when it comes to fetching follower and dashboard data (i.e., data where you have to specify offsets: https://groups.google.com/forum/#!topic/tumblr-api/aFiFJ9DB-us).
 
 ## The future
 
@@ -37,13 +38,9 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 
 ## To do
 
-+ Improve user experience for initial caching functions
-+ Tag search on enter
-+ Fix Tumblr popover so term search can take advantages of multiple queries (right now it only takes one and is stupid)
 + Find a way to speed up caching process
 + Sync followers on follow/unfollow events
-+ Indicate that tag caching is done when ajax response is empty
-+ Wrap utils in a module, split utils between front-end and back-end
++ Toggle data dependent feature.
 
 ## Relevant development posts
 
@@ -65,15 +62,9 @@ Run `$ npm run start` and load the `dist`-directory into chrome.
 
 ### Build
 
-	$ gulp
+	$ npm run build
 
-
-| Option         | Description                                                                                                                                           |
-|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--watch`      | Starts a livereload server and watches all assets. <br>To reload the extension on change include `livereload.js` in your bundle.                      |
-| `--production` | Minifies all assets                                                                                                                                   |
-
-### Test
+### Tests
 
 	$ npm run tests
 

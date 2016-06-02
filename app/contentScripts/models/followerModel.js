@@ -23,7 +23,6 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       });
     },
     fetch(query) {
-      // console.log('[QUERY]', query, this);
       const deferred = $.Deferred();
       if (query === 'followed') {
         return this.pageFetch(this.options.offset); // should also be a promise

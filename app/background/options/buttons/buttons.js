@@ -50,6 +50,11 @@ const parseFile = (file, callback) => {
 }
 
 const Buttons = View.extend({
+  defaults: {
+    props: {
+      saveViaFirebase: false
+    }
+  },
   template: $(buttonsTemplate).html(),
   className: 'buttons',
   tagName: 'section',

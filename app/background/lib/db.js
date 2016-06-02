@@ -94,6 +94,37 @@ db.version(12).stores({
   tags: 'tag, count'
 });
 
+db.version(13).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: null,
+  tags: 'tag, count'
+});
+
+db.version(14).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: null,
+  tags: 'tag, count'
+});
+
+db.version(15).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: '++id, name, updated',
+  tags: 'tag, count'
+});
+
+db.version(16).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: null,
+  tags: 'tag, count'
+});
+
+db.version(17).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: 'name, updated, order',
+  tags: 'tag, count'
+});
+
+
 db.open().then(() => {
   // port.postMessage('initialized');
 }).catch(error => {

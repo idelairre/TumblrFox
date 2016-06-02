@@ -48,7 +48,7 @@ export default class Cache {
   }
 
   static async uploadCache(port) {
-    const limit = 1000;
+    const limit = 1;
     const count = await db.posts.toCollection().count();
     let last = await db.posts.toCollection().first();
     const items = {
@@ -56,7 +56,7 @@ export default class Cache {
       totalPostsCount: count
     };
     async.whilst(() => {
-      return items.cachedPostsCount <= items.totalPostsCount;
+      return items.cachedPostsCount < items.totalPostsCount;
     }, async next => {
       try {
         const posts = await db.posts.where('id').aboveOrEqual(last.id).limit(limit).toArray();
@@ -84,7 +84,7 @@ export default class Cache {
       const file = await CacheWorker.assembleFile(fileSlug);
       Papa.parse(file, {
       	delimiter: 'Ꮂ',	// auto-detect
-      	newline: '',	// auto-detect
+      	newline: '',
       	header: true,
       	dynamicTyping: true,
       	worker: false,
@@ -96,9 +96,7 @@ export default class Cache {
           console.error(e);
           logError(e, port);
         },
-      	download: false,
-      	skipEmptyLines: true,
-      	fastMode: undefined
+      	skipEmptyLines: true
       });
     } catch (e) {
       console.error(e);
@@ -107,7 +105,6 @@ export default class Cache {
     }
 
   static _addPostsToDb(posts, port) {
-    console.log(posts);
     const items = {
       cachedPostsCount: 0,
       totalPostsCount: posts.length - 1

@@ -10,7 +10,7 @@ import db from '../lib/db';
 import { log, logError } from '../services/logging';
 import Tags from './tagStore';
 import FuseSearch from '../services/fuseSearch';
-import Source from '../source/source';
+import Source from '../source/postSource';
 import 'babel-polyfill';
 
 export default class Likes {
@@ -19,7 +19,7 @@ export default class Likes {
     sendResponse(response);
   }
 
-  static async cache(sendResponse) {
+  static cache(sendResponse) {
     const items = {
       cachedPostsCount: constants.get('cachedPostsCount'),
       totalPostsCount: constants.get('totalPostsCount')
@@ -29,15 +29,15 @@ export default class Likes {
         const posts = await Source.start(sendResponse);
         await Likes.bulkPut(posts);
         items.cachedPostsCount = constants.get('cachedPostsCount');
-        log('posts', items, response => {
-          sendResponse(response);
-          next(null, response);
+        log('posts', items, progress => {
+          sendResponse(progress);
+          next(null, posts);
         });
       } catch (e) {
         logError(e, next, sendResponse)
       }
-    }, response => {
-      return response;
+    }, posts => {
+      return posts.length !== 0;
     });
   }
 
@@ -46,7 +46,6 @@ export default class Likes {
       await db.posts.put(post);
       const count = await db.posts.toCollection().count();
       constants.set('cachedPostsCount', count);
-      console.log(post);
       if (typeof post.tags === 'string') {
         post.tags = JSON.parse(post.tags) || [];
       } else if (typeof post.tags === 'undefined') {

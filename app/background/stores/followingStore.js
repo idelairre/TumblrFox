@@ -1,7 +1,7 @@
 import { Deferred } from 'jquery';
 import async from 'async';
 import db from '../lib/db';
-import { oauthRequest, resetOauthSlug } from '../lib/oauthRequest';
+import Source from '../source/followingSource';
 import { log, logError } from '../services/logging';
 import constants from '../constants';
 import 'babel-polyfill';
@@ -13,76 +13,78 @@ export default class Following {
   }
 
   static async fetch(query) {
+    console.log(query);
     let response = {};
     if (query && query === 'alphabetically') {
       response = await db.following.orderBy('name').toArray();
-      console.log('[FOLLOWERS]', response);
-    } else {
+    } else if (query && query === 'orderFollowed') {
+      response = await db.following.orderBy('id').toArray(); // maybe fetch each user individually and update?
+    } else { // recently updated
+      Following.refresh();
       response = await db.following.orderBy('updated').reverse().toArray();
-      console.log('[FOLLOWERS]', response);
     }
     return response;
   }
 
   static async sync() {
-    const slug = {
-      limit: 1,
-      offset: 0
-    };
-    const response = await this._getFollowing(slug);
-    db.following.put(response.blogs[0]);
+    // as my Java prof. would say: implementation goes here
   }
 
-  static preload(port) {
-    const slug = {
-      limit: 20,
-      offset: constants.get('cachedFollowingCount') || 0
-    };
-    Following._populateFollowing(slug, port);
+  static refresh() {
+    const slug = { offset: 0, limit: 20 };
+    async.doWhilst(async next => {
+      try {
+        const following = await Source.start(null, slug);
+        await Following.bulkPut(following);
+        slug.offset += slug.limit;
+        next(null, following);
+      } catch (e) {
+        next(e);
+      }
+    }, async following => {
+      return following.length !== 0;
+    });
   }
 
-  static _populateFollowing(slug, port) {
+  static cache(port) {
     const items = {
-      totalFollowingCount: constants.get('totalFollowingCount') || 0,
-      cachedFollowingCount: constants.get('cachedFollowingCount') || 0
+      cachedFollowingCount: constants.get('cachedFollowingCount'),
+      totalFollowingCount: constants.get('totalFollowingCount')
     };
     async.doWhilst(async next => {
       try {
-        const response = await Following._getFollowing(slug);
-        const nextSlug = { slug, response, items };
-        await Following._processFollowing(nextSlug);
-        log('following', items, data => {
-          port(data);
-          next(null, response);
+        const following = await Source.start();
+        await Following.bulkPut(following);
+        items.cachedFollowingCount = constants.get('cachedFollowingCount');
+        log('following', items, progress => {
+          port(progress);
+          next(null, items);
         });
       } catch (e) {
        logError(e, next, port)
       }
-    }, async response => {
-      return response;
+    }, async items => {
+      return items.cachedFollowingCount < items.totalFollowingCount;
     });
   }
 
-  static _getFollowing(slug) {
-    slug.url = `https://api.tumblr.com/v2/user/following`;
-    return oauthRequest(slug);
+  static async put(follower) {
+    try {
+      const count = await db.following.toCollection().count();
+      follower.order = count + 1;
+      await db.following.put(follower);
+      constants.set('cachedFollowingCount', count);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  static _processFollowing({ slug, response, items }) {
-    const deferred = Deferred();
-    if (response.blogs && response.blogs.length) {
-      resetOauthSlug(slug);
-      slug.offset += response.blogs.length;
-      items.totalFollowingCount = response.total_blogs;
-      items.cachedFollowingCount += response.blogs.length;
-      const transaction = db.following.bulkPut(response.blogs);
-      transaction.then(() => {
-        deferred.resolve();
-      });
-    } else {
-      resetOauthSlug(slug);
-      deferred.reject('Response was empty, yo');
+  static bulkPut(following) {
+    try {
+      const promises = following.map(Following.put);
+      return Promise.all(promises);
+    } catch (e) {
+      console.error(e);
     }
-    return deferred.promise();
   }
 }

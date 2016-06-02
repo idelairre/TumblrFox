@@ -53,7 +53,8 @@ const Progress = View.extend({
     });
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'ASSEMBLE_FILE', ::this.$el.show)
+    this.listenTo(Backbone.Events, 'ASSEMBLE_FILE', ::this.$el.show);
+    this.listenTo(Backbone.Events, 'DOWNLOAD_CACHE', ::this.$el.show);
     this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.$el.show);
     this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.$el.show);
     this.listenTo(Backbone.Events, 'HIDE_PROGRESS', ::this.$el.hide);
@@ -64,7 +65,12 @@ const Progress = View.extend({
     const { constants, percentComplete } = response.payload;
     this.$bar.animate(percentComplete * 0.01);
     if (parseInt(percentComplete) === 100) {
-      Backbone.Events.trigger('DONE', constants);
+      Backbone.Events.trigger('DONE', {
+        payload: {
+          message: 'Process complete',
+          constants
+        }
+      });
     }
     Backbone.Events.trigger('CHANGE_PROPS', constants);
   },

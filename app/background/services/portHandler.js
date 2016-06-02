@@ -1,3 +1,5 @@
+import { noop } from 'lodash';
+
 const portHandler = handlers => {
 	return port => {
     port.onMessage.addListener(request => {

@@ -4,6 +4,13 @@
 import { camelCase } from 'lodash';
 import constants from '../constants';
 
+export const calculatePercent = (count, objects) => {
+  const percentComplete = ((count / objects) * 100).toFixed(2);
+  const itemsLeft = objects - count;
+  const total = objects;
+  return { percentComplete, itemsLeft, total };
+}
+
 export const log = (database, items, callback, save) => {
   try {
     const cachedKey = camelCase(`cached-${database}-count`);
@@ -24,15 +31,8 @@ export const log = (database, items, callback, save) => {
     });
   } catch (e) {
     console.error(e);
-    callback({ error: e });
+    logError(e, callback);
   }
-}
-
-export const calculatePercent = (count, objects) => {
-  const percentComplete = ((count / objects) * 100).toFixed(2);
-  const itemsLeft = objects - count;
-  const total = objects;
-  return { percentComplete, itemsLeft, total };
 }
 
 export const logError = (error, next, port) => {
