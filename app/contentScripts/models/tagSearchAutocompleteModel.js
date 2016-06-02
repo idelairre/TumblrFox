@@ -81,7 +81,9 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     },
     chromeFetch() {
       const deferred = $.Deferred();
-      this.chromeTrigger('chrome:fetch:tags', ::this.parse);
+      if (!this.fetched) {
+        this.chromeTrigger('chrome:fetch:tags', ::this.parse);
+      }
       deferred.resolve(this.items);
       return deferred.promise();
     },
@@ -110,6 +112,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
          this.set('typeAheadMatches', this.items.toJSON());
        }
       omit(e, 'tags');
+      this.fetched = !0;
     }
   });
 

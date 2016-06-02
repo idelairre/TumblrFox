@@ -49,6 +49,7 @@ const Options = Backbone.View.extend({
     }
   },
   initialize() {
+    // TODO: bind defaults
     this.props = new Backbone.Model();
     this.bindEvents();
     this.initializePort();

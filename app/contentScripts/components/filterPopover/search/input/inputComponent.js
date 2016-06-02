@@ -16,6 +16,17 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.listenTo(this.model, 'change:term', this.onTermChange);
       this.listenTo(this.model, 'reset', this.onModelReset);
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
+      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.delegateInputEvents);
+    },
+    delegateInputEvents(state) { // NOTE: turns off tag popover while backend is being sorted out
+      switch(state) {
+        case 'tag':
+          this.blogSearchAutocompleteHelper.delegateEvents();
+          break;
+        case 'text':
+          this.blogSearchAutocompleteHelper.undelegateEvents();
+          break;
+      }
     },
     inputKeyDownHandler(e) {
       if (e.keyCode === 13) {
@@ -30,31 +41,19 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.blogSearchAutocompleteHelper.model.set('blogname', blogname);
       this.blogSearchAutocompleteHelper.model.getItems();
     },
-    setInput(state) {
-      this.$el.find('input').val('');
-      switch (state) {
-        case 'user':
-          this.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`);
-          break;
-        case 'dashboard':
-          this.$el.find('input').attr('placeholder', 'Search dashboard');
-          break;
-        case 'likes':
-          this.$el.find('input').attr('placeholder', 'Search likes');
-          break;
-      }
-    },
     updateSearchSettings(state) {
-      this.setInput(state);
       switch (state) {
         case 'dashboard':
           this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
+          this.$el.find('input').attr('placeholder', `Search ${state}`);
           break;
         case 'likes':
           this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
+          this.$el.find('input').attr('placeholder', `Search ${state}`);
           break;
         case 'user':
           this.blogSearchAutocompleteHelper.model = this.blogSearchAutocompleteModel;
+          this.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`);
           break;
       }
       this.blogSearchAutocompleteHelper.model.getItems();

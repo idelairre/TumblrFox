@@ -1,6 +1,6 @@
 module.exports = (function(Tumblr, Backbone, _) {
-  const { assign } = _;
-  
+  const { assign, mapKeys } = _;
+
   const State = Backbone.Model.extend({
     initialize(e) {
       assign(this, e);
@@ -11,6 +11,15 @@ module.exports = (function(Tumblr, Backbone, _) {
           return key;
         }
       }
+    },
+    setState(state) {
+      mapKeys(this.attributes, (value, key) => {
+        this.attributes[key] = !1;
+        if (key === state) {
+          this.attributes[key] = !0;
+        }
+      });
+      this.set(this.attributes);
     }
   });
 

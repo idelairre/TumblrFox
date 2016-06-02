@@ -21,6 +21,7 @@ module.exports = (function settings(Tumblr, Backbone, _) {
           { icon: 'none', name: 'Search dashboard', data: 'dashboard', checked: false, hidden: false }
         ]
       }, {
+        hidden: false,
         multipleSelection: false,
         name: 'searchOptions',
         listItems: [
@@ -35,6 +36,9 @@ module.exports = (function settings(Tumblr, Backbone, _) {
       this.state = Tumblr.Fox.state;
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setSearchStateMenu);
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOptionMenu);
+      if (!Tumblr.Fox.options.enableTextSearch) {
+        this.options.popoverOptions[1].hidden = true;
+      }
     },
     setSearchStateMenu() {
       if (!Tumblr.Fox.options.cachedTags && this.state.likes) {

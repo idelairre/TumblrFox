@@ -73,12 +73,10 @@ module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
-      let keys = e.detail || e;
-
+      let keys = e.detail || e || [];
       keys.map(key => {
         key.renameProperty('term', 'tag');
       });
-
       if (!this.fetched) {
         this.items.reset(keys);
       }

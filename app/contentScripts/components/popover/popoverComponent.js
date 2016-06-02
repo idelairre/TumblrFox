@@ -66,13 +66,21 @@ module.exports = (function popover(Tumblr, Backbone, _) {
     render() {
       this.$el = this.$el.html(this.template(this.options));
       this.$el.addClass(this.options.class);
+      let hiddenItems = 0;
       this.options.items.map(item => {
+        if (item.hidden) {
+          hiddenItems =+ 1;
+          this.$(`#${item.name}`).hide();
+        }
         item.listItems.map(li => {
           if (li.hidden) {
             this.$(`[data-js-menu-item="${li.data}"]`).hide();
           }
         });
       });
+      if (this.options.items.length - hiddenItems === 1) {
+        this.$('ul.popover_inner_list').removeClass('search_filter_items');
+      }
     },
     toggleSelected(e) {
       const target = $(e.currentTarget);
