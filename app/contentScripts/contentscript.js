@@ -20,6 +20,7 @@ import Init from './init';
 import InputComponent from './components/filterPopover/search/input/inputComponent';
 import LikesModel from './models/likesModel';
 import Main from './main';
+import ObjectUtil from './utils/objectUtil';
 import PostFormatter from './utils/postFormatterUtil';
 import PostModel from './models/postModel';
 import PopoverMixin from './components/mixins/popoverMixin';
@@ -75,6 +76,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     Events,
     Time,
     Main,
+    ObjectUtil,
     PostFormatter,
     ChromeMixin,
     LoaderMixin,
