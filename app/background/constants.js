@@ -87,6 +87,7 @@ class Constants extends Eventor {
     this.set('cachedPostsCount', 0);
     this.set('cachedFollowingCount', 0);
     this.set('nextSlug', null);
+    this.trigger('reset');
   }
 
   _assign(items) {

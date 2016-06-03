@@ -1,13 +1,9 @@
 module.exports = (function followerSearch(Tumblr, Backbone, _) {
-  const { assign, defer } = _;
+  const { assign, defer, omit } = _;
   const { Popover } = Tumblr.Fox;
 
   const FollowerSearch = Backbone.View.extend({
     defaults: {
-      state: {
-        search: !1,
-        follow: !0
-      },
       popoverOptions: [{
         header: 'Sort',
         name: 'sort',
@@ -20,8 +16,8 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       }]
     },
     initialize(e) {
-      this.state = this.defaults.state;
-      this.options = assign({}, this.defaults, e);
+      this.state = e.state;
+      this.options = assign({}, this.defaults, omit(e, 'state'));
       this.$form = this.$('form');
       this.$form.css('display', 'inline-block');
       this.$form.css('width', '89%');
@@ -35,9 +31,8 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       'click button.chrome': 'follow',
       'click .follower-filter': 'togglePopover'
     },
-    togglePopover(e) { // NOTE: this is broken
+    togglePopover(e) {
       e.preventDefault();
-      console.log('[TOGGLE POPOVER]', e);
       this.popover || (this.popover = new Popover({
         pinnedTarget: this.$followerFilter,
         pinnedSide: 'bottom',
@@ -45,8 +40,10 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
         selection: 'checkmark',
         items: this.options.popoverOptions,
         onSelect: (e) => {
-          console.log('[SELECTION]', e);
-          Tumblr.Events.trigger('fox:fetchFollowers', e);
+          if (this.state.get(e)) {
+            return;
+          }
+          Tumblr.Events.trigger('fox:following:state', e);
         }
       }),
       this.popover.render(),
@@ -61,8 +58,16 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
       });
     },
     follow(e) {
-      console.log('[FOLLOW]', e);
       e.preventDefault();
+      e.stopPropagation();
+      const tumblelog = this.$input.val();
+      Tumblr.follow({
+        tumblelog,
+        source: 'FOLLOW_SOURCE_FOLLOWING_PAGE'
+      });
+      if (this.state.get('orderFollowed')) {
+        Tumblr.Events.trigger('fox:following:refresh');
+      }
     }
   });
 

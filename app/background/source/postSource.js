@@ -16,13 +16,15 @@ class PostSource extends Source {
 
   constructor() {
     super();
-    this.constants.addListener('ready', () => {
-      console.log(`Total posts: ${this.constants.get('totalPostsCount')}`);
-      if (!isEmpty(this.constants.get('nextSlug'))) {
-        this.options.timestamp = this.constants.get('nextSlug').timestamp;
-        this.options.page = this.constants.get('nextSlug').page;
-      }
-    });
+    this.constants.addListener('ready', ::this.initializeConstants);
+    this.constants.addListener('reset', ::this.initializeConstants);
+  }
+
+  initializeConstants() {
+    if (!isEmpty(this.constants.get('nextSlug'))) {
+      this.options.timestamp = this.constants.get('nextSlug').timestamp;
+      this.options.page = this.constants.get('nextSlug').page;
+    }
   }
 
   async _run(retry) {

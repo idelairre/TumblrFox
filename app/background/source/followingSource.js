@@ -15,10 +15,13 @@ class FollowingSource extends Source {
   }
   constructor() {
     super();
-    constants.addListener('ready' , () => {
-      this.options.offset = constants.get('cachedFollowingCount');
-      this.options.total = constants.get('totalFollowingCount');
-    });
+    this.constants.addListener('ready', ::this.initializeConstants);
+    this.constants.addListener('reset', ::this.initializeConstants);
+  }
+
+  initializeConstants() {
+    this.options.offset = constants.get('cachedFollowingCount');
+    this.options.total = constants.get('totalFollowingCount');
   }
 
   start(retry, options) {
@@ -60,7 +63,7 @@ class FollowingSource extends Source {
 
   async fetch() {
     const deferred = Deferred();
-    if (this.options.offset > this.options.total) {
+    if (this.options.offset >= this.options.total) {
       deferred.reject(new Error('Invalid parameters'));
     }
     try {

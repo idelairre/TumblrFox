@@ -1,7 +1,7 @@
 module.exports = (function followerList(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { assign, debounce, each } = _;
-  const { FollowerModel, FollowerItem, FollowerSearch } = Tumblr.Fox;
+  const { FollowerModel, FollowerItem, FollowerSearch, State } = Tumblr.Fox;
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
@@ -15,21 +15,22 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       offset: 25,
       limit: 25,
       state: {
-        followed: !0,
+        orderFollowed: !0,
         alphabetically: !1,
-        updated: !1
-      },
-      query: 'followed'
+        recentlyUpdated: !1
+      }
     },
     initialize(e) {
       this.options = assign({}, e, this.defaults);
-      this.state = this.defaults.state;
+      this.state = new State(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
       this.model = new FollowerModel();
       this.$el.find('.left_column').addClass('ui_notes');
       this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
       this.$followerSearch = new FollowerSearch({
+        state: this.state,
+        model: this.model,
         el: $('#invite_someone')
       });
       this.$pagination = this.$('#pagination'); // insert followers before pagination element
@@ -44,56 +45,60 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       'click input.text_field': 'togglePopover'
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'fox:fetchFollowers', ::this.fetch);
+      this.listenTo(Tumblr.Events, 'fox:following:refresh', ::this.refresh);
+      this.listenTo(Tumblr.Events, 'fox:following:state', ::this.state.setState);
       this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 100));
-      this.listenTo(this.model.items, 'reset', this.populate);
-      this.listenTo(this.model, 'all', console.log.bind(console, '[FOLLOWER MODEL]'));
+      this.listenTo(this.model.items, 'reset', ::this.populate);
+      this.listenTo(this.state, 'change:state', ::this.fetch);
     },
     togglePopover(e) {
       e.preventDefault();
       // TODO: make this component actually useful
-      console.log('[AUTOCOMPLETE POPOVER]', e);
+      // console.log('[AUTOCOMPLETE POPOVER]', e);
     },
-    fetch(option) {
-      for (const key in this.state) {
-        if (option !== key) {
-          this.state[key] = false;
-        }
-        this.state[option] = true;
-      }
-      this.options.query = option;
+    refresh() {
+      this.model.options.offset = 0;
+      this.fetch();
+    },
+    fetch() {
       this.options.offset = 0;
-      if (option === 'followed') {
+      const query = this.state.getState();
+      if (query === 'orderFollowed') {
         this.clearElements().then(() => {
-          this.model.fetch(option).then(::this.renderFollowerViews);
+          this.model.fetch(query).then(::this.renderFollowerViews);
         });
       } else {
         this.clearElements().then(() => {
-          this.model.fetch(option);
+          this.model.fetch(query);
         });
       }
     },
     clearElements() {
       const deferred = $.Deferred();
-      this.$followers.fadeOut(300, () => {
-        deferred.resolve();
-      });
+      this.$followers.fadeOut(300, deferred.resolve);
       return deferred.promise();
     },
-    onScroll() {
-      if (this.state.followed) {
-        this.$loader.set('loading', true);
-        this.model.fetch(this.options.query).then(followers => {
-          this.renderFollowerViews(followers);
-          this.$loader.set('loading', false);
-        });
-      } else {
-        const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
-        this.$loader.set('loading', true);
-        followers.map(follower => {
-          // this.$loader.set('loading', false);
-          this.renderFollower(follower);
-        });
+    onScroll(e) {
+      if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
+        if (this.$loader.get('loading')) {
+          return;
+        }
+        if (this.state.get('orderFollowed')) {
+          this.$loader.set('loading', true);
+          this.model.fetch(this.state.getState()).then(followers => {
+            this.renderFollowerViews(followers);
+            this.$loader.set('loading', false);
+          });
+        } else {
+          const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
+          this.$loader.set('loading', true);
+          followers.map(follower => {
+            setTimeout(() => {
+              this.$loader.set('loading', false);
+              this.renderFollower(follower);
+            }, 100);
+          });
+        }
       }
     },
     populate(e) {

@@ -6,14 +6,14 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
 
   const FollowerModel = Backbone.Model.extend({
     defaults: {
-      offset: 0,
+      offset: 25,
       limit: 25
     },
     mixins: [chromeMixin],
     initialize(e) {
       this.options = this.defaults;
       this.items = Tumblelog.collection;
-      this.$views = new Backbone.Collection();
+      this.$views = []
       this.chromeTrigger('chrome:refresh:following');
       this.bindEvents();
     },
@@ -24,10 +24,10 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
     },
     fetch(query) {
       const deferred = $.Deferred();
-      if (query === 'followed') {
-        return this.pageFetch(this.options.offset); // should also be a promise
+      if (query === 'orderFollowed') {
+        return this.pageFetch(this.options.offset);
       } else {
-        this.options.offset = 0;
+        this.options.offset = 0; // this is so the page fetch starts at zero when it is selected again
         this.chromeTrigger('chrome:fetch:following', query, followers => {
           deferred.resolve(this.items.reset(followers));
         });
@@ -41,10 +41,15 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
         url: `https://www.tumblr.com/following/${offset}`,
         success: data => {
           let response = $(data).find('.follower');
-          response = response.slice(1, response.length);
+          if (this.options.offset === 0) {
+            response = response.slice(1, response.length);
+          }
           this.options.offset += this.options.limit;
-          this.$views.add(response);
-          // console.log('[RESPONSE]', response);
+          // $.each(response, (i, value) => {
+          //   const tumblelog = new Tumblelog($(response).find('[data-tumblelog-popover]').data('tumblelog-popover'));
+          //   console.log(tumblelog);
+          //   this.items.add(tumblelog);
+          // });
           deferred.resolve(response);
         },
         error: error => {

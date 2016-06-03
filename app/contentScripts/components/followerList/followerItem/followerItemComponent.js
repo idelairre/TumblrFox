@@ -20,7 +20,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
 
   const followerTemplate = `
     <script type="text/template">
-      <a href="http://<%= attributes.name %>.tumblr.com/" class="avatar" style="background-image:url('<%= attributes.avatar.url %>')" data-tumblelog-popover="<%- JSON.stringify(attributes) %>">
+      <a href="http://<%= attributes.name %>.tumblr.com/" class="avatar" style="background-image:url('<%= attributes.avatar %>')" data-tumblelog-popover="<%- JSON.stringify(attributes) %>">
         <img class="avatar_img" alt="" src="<%= attributes.avatar.url %>" width="40" height="40">
       </a>
       <div class="info">
@@ -49,15 +49,17 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
   const FollowerItem = Backbone.View.extend({
     template: template($(followerTemplate).html()),
     className: 'follower clearfix',
+    initialize(e) {
+      this.model = e.model;
+      this.model.attributes.avatar = this.model.attributes.avatar_url || this.model.attributes.avatar[1].url;
+      this.model.attributes.updated = Utils.prettyDate(Utils.fromTumblrTime(this.model.attributes.updated));
+      this.model.attributes.formkey = constants.formkey;
+    },
     render() {
       this.$el.removeAttributes({ ignore: 'class' });
       if (this.model.collection.indexOf(this.model) % 2 === 0) {
         this.$el.addClass('alt');
       }
-      this.model.attributes.avatar = this.model.attributes.avatar[1];
-      this.model.attributes.updated = Utils.prettyDate(Utils.fromTumblrTime(this.model.attributes.updated));
-      this.model.attributes.can_subscribe = this.model.attributes.can_subscribe || true; // TODO: findout how to get this data
-      this.model.attributes.formkey = constants.formkey;
       this.$el = this.$el.html(this.template(this.model));
       this.$popover = new Tumblr.TumblelogPopover.PopticaInfoPopover({
         el: this.$el.find('.poptica_header'),
@@ -79,6 +81,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
       });
       this.$el.data('has-popover', true);
       this.$el.data('ref-popover', this.$popover);
+      console.log(this);
     },
     events: {
       'click button.unfollow_button': 'unfollow',
@@ -88,40 +91,42 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     follow(e) {
       e.stopPropagation();
       e.preventDefault();
-      const followButton = this.$el.find('button.follow_button');
-      const tumblelogName = followButton.attr('data-name');
+      const $followButton = $(e.currentTarget);
+      const $unfollowButton = $(e.currentTarget).prev();
+      const tumblelog = this.model.get('name');
       Tumblr.follow({
-        tumblelog: tumblelogName,
+        tumblelog: tumblelog,
         source: 'FOLLOW_SOURCE_FOLLOWING_PAGE'
       }, {
         success() {
-          $(`#loading_${tumblelogName}`).show();
-          $(`#follow_button_${tumblelogName}`).hide();
-          $(`#unfollow_button_${tumblelogName}`).show();
+          $(`#loading_${tumblelog}`).show();
+          $unfollowButton.show();
+          $followButton.hide();
         },
         complete() {
-          $(`#loading_${tumblelogName}`).hide();
+          $(`#loading_${tumblelog}`).hide();
         }
       });
       this.capturing = (Tumblr.Capture) ? new Tumblr.Capture.CrushClick() : null;
-      console.log('[FOLLOW] called');
     },
     unfollow(e) {
       e.stopPropagation();
       e.preventDefault();
-      const unfollowButton = this.$el.find('button.unfollow_button');
-      const tumblelogName = unfollowButton.attr('data-name');
+      console.log($(e.currentTarget).next());
+      const $followButton = $(e.currentTarget).next();
+      const $unfollowButton = $(e.currentTarget);
+      const tumblelog = this.model.get('name');
       Tumblr.unfollow({
-        tumblelog: tumblelogName,
+        tumblelog: tumblelog,
         source: 'UNFOLLOW_SOURCE_FOLLOWING_PAGE'
       }, {
         success() {
-          $(`#loading_${tumblelogName}`).show();
-          $(`#follow_button_${tumblelogName}`).show();
-          $(`#unfollow_button_${tumblelogName}`).hide();
+          $(`#loading_${tumblelog}`).hide();
+          $unfollowButton.hide();
+          $followButton.show();
         },
         complete() {
-          $(`#loading_${tumblelogName}`).hide();
+          $(`#loading_${tumblelog}`).hide();
         }
       });
       this.capturing = Tumblr.Capture ? new Tumblr.Capture.CrushClick() : null;

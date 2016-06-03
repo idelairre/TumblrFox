@@ -13,13 +13,15 @@ module.exports = (function(Tumblr, Backbone, _) {
       }
     },
     setState(state) {
-      mapKeys(this.attributes, (value, key) => {
-        this.attributes[key] = !1;
+      const attributes = this.attributes;
+      mapKeys(attributes, (value, key) => {
+        attributes[key] = !1;
         if (key === state) {
-          this.attributes[key] = !0;
+          attributes[key] = !0;
         }
       });
-      this.set(this.attributes);
+      this.set(attributes);
+      this.trigger('change:state');
     }
   });
 

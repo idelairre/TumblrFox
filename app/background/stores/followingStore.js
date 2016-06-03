@@ -18,7 +18,7 @@ export default class Following {
     if (query && query === 'alphabetically') {
       response = await db.following.orderBy('name').toArray();
     } else if (query && query === 'orderFollowed') {
-      response = await db.following.orderBy('id').toArray(); // maybe fetch each user individually and update?
+      response = await db.following.orderBy('order').toArray(); // maybe fetch each user individually and update? delegate to front end?
     } else { // recently updated
       Following.refresh();
       response = await db.following.orderBy('updated').reverse().toArray();
@@ -79,10 +79,11 @@ export default class Following {
     }
   }
 
-  static bulkPut(following) {
+  static async bulkPut(following) {
     try {
-      const promises = following.map(Following.put);
-      return Promise.all(promises);
+      for (let i = 0; following.length > i; i += 1) {
+        await Following.put(following[i]);
+      }
     } catch (e) {
       console.error(e);
     }
