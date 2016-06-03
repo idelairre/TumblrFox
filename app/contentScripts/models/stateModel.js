@@ -5,6 +5,10 @@ module.exports = (function(Tumblr, Backbone, _) {
     initialize(e) {
       assign(this, e);
     },
+    set() {
+      Backbone.Model.prototype.set.apply(this, arguments);
+      this.trigger('change:state', this.attributes);
+    },
     getState() {
       for (const key in this.attributes) {
         if (this.attributes[key]) {
@@ -21,7 +25,7 @@ module.exports = (function(Tumblr, Backbone, _) {
         }
       });
       this.set(attributes);
-      this.trigger('change:state');
+      this.trigger('change:state', this.attributes);
     }
   });
 

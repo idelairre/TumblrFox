@@ -168,7 +168,22 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       Tumblr.Fox.constants.attachNode.before(postContainer);
       Tumblr.Fox.Utils.PostFormatter.createPostView(postElement, postModel);
       Tumblr.Posts.add(postModel);
-    }
+    },
+    parseTags(postViews) {
+      return postViews.map(post => {
+        const tagElems = post.$el.find('.post_tags');
+        if (tagElems.length > 0) {
+          const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
+          post.tags = rawTags.filter(tag => {
+            if (tag !== '') {
+              return tag;
+            }
+          });
+        } else {
+          post.tags = [];
+        }
+      });
+    },
   }
 
   Tumblr.Fox.Utils.PostFormatter = PostFormatter;

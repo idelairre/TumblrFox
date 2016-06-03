@@ -9,7 +9,7 @@
 
 ## tl:dr
 
-A Chrome extension that adds a new navigation tab and dropdown that allows you to fetch posts of a certain type, from a certain user or search for posts from a specific user by tag.
+A Chrome extension that adds a new navigation tab and dropdown that allows you to filter and search through your dashboard/liked/following posts via text search, type or tag.
 
 ## In action
 
@@ -24,8 +24,7 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 ## The idea
 
 + Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
-+ Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier.
-+ Leverage es6 + es7 features while maintaining a code style consistent with Tumblr's code base
++ Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier (this is panning out to building components that have a "React-like" behavior)
 
 ## Problems
 
@@ -35,12 +34,14 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 ## The future
 
 + Use Firebase to store data server side and speed up initial caching (in development)
++ Select from multiple users
++ Filter seen posts
 
 ## To do
 
 + Find a way to speed up caching process
 + Sync followers on follow/unfollow events
-+ Toggle data dependent feature.
++ Toggle data dependent features.
 
 ## Relevant development posts
 

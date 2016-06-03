@@ -6,7 +6,8 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   const { chromeMixin, Utils } = Tumblr.Fox;
 
   // NOTE: this strikes me as a "super model", maybe thin this out?
-  // TODO: redirect to dashboard if the route is other than the dashboard
+  // TODO: 1. redirect to dashboard if the route is other than the dashboard
+  //       2. thin this the fuck out
 
   const PostsModel = Backbone.Model.extend({
     mixins: [chromeMixin],
@@ -14,7 +15,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       apiSlug: {
         type: null,
         offset: 0,
-        limit: 8,
+        limit: 12,
         blogname: currentUser().id
       },
       query: {
@@ -28,7 +29,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
           offset: 0
         }
       },
-      state: {
+      state: { // this is confusing and has to change
         apiFetch: !1,
         tagSearch: !0,
         dashboardSearch: !1
@@ -56,20 +57,17 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'peepr:close', ::this.bindEvents);
     },
     fetch() {
-      const deferred = $.Deferred();
       if (this.state.tagSearch && this.state.apiFetch) {
         this.renderSearchResults();
       } else if (this.state.apiFetch) {
-        this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
+        this.apiFetchAndRenderPosts();
       } else if (!this.state.apiFetch && this.query.loggingData.term === '') {
         this.clientFetchPosts(this.query.loggingData); // NOTE: this needs to toggle the loader, it can only fetch while its not loading so it might be fucked
       } else {
         this.fetchSearchResults(this.query);
       }
-      return deferred.resolve(this.items);
     },
     fetchSearchResults(query) {
-      // console.log('[POST MODEL QUERY]', query);
       Tumblr.Events.trigger('peepr-search:search-start', query);
       Tumblr.Events.trigger('indashblog:search:fetch-requested', query);
     },
@@ -115,13 +113,42 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         return;
       }
       this.filterPosts(type);
+      this.toggleLoading();
       this.state.apiFetch = !0;
       this.state.tagSearch = !1;
       this.state.dashboardSearch = !1;
       this.resetQueryOffsets();
       setTimeout(() => {
-        this.apiFetchPosts(this.apiSlug).then(::this.handOffPosts);
-      }, 300);
+        this.apiFetchPosts(this.apiSlug).then(posts => {
+          this.handOffPosts(posts);
+          this.toggleLoading();
+        }, 300);
+      })
+    },
+    apiFetchPosts(slug) {
+      console.log('[FETCH API POSTS]');
+      const deferred = $.Deferred();
+      if (this.apiSlug.type === 'likes') {
+        this.chromeTrigger('chrome:fetch:likes', slug, deferred.resolve);
+      } else {
+        if (slug.type === 'any') {
+          delete slug.type;
+        }
+        this.chromeTrigger('chrome:fetch:posts', slug, deferred.resolve);
+      }
+      return deferred.promise();
+    },
+    apiFetchAndRenderPosts() {
+      if (this.loading) {
+        return;
+      }
+      this.toggleLoading();
+      this.apiFetchPosts(this.apiSlug).then(posts => {
+        setTimeout(() => {
+          this.handOffPosts(posts);
+          this.toggleLoading();
+        }, 175);
+      });
     },
     initialBlogFetch(e) {
       if (e.blogname !== this.query.loggingData.blogname) {
@@ -159,28 +186,13 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         $('li[data-pageable]').remove();
       });
     },
-    parseTags(postViews) {
-      return postViews.map(post => {
-        const tagElems = post.$el.find('.post_tags');
-        if (tagElems.length > 0) {
-          const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
-          post.tags = rawTags.filter(tag => {
-            if (tag !== '') {
-              return tag;
-            }
-          });
-        } else {
-          post.tags = [];
-        }
-      });
-    },
     searchDashboard(query) {
       const deferred = $.Deferred();
       let results = [];
       if (!this.state.dashboardSearch) { // cache posts and search amongst these from now on
         this.state.dashboardSearch = !0;
         this.$$matches = Tumblr.postsView.postViews;
-        this.parseTags(this.$$matches);
+        Utils.postFormatter.parseTags(this.$$matches);
       }
       // console.log('[QUERY]', query, this.$$matches);
       Tumblr.Events.trigger('fox:disablePagination');
@@ -201,28 +213,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       deferred.resolve(this.items);
       return deferred.promise();
     },
-    apiFetchPosts(slug) {
-      const deferred = $.Deferred();
-      if (this.loading) {
-        deferred.reject(); // remember this shit
-      }
-      const resolve = response => {
-        deferred.resolve(response);
-        this.toggleLoading();
-      };
-      this.toggleLoading();
-      if (this.apiSlug.type === 'likes') {
-        this.chromeTrigger('chrome:fetch:likes', slug, resolve);
-      } else {
-        if (slug.type === 'any') {
-          delete slug.type;
-        }
-        this.chromeTrigger('chrome:fetch:posts', slug, resolve);
-      }
-      return deferred.promise();
-    },
     clientFetchPosts(slug) {
-      // console.log('[POST MODEL STATE]', this.state, this.query);
       if (!this.state.apiFetch && this.loading) { // TODO: this really needs to change
         return;
       }
@@ -259,7 +250,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       });
     },
     handOffPosts(e) {
-      console.log('[RESPONSE]', e);
       if (isEmpty(e)) {
         Tumblr.Events.trigger('fox:postFetch:empty', this.query.loggingData);
         return;

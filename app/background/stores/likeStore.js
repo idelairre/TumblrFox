@@ -10,7 +10,7 @@ import db from '../lib/db';
 import { log, logError } from '../services/logging';
 import Tags from './tagStore';
 import FuseSearch from '../services/fuseSearch';
-import Source from '../source/postSource';
+import Source from '../source/likeSource';
 import 'babel-polyfill';
 
 export default class Likes {

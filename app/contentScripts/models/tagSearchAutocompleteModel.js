@@ -23,6 +23,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
       this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
       this.listenTo(this, 'change:matchTerm', ::this.setMatches);
+      this.listenTo(this.state, 'change:state', ::this.flushTags);
     },
     unbindEvents() {
       this.stopListening(Tumblr.Events, 'peeprsearch:change:unsetTerm');
@@ -38,6 +39,10 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
           break;
       }
     },
+    flushTags() {
+      this.fetched = !1;
+      this.items.reset([]);
+    },
     fetch() {
       if (this.state.get('dashboard')) {
         return this.dashboardFetch();
@@ -48,8 +53,8 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
     // need a trigger to flush tags
     dashboardFetch() {
-      const tagArray = [];
       const deferred = $.Deferred();
+      const tagArray = [];
       deferred.resolve(this.items);
       if (Tumblr.Fox.Posts.state.dashboardSearch) { // return early
         return deferred.promise();

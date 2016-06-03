@@ -53,7 +53,7 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
         return;
       }
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
-        debounce.bind(once(this.model.fetch).call(this.model), 300); // fucking lodash
+        debounce(::this.model.fetch, 300)();
       }
     }
   });

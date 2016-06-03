@@ -219,7 +219,6 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     },
     updateLog(response) {
       console.log('[UPDATE LOG]', response);
-      this.searchStarted = !1;
       this.model.set(response.loggingData);
       assign(this.filters.model, response.loggingData);
       assign(Tumblr.Fox.Posts.query, response);

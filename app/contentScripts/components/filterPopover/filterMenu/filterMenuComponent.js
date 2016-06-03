@@ -39,11 +39,10 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       if (this.disabled) {
         return;
       }
-      console.log('[FILTER MENU STATE]', this.state);
       const type = $(e.target).data('js-menu-item-link');
       this.resetChecks();
       this.$(`i[data-check="${type}"]`).show();
-      if (this.state.dashboard) {
+      if (this.state.get('dashboard')) {
         this.filterAndFetchPosts(type);
       } else {
         this.selectFilter(type);

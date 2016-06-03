@@ -1,6 +1,7 @@
 import constants from '../constants';
 import receiverHandler from '../services/receiverHandler';
 import FuseSearch from '../services/fuseSearch';
+import PostSource from '../source/postSource';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
@@ -11,6 +12,7 @@ const sendConstants = (request, sender, sendResponse) => {
 
 const chromeReciever = receiverHandler({
   fetchConstants: sendConstants,
+  fetchPosts: PostSource.fetch,
   fetchTags: Tags.send,
   searchLikesByTag: Likes.send,
   searchLikesByTerm: Likes.send,

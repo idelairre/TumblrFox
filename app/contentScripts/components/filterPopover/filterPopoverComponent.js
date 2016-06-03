@@ -49,8 +49,8 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
     },
     initialize(e) {
       this.options = assign({}, this.defaults, e);
-      this.state = this.defaults.state;
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setState);
+      this.state = Tumblr.Fox.state;
+      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.state.setState);
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);
     },
     render() {
@@ -65,7 +65,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
     },
     afterRenderSubviews() {
       setTimeout(() => {
-        this.setState('user');
+        this.state.setState('user');
       }, 1);
     },
     bindClickOutside() {
@@ -86,17 +86,6 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       this.clickOutside = null;
       this.stopListening(Tumblr.Events, 'DOMEventor:keyup:escape');
     },
-    setState(state) {
-      for (const key in this.state) {
-        if ({}.hasOwnProperty.call(this.state, key)) {
-          this.state[key] = !1;
-          if (key.includes(state)) {
-            this.state[key] = !0;
-          }
-        }
-      }
-      Tumblr.Fox.state.set(this.state);
-    },
     hide() {
       Tumblr.Events.trigger('popover:close', this);
       this.unbindClickOutside();
@@ -109,7 +98,6 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       this.$el.css({ display: 'none' });
     },
     show() {
-      // console.log('[FILTER COMPONENT]', this),
       Tumblr.Events.trigger('popover:open', this);
       this.bindClickOutside();
       this.$pinned.addClass('active');
