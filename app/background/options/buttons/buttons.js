@@ -37,7 +37,7 @@ const parseFile = (file, callback) => {
     // callback for handling read chunk
     // off to the next chunk
     chunkReaderBlock(offset, chunkSize, file);
-  }
+  };
 
   chunkReaderBlock = (_offset, length, _file) => {
     const r = new FileReader();
@@ -47,7 +47,7 @@ const parseFile = (file, callback) => {
   };
   // now let's start the read with the first block
   chunkReaderBlock(offset, chunkSize, file);
-}
+};
 
 const Buttons = View.extend({
   defaults: {
@@ -80,6 +80,11 @@ const Buttons = View.extend({
     this.toggleButtonsState();
   },
   toggleButtonsState() {
+    if (this.props.get('saveViaFirebase')) {
+      this.$('#downloadCache').text('Sync cache');
+    } else {
+      this.$('#downloadCache').text('Save cache');
+    }
     this.setCacheLikesButton();
   },
   setCacheLikesButton() {
@@ -92,7 +97,9 @@ const Buttons = View.extend({
       this.restoreCache();
     } else { // all other events are sent to settings component and posted to the background script
       const e = toUpper(snakeCase(key));
-      Backbone.Events.trigger(e, { type: key });
+      Backbone.Events.trigger(e, {
+       type: key
+     });
     }
   },
   restoreCache() {
@@ -130,7 +137,7 @@ const Buttons = View.extend({
     setTimeout(() => {
       document.getElementById('cache').click();
     }, 1);
-  },
+  }
 });
 
 export default Buttons;

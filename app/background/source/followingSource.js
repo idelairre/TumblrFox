@@ -1,7 +1,6 @@
-import async from 'async';
-import constants from '../constants';
 import { Deferred } from 'jquery';
-import { oauthRequest, resetOauthSlug } from '../lib/oauthRequest';
+import constants from '../constants';
+import { oauthRequest } from '../lib/oauthRequest';
 import Source from './source';
 import 'babel-polyfill';
 
@@ -31,7 +30,7 @@ class FollowingSource extends Source {
     return super.start(retry);
   }
 
-  async _run(retry, refresh) {
+  async _run(retry) {
     const deferred = Deferred();
     try {
       const following = await this.crawlFollowing(retry);
@@ -39,20 +38,16 @@ class FollowingSource extends Source {
       deferred.resolve(following);
     } catch (error) {
       if (this.retriedTimes <= (this.retryTimes - 1)) {
-        this.handleError(error);
-      } else {
-        console.info(this.MAX_RETRIES_MESSAGE);
-        deferred.reject(error);
+        return this.handleError(error);
       }
+      console.info(this.MAX_RETRIES_MESSAGE);
+      deferred.reject(this.MAX_RETRIES_MESSAGE);
     }
     return deferred.promise();
   }
 
   async _processFollowing(response) {
     const deferred = Deferred();
-    if (response.blogs.length === 0) {
-      deferred.reject(new Error('Response was empty'));
-    }
     this.options.offset += this.options.limit;
     if (this.constants.get('totalFollowingCount') === 0) {
       this.constants.set('totalFollowingCount', response.total_blogs);
@@ -63,9 +58,6 @@ class FollowingSource extends Source {
 
   async fetch() {
     const deferred = Deferred();
-    if (this.options.offset >= this.options.total) {
-      deferred.reject(new Error('Invalid parameters'));
-    }
     try {
       const slug = {
         url: this.options.url,
@@ -82,14 +74,20 @@ class FollowingSource extends Source {
   }
 
   async crawlFollowing(retry) {
-    if (retry && this.retriedTimes && this.retriedTimes <= this.retryTimes) {
-      console.log(`Retried times: ${this.retriedTimes}, retrying following from offset: ${this.options.offset}...`);
-    } else {
-      console.log(`Crawling following from offset: ${this.options.offset}...`);
+    const deferred = Deferred();
+    try {
+      if (retry && this.retriedTimes && this.retriedTimes <= this.retryTimes) {
+        console.log(`Retried times: ${this.retriedTimes}, retrying following from offset: ${this.options.offset}...`);
+      } else {
+        // console.log(`Crawling following from offset: ${this.options.offset}...`);
+      }
+      const following = await this.fetch(retry);
+      console.log(`✔ Crawled following from offset: ${this.options.offset}`);
+      deferred.resolve(following);
+    } catch (e) {
+      deferred.reject(e);
     }
-    const following = await this.fetch(retry);
-    console.log(`✔ Crawled following from offset: ${this.options.offset}`);
-    return following;
+    return deferred.promise();
   }
 }
 

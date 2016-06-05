@@ -15,16 +15,16 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       offset: 25,
       limit: 25,
       state: {
-        orderFollowed: !0,
-        alphabetically: !1,
-        recentlyUpdated: !1
+        orderFollowed: true,
+        alphabetically: false,
+        recentlyUpdated: false
       }
     },
     initialize(e) {
       this.options = assign({}, e, this.defaults);
       this.state = new State(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
-      this.model = new FollowerModel();
+      this.model = FollowerModel;
       this.$el.find('.left_column').addClass('ui_notes');
       this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
@@ -35,7 +35,10 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       });
       this.$pagination = this.$('#pagination'); // insert followers before pagination element
       this.$pagination.remove();
-      this.$loader = new Tumblr.Prima.KnightRiderLoader({ variation: 'leviathan', className: 'Knight-Rider-loader centered' });
+      this.$loader = new Tumblr.Prima.KnightRiderLoader({
+        variation: 'leviathan',
+        className: 'Knight-Rider-loader centered'
+       });
       this.$loader.render();
       this.$el.find('.left_column').prepend('<div class="load_cont"></div>');
       this.$('.load_cont').append(this.$loader.$el);

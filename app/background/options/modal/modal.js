@@ -34,6 +34,6 @@ const Modal = Backbone.View.extend({
   hide() {
     this.$el.fadeOut(100);
   }
-})
+});
 
 export default Modal;

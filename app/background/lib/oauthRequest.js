@@ -1,7 +1,6 @@
 import { Deferred } from 'jquery';
-import { isError } from 'lodash';
-import { ChromeExOAuth } from './chromeExOauth';
 import tokens from '../tokens.json';
+import { ChromeExOAuth } from './chromeExOauth';
 
 const REQUEST_TOKEN_URL = 'https://www.tumblr.com/oauth/request_token';
 const AUTHORIZATION_BASE_URL = 'https://www.tumblr.com/oauth/authorize';
@@ -20,7 +19,6 @@ const oauth = ChromeExOAuth.initBackgroundPage({
 
 // TODO: better error logging
 const onAuthorized = (slug, callback) => {
-  // console.log('[SLUG]', slug);
   const request = {
     method: 'GET',
     headers: {
@@ -36,11 +34,11 @@ const onAuthorized = (slug, callback) => {
       const response = JSON.parse(data).response;
       callback(null, response);
     } else {
-      // callback(new Error('Response was empty'));
+      // throw new Error('Response was empty');
       callback(xhr);
     }
   }, request);
-}
+};
 
 export const oauthRequest = slug => {
   const deferred = Deferred();
@@ -54,7 +52,7 @@ export const oauthRequest = slug => {
     });
   });
   return deferred.promise();
-}
+};
 
 export const resetOauthSlug = slug => {
   for (const key in slug) {
@@ -64,4 +62,4 @@ export const resetOauthSlug = slug => {
       }
     }
   }
-}
+};

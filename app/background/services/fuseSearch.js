@@ -1,20 +1,31 @@
 import { Deferred } from 'jquery';
-import { isNumber, words, keyBy, union } from 'lodash';
-import constants from '../constants';
+import { keyBy } from 'lodash';
 import db from '../lib/db';
 import Fuse from '../lib/fuse';
+import constants from '../constants';
 import 'babel-polyfill';
+
+// keys: [{
+//   name: 'blogname',
+//   weight: 0.7
+// }, {
+//   name: 'title',
+//   weight: 0.7
+// }, {
+//   name: 'tags',
+//   weight: 0.8
+// }],
 
 const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
 
 class FuseSearch {
-  fuse = {};
   options = {
     caseSensitive: false,
+    include: ['score', 'matches'],
     includeScore: true,
     shouldSort: true,
     tokenize: true,
-    threshold: 0.6,
+    threshold: 0.5,
     location: 0,
     distance: 100,
     maxPatternLength: 32,
@@ -22,9 +33,14 @@ class FuseSearch {
     id: 'id'
   }
   constructor() {
-    db.posts.toCollection().toArray().then(posts => {
-      this.posts = keyBy(posts, 'id');
-      this.fuse = new Fuse(posts, this.options);
+    constants.addListener('ready', () => {
+      if (constants.get('fullTextSearch')) {
+        db.posts.toCollection().toArray().then(posts => {
+          this.posts = keyBy(posts, 'id');
+          this.fuse = new Fuse(posts, this.options);
+          console.log(this.fuse);
+        });
+      }
     });
   }
 
@@ -41,13 +57,12 @@ class FuseSearch {
   }
 
   async search(query) {
-    console.log(query);
     const deferred = Deferred();
     try {
       const posts = [];
       const results = this.fuse.search(query.term);
-      results.map(id => {
-        posts.push(this.posts[id]);
+      results.map(result => {
+        posts.push(this.posts[result.item]);
       });
       deferred.resolve(posts);
     } catch (e) {

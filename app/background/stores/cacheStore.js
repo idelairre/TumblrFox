@@ -1,5 +1,5 @@
 import async from 'async';
-import { escape, maxBy, once, trim } from 'lodash';
+import { maxBy } from 'lodash';
 import Papa from '../lib/papaParse';
 import CacheWorker from '../services/cacheWorker';
 import constants from '../constants';
@@ -8,8 +8,6 @@ import db from '../lib/db';
 import Firebase from '../services/firebase';
 import Likes from './likeStore';
 import 'babel-polyfill';
-
-console.log(Papa);
 
 export default class Cache {
   static async assembleCacheAsCsv(port) {
@@ -42,34 +40,39 @@ export default class Cache {
           constants
         }
       });
-    } catch(e) {
+    } catch (e) {
       logError(e, port);
     }
   }
 
   static async uploadCache(port) {
-    const limit = 1;
+    const limit = 10;
+    const last = await db.posts.toCollection().last().id;
+    let start = await db.posts.toCollection().first().id;
+    console.log('[FIRST]:', start.id, '[LAST]:', last.id);
     const count = await db.posts.toCollection().count();
-    let last = await db.posts.toCollection().first();
     const items = {
       cachedPostsCount: 0,
       totalPostsCount: count
     };
-    async.whilst(() => {
-      return items.cachedPostsCount < items.totalPostsCount;
-    }, async next => {
+
+    async.doWhilst(async next => {
       try {
-        const posts = await db.posts.where('id').aboveOrEqual(last.id).limit(limit).toArray();
-        last = maxBy(posts, 'id');
+        const posts = await db.posts.where('id').aboveOrEqual(start.id).limit(limit).toArray();
+        start = maxBy(posts, 'id').id;
+        console.log('[START]', start.id);
+        console.log('[UPLOADING]', posts);
         await Firebase.bulkPut('posts', posts);
         items.cachedPostsCount += posts.length;
         log('posts', items, response => {
           port(response);
-          next(null);
+          next(null, start, last);
         }, false);
       } catch (e) {
         logError(e, next, port);
       }
+    }, (start, last) => {
+      return start !== last;
     });
   }
 
@@ -83,26 +86,25 @@ export default class Cache {
       });
       const file = await CacheWorker.assembleFile(fileSlug);
       Papa.parse(file, {
-      	delimiter: 'Ꮂ',	// auto-detect
-      	newline: '',
-      	header: true,
-      	dynamicTyping: true,
-      	worker: false,
-      	comments: false,
-      	complete: (results, parse) => {
-          Cache._addPostsToDb(results.data, port)
+        delimiter: 'Ꮂ',	// auto-detect
+        newline: '',
+        header: true,
+        dynamicTyping: true,
+        worker: false,
+        comments: false,
+        complete: (results, parse) => {
+          Cache._addPostsToDb(results.data, port);
         },
-      	error: e => {
+        error: e => {
           console.error(e);
           logError(e, port);
         },
-      	skipEmptyLines: true
+        skipEmptyLines: true
       });
     } catch (e) {
       console.error(e);
     }
-      // const postsJson = await CacheWorker.convertCsvToJson(file);
-    }
+  }
 
   static _addPostsToDb(posts, port) {
     const items = {
@@ -118,7 +120,6 @@ export default class Cache {
           next(null, items.cachedPostsCount);
         }, false);
       } catch (e) {
-        console.error(e);
         logError(e, next, port);
       }
     }, count => {

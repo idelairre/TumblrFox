@@ -1,4 +1,4 @@
-import { Deferred } from 'jquery';
+import { kebabCase } from 'lodash';
 import async from 'async';
 import db from '../lib/db';
 import Source from '../source/followingSource';
@@ -8,12 +8,14 @@ import 'babel-polyfill';
 
 export default class Following {
   static async send(request, sender, sendResponse) {
-    const response = await Following.fetch(request.payload);
+    request.type = kebabCase(request.type);
+    request.type = request.type.split('-');
+    const func = request.type[0];
+    const response = await Following[func](request.payload);
     sendResponse(response);
   }
 
   static async fetch(query) {
-    console.log(query);
     let response = {};
     if (query && query === 'alphabetically') {
       response = await db.following.orderBy('name').toArray();
@@ -26,8 +28,25 @@ export default class Following {
     return response;
   }
 
-  static async sync() {
-    // as my Java prof. would say: implementation goes here
+  // TODO: right now this only works for liked posts from users that are not followed
+  static async update(payload) {
+    try {
+      console.log(payload);
+      const { following } = payload;
+      await Following.put(following);
+      const posts = await db.posts.where('blog_name').equalsIgnoreCase(following.name).toArray();
+      posts.map(post => {
+        post['tumblelog-data'].following = true;
+        db.posts.put(post);
+        return post;
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  static async destroy(payload) {
+    console.log('[DESTROY]', payload);
   }
 
   static refresh() {
@@ -46,25 +65,35 @@ export default class Following {
     });
   }
 
-  static cache(port) {
+  static cache(sendResponse) {
     const items = {
       cachedFollowingCount: constants.get('cachedFollowingCount'),
       totalFollowingCount: constants.get('totalFollowingCount')
     };
     async.doWhilst(async next => {
       try {
-        const following = await Source.start();
-        await Following.bulkPut(following);
-        items.cachedFollowingCount = constants.get('cachedFollowingCount');
-        log('following', items, progress => {
-          port(progress);
-          next(null, items);
-        });
+        const following = await Source.start(); // NOTE: this returns undefined when recursive error handling starts
+        if (typeof following === 'undefined') {
+          logError(Source.MAX_RETRIES_MESSAGE, next, sendResponse);
+        } else if (following.length === 0) {
+          sendResponse({
+            type: 'done',
+            payload: { message: 'Maximum fetchable followers reached.' }
+          });
+          next(null, following);
+        } else {
+          await Following.bulkPut(following);
+          items.cachedFollowingCount = constants.get('cachedFollowingCount');
+          log('following', items, progress => {
+            sendResponse(progress);
+            next(null, following);
+          });
+        }
       } catch (e) {
-       logError(e, next, port)
+       logError(e, next, sendResponse);
       }
-    }, async items => {
-      return items.cachedFollowingCount < items.totalFollowingCount;
+    }, following => {
+      return following.length !== 0;
     });
   }
 

@@ -58,9 +58,9 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       settings: {
         constructor: Settings,
         options: {
-          isFixedPosition: !0,
-          autoTeardown: !1,
-          teardownOnEscape: !1
+          isFixedPosition: true,
+          autoTeardown: false,
+          teardownOnEscape: false
         }
       },
       toggle: {
@@ -80,6 +80,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         blogname: Tumblr.Prima.currentUser().id,
         themeParams: this.blog.get('global_theme_params')
       });
+      console.log(this.model);
       this.initializeSubviews();
     },
     initializeSubviews() {
@@ -98,7 +99,11 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.$filters = this.filters.$el;
       this.$settings = this.settings.$el;
       this.input.conversations = Conversations;
-      this.input.conversations.fetchFavorites({ data: { limit: 4 } });
+      this.input.conversations.fetchFavorites({
+         data: {
+           limit: 4
+         }
+       });
       this.input.model.set(this.options); // this enables the nsfw filter
       this.input.$el.find('input').attr('data-js-textinput', '');
       this.set('showUserList', false);
@@ -123,8 +128,8 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', this.toggleLoader.bind(this, false));
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', ::this.updateLog);
       this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.updateLog);
-      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOption);
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
+      this.listenTo(Tumblr.Fox.searchOptions, 'change:state', ::this.setSearchOption);
+      this.listenTo(Tumblr.Fox.state, 'change:state', ::this.updateSearchSettings);
     },
     unbindEvents() {
       // unbind shit
@@ -139,7 +144,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         this.chromeTrigger('chrome:search:setBlog', tumblelog);
       }
       Tumblr.AutoPaginator.stop();
-      Posts.state.apiFetch = !1;
+      Posts.state.apiFetch = false;
     },
     onChangeBlog(model) {
       model.set('term', '');
@@ -148,38 +153,41 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         Tumblr.Events.trigger('fox:filterFetch:started', model.attributes);
       }
     },
-    log(query) {
+    log(query) { // TODO: this is a mess, refactor in a way that is very far from Tumblr's style
       // console.log('[LOG QUERY]', query);
       if (isString(query)) {
         return;
       }
-      switch (Tumblr.Fox.state.getState()) {
+      console.log(query);
+      this.toggleLoader(true);
+      switch (this.state.getState()) {
         case 'likes':
-        console.log('[LIKES SEARCH]');
-          this.toggleLoader(true);
+        console.log('[LIKES SEARCH]', this.state.getState());
           Likes.search(this.model.attributes).then(() => {
             this.toggleLoader(false);
           });
           break;
         case 'dashboard':
-          console.log('[DASHBOARD SEARCH]');
-          this.toggleLoader(true);
+          console.log('[DASHBOARD SEARCH]', this.state.getState());
           Posts.searchDashboard(this.model.attributes).then(() => {
             this.toggleLoader(false);
           });
           break;
-        default:
-          this.toggleLoader(true);
-          this.searchStarted = !0;
-          this.model.set(query);
-          this.model.fetch();
+        case 'user':
+          console.log('[PEEPR SEARCH]', this.state.getState());
+          if (this.searchOptions.get('tag')) {
+            this.model.set(query);
+            this.model.fetch();
+          } else {
+            Likes.search(this.model.attributes).then(() => {
+              this.toggleLoader(false);
+            });
+          }
           break;
       }
     },
     setSearchOption(state) {
       this.$el.find('.popover_header').find('span.header_title').text(`${state} search`);
-      Tumblr.Fox.searchOptions.setState(state);
-      Tumblr.Events.trigger('fox:setSearchState', state);
     },
     updateSearchSettings(state) {
       if (state === 'dashboard') {

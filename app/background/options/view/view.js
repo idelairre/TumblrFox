@@ -1,4 +1,5 @@
-import { bind, each, extend, isFunction, noop, pick, result, union } from 'lodash';
+import Backbone from 'backbone';
+import { bind, noop } from 'lodash';
 
 const assignProps = (target, source) => {
   if (!target) {
@@ -10,7 +11,7 @@ const assignProps = (target, source) => {
     }
   }
   return target;
-}
+};
 
 const View = Backbone.View.extend({
   defaults: {},
@@ -32,7 +33,6 @@ const View = Backbone.View.extend({
       this._beforeRender.apply(this, arguments);
       this.beforeRender.apply(this, arguments);
       render = render.apply(this, arguments);
-      this.initialize.apply(this, arguments);
       this.afterRender.apply(this, arguments);
       this._afterRender.apply(this, arguments);
       this.renderProps.apply(this);

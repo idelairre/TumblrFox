@@ -8,44 +8,51 @@ module.exports = (function popoverMixin(Tumblr, Backbone, _) {
 
   const PopoverMixin = new Mixin({
     afterRender() {
-      this.initialized = !1,
-      this.$main = this.$('.popover_menu'),
+      this.initialized = false;
+      this.$main = this.$('.popover_menu');
       setTimeout(::this.setActiveAndBindEvents, 1);
     },
     bindClickOutside() {
       const options = {
-        preventInteraction: !0,
+        preventInteraction: true,
         ignoreSelectors: ['.popover_content_wrapper', '.tumblelog_popover']
       };
-      this._popoverBase.autoTeardown && (this.clickOutside = new ClickHandler(this.el, options),
-      this.clickOutside.on('click:outside', this.hide, this),
-      this.clickOutside.on('click:inside', this.hideOnSelect, this));
+      if (this._popoverBase.autoTeardown) {
+        this.clickOutside = new ClickHandler(this.el, options);
+        this.clickOutside.on('click:outside', this.hide, this);
+        this.clickOutside.on('click:inside', this.hideOnSelect, this);
+      }
     },
     hideOnSelect(e) {
       e.preventDefault();
       this.hide();
     },
     unbindClickOutside() {
-      this.clickOutside && (this.clickOutside.remove(), this.clickOutside = null);
+      if (this.clickOutside) {
+        this.clickOutside.remove();
+        this.clickOutside = null;
+      }
     },
     setActiveAndBindEvents() {
-      this.$main.addClass('popover--active'),
-      this.bindClickOutside(),
-      this.initialized = !0;
+      this.$main.addClass('popover--active');
+      this.bindClickOutside();
+      this.initialized = true;
     },
     show() {
-      this.$el.css({ display: 'block' }),
+      this.$el.css({
+        display: 'block'
+      });
       setTimeout(::this.setActiveAndBindEvents, 1);
     },
     hide() {
-      this.unbindClickOutside(),
-      this.$main.removeClass('popover--active'),
+      this.unbindClickOutside();
+      this.$main.removeClass('popover--active');
       transition(this.$el, () => {
         this.afterHide();
       });
     },
     afterHide() {
-      this.teardown(),
+      this.teardown();
       this.remove();
     }
   });

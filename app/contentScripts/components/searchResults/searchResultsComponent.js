@@ -4,7 +4,7 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
 
   const SearchResults = Backbone.View.extend({
     defaults: {
-      initialized: !1,
+      initialized: false,
       term: ''
     },
     template: template($('#searchResultsTemplate').html()),
@@ -45,7 +45,7 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
     },
     setTerm(e) {
       this.options.term = e.term;
-      console.log(this.options, e, this.term);
+      // console.log(this.options, e, this.term);
     },
     renderTerm(term) {
       if (!this.initialized) {

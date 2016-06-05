@@ -1,6 +1,6 @@
 module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { assign, each } = _;
+  const { assign } = _;
   const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
@@ -26,11 +26,11 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   const FilterPopoverComponent = PopoverComponent.extend({
     className: 'popover--filter-popover',
     defaults: {
-      preventInteraction: !0,
+      preventInteraction: true,
       state: {
-        likes: !1,
-        dashboard: !1,
-        user: !0
+        likes: false,
+        dashboard: false,
+        user: true
       }
     },
     mixins: [popover],
@@ -70,7 +70,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
     },
     bindClickOutside() {
       const options = {
-        preventInteraction: !0,
+        preventInteraction: true,
         ignoreSelectors: ['.popover', '.popover_inner', '.popover_content_wrapper', '.popover_inner_list', '.popover_menu_list', '.tumblelog_popover', '.ui_peepr_glass', '.drawer']
       };
       this.clickOutside = new ClickHandler(this.el, options);

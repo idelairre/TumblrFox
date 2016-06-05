@@ -7,7 +7,7 @@
 + Download and cache your liked posts
 + Tumblr client-side data (primarily Backbone models and collections) are used where possible to benefit from improved performance and richer data over the public api.
 
-## tl:dr
+## tl;dr
 
 A Chrome extension that adds a new navigation tab and dropdown that allows you to filter and search through your dashboard/liked/following posts via text search, type or tag.
 
@@ -24,11 +24,11 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 ## The idea
 
 + Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
-+ Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier (this is panning out to building components that have a "React-like" behavior)
++ Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier
 
 ## Problems
 
-+ Since TumblrFox makes heavy use of local resources, clearing your browser cache can wipeout TumblrFox's database!
++ Since TumblrFox makes heavy use of local storage, clearing your browser cache can wipeout TumblrFox's database!
 + Tumblr api is inconsistent when it comes to fetching follower and dashboard data (i.e., data where you have to specify offsets: https://groups.google.com/forum/#!topic/tumblr-api/aFiFJ9DB-us).
 
 ## The future
@@ -40,8 +40,11 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 ## To do
 
 + Find a way to speed up caching process
-+ Sync followers on follow/unfollow events
-+ Toggle data dependent features.
++ Find better template system (Mustache is looking like a good lightweight option)
++ Thin out post model
++ Remove event listeners where possible
++ Remove all vestiges of Tumblr code style
++ Leverage Tumblr libraries/mixins more to clean up code
 
 ## Relevant development posts
 

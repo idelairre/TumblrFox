@@ -1,5 +1,5 @@
 module.exports = (function autopaginator(Tumblr, Backbone, _) {
-  const { debounce, once } = _;
+  const { debounce } = _;
   const { Posts } = Tumblr.Fox;
 
   // NOTE: all this does is poop out posts. No component should be in charge of rendering posts except this one
@@ -8,8 +8,8 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
   const AutoPaginator = Backbone.View.extend({
     model: Posts,
     initialize() {
-      this.enabled = !1;
-      this.defaultPagination = !0;
+      this.enabled = false;
+      this.defaultPagination = true;
       this.bindEvents();
     },
     bindEvents() {
@@ -20,32 +20,32 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
     },
     start() {
       console.log('[AUTOPAGINATOR] started');
-      this.enabled = !0;
+      this.enabled = true;
       this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.stop);
       this.disableDefaultPagination();
     },
     stop() {
       console.log('[AUTOPAGINATOR] stopped');
-      this.enabled = !1;
+      this.enabled = false;
       this.stopListening(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       Tumblr.Events.on('peepr:close', ::this.start);
     },
     disableAll() {
       console.log('[AUTOPAGINATOR] all pagination disabled');
-      this.enabled = !1;
-      this.defaultPagination = !1;
+      this.enabled = false;
+      this.defaultPagination = false;
       Tumblr.AutoPaginator.stop();
       this.stop();
     },
     enableDefaultPagination() {
-      this.enabled = !1;
-      this.defaultPagination = !0;
+      this.enabled = false;
+      this.defaultPagination = true;
       Tumblr.AutoPaginator.start();
     },
     disableDefaultPagination() {
-      this.enabled = !0;
-      this.defaultPagination = !1;
+      this.enabled = true;
+      this.defaultPagination = false;
       Tumblr.AutoPaginator.stop();
     },
     onScroll(e) {

@@ -18,7 +18,7 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
     events: {
       'change input.date-filter-input': 'contentChanged',
       'click [data-filter]': 'onFilterClick',
-      'click .sort_filter.toggle': 'onToggleFilterClick',
+      'click .toggle': 'onToggleFilterClick',
       'click .option-radio': 'onCheckboxClick',
       'change [type=checkbox]': 'onCheckboxChange'
     },
@@ -29,6 +29,7 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
         }
       });
       this.state = Tumblr.Fox.state;
+      this.searchOptions = Tumblr.Fox.searchOptions;
       this.bindEvents();
     },
     render() {
@@ -36,24 +37,25 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       this.$main = this.$('.popover_menu');
       this.$date = this.$('.date-filter');
       this.$toggleItems = this.$('.toggle_items');
-      if (this.state.get('likes')) {
-        this.$date.find('input').val(new Date().toDateInputValue());
-        this.$toggleItems.hide();
-      } else {
+      this.$date.find('input').val(new Date().toDateInputValue());
+      if (this.searchOptions.get('tag') && !this.state.get('likes')) {
         this.$date.parents().find('.datepicker').hide();
+        this.$(this.$el.find('.search_filter_items')[2]).css('border-bottom', '0px');
       }
       setTimeout(::this.setActiveAndBindEvents, 1);
+      return this;
     },
     bindEvents() {
       SearchFilters.prototype.bindEvents.apply(this);
+      this.listenTo(this.model, 'change:filter_nsfw', ::this.hide);
     },
     bindClickOutside() {
-      this._popoverBase.autoTeardown && (this.clickOutside = new ClickHandler(this.el),
-      this.clickOutside.on('click:outside', this.hide, this));
+      this.clickOutside = new ClickHandler(this.el);
+      this.clickOutside.on('click:outside', this.hide, this);
     },
     contentChanged(e) {
       this.model.set('before', Date.parse(e.currentTarget.value));
-      console.log('[MODEL]', this.model.attributes);
+      console.log('[DATE]', this.model.get('before'));
     },
     toggleDate(e) {
       console.log(e);

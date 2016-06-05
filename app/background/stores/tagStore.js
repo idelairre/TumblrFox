@@ -1,7 +1,5 @@
-import { Deferred } from 'jquery';
 import constants from '../constants';
 import db from '../lib/db';
-import { log } from '../services/logging';
 import 'babel-polyfill';
 
 export default class Tags {

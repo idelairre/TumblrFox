@@ -15,22 +15,27 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.listenTo(this.model, 'change:blogname', this.flushTags);
       this.listenTo(this.model, 'change:term', this.onTermChange);
       this.listenTo(this.model, 'reset', this.onModelReset);
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.updateSearchSettings);
-      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.delegateInputEvents);
+      this.listenTo(Tumblr.Fox.state, 'change:state', ::this.updateSearchSettings);
+      this.listenTo(Tumblr.Fox.searchOptions, 'change:state', ::this.delegateInputEvents);
     },
     delegateInputEvents(state) { // NOTE: turns off tag popover while backend is being sorted out
+      // console.log('[DELEGATE INPUT EVENTS]', state, this);
       switch(state) {
         case 'tag':
           this.blogSearchAutocompleteHelper.delegateEvents();
+          this.blogSearchAutocompleteHelper.bindEvents();
+          this.blogSearchAutocompleteModel.bindEvents();
           break;
         case 'text':
           this.blogSearchAutocompleteHelper.undelegateEvents();
+          this.blogSearchAutocompleteHelper.stopListening();
+          this.blogSearchAutocompleteModel.stopListening();
           break;
       }
     },
     inputKeyDownHandler(e) {
       if (e.keyCode === 13) {
-        this.model.set('unsetTerm', this.getTerm());
+        this.model.set('term', this.getTerm());
         this.blogSearchAutocompleteModel.set('matchTerm', this.getTerm());
         console.log('[SEARCH ON ENTER]', this.model);
         Tumblr.Events.trigger('peeprsearch:change:term', this.model.attributes);
@@ -42,6 +47,7 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.blogSearchAutocompleteHelper.model.getItems();
     },
     updateSearchSettings(state) {
+      // console.log(state);
       switch (state) {
         case 'dashboard':
           this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);

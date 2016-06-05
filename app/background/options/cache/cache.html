@@ -1,6 +1,24 @@
 <script id="cacheTemplate" type="text/javascript">
   <h1 class="cache-header" data-tooltip-key="caching">Cache*</h1>
-  <p class="likes">Likes: <span id="cachedPostsCount"></span> out of <span id="totalPostsCount"></span><button id="cacheLikes">Cache likes</button></p>
-  <p class="following">Following: <span id="cachedFollowingCount"></span> out of <span id="totalFollowingCount"></span><button id="cacheFollowing">Cache following</button></p>
-  <p class="tags">Tags: <span id="cachedTagsCount"></span></p>
+  <form novalidate>
+    <div class="likes-container container">
+      <div class="likes-info">
+        <p class="likes">Likes: <span id="cachedPostsCount" class="cache-count"></span> out of <span id="totalPostsCount" class="total-count"></span></p>
+      </div>
+      <div class="likes-options">
+        <p class="page-num-label label">until page: </p><select id="page" class="page-num" type="select" value="max"></select><p class="date-label label">date: </p><input class="date" type="date"><button id="cacheLikes" class="likes-button">Cache likes</button>
+      </div>
+    </div>
+    <div class="following-container container">
+      <div class="following-info">
+        <p class="following">Following: <span id="cachedFollowingCount" class="cache-count"></span> out of <span id="totalFollowingCount" class="total-count"></span></p>
+      </div>
+      <div class="following-options">
+        <button id="cacheFollowing" class="following-button">Cache following</button>
+      </div>
+    </div>
+    <div class="tags-container container">
+      <p class="tags">Tags: <span id="cachedTagsCount"></span></p>
+    </div>
+  </form>
 </script>

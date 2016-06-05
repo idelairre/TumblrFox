@@ -8,7 +8,7 @@ import Following from '../stores/followingStore';
 
 const sendConstants = (request, sender, sendResponse) => {
   sendResponse(constants);
-}
+};
 
 const chromeReciever = receiverHandler({
   fetchConstants: sendConstants,
@@ -20,7 +20,7 @@ const chromeReciever = receiverHandler({
   updateLikes: Likes.update,
   searchSetBlog: FuseSearch.setBlog,
   fetchFollowing: Following.send,
-  updateFollowing: Following.sync
+  updateFollowing: Following.send
 });
 
 export default chromeReciever;

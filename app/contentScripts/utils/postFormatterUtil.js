@@ -94,7 +94,8 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         data-root_id="${postData.root_id}"
         data-tumblelog="${postData.tumblelog}"
         data-is-reblog="${postData['tumblelog-parent-data'] ? 1 : 0}"
-        data-tumblog-key="${postData['tumblelog-data'].key}">`;
+        data-tumblog-key="${postData['tumblelog-data'].key}"
+        data-tumblrfox-post="true">`;
       return wrapper;
   }
 
@@ -148,10 +149,10 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     if (postData.hasOwnProperty('reblogged_from_name')) {
       postData['tumblelog-parent-data'] = {
         anonymous_asks: null,
-        cname: '',
         avatar_url: null,
         can_send_messages: postData.reblogged_from_can_message,
         can_receive_messages: null,
+        cname: '',
         dashboard_url: `/blog/${postData.reblogged_from_name}`,
         following: postData.reblogged_from_following,
         is_group: null,
@@ -169,6 +170,8 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
 
     if (postData.hasOwnProperty('reblogged_root_name')) {
       postData['tumblelog-root-data'] = {
+        anonymous_asks: null,
+        avatar_url: null,
         can_send_messages: postData.reblogged_root_can_message,
         cname: '',
         following: postData.reblogged_root_following,
@@ -230,8 +233,9 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       postView.remove();
       return { postContainer, postElement, postModel };
     },
+    // TODO: fix the like button for liked posts that are from blogs that aren't followed
     renderPostFromHtml(post) {
-      if (typeof $.parseHTML(post.html) !== 'undefined') {
+      if (typeof post.html !== 'undefined' && $.parseHTML(post.html)) {
         const escapedHtml = unescapeQuotes(unescapeQuotes(post.html)); // NOTE: make it so you don't have to run this twice
         const postElement = $($.parseHTML(escapedHtml));
         const postModel = new Tumblr.Prima.Models.Post($(postElement).data('json'));
@@ -260,9 +264,9 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         return;
       }
       const posts = response.posts || response;
-      for (let i = 0; posts.length > i; i += 1) { // NOTE: posts do not come out in order due to different formatting times
-        Tumblr.Fox.Utils.PostFormatter.renderPost(posts[i]);
-      }
+      posts.map(post => { // NOTE: posts do not come out in order due to different formatting times
+        Tumblr.Fox.Utils.PostFormatter.renderPost(post);
+      });
     },
     renderPost(post) {
       const { postContainer, postElement, postModel } = Tumblr.Fox.Utils.PostFormatter.formatDashboardPost(post);

@@ -20,7 +20,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
       this.$el.addClass(`toggle-${this.options.name}`);
       this.$el.prop('href', '#');
       this.$button = this.$el.find('.indicator');
-      this.rendered = !0; // NOTE: all tumblr subviews must alert that they have been rendered or the parent component won't call "afterRender()"
+      this.rendered = true; // NOTE: all tumblr subviews must alert that they have been rendered or the parent component won't call "afterRender()"
     },
     bindEvents() {
       this.listenTo(this.state, 'change:toggled', ::this.setState);

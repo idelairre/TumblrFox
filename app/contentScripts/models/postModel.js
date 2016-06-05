@@ -30,9 +30,9 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         }
       },
       state: { // this is confusing and has to change
-        apiFetch: !1,
-        tagSearch: !0,
-        dashboardSearch: !1
+        apiFetch: false,
+        tagSearch: true,
+        dashboardSearch: false
       }
     },
     initialize() {
@@ -40,7 +40,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.apiSlug = this.defaults.apiSlug;
       this.state = this.defaults.state;
       this.items = Tumblr.Posts;
-      this.loading = !1;
+      this.loading = false;
       this.bindEvents();
     },
     bindEvents() {
@@ -51,10 +51,14 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Events, 'indashblog:search:complete', ::this.initialIndashSearch); // add posts to collection
       this.listenTo(Tumblr.Events, 'indashblog:search:post-added', Utils.PostFormatter.renderPost);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
+      this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.flushMatches);
     },
     unbindEvents() {
       this.stopListening();
       this.listenTo(Tumblr.Events, 'peepr:close', ::this.bindEvents);
+    },
+    flushMatches() {
+      this.$$matches = [];
     },
     fetch() {
       if (this.state.tagSearch && this.state.apiFetch) {
@@ -96,10 +100,12 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
            Tumblr.Events.trigger('fox:autopaginator:stop');
          }
       } else if (matches.length > 0) {
-        this.handOffPosts({
-          posts: matches
-        });
-        this.toggleLoading();
+        setTimeout(() => {
+          this.handOffPosts({
+            posts: matches
+          });
+          this.toggleLoading();
+        }, 700);
       }
     },
     setTerm(e) {
@@ -112,18 +118,17 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       if (this.loading) {
         return;
       }
-      this.filterPosts(type);
+      this.state.apiFetch = true;
+      this.state.tagSearch = false;
+      this.state.dashboardSearch = false;
       this.toggleLoading();
-      this.state.apiFetch = !0;
-      this.state.tagSearch = !1;
-      this.state.dashboardSearch = !1;
-      this.resetQueryOffsets();
-      setTimeout(() => {
+      this.filterPosts(type).then(() => {
+        this.resetQueryOffsets();
         this.apiFetchPosts(this.apiSlug).then(posts => {
           this.handOffPosts(posts);
           this.toggleLoading();
-        }, 300);
-      })
+        });
+      });
     },
     apiFetchPosts(slug) {
       console.log('[FETCH API POSTS]');
@@ -156,15 +161,17 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
        Tumblr.Events.trigger('fox:autopaginator:start');
       }
       this.resetQueryOffsets();
-      this.query.loggingData = assign({ offset: 0 }, e); // this is weird and I don't want to touch it
+      this.query.loggingData = assign({
+        offset: 0
+      }, e); // this is weird and I don't want to touch it
       this.clientFetchPosts(this.query.loggingData);
     },
     initialIndashSearch(posts) {
       Tumblr.Events.trigger('fox:autopaginator:start');
       this.filterPosts();
-      this.state.apiFetch = !1;
-      this.state.tagSearch = !0;
-      this.state.dashboardSearch = !1;
+      this.state.apiFetch = false;
+      this.state.tagSearch = true;
+      this.state.dashboardSearch = false;
       setTimeout(() => {
         posts = posts.filter(post => {
           return post.post_html;
@@ -174,6 +181,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       }, 300);
     },
     filterPosts(filterType) {
+      const deferred = $.Deferred();
       if (filterType && filterType !== this.apiSlug.type) {
         this.apiSlug.type = filterType;
         this.resetQueryOffsets();
@@ -183,21 +191,24 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       Tumblr.postsView.postViews = [];
       $('li[data-pageable]').fadeOut(300, () => {
         $('.standalone-ad-container').remove();
-        $('li[data-pageable]').remove();
       });
+      $('li[data-pageable]').promise().done(() => {
+        $('li[data-pageable]').remove();
+        deferred.resolve();
+      });
+      return deferred.promise();
     },
     searchDashboard(query) {
       const deferred = $.Deferred();
       let results = [];
       if (!this.state.dashboardSearch) { // cache posts and search amongst these from now on
-        this.state.dashboardSearch = !0;
+        this.state.dashboardSearch = true;
         this.$$matches = Tumblr.postsView.postViews;
         Utils.postFormatter.parseTags(this.$$matches);
       }
-      // console.log('[QUERY]', query, this.$$matches);
       Tumblr.Events.trigger('fox:disablePagination');
-      this.state.apiFetch = !0;
-      this.state.tagSearch = !0;
+      this.state.apiFetch = true;
+      this.state.tagSearch = true;
       this.filterPosts();
       this.toggleLoading();
       setTimeout(() => {
@@ -206,7 +217,6 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
             return post;
           }
         });
-        console.log(this.$$matches, results);
         this.handOffPosts(results);
         this.toggleLoading();
       }, 300);
@@ -257,17 +267,16 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       const posts = e.length ? e : e.posts || e.liked_posts || e.models || e.detail.liked_posts || e.detail.posts; // this is because of poor choices, this needs to be hammered down
       const length = posts.length;
       this.apiSlug.offset += length;
-      for (let i = 0; length > i; i += 1) {
-        const post = posts[i];
-        if (post.hasOwnProperty('html') && $.parseHTML(post.html)) {
-          Utils.PostFormatter.renderPostFromHtml(posts[i]);
+      posts.map(post => {
+        if (post.hasOwnProperty('html') && typeof post.html !== 'undefined') {
+          Utils.PostFormatter.renderPostFromHtml(post);
         } else {
           this.clientFetchPosts({
             blogNameOrId: post.blog_name || post.model.attributes.tumblelog || post.get('blog_name'),
             postId: post.id || post.model.get('id')
           });
         }
-      }
+      });
     }
   });
 

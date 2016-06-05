@@ -61,12 +61,12 @@ module.exports = (function popover(Tumblr, Backbone, _) {
     },
     initialize(e) {
       this.options = assign({}, e);
-      this.initialized = !1;
+      this.initialized = false;
     },
     render() {
       this.$el = this.$el.html(this.template(this.options));
       this.$el.addClass(this.options.class);
-      let hiddenItems = 0;
+      let hiddenItems = null;
       this.options.items.map(item => {
         if (item.hidden) {
           hiddenItems =+ 1;
@@ -78,8 +78,8 @@ module.exports = (function popover(Tumblr, Backbone, _) {
           }
         });
       });
-      if (this.options.items.length - hiddenItems === 1) {
-        this.$('ul.popover_inner_list').removeClass('search_filter_items');
+      if (hiddenItems && (this.options.items.length - hiddenItems === 1)) {
+        this.$('ul.popover_inner_list').css('border-bottom', '0px');
       }
     },
     toggleSelected(e) {

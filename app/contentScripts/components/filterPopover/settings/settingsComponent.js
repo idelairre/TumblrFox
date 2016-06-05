@@ -32,16 +32,18 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     },
     template: $(settingsPopoverTemplate).html(),
     initialize(e) {
+      this.intialized = false;
       this.options = assign({}, this.defaults, e);
       this.state = Tumblr.Fox.state;
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.setSearchStateMenu);
-      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setSearchOptionMenu);
+      this.searchOptions = Tumblr.Fox.searchOptions;
+      this.listenTo(this.state, 'change:state', ::this.setSearchStateMenu);
+      this.listenTo(this.searchOptions, 'change:state', ::this.setSearchOptionMenu);
       if (!Tumblr.Fox.options.enableTextSearch) {
         this.options.popoverOptions[1].hidden = true;
       }
     },
-    setSearchStateMenu() {
-      if (!Tumblr.Fox.options.cachedTags && this.state.likes) {
+    setSearchStateMenu(state) {
+      if (!Tumblr.Fox.options.cachedTags && state === 'likes') {
         this.options.popoverOptions[1].listItems.splice(0, 1);
       } else {
         if (this.options.popoverOptions[1].listItems[0].name !== 'Tag') {
@@ -58,22 +60,22 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     },
     render() {
       this.$el.html(this.template);
-      this.initialized = !0;
+      this.initialized = true;
     },
     events: {
       'click .toggle-search': 'togglePopover'
     },
     togglePopover() {
-      this.popover || (this.popover = new Popover({
+      this.popover = new Popover({
         pinnedTarget: this.$el,
         pinnedSide: 'bottom',
         class: 'popover--settings-popover',
         selection: 'checkmark',
         items: this.options.popoverOptions,
-        onSelect: this.onSelect
-      }),
-      this.popover.render(),
-      this.listenTo(this.popover, 'close', this.onPopoverClose));
+        onSelect: ::this.onSelect
+      });
+      this.popover.render();
+      this.listenTo(this.popover, 'close', this.onPopoverClose);
     },
     hidePopover() {
       this.popover && this.popover.hide();
@@ -85,11 +87,18 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     },
     onSelect(setting) {
       if (this.initialized) {
-        if (setting === 'tag' || setting === 'text') {
-          Tumblr.Events.trigger('fox:setSearchOption', setting);
-        } else {
-          Tumblr.Fox.Posts.set('tagSearch', setting);
-          Tumblr.Events.trigger('fox:setSearchState', setting);
+        switch(setting) {
+          case 'tag':
+            this.searchOptions.setState(setting);
+            break;
+          case 'text':
+            this.searchOptions.setState(setting);
+            this.state.setState('user');
+            break;
+          default:
+            this.state.setState(setting);
+            Tumblr.Fox.Posts.set('tagSearch', setting);
+            break
         }
       }
     }

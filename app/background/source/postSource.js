@@ -1,8 +1,4 @@
-import async from 'async';
-import constants from '../constants';
-import { Deferred } from 'jquery';
 import { oauthRequest } from '../lib/oauthRequest';
-import Source from './source';
 import 'babel-polyfill';
 
 export default class PostSource {

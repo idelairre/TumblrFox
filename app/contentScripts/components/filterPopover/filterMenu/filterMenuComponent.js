@@ -3,7 +3,7 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
 
   const FilterMenuComponent = Backbone.View.extend({
     defaults: {
-      disabled: !1,
+      disabled: false
     },
     className: 'popover--filter-select-dropdown',
     template: $('#filterMenuTemplate').html(),
@@ -21,15 +21,15 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       Tumblr.Events.trigger('fox:setFilter', querySlug);
       this.resetChecks();
       this.$('i[data-check="any"]').show();
-      this.rendered = !0;
+      this.rendered = true;
       this.trigger('rendered', this);
     },
     events: {
       'click [data-js-menu-item]': 'toggleSelection'
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'peepr-open-request', this.set('disabled', !0));
-      this.listenTo(Tumblr.Events, 'peepr:close', this.set('disabled', !1));
+      this.listenTo(Tumblr.Events, 'peepr-open-request', this.set('disabled', true));
+      this.listenTo(Tumblr.Events, 'peepr:close', this.set('disabled', false));
     },
     resetChecks() {
       this.$('i[data-check]').hide();

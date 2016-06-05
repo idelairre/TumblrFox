@@ -2,11 +2,11 @@ import $ from 'jquery';
 import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
 import View from '../view/view';
+import Tipped from '../../lib/tipped';
 import experimentalTemplate from './experimental.html';
 import clientCachingTooltip from './tooltips/clientCachingTooltip.html';
 import fullTextSearchTooltip from './tooltips/fullTextSearchTooltip.html';
 import saveViaFirebaseTooltip from './tooltips/saveViaFirebaseTooltip.html';
-import Tipped from '../../lib/tipped';
 
 const Experimental = View.extend({
   defaults: {
@@ -19,9 +19,6 @@ const Experimental = View.extend({
   className: 'experimental options',
   tagName: 'section',
   render() {
-    this.port = chrome.runtime.connect({
-      name: 'options'
-    });
     this.$el.html(this.template);
     this.bindEvents();
     return this;

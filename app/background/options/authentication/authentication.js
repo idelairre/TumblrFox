@@ -1,6 +1,5 @@
 import $ from 'jquery';
 import { isString, mapKeys } from 'lodash';
-import Backbone from 'backbone';
 import View from '../view/view';
 import authenticationTemplate from './authentication.html';
 

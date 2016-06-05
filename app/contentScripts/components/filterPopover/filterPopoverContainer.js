@@ -10,9 +10,9 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
     view(e) {
       assign(e, {
         pinnedTarget: $('#filter_button'),
-        isFixedPosition: !0,
-        autoTeardown: !1,
-        teardownOnEscape: !1
+        isFixedPosition: true,
+        autoTeardown: false,
+        teardownOnEscape: false
       });
       return new FilterPopoverComponent(e);
     },

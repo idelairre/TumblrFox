@@ -1,6 +1,6 @@
 module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { countBy, identity, invoke, omit } = _;
+  const { invoke, omit } = _;
   const { chromeMixin } = Tumblr.Fox;
 
   const TextSearchAutocompleteModel = Backbone.Model.extend({
@@ -11,7 +11,7 @@ module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
       typeAheadMatches: []
     },
     initialize() {
-      this.fetched = !1;
+      this.fetched = false;
       this.state = Tumblr.Fox.state;
       this.items = new Backbone.Collection();
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
@@ -34,7 +34,7 @@ module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
           break;
       }
     },
-    fetch(e) {
+    fetch() {
       const deferred = $.Deferred();
       this.chromeTrigger('chrome:fetch:keys', ::this.parse);
       deferred.resolve(this.items);
@@ -57,7 +57,7 @@ module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
-      let keys = e.detail || e || [];
+      const keys = e.detail || e || [];
       keys.map(key => {
         key.renameProperty('term', 'tag');
       });

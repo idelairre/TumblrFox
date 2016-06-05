@@ -23,18 +23,30 @@ export default class Likes {
     const items = {
       cachedPostsCount: constants.get('cachedPostsCount'),
       totalPostsCount: constants.get('totalPostsCount')
-    }
+    };
+    const opts = {
+      untilPage: constants.get('fetchLikesUntil').page,
+      untilTimestamp: constants.get('fetchLikesUntil').date / 1000
+    };
     async.doWhilst(async next => {
       try {
-        const posts = await Source.start(sendResponse);
-        await Likes.bulkPut(posts);
-        items.cachedPostsCount = constants.get('cachedPostsCount');
-        log('posts', items, progress => {
-          sendResponse(progress);
-          next(null, posts);
-        });
+        const posts = await Source.start(sendResponse, opts);
+        if (posts.length === 0) {
+          sendResponse({
+            type: 'done',
+            payload: { message: 'Maximum fetchable posts reached.' }
+          });
+          next(null, items);
+        } else {
+          await Likes.bulkPut(posts);
+          items.cachedPostsCount = constants.get('cachedPostsCount');
+          log('posts', items, progress => {
+            sendResponse(progress);
+            next(null, posts);
+          });
+        }
       } catch (e) {
-        logError(e, next, sendResponse)
+        logError(e, next, sendResponse);
       }
     }, posts => {
       return posts.length !== 0;
@@ -69,17 +81,13 @@ export default class Likes {
   }
 
   static async searchLikesByTerm(query, port) {
+    console.log('[QUERY]', query);
     try {
       let matches = await FuseSearch.search(query);
-      if (query.sort === 'POPULARITY_DESC') {
-        await Likes._sortByPopularity(matches);
-      }
-      if (query.post_type !== 'ANY') {
-        matches = await Likes._filterByType(query, matches);
-      }
-      if (query.before) {
-        matches = await Likes._filterByDate(query, matches);
-      }
+      await Likes._sortByPopularity(matches);
+      matches = await Likes._filterByType(query, matches);
+      matches = await Likes._filterByDate(query, matches);
+      matches = await Likes._filterNSFW(query, matches);
       return matches;
     } catch (e) {
       console.error(e);
@@ -97,33 +105,63 @@ export default class Likes {
     }
   }
 
-  static async _filterByDate(args, posts) {
+  static async _filterByDate(query, posts) {
     const deferred = Deferred();
-    const date = args.before / 1000;
-    posts = posts.filter(post => {
-      if (date >= post.liked_timestamp) {
-        return post;
-      }
-    });
+    if (query.before) {
+      const date = query.before / 1000;
+      posts = posts.filter(post => {
+        if (date >= post.liked_timestamp) {
+          return post;
+        }
+      });
+    }
     return deferred.resolve(posts);
   }
 
-  static _filterByType(args, posts) {
+  static _filterByType(query, posts) {
     const deferred = Deferred();
-    const type = args.post_type.toLowerCase();
-    posts = posts.filter(post => {
-      if (post.type === type) {
-        return post;
-      }
-    });
+    if (query.post_type !== 'ANY') {
+      const type = query.post_type.toLowerCase();
+      posts = posts.filter(post => {
+        if (post.type === type) {
+          return post;
+        }
+      });
+    }
     return deferred.resolve(posts);
   }
 
-  static _sortByPopularity(posts) {
+  static _sortByPopularity(query, posts) {
     const deferred = Deferred();
-    posts = posts.sort((a, b) => {
-      return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1 : 0);
-    }).reverse();
+    if (query.sort === 'POPULARITY_DESC') {
+      posts = posts.sort((a, b) => {
+        return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1 : 0);
+      }).reverse();
+    }
+    return deferred.resolve(posts);
+  }
+
+  static _filterNSFW(query, posts) {
+    const deferred = Deferred();
+    if (query.filter_nsfw) {
+      posts = posts.filter(post => {
+        if (!post.hasOwnProperty('tumblelog-content-rating')) {
+          return post;
+        }
+      });
+    }
+    return deferred.resolve(posts);
+  }
+
+  static _filterOriginal(query, posts) {
+    const deferred = Deferred();
+    if (query.post_role === 'ORIGINAL') {
+      posts = posts.filter(post => {
+        if (!post.is_reblog) {
+          return post;
+        }
+      });
+    }
     return deferred.resolve(posts);
   }
 
@@ -138,15 +176,11 @@ export default class Likes {
       } else {
         matches = await db.posts.orderBy('tags').reverse().toArray(); // return all
       }
-      if (query.sort === 'POPULARITY_DESC') {
-        await Likes._sortByPopularity(matches);
-      }
-      if (query.post_type !== 'ANY') {
-        matches = await Likes._filterByType(query, matches);
-      }
-      if (query.before) {
-        matches = await Likes._filterByDate(query, matches);
-      }
+      await Likes._sortByPopularity(matches);
+      matches = await Likes._filterByType(query, matches);
+      matches = await Likes._filterByDate(query, matches);
+      matches = await Likes._filterNSFW(query, matches);
+      matches = await Likes._filterOriginal(query, matches);
       if (query.offset && query.limit) {
         const { offset, limit } = query;
         matches = matches.slice(offset, offset + limit);
@@ -158,26 +192,13 @@ export default class Likes {
     return deferred.promise();
   }
 
-  static async sync(payload) {
-    console.log(payload);
-    let count = await db.posts.toCollection().count();
-    console.log('[POSTS BEFORE]', count);
-    const cachedPost = await db.posts.get(payload.id);
-    if (cachedPost && !cachedPost.hasOwnProperty('html')) {
-      const postData = Likes._testProcessPost(payload.html, cachedPost.liked_timestamp);
-      await db.posts.put(postData);
-    }
-    count = await db.posts.toCollection().count();
-    console.log('[POSTS AFTER]', count);
-  }
-
   static async update(request) {
     const { type, html, postId, timestamp } = request.payload;
     if (type === 'like') {
       const postData = Source.processPost(html, timestamp);
       await db.posts.put(postData);
       const count = await db.posts.toCollection().count();
-      constants.set('totalPostsCount', count);
+      constants.set('cachedPostsCount', count);
       console.log('[ADDED LIKE]', count);
     } else {
       await db.posts.delete(postId);

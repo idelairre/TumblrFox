@@ -1,11 +1,8 @@
 /* global chrome:true */
 /* eslint no-undef: "error" */
 
-import constants from './constants';
-import db from './lib/db';
 import chromeReceiver from './receivers/chromeReceiver';
 import optionsReceiver from './receivers/optionsReceiver';
-import { oauthRequest } from './lib/oauthRequest';
 import './lib/livereload';
 import 'babel-polyfill';
 
@@ -17,7 +14,7 @@ const loadChromeEventHandlers = () => {
 
 const loadOptionsEventHandlers = () => {
   chrome.runtime.onConnect.addListener(optionsReceiver);
-}
+};
 
 if (inExtension) {
   loadChromeEventHandlers();

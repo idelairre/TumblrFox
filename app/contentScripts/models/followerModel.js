@@ -2,7 +2,6 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { chromeMixin } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
-  const { currentUser } = Tumblr.Prima;
 
   const FollowerModel = Backbone.Model.extend({
     defaults: {
@@ -10,29 +9,26 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       limit: 25
     },
     mixins: [chromeMixin],
-    initialize(e) {
+    initialize() {
       this.options = this.defaults;
       this.items = Tumblelog.collection;
-      this.$views = []
+      this.$views = [];
       this.chromeTrigger('chrome:refresh:following');
       this.bindEvents();
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'post:follow:success', () => {
-        this.chromeTrigger('chrome:update:following');
-      });
+      this.listenTo(Tumblr.Events, 'post:follow:success', ::this.updatePosts);
     },
     fetch(query) {
       const deferred = $.Deferred();
       if (query === 'orderFollowed') {
         return this.pageFetch(this.options.offset);
-      } else {
-        this.options.offset = 0; // this is so the page fetch starts at zero when it is selected again
-        this.chromeTrigger('chrome:fetch:following', query, followers => {
-          deferred.resolve(this.items.reset(followers));
-        });
-        return deferred.promise();
       }
+      this.options.offset = 0; // this is so the page fetch starts at zero when it is selected again
+      this.chromeTrigger('chrome:fetch:following', query, followers => {
+        deferred.resolve(this.items.reset(followers));
+      });
+      return deferred.promise();
     },
     pageFetch(offset) {
       const deferred = $.Deferred();
@@ -45,11 +41,6 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
             response = response.slice(1, response.length);
           }
           this.options.offset += this.options.limit;
-          // $.each(response, (i, value) => {
-          //   const tumblelog = new Tumblelog($(response).find('[data-tumblelog-popover]').data('tumblelog-popover'));
-          //   console.log(tumblelog);
-          //   this.items.add(tumblelog);
-          // });
           deferred.resolve(response);
         },
         error: error => {
@@ -58,8 +49,20 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
         }
       });
       return deferred.promise();
+    },
+    updatePosts(following) {
+      const posts = Tumblr.Fox.Posts.items.where({
+        tumblelog: following.attributes.name
+      });
+      posts.map(post => {
+        post.attributes['tumblelog-data'].following = true;
+        post.set(post.attributes);
+      });
+      this.chromeTrigger('chrome:update:following', {
+        following: following.attributes
+      });
     }
   });
 
-  Tumblr.Fox.FollowerModel = FollowerModel;
+  Tumblr.Fox.FollowerModel = new FollowerModel();
 });

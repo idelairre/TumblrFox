@@ -6,13 +6,12 @@ module.exports = (function loaderMixin(Tumblr, Backbone, _) {
 
   const loader = new Mixin({
     toggleLoader(e) {
-      console.log('[TOGGLE LOADER]', e);
-      e === !0 ? this.loader ? this.loader.set('loading', !0) : this.loader = new Loader({ // I hate this
+      e === true ? this.loader ? this.loader.set('loading', true) : this.loader = new Loader({ // I hate this
           $container: this.$el,
           type: 'bar',
           classModifiers: 'top',
-          loading: !0
-      }) : this.loader.set('loading', !1);
+          loading: true
+      }) : this.loader.set('loading', false);
     }
   });
 

@@ -1,6 +1,3 @@
-/* global chrome:true */
-/* eslint no-undef: "error" */
-
 import { camelCase } from 'lodash';
 import constants from '../constants';
 
@@ -9,42 +6,52 @@ export const calculatePercent = (count, objects) => {
   const itemsLeft = objects - count;
   const total = objects;
   return { percentComplete, itemsLeft, total };
-}
+};
 
-export const log = (database, items, callback, save) => {
+export const log = (database, items, sendResponse, save) => {
   try {
     const cachedKey = camelCase(`cached-${database}-count`);
     const totalKey = camelCase(`total-${database}-count`);
     const { percentComplete, itemsLeft, total } = calculatePercent(items[cachedKey], items[totalKey]);
     if (typeof save === 'undefined' || save) {
-      if (typeof constants.get(`${cachedKey}`) !== 'undefined '&& constants.get(`${totalKey}`) !== 'undefined') {
+      if (typeof constants.get(`${cachedKey}`) !== 'undefined ' && typeof constants.get(`${totalKey}`) !== 'undefined') {
         const storageSlug = {};
         storageSlug[cachedKey] = items[cachedKey];
         storageSlug[totalKey] = items[totalKey];
         constants.set(storageSlug);
       }
     }
+
+    const payload = {
+      constants,
+      database,
+      percentComplete,
+      itemsLeft,
+      total
+    };
     // console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
-    callback({
-      type: 'progress',
-      payload: { constants, database, percentComplete, itemsLeft, total }
-    });
+    if (itemsLeft === 0) {
+      sendResponse({ type: 'done', payload });
+    } else {
+      sendResponse({ type: 'progress', payload });
+    }
   } catch (e) {
     console.error(e);
     logError(e, callback);
   }
-}
+};
 
-export const logError = (error, next, port) => {
+export const logError = (error, next, sendResponse) => {
+  console.error(error);
   if (error.message) {
     error = error.message;
   }
   let isAsync = true;
-  if (!port) {
-    port = next;
+  if (!sendResponse) {
+    sendResponse = next;
     isAsync = false;
   }
-  port({
+  sendResponse({
     type: 'error',
     payload: {
       message: error
@@ -53,4 +60,4 @@ export const logError = (error, next, port) => {
   if (isAsync) {
     next(error);
   }
-}
+};

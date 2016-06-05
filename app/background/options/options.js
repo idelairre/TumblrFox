@@ -16,7 +16,7 @@ import Experimental from './experimental/experimental';
 import ProgressBar from './progressBar/progressBar';
 import Settings from './settings/settings';
 import View from './view/view';
-import events from './events';
+import bindListeners from './events';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
@@ -49,7 +49,7 @@ const Options = Backbone.View.extend({
     }
   },
   initialize() {
-    // TODO: bind defaults
+    this.initialized = false;
     this.props = new Backbone.Model();
     this.bindEvents();
     this.initializePort();
@@ -58,10 +58,12 @@ const Options = Backbone.View.extend({
     this.port = chrome.runtime.connect({
       name: 'options'
     });
-    this.port.postMessage({
-      type: 'fetchConstants'
-    });
-    this.port.onMessage.addListener(events);
+    if (this.port) {
+      this.port.onMessage.addListener(bindListeners);
+      this.postMessage({
+        type: 'fetchConstants'
+      });
+    }
   },
   renderSubviews() {
     this._subviews = Array.prototype.slice.call(this.$('[data-subview]'));
@@ -76,7 +78,7 @@ const Options = Backbone.View.extend({
     this.initialized = true;
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'INITIALIZED', ::this.restoreOptions);
+    this.listenTo(Backbone.Events, 'REPLY_CONSTANTS', ::this.restoreOptions);
     this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
     this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.postMessage);
     this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.postMessage);
@@ -84,7 +86,7 @@ const Options = Backbone.View.extend({
     this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'SAVE_CACHE', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'SHOW_ERROR', ::this.showError);
+    this.listenTo(Backbone.Events, 'ERROR', ::this.showError);
     this.listenTo(Backbone.Events, 'DONE', ::this.showDone);
   },
   showError(response) {
@@ -122,9 +124,7 @@ const Options = Backbone.View.extend({
   restoreOptions(response) {
     const { payload } = response;
     this.props.set(payload);
-    console.log('[CONTROLLER INITIALIZED]', this.initialized);
     if (!this.initialized) {
-      console.log('[RENDERING SUBVIEWS...]');
       this.renderSubviews();
     }
   }

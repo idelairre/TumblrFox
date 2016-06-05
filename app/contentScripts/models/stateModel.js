@@ -1,4 +1,4 @@
-module.exports = (function(Tumblr, Backbone, _) {
+module.exports = (function (Tumblr, Backbone, _) {
   const { assign, mapKeys } = _;
 
   const State = Backbone.Model.extend({
@@ -7,7 +7,7 @@ module.exports = (function(Tumblr, Backbone, _) {
     },
     set() {
       Backbone.Model.prototype.set.apply(this, arguments);
-      this.trigger('change:state', this.attributes);
+      this.trigger('change:state', this.getState());
     },
     getState() {
       for (const key in this.attributes) {
@@ -19,26 +19,25 @@ module.exports = (function(Tumblr, Backbone, _) {
     setState(state) {
       const attributes = this.attributes;
       mapKeys(attributes, (value, key) => {
-        attributes[key] = !1;
+        attributes[key] = false;
         if (key === state) {
-          attributes[key] = !0;
+          attributes[key] = true;
         }
       });
       this.set(attributes);
-      this.trigger('change:state', this.attributes);
     }
   });
 
   Tumblr.Fox.state = new State({
-    dashboard: !1,
-    user: !0,
-    likes: !1
+    dashboard: false,
+    user: true,
+    likes: false
   });
 
   Tumblr.Fox.searchOptions = new State({
-    tag: !0,
-    text: !1
+    tag: true,
+    text: false
   });
 
   Tumblr.Fox.State = State;
-})
+});

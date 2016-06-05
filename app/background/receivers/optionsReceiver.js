@@ -1,17 +1,16 @@
 import constants from '../constants';
 import portHandler from '../services/portHandler';
 import Cache from '../stores/cacheStore';
-import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
 
 const sendConstants = postMessage => {
   postMessage({ type: 'replyConstants', payload: constants });
-}
+};
 
 const updateConstants = (request, postMessage) => {
   constants.set(request);
-}
+};
 
 const downloadCache = postMessage => {
   if (constants.get('saveViaFirebase')) {
@@ -19,7 +18,7 @@ const downloadCache = postMessage => {
   } else {
     Cache.assembleCacheAsCsv(postMessage);
   }
-}
+};
 
 const restoreCache = (request, postMessage) => {
   if (constants.get('saveViaFirebase')) {
@@ -28,7 +27,7 @@ const restoreCache = (request, postMessage) => {
   } else {
     Cache.restoreCache(request, postMessage);
   }
-}
+};
 
 const optionsReceiver = portHandler({
   cacheLikes: Likes.cache,

@@ -13,12 +13,11 @@ const CacheWorker = operative({
       console.log(`[ASSEMBLING FILE]: ${offset} out of ${fileSize}`);
     }
   },
-  convertJsonToCsv(jsonData, callback) {
+  convertJsonToCsv(jsonData) {
     const deferred = this.deferred();
     try {
       let csv = '';
       const headers = [];
-      const keys = [];
       for (let i = 0; jsonData.length > i; i += 1) {
         const item = jsonData[i];
         Object.keys(item).map(key => {
@@ -47,7 +46,7 @@ const CacheWorker = operative({
       deferred.reject(e);
     }
   },
-  assembleFileBlob({ file, type }, callback) {
+  assembleFileBlob({ file, type }) {
     console.log('[ASSEMBLING FILE BLOB]');
     const deferred = this.deferred();
     try {

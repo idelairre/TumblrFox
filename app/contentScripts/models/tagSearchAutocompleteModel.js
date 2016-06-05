@@ -11,7 +11,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       typeAheadMatches: []
     },
     initialize() {
-      this.fetched = !1;
+      this.fetched = false;
       this.state = Tumblr.Fox.state;
       this.items = new Backbone.Collection();
       this.$$dashboardTags = [];
@@ -46,9 +46,8 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     fetch() {
       if (this.state.get('dashboard')) {
         return this.dashboardFetch();
-      } else {
-        return this.chromeFetch();
       }
+      return this.chromeFetch();
     },
     // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
     // need a trigger to flush tags
@@ -117,7 +116,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
          this.set('typeAheadMatches', this.items.toJSON());
        }
       omit(e, 'tags');
-      this.fetched = !0;
+      this.fetched = true;
     }
   });
 

@@ -27,15 +27,20 @@ class Constants extends Eventor {
     saveViaFirebase: true,
     setUser: false,
     currentUser: {},
-    nextSlug: null,
-    userName: '',
-    consumerKey: CONSUMER_KEY,
-    consumerSecret: CONSUMER_SECRET,
-    initialized: false
+    fetchLikesUntil: {
+      date: new Date(2007, 1, 1),
+      page: 'max'
+    },
+    nextSlug: {
+      timestamp: null,
+      page: 1
+    },
+    userName: ''
   };
 
   constructor() {
     super();
+    this.initialized = false;
     this._events = {};
     this.initialize();
   }
@@ -46,6 +51,7 @@ class Constants extends Eventor {
       const response = await oauthRequest({
         url: 'https://api.tumblr.com/v2/user/info'
       });
+      console.log('[USER]', response);
       const postsCount = await db.posts.toCollection().count();
       // const canFetchApiLikes = await Likes.check(response.user.name);
       this.set('userName', response.user.name);
@@ -55,6 +61,7 @@ class Constants extends Eventor {
       this.set('totalFollowingCount', response.user.following);
       this.initialized = true;
       this.trigger('ready');
+      console.log('[CONSTANTS]', this);
     } catch (e) {
       console.error(e);
     }
@@ -83,10 +90,10 @@ class Constants extends Eventor {
   }
 
   reset() {
-    this.set('cachedTagsCount', 0);
-    this.set('cachedPostsCount', 0);
-    this.set('cachedFollowingCount', 0);
-    this.set('nextSlug', null);
+    this.set('cachedTagsCount', this.defaults.cachedTagsCount);
+    this.set('cachedPostsCount', this.defaults.cachedPostsCount);
+    this.set('cachedFollowingCount', this.defaults.cachedFollowingCount);
+    this.set('nextSlug', this.defaults.nextSlug);
     this.trigger('reset');
   }
 
@@ -117,23 +124,7 @@ class Constants extends Eventor {
 
   _initializeStorageValues() {
     const deferred = Deferred();
-    chrome.storage.local.get({
-      cachedPostsCount: 0,
-      cachedFollowingCount: 0,
-      cachedTagsCount: 0,
-      maxPostCount: 0,
-      totalPostsCount: 0,
-      totalFollowingCount: 0,
-      totalTagsCount: 0,
-      canFetchApiLikes: false,
-      debug: false,
-      defaultKeys: true,
-      fullTextSearch: true,
-      saveViaFirebase: true,
-      setUser: false,
-      currentUser: {},
-      nextSlug: null
-    }, items => {
+    chrome.storage.local.get(this.defaults, items => {
       this._assign(items);
     });
     chrome.storage.sync.get({
