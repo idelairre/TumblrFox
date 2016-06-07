@@ -1,9 +1,9 @@
 module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $, Model } = Backbone;
   const { countBy, identity, invoke, omit } = _;
   const { chromeMixin } = Tumblr.Fox;
 
-  const TagSearchAutocompleteModel = Backbone.Model.extend({
+  const TagSearchAutocompleteModel = Model.extend({
     mixins: [chromeMixin],
     defaults: {
       matchTerm: '',
@@ -14,10 +14,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.fetched = false;
       this.state = Tumblr.Fox.state;
       this.items = new Backbone.Collection();
-      this.$$dashboardTags = [];
-      this.$$likesTags = [];
       this.bindEvents();
-      this.chromeTrigger('chrome:fetch:tags', ::this.parse);
     },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
@@ -39,8 +36,8 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
           break;
       }
     },
-    flushTags() {
-      this.fetched = !1;
+    flushTags(state) {
+      this.fetched = false;
       this.items.reset([]);
     },
     fetch() {
@@ -55,9 +52,6 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       const deferred = $.Deferred();
       const tagArray = [];
       deferred.resolve(this.items);
-      if (Tumblr.Fox.Posts.state.dashboardSearch) { // return early
-        return deferred.promise();
-      }
       Tumblr.postsView.postViews.filter(post => {
         const tagElems = post.$el.find('.post_tags');
         if (tagElems.length > 0) {
@@ -85,10 +79,10 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     },
     chromeFetch() {
       const deferred = $.Deferred();
-      if (!this.fetched) {
-        this.chromeTrigger('chrome:fetch:tags', ::this.parse);
-      }
-      deferred.resolve(this.items);
+      this.chromeTrigger('chrome:fetch:tags', tags => {
+        this.parse(tags);
+        deferred.resolve(tags);
+      });
       return deferred.promise();
     },
     getItems() {
@@ -108,15 +102,15 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
-      const tags = e.detail || e;
+      let tags = e.detail || e;
       if (!this.fetched) {
-        this.items.reset(tags.slice(0, 250));
+        this.items.reset(tags);
+        this.fetched = true;
       }
       if (this.get('matchTerm') === '') {
          this.set('typeAheadMatches', this.items.toJSON());
        }
       omit(e, 'tags');
-      this.fetched = true;
     }
   });
 

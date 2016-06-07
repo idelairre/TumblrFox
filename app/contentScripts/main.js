@@ -33,11 +33,11 @@ module.exports = (function main(Tumblr, Backbone, _) {
     Utils.getComponent('Mixin', 'this.mixins=');
     Utils.getComponent('TumblrModel', '.Model.extend({})');
     Utils.getComponent('TumblrView', 'uniqueId("view")');
+    // Utils.getComponent('PeeprPostsModel', '/svc/indash_blog/posts');
     Utils.getComponent('AutoComplete', '/svc/search/blog_search_typeahead');
     Utils.getComponent('SearchFiltersTemplate', 'model.showOriginalPostsSwitch');
     Utils.getComponent('SearchFiltersPopover', 'blog-search-filters-popover'); // extend this to get the settings options
     Utils.getComponent('SearchFilters', '[data-filter]');
-    // Tumblr.Fox.getComponent('ModelForTinyGreyButton', '_updateSubscriptionStatus');
 
     assign(Backbone.Model, Tumblr.Fox.get('TumblrModel'));
     // Object.assign(Backbone.View, Tumblr.Fox.get('TumblrView'));

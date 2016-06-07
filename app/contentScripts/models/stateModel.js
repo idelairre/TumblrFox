@@ -1,12 +1,14 @@
 module.exports = (function (Tumblr, Backbone, _) {
+  const { Model } = Backbone;
   const { assign, mapKeys } = _;
 
-  const State = Backbone.Model.extend({
+  const State = Model.extend({
     initialize(e) {
       assign(this, e);
     },
     set() {
       Backbone.Model.prototype.set.apply(this, arguments);
+      Backbone.Model.prototype.set.call(this, 'state', this.getState());
       this.trigger('change:state', this.getState());
     },
     getState() {

@@ -1,9 +1,11 @@
-import AutopaginatorComponent from './components/autopaginator/autopaginatorComponent';
+import AutopaginatorModel from './models/autopaginatorModel';
 import Bridge from './bridge';
+import BlogModel from './models/blogModel';
 import ComponentFetcher from './utils/componentFetcherUtil';
+import DashboardModel from './models/dashboardModel';
 import ChromeMixin from './components/mixins/chromeTriggerMixin';
-import TagSearchAutocompleteModel from './models/tagSearchAutocompleteModel';
-import TextSearchAutocompleteModel from './models/textSearchAutocompleteModel';
+import TagSearchAutocompleteModel from './components/filterPopover/search/input/tagSearchAutocompleteModel';
+import TextSearchAutocompleteModel from './components/filterPopover/search/input/textSearchAutocompleteModel';
 import FilterDropdownTemplate from './components/filterPopover/search/filterDropdown/filterDropdownTemplate.html';
 import FilterDropdownComponent from './components/filterPopover/search/filterDropdown/filterDropdownComponent';
 import FilterIcon from './components/filterPopover/filterPopoverIcon';
@@ -82,12 +84,14 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     LoaderMixin,
     PopoverMixin,
     StateModel,
-    PostModel,
+    BlogModel,
+    DashboardModel,
     FollowerModel,
     LikesModel,
+    AutopaginatorModel,
+    PostModel,
     ToggleComponent,
     PopoverComponent,
-    AutopaginatorComponent, // depends on PostModel
     LoaderComponent, // must be loaded after PostModel or doesn't listen correctly
     TagSearchAutocompleteModel,
     TextSearchAutocompleteModel,

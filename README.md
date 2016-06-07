@@ -36,14 +36,16 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 + Use Firebase to store data server side and speed up initial caching (in development)
 + Select from multiple users
 + Filter seen posts
++ Look ahead on dashboard posts/cache sessions
 
 ## To do
 
 + Find a way to speed up caching process
 + Find better template system (Mustache is looking like a good lightweight option)
 + Thin out post model
++ Improve file structure organization
 + Remove event listeners where possible
-+ Remove all vestiges of Tumblr code style
++ Remove all vestiges of Tumblr code style/weird minified code
 + Leverage Tumblr libraries/mixins more to clean up code
 
 ## Relevant development posts

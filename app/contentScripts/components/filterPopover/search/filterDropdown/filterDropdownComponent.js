@@ -1,5 +1,5 @@
 module.exports = (function filterDropdown(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $ } = Backbone;
   const { mapKeys } = _;
   const { get } = Tumblr.Fox;
   const SearchFiltersPopover = get('SearchFiltersPopover');
@@ -23,8 +23,9 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       'change [type=checkbox]': 'onCheckboxChange'
     },
     initialize() {
+      const ignores = ['template', 'render', 'initialize', 'bindEvents', 'events'];
       mapKeys(SearchFilters.prototype, (val, key) => {
-        if (typeof val === 'function' && key !== 'template' && key !== 'render' && key !== 'initialize' && key !== 'bindEvents' && key !== 'events') {
+        if (typeof val === 'function' && !ignores.includes(key)) {
           this.__proto__[key] = val;
         }
       });
@@ -49,9 +50,15 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       SearchFilters.prototype.bindEvents.apply(this);
       this.listenTo(this.model, 'change:filter_nsfw', ::this.hide);
     },
-    bindClickOutside() {
-      this.clickOutside = new ClickHandler(this.el);
-      this.clickOutside.on('click:outside', this.hide, this);
+    bindClickOutside() { // this no longer closes when you click on the filter icon
+      const options = {
+        preventInteraction: true,
+        ignoreSelectors: ['.popover_content_wrapper', '.tumblelog_popover']
+      };
+      if (this._popoverBase.autoTeardown) {
+        this.clickOutside = new ClickHandler(this.el, options);
+        this.clickOutside.on('click:outside', this.hide, this);
+      }
     },
     contentChanged(e) {
       this.model.set('before', Date.parse(e.currentTarget.value));
@@ -70,7 +77,10 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       this.remove();
     },
     unbindClickOutside() {
-      this.clickOutside && (this.clickOutside.remove(), this.clickOutside = null);
+      if (this.clickOutside) {
+        this.clickOutside.remove();
+        this.clickOutside = null;
+      }
     },
     setActiveAndBindEvents() {
       this.$main.addClass('popover--active');

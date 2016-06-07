@@ -1,7 +1,7 @@
 module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $, View } = Backbone;
 
-  const FilterMenuComponent = Backbone.View.extend({
+  const FilterMenuComponent = View.extend({
     defaults: {
       disabled: false
     },

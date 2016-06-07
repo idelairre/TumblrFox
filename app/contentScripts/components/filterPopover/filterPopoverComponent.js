@@ -1,7 +1,7 @@
 module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $ } = Backbone;
   const { assign } = _;
-  const { get, FilterMenuComponent, SearchComponent } = Tumblr.Fox;
+  const { get, FilterMenuComponent, SearchComponent, PopoverMixin } = Tumblr.Fox;
   const transition = get('animation').transition;
   const popover = get('PopoverMixin');
   const PopoverComponent = get('PopoverComponent');

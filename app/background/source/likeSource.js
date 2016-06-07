@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash';
-import $, { ajax, Deferred } from 'jquery';
+import $, { ajax, each, Deferred } from 'jquery';
 import constants from '../constants';
 import Source from './source';
 
@@ -94,8 +94,6 @@ class LikeSource extends Source {
     try {
       if (retry && this.retriedTimes && this.retriedTimes <= this.retryTimes) {
         console.log(`Retried times: ${this.retriedTimes + 1}, retrying posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}...`);
-      } else {
-        // console.log(`Crawling posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}...`);
       }
       const posts = await this.fetch(retry);
       console.log(`✔ Crawled posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}`);
@@ -135,7 +133,7 @@ class LikeSource extends Source {
     try {
       const postsJson = [];
       const posts = $(data).find('[data-json]');
-      $.each(posts, (i, post) => {
+      each(posts, (i, post) => {
         post = this.processPost(post, this.options.timestamp);
         if (post.id) {
           postsJson.push(post);

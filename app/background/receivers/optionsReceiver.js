@@ -1,6 +1,6 @@
 import constants from '../constants';
-import portHandler from '../services/portHandler';
-import Cache from '../stores/cacheStore';
+import portHandler from '../services/portService';
+import Cache from '../services/cacheService';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
 

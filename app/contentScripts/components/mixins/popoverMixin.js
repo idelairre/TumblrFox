@@ -20,7 +20,7 @@ module.exports = (function popoverMixin(Tumblr, Backbone, _) {
       if (this._popoverBase.autoTeardown) {
         this.clickOutside = new ClickHandler(this.el, options);
         this.clickOutside.on('click:outside', this.hide, this);
-        this.clickOutside.on('click:inside', this.hideOnSelect, this);
+        this.clickOutside.on('click:inside', this.hideOnSelect, this); // make this optional
       }
     },
     hideOnSelect(e) {

@@ -1,5 +1,4 @@
 /* global Promise:true */
-/* global alert:true */
 /* eslint no-undef: "error" */
 
 import $, { ajax, Deferred } from 'jquery';
@@ -7,9 +6,9 @@ import async from 'async';
 import { differenceBy, isString } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
-import { log, logError } from '../services/logging';
+import { log, logError } from '../services/loggingService';
 import Tags from './tagStore';
-import FuseSearch from '../services/fuseSearch';
+import FuseSearch from '../services/fuseSearchService';
 import Source from '../source/likeSource';
 import 'babel-polyfill';
 

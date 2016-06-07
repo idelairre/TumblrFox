@@ -1,9 +1,9 @@
 module.exports = (function followerModel(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $, Model }= Backbone;
   const { chromeMixin } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
 
-  const FollowerModel = Backbone.Model.extend({
+  const FollowerModel = Model.extend({
     defaults: {
       offset: 25,
       limit: 25

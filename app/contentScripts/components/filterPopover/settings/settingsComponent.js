@@ -95,9 +95,8 @@ module.exports = (function settings(Tumblr, Backbone, _) {
             this.searchOptions.setState(setting);
             this.state.setState('user');
             break;
-          default:
+          default: // this controls everything besides searchOptions, so state, e.g., user/dashboard/likes
             this.state.setState(setting);
-            Tumblr.Fox.Posts.set('tagSearch', setting);
             break
         }
       }

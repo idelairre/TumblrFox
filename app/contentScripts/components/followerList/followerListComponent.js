@@ -5,10 +5,12 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
-  // states:
-  //    default => do nothing => onScroll => populateFollowers from ajax response
-  //    alphabetically => clear elements => onScroll => populate followers from model
-  //    updated => clear elements => onScroll => populate followers from model
+  /**
+  * NB: states:
+  *     default => do nothing => onScroll => populateFollowers from ajax response
+  *     alphabetically => clear elements => onScroll => populate followers from model
+  *     updated => clear elements => onScroll => populate followers from model
+  */
 
   const FollowerList = Backbone.View.extend({
     defaults: {

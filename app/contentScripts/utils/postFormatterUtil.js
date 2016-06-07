@@ -243,21 +243,26 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         Tumblr.Fox.constants.attachNode.before(postContainer);
         Tumblr.Fox.Utils.PostFormatter.createPostView(postElement, postModel);
         Tumblr.Posts.add(postModel);
+        Tumblr.postsView.postViews.push(postElement);
       }
     },
+    renderPostsFromHtml(posts) {
+      posts.map(Tumblr.Fox.Utils.PostFormatter.renderPostFromHtml);
+    },
     createPostView(postElement, postModel) {
-      const postView = new Tumblr.PostView({
-        el: postElement,
-        model: postModel
-      });
-      // console.log('[POSTVIEW]: ', postView); // needs a model for follow button which relies on a tumblelog model attribute
-      postElement.attr('data-likeable-view-exists', true);
-      if (postView.$el.find('.reblog-list').length) {
-        postView.$reblog_list = postView.$el.find('.reblog-list');
+      if (typeof postModel.get('id') !== 'undefined') {
+        const postView = new Tumblr.PostView({
+          el: postElement,
+          model: postModel
+        });
+        postElement.attr('data-likeable-view-exists', true);
+        if (postView.$el.find('.reblog-list').length) {
+          postView.$reblog_list = postView.$el.find('.reblog-list');
+        }
+        Tumblr.postsView.postViews.push(postView);
+        Tumblr.Events.trigger('postsView:createPost', postView);
+        Tumblr.Events.trigger('DOMEventor:updateRect');
       }
-      Tumblr.postsView.postViews.push(postView);
-      Tumblr.Events.trigger('postsView:createPost', postView);
-      Tumblr.Events.trigger('DOMEventor:updateRect');
     },
     renderPosts(response) {
       if (!response) {
@@ -274,21 +279,35 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       Tumblr.Fox.Utils.PostFormatter.createPostView(postElement, postModel);
       Tumblr.Posts.add(postModel);
     },
-    parseTags(postViews) {
-      return postViews.map(post => {
-        const tagElems = post.$el.find('.post_tags');
-        if (tagElems.length > 0) {
-          const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
-          post.tags = rawTags.filter(tag => {
-            if (tag !== '') {
-              return tag;
-            }
-          });
-        } else {
-          post.tags = [];
-        }
-      });
+    parseTags(post) {
+      const postHtml = typeof post.get === 'function' ? $(post.get('html')) : $(post.html);
+      const tagElems = postHtml.find('.post_tags');
+      if (tagElems.length > 0) {
+        const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
+        const tags = rawTags.filter(tag => {
+          if (tag !== '') {
+            return tag;
+          }
+        });
+        typeof post.set === 'function' ? post.set('tags', tags) : post.tags = tags;
+      } else {
+        typeof post.set === 'function' ? post.set('tags', []) : post.tags = [];
+      }
+      return post;
     },
+    renderDashboardPosts(posts) {
+      posts = $(posts);
+      const views = [];
+      $.each(posts, (i, post) => {
+        const model = $(post).find('[data-json]').data('json');
+        const postView = new Tumblr.PostView({
+          el: $(post).html(),
+          model: new Tumblr.Prima.Models.Post(model)
+        });
+        views.push(postView);
+      });
+      return views;
+    }
   }
 
   Tumblr.Fox.Utils.PostFormatter = PostFormatter;

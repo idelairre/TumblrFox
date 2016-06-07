@@ -1,9 +1,9 @@
 module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $, Model } = Backbone;
   const { invoke, omit } = _;
   const { chromeMixin } = Tumblr.Fox;
 
-  const TextSearchAutocompleteModel = Backbone.Model.extend({
+  const TextSearchAutocompleteModel = Model.extend({
     mixins: [chromeMixin],
     defaults: {
       matchTerm: '',

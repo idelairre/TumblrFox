@@ -5,16 +5,7 @@ import Fuse from '../lib/fuse';
 import constants from '../constants';
 import 'babel-polyfill';
 
-// keys: [{
-//   name: 'blogname',
-//   weight: 0.7
-// }, {
-//   name: 'title',
-//   weight: 0.7
-// }, {
-//   name: 'tags',
-//   weight: 0.8
-// }],
+// TODO: add weights
 
 const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
 

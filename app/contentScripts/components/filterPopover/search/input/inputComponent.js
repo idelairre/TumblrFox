@@ -19,17 +19,14 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.listenTo(Tumblr.Fox.searchOptions, 'change:state', ::this.delegateInputEvents);
     },
     delegateInputEvents(state) { // NOTE: turns off tag popover while backend is being sorted out
-      // console.log('[DELEGATE INPUT EVENTS]', state, this);
       switch(state) {
         case 'tag':
           this.blogSearchAutocompleteHelper.delegateEvents();
           this.blogSearchAutocompleteHelper.bindEvents();
-          this.blogSearchAutocompleteModel.bindEvents();
           break;
         case 'text':
           this.blogSearchAutocompleteHelper.undelegateEvents();
           this.blogSearchAutocompleteHelper.stopListening();
-          this.blogSearchAutocompleteModel.stopListening();
           break;
       }
     },
@@ -37,35 +34,27 @@ module.exports = (function (Tumblr, Backbone, _) {
       if (e.keyCode === 13) {
         this.model.set('term', this.getTerm());
         this.blogSearchAutocompleteModel.set('matchTerm', this.getTerm());
-        console.log('[SEARCH ON ENTER]', this.model);
         Tumblr.Events.trigger('peeprsearch:change:term', this.model.attributes);
       }
     },
     flushTags() {
       const blogname = this.model.get('blogname');
       this.blogSearchAutocompleteHelper.model.set('blogname', blogname);
-      this.blogSearchAutocompleteHelper.model.getItems();
+      this.blogSearchAutocompleteHelper.model.fetch();
     },
     updateSearchSettings(state) {
-      // console.log(state);
       switch (state) {
-        case 'dashboard':
-          this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
-          this.$el.find('input').attr('placeholder', `Search ${state}`);
-          break;
-        case 'likes':
-          this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
-          this.$el.find('input').attr('placeholder', `Search ${state}`);
-          break;
         case 'user':
           this.blogSearchAutocompleteHelper.model = this.blogSearchAutocompleteModel;
           this.$el.find('input').attr('placeholder', `Search ${this.model.get('blogname')}`);
           break;
+        default:
+          this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
+          this.$el.find('input').attr('placeholder', `Search ${state}`);
+          break;
       }
-      this.blogSearchAutocompleteHelper.model.getItems();
     },
     fetchResults(query) {
-      console.log(this.conversations);
       return this.conversations.fetch({
         data: {
           q: query,

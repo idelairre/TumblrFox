@@ -9,7 +9,7 @@ export default class Tags {
   }
 
   static async fetch(port) {
-    const tags = await db.tags.orderBy('count').reverse().toArray();
+    const tags = await db.tags.orderBy('count').reverse().limit(250).toArray();
     return tags;
   }
 

@@ -1,12 +1,12 @@
 import async from 'async';
 import { maxBy } from 'lodash';
 import Papa from '../lib/papaParse';
-import CacheWorker from '../services/cacheWorker';
+import CacheWorker from './cacheWorkerService';
 import constants from '../constants';
-import { log, logError, calculatePercent } from '../services/logging';
+import { log, logError, calculatePercent } from './loggingService';
 import db from '../lib/db';
-import Firebase from '../services/firebase';
-import Likes from './likeStore';
+import Firebase from './firebaseService';
+import Likes from '../stores/likeStore';
 import 'babel-polyfill';
 
 export default class Cache {
@@ -49,7 +49,6 @@ export default class Cache {
     const limit = 10;
     const last = await db.posts.toCollection().last().id;
     let start = await db.posts.toCollection().first().id;
-    console.log('[FIRST]:', start.id, '[LAST]:', last.id);
     const count = await db.posts.toCollection().count();
     const items = {
       cachedPostsCount: 0,
@@ -60,7 +59,6 @@ export default class Cache {
       try {
         const posts = await db.posts.where('id').aboveOrEqual(start.id).limit(limit).toArray();
         start = maxBy(posts, 'id').id;
-        console.log('[START]', start.id);
         console.log('[UPLOADING]', posts);
         await Firebase.bulkPut('posts', posts);
         items.cachedPostsCount += posts.length;

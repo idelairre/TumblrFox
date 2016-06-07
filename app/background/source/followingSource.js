@@ -78,8 +78,6 @@ class FollowingSource extends Source {
     try {
       if (retry && this.retriedTimes && this.retriedTimes <= this.retryTimes) {
         console.log(`Retried times: ${this.retriedTimes}, retrying following from offset: ${this.options.offset}...`);
-      } else {
-        // console.log(`Crawling following from offset: ${this.options.offset}...`);
       }
       const following = await this.fetch(retry);
       console.log(`✔ Crawled following from offset: ${this.options.offset}`);

@@ -2,7 +2,7 @@ import { kebabCase } from 'lodash';
 import async from 'async';
 import db from '../lib/db';
 import Source from '../source/followingSource';
-import { log, logError } from '../services/logging';
+import { log, logError } from '../services/loggingService';
 import constants from '../constants';
 import 'babel-polyfill';
 
@@ -31,7 +31,6 @@ export default class Following {
   // TODO: right now this only works for liked posts from users that are not followed
   static async update(payload) {
     try {
-      console.log(payload);
       const { following } = payload;
       await Following.put(following);
       const posts = await db.posts.where('blog_name').equalsIgnoreCase(following.name).toArray();
