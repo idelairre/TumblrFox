@@ -5,6 +5,7 @@ export default class Source {
   retryTimes = 3;
   retriedTimes = 0;
   MAX_RETRIES_MESSAGE = 'Max retries reached, either there is a connection error or you have reached the maximum items you can fetch.';
+  MAX_ITEMS_MESSAGE = 'Maximum fetchable items reached.';
 
   constructor() {
     this.constants = constants;

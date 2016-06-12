@@ -99,11 +99,11 @@ const Options = Backbone.View.extend({
     this.$el.append(this.$errorModal.$el);
   },
   showDone(response) {
-    console.log(response);
+    console.log('[DONE]', response);
     this.$doneModal = new Modal({
       parent: $('.container'),
       header: 'Done',
-      message: `${response.payload.message}`
+      message: `${response.message}`
     });
     Backbone.Events.trigger('CHANGE_PROPS', response.payload.constants);
     this.$doneModal.render();

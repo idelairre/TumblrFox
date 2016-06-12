@@ -1,37 +1,131 @@
 module.exports = (function init(Tumblr, Backbone, _) {
-  Tumblr.Fox = Tumblr.Fox || {};
+  const { $, Model, View } = Backbone;
+  const { assign, concat, cloneDeep, extend, omit } = _;
+  const { currentUser } = Tumblr.Prima;
+  const listItems = $('#posts').find('li');
+  const attachNode = $(listItems[listItems.length - 1]);
+  const formKey = $('#tumblr_form_key').attr('content');
+  const Events = extend({}, Tumblr.Events, Tumblr.Prima.Events, Backbone.Events);
 
-  const { assign } = _;
+  const TumblrFox = function () {
+    this.initialized = false;
+    this.constants = {
+      attachNode,
+      formKey
+    };
+    this.options = new Model({
+      rendered: false,
+      test: false,
+      cachedTags: false,
+      enableTextSearch: false
+    });
+    this.state = {};
+    this.searchOptions = {};
 
-  Tumblr.Fox.options = {
-    rendered: false,
-    logging: true,
-    test: false,
-    cachedTags: false,
-    enableTextSearch: false
-  };
+    this.Utils = {};
+    this.Models = {};
+    this.Listeners = {};
+    this.Components = {};
+    this.Mixins = {};
 
-  const dataReq = new CustomEvent('chrome:initialize', {
-    detail: Tumblr.Prima.currentUser().attributes
-  });
-
-  const initializeConstants = e => {
-    const constants = e.detail;
-    Tumblr.Fox.options.logging = constants.debug;
-    Tumblr.Fox.options.cachedTags = constants.cachedTagsCount !== 0;
-    Tumblr.Fox.options.enableTextSearch = constants.fullTextSearch;
-    console.log('[BACKEND CONSTANTS]:', constants)
-    console.log('[TUMBLRFOX OPTIONS]', Tumblr.Fox.options);
-    setTimeout(() => {
-      window.removeEventListener('chrome:constants:response', initializeConstants);
-    }, 1);
+    this.initialize();
   }
 
-  window.dispatchEvent(dataReq);
+  extend(TumblrFox.prototype, Tumblr.Events, Backbone.Events);
 
-  const constReq = new Event('chrome:fetch:constants');
-  window.addEventListener('chrome:response:constants', initializeConstants);
-  window.dispatchEvent(constReq);
+  extend(TumblrFox.prototype, {
+    initialize() {
+      this.bindListeners();
+    },
+    bindListeners() {
+      this.listenTo(this, 'fox:components:fetcherInitialized', ::this.bindComponentGet);
+      this.listenTo(this, 'fox:components:add', ::this.initializeDependencies);
+    },
+    register(name, component) {
+      if (name.includes('Model')) {
+        this.Models[name] = component;
+      } else if (name.includes('Component') || name.includes('Container')){
+        this.Components[name] = component;
+      } else if (name.includes('Mixin')) {
+        this.Mixins[name] = component;
+      } else if (name.includes('Listener')) {
+        this.Listeners[name] = component;
+      }
+      this.Utils.ComponentFetcher.put(name, component);
+    },
+    bindComponentGet(ComponentFetcher) {
+      this.get = ComponentFetcher.get.bind(ComponentFetcher);
+      this.put = ComponentFetcher.put.bind(ComponentFetcher);
+    },
+    initializeDependencies(name) {
+      switch(name) {
+        case 'ChromeMixin':
+          extend(TumblrFox.prototype, this.get('ChromeMixin').properties);
+          this.fetchConstants();
+          this.sendUser();
+          break;
+        case 'LikesListener':
+          const LikesListener = this.get('LikesListener');
+          this.likesListener = new LikesListener();
+          break;
+        case 'EventsListener':
+          const EventsListener = this.get('EventsListener');
+          this.eventsListener = new EventsListener({
+            events: Events,
+            options: this.options
+          });
+          break;
+        case 'StateModel':
+          const State = this.get('StateModel');
+          this.state = new State({
+            dashboard: true,
+            user: false,
+            likes: false
+          });
+          this.searchOptions = new State({
+            tag: true,
+            text: false
+          });
+          break;
+        case 'FollowerListComponent':
+          if (window.location.href === 'https://www.tumblr.com/following') {
+            this.initializeFollowing();
+          }
+          break;
+        case 'FilterPopoverIcon':
+          const FilterPopoverIcon = this.get('FilterPopoverIcon');
+          const FoxIcon = new FilterPopoverIcon({
+            state: this.state,
+            searchOptions: this.searchOptions,
+            options: this.options
+          });
+          this.App = FoxIcon;
+          this.App.render();
+          break;
+      }
+    },
+    initializeFollowing() {
+      const FollowerList = this.get('FollowerListComponent');
+      this.App = new FollowerList({
+        el: $('#following')
+      });
+    },
+    fetchConstants() {
+      this.chromeTrigger('chrome:fetch:constants', ::this._initializeConstants);
+    },
+    sendUser() {
+      this.chromeTrigger('chrome:initialize', currentUser().toJSON());
+    },
+    _initializeConstants(constants) {
+      constants = omit(constants, '_events');
+      this.options.set('logging', constants.debug);
+      this.options.set('cachedTags', (constants.cachedTagsCount !== 0));
+      this.options.set('enableTextSearch', constants.fullTextSearch);
+      console.log('[TUMBLRFOX CONSTANTS]', constants);
+      console.log('[TUMBLRFOX OPTIONS]', this.options.toJSON());
+      Tumblr.Events.trigger('fox:constants:initialized', this.constants, this.options);
+    }
+  });
 
-  return Tumblr.Fox;
+  Tumblr.Fox = new TumblrFox();
 });

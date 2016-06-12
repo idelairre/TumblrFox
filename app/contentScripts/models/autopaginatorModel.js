@@ -9,49 +9,65 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
     id: 'Autopaginator',
     defaults: {
       enabled: false,
-      defaultPagination: true
+      defaultPaginationEnabled: true
     },
-    initialize(e) {
+    initialize(options) {
+      this.posts = options.posts;
       this.attributes = {};
       this.set(this.defaults);
-      this.posts = e.posts;
       this.bindEvents();
     },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'fox:autopaginator:start', ::this.start);
       this.listenTo(Tumblr.Events, 'fox:autopaginator:stop', ::this.stop);
       this.listenTo(Tumblr.Events, 'fox:disablePagination', ::this.disableAll);
-      this.listenTo(Tumblr.Events, 'indashblog:search:results-end', ::this.stop);
     },
     start() {
-      console.log('[AUTOPAGINATOR] started');
+      if (this.get('enabled')) {
+        console.info('[FOX AUTOPAGINATOR]: pagination already enabled');
+        return;
+      }
       this.set('enabled', true);
+      this.listenTo(Tumblr.Events, 'indashblog:search:results-end', ::this.stop);
       this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.stop);
+      this.stopListening(Tumblr.Events, 'peepr:close', ::this.onScroll);
       this.disableDefaultPagination();
+      console.log('[FOX AUTOPAGINATOR]: started');
     },
     stop() {
-      console.log('[AUTOPAGINATOR] stopped');
+      if (!this.get('enabled')) {
+        console.info('[FOX AUTOPAGINATOR]: pagination already disabled');
+        return;
+      }
       this.set('enabled', false);
+      this.stopListening(Tumblr.Events, 'indashblog:search:results-end', ::this.stop);
       this.stopListening(Tumblr.Events, 'DOMEventor:flatscroll', ::this.onScroll);
-      Tumblr.Events.on('peepr:close', ::this.start);
+      this.stopListening(Tumblr.Events, 'peepr-open-request', ::this.stop);
+      this.listenTo(Tumblr.Events, 'peepr:close', ::this.start);
+      console.log('[FOX AUTOPAGINATOR]: stopped');
     },
     disableAll() {
-      console.log('[AUTOPAGINATOR] all pagination disabled');
-      this.set('enabled', false);
-      this.set('defaultPagination', false);
-      Tumblr.AutoPaginator.stop();
       this.stop();
+      this.disableDefaultPagination();
     },
     enableDefaultPagination() {
-      this.set('enabled', false);
-      this.set('defaultPagination', true);
-      Tumblr.AutoPaginator.start();
+      if (this.get('enabled')) {
+        this.stop();
+      }
+      if (!this.get('defaultPaginationEnabled')) {
+        this.set('defaultPaginationEnabled', true);
+        Tumblr.AutoPaginator.start();
+      }
     },
     disableDefaultPagination() {
-      this.set('enabled', true);
-      this.set('defaultPagination', false);
+      if (!this.get('defaultPaginationEnabled')) {
+        console.info('[TUMBLR AUTOPAGINATOR]: Default pagination already disabled');
+        return;
+      }
+      this.set('defaultPaginationEnabled', false);
       Tumblr.AutoPaginator.stop();
+      console.log('[TUMBLR AUTOPAGINATOR]: stopped');
     },
     onScroll(e) {
       if (!this.get('enabled')) {
@@ -63,5 +79,5 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.AutoPaginator = AutoPaginator;
+  Tumblr.Fox.register('AutoPaginatorModel', AutoPaginator);
 });

@@ -89,6 +89,23 @@ class LikeSource extends Source {
     return deferred.promise();
   }
 
+  async fetchMostRecent() {
+    const deferred = Deferred();
+    ajax({
+      type: 'GET',
+      url: 'https://www.tumblr.com/likes',
+      success: data => {
+        const posts = this.parsePosts(data);
+        deferred.resolve(posts);
+      },
+      error: error => {
+        console.error('[ERROR]', error);
+        deferred.reject(error);
+      }
+    });
+    return deferred.promise();
+  }
+
   async crawlPosts(retry) {
     const deferred = Deferred();
     try {
@@ -107,7 +124,7 @@ class LikeSource extends Source {
   processPost(postHtml, timestamp) {
     const post = $(postHtml).data('json');
     post.id = parseInt(post.id, 10);
-    post.html = $(postHtml).prop('outerHTML'); // .replace(/"/g, '\\\"');
+    post.html = $(postHtml).prop('outerHTML');
     if (timestamp) {
       post.liked_timestamp = parseInt(timestamp, 10);
     }
@@ -132,7 +149,7 @@ class LikeSource extends Source {
   parsePosts(data) {
     try {
       const postsJson = [];
-      const posts = $(data).find('[data-json]');
+      const posts = $(data).find('[data-json]').not('[data-is-radar]');
       each(posts, (i, post) => {
         post = this.processPost(post, this.options.timestamp);
         if (post.id) {

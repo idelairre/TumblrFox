@@ -31,12 +31,11 @@ export default class Cache {
     try {
       await db.delete();
       constants.reset();
-      console.log('[DB] deleted');
       await db.open();
       port({
         type: 'done',
+        message: 'Cache reset',
         payload: {
-          message: 'Cache reset',
           constants
         }
       });
@@ -84,7 +83,7 @@ export default class Cache {
       });
       const file = await CacheWorker.assembleFile(fileSlug);
       Papa.parse(file, {
-        delimiter: 'Ꮂ',	// auto-detect
+        delimiter: 'Ꮂ',
         newline: '',
         header: true,
         dynamicTyping: true,

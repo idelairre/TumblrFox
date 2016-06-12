@@ -1,0 +1,105 @@
+<script id="postViewTemplate" type="text/template">
+  <div id="post_<%- model.id %>" class="post post_full with_permalink pt reblog_ui_refresh is_<%- model.get('type') %>"
+    data-id="<%- model.id %>"
+    data-type="<%- model.get('type') %>"
+    data-reblog_source="<%- model.get('reblog_source') %>"
+    data-reblog_key="<%- model.get('reblog_key') %>"
+    data-reblog-key="<%- model.get('reblog-key') %>"
+    data-root_id="<%- model.get('root_id') %>"
+    data-tumblelog="<%- model.get('tumblelog') %>"
+    data-is-reblog="<%- model.get('tumblelog-parent-data') ? 1 : 0 %>"
+    data-tumblog-key="<%- model.get('tumblelog-data').key %>"
+    data-can_reply="<%- model.get('can_reply') ? 1 : 0 %>"
+    data-json="<%- JSON.stringify(_.omit(model.attributes, 'post_html', 'tags')) %>"
+    data-tumblrfox-post="true">
+    <div class="post_avatar  show_user_menu">
+      <div class="post_avatar_wrapper">
+        <a class="post_avatar_link"
+          href="<%- model.get('tumblelog-data').url %>"
+          target="_blank"
+          title="<%- model.get('tumblelog-data').title %>"
+          id="post_avatar_<%- model.id %>"
+          style="background-image:url('<%- model.get('tumblelog-data').avatar_url %>')"
+          data-user-avatar-url="<%- model.get('tumblelog-data').avatar_url %>"
+          data-use-sub-avatar
+          data-avatar-url="<%- model.get('tumblelog-data').avatar_url %>"
+          data-blog-url="<%- model.get('tumblelog-data').url %>"
+          data-tumblelog-name="<%- model.get('tumblelog') %>"
+          data-use-channel-avatar="1"
+          data-peepr='{"tumblelog": "<%- model.get('tumblelog') %>" }'
+          data-tumblelog-popover="<%- JSON.stringify(model.get('tumblelog-data')) %>"></a>
+      </div>
+    </div>
+    <div class="post_wrapper">
+      <div class="post_header">
+        <div class="post_info">
+          <div class="post_info_fence <%- model.get('tumblelog-parent-data') ? 'has_follow_button' : '' %>">
+            <a class="post_info_link" href="<%- model.get('tumblelog-data').url %>" data-peepr='{"tumblelog": "<%- model.get('tumblelog-data').name %>" }' data-tumblog-popover="<%- JSON.stringify(model.get('tumblelog-data')) %>"><%- model.get('tumblelog-data').name %></a>
+            <% if (model.get('tumblelog-parent-data')) { %>
+              <span class="reblog_source">
+                <span class="reblog_icon" title="<%- model.get('tumblelog-data').name %> reblogged <%- model.get('tumblelog-parent-data').name %>">reblogged</span>
+                <a class="post_info_link" href="<%- model.get('tumblelog-parent-data').url %>" data-tumblelog-name="<%- model.get('tumblelog-parent-data').name %>" rel="noopener" data-peepr='{"tumblelog":"<%- model.get('tumblelog-parent-data').name %>", "postId":"<%- model.get('root_id') %>"}'><%- model.get('tumblelog-parent-data').name %></a>
+              </span>
+            <% } %>
+          </div>
+          <% if (typeof model.get('tumblelog-parent-data').following !== 'undefined' && model.get('tumblelog-parent-data').following === false) { %>
+            <a href="/follow/<%- model.get('tumblelog-parent-data').name %>" class="reblog_follow_button" data-tumblelog-name="<%- model.get('tumblelog-parent-data').name %>" title="Follow <%- model.get('tumblelog-parent-data').name %>"><span class="follow-text">Follow</span></a>
+          <% } %>
+        </div>
+      </div>
+      <div class="post_content clearfix">
+        <div class="post_content_inner">
+          <%= model.get('post_html') %>
+        </div>
+      </div>
+    <% if (typeof model.get('source_url') !== 'undefined' && model.get('source_title')) { %>
+      <div class="post-source-footer">
+        <span class="post-source-name-prefix">Source: </span>
+        <a class="post-source-link post_info_link" target="_blank" href="<%- model.get('source_url') %>" title="<%- model.get('source_title') %>" rel="noopener" data-peepr='{"tumblelog":"<%- model.get('source_title') %>", "postId":"<%- model.get('root_id') %>"}'><%- model.get('source_title') %></a>
+      </div>
+    <% } %>
+    <% if (typeof model.get('tags') !== 'undefined' && model.get('tags').length > 0) { %>
+      <div class="post_tags">
+        <div class="post_tags_inner">
+          <% if (typeof model.get('tags') !== 'undefined') { %>
+            <% _.each(model.tags, function(tag) { %>
+              <a class="post_tag" data-tag="<%- tag %>" href="<%- Tumblr.Utils.PostTags.tag_url(tag) %>">#<%- tag %></a>
+            <% }); %>
+          <% } %>
+          </div>
+        </div>
+      <% } %>
+      <div class="post_footer clearfix" data-subview="footer">
+        <% if (model.get('notes').count > 0) { %>
+        <div class="post_notes" data-subview="notes">
+          <div class="post_notes_inner">
+            <div class="post_notes_label note_count">
+              <span class="note_link_current" title="<%- model.get('notes').count %> notes" data-count="<%- model.get('notes').count %>" data-less="<%- model.get('notes').less %>" data-more="<%- model.get('notes').more %>"><%= model.get('notes').count %> notes</span>
+              <div class="notes_outer_container popover popover_gradient nipple_on_left" style="display: none;">
+                <div class="notes_container popover_inner">
+                  <div class="popover_scroll">
+                    <ol class="notes"></ol>
+                    <div class="more_notes_link_container">
+                      <span class="notes_loading">Loading...</span>
+                      <a class="more_notes_link" style="display:none;" data-next="" rel="nofollow" href="#">Show more notes</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+        <div class="post_controls" role="toolbar" data-subview="controls">
+          <div class="post_controls_inner">
+            <!-- <div class="post_control reblog-graph-control" data-subview="reblogGraph"></div> -->
+            <div class="post_control post-control-icon messaging" data-tumblelog-uuid="<%- model.get('tumblelog-data').uuid %>" data-tumblelog-name="<%- model.get('tumblelog') %>" data-post-id="<%- model.get('id') %>" title="Share" data-subview="messaging"></div>
+          <a class="post_control post-control-icon reblog" target="_blank" title="Reblog" href="/reblog/<%- model.get('id') %>/<%- model.get('reblog_key') %>?redirect_to=%2Fdashboard" data-subview="reblog"></a>
+          <div class="post_control post-control-icon like" title="Like" data-subview="like"></div>
+          </div>
+        </div>
+      </div>
+      <a class="post_permalink" href="<%- model.get('post_url') %>" target="_blank" title="View post -  <%- model.get('posted_on_tooltip') %>" rel="noopener"></a>
+    </div>
+  </div>
+</script>

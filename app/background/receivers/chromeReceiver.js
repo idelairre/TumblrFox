@@ -13,12 +13,12 @@ const sendConstants = (request, sender, sendResponse) => {
 const chromeReciever = receiverHandler({
   fetchConstants: sendConstants,
   fetchPosts: PostSource.fetch,
+  fetchBlogPosts: PostSource.blogFetch,
   fetchTags: Tags.send,
   searchLikesByTag: Likes.send,
   searchLikesByTerm: Likes.send,
   syncLikes: Likes.sync,
   updateLikes: Likes.update,
-  searchSetBlog: FuseSearch.setBlog,
   fetchFollowing: Following.send,
   updateFollowing: Following.send
 });

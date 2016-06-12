@@ -1,15 +1,12 @@
 module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   const { $ } = Backbone;
-  const { assign } = _;
-  const { get, FilterMenuComponent, SearchComponent, PopoverMixin } = Tumblr.Fox;
-  const transition = get('animation').transition;
-  const popover = get('PopoverMixin');
-  const PopoverComponent = get('PopoverComponent');
-  const ClickHandler = get('ClickHandler');
+  const { assign, omit, pick } = _;
+  const { get, Utils } = Tumblr.Fox;
+  const { ComponentFetcher } = Utils;
+  const { transition  } = get('animation');
+  const { ConversationsCollection, ClickHandler, PopoverMixin, TumblrView } = ComponentFetcher.getAll('ConversationsCollection', 'ClickHandler', 'PopoverMixin', 'TumblrView');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
-
-  // NOTE: teardown is not consistently resetting the original peepr-search component
 
   const filterPopoverTemplate = `
     <script id="filterPopoverTemplate" type="text/template">
@@ -23,33 +20,34 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       </div>
     </script>`;
 
-  const FilterPopoverComponent = PopoverComponent.extend({
+  const FilterPopoverComponent = TumblrView.extend({
     className: 'popover--filter-popover',
     defaults: {
-      preventInteraction: true,
-      state: {
-        likes: false,
-        dashboard: false,
-        user: true
-      }
+      preventInteraction: true
     },
-    mixins: [popover],
+    mixins: [PopoverMixin],
     template: $(filterPopoverTemplate).html(),
     subviews: {
       filterMenu: {
-        constructor: FilterMenuComponent
+        constructor: get('FilterMenuComponent')
       },
       searchFilter: {
-        constructor: SearchComponent,
-        options: {
-          blogname: currentUser().id,
-          blog: Tumblelog.collection.models[0]
+        constructor: get('SearchComponent'),
+        options: opts => {
+          return {
+            conversations: opts.conversations,
+            state: opts.state,
+            searchOptions: opts.searchOptions,
+            blogname: currentUser().id,
+            blog: Tumblelog.collection.models[0]
+          }
         }
       }
     },
     initialize(e) {
-      this.options = assign({}, this.defaults, e);
-      this.state = Tumblr.Fox.state;
+      this.options = assign({}, this.defaults, omit(e, ['state', 'searchOptions', 'options']));
+      this.conversations = new ConversationsCollection();
+      assign(this, pick(e, ['state', 'searchOptions', 'options']));
       this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.state.setState);
       this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);
     },
@@ -61,12 +59,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       setTimeout(() => {
         this.$filterPopoverMenu.addClass('popover--active');
         this.bindClickOutside();
-      }, 1);
-    },
-    afterRenderSubviews() {
-      setTimeout(() => {
-        this.state.setState('user');
-      }, 1);
+      }, 0);
     },
     bindClickOutside() {
       const options = {
@@ -95,11 +88,14 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
       transition(this.$el, ::this.afterHide);
     },
     afterHide() {
-      this.$el.css({ display: 'none' });
+      this.$el.css({
+        display: 'none'
+      });
     },
     show() {
       Tumblr.Events.trigger('popover:open', this);
       this.bindClickOutside();
+      this.searchFilter.bindEvents();
       this.$pinned.addClass('active');
       this.$el.css({ display: 'block' });
       setTimeout(() => {
@@ -108,5 +104,5 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.FilterPopoverComponent = FilterPopoverComponent;
+  Tumblr.Fox.register('FilterPopoverComponent', FilterPopoverComponent);
 });

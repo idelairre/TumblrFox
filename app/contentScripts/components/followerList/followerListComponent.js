@@ -1,18 +1,20 @@
 module.exports = (function followerList(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $, View } = Backbone;
+  const { ComponentFetcher } = Tumblr.Fox.Utils
   const { assign, debounce, each } = _;
-  const { FollowerModel, FollowerItem, FollowerSearch, State } = Tumblr.Fox;
+  // const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = ComponentFetcher.getAll('FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel');
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
   /**
-  * NB: states:
+  * states:
   *     default => do nothing => onScroll => populateFollowers from ajax response
   *     alphabetically => clear elements => onScroll => populate followers from model
   *     updated => clear elements => onScroll => populate followers from model
   */
 
-  const FollowerList = Backbone.View.extend({
+  const FollowerList = View.extend({
+    dependencies: ComponentFetcher.getAll(['FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel']),
     defaults: {
       offset: 25,
       limit: 25,
@@ -23,14 +25,15 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       }
     },
     initialize(e) {
+      const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = this.dependencies;
       this.options = assign({}, e, this.defaults);
-      this.state = new State(this.defaults.state);
+      this.state = new StateModel(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
-      this.model = FollowerModel;
+      this.model = new FollowerModel();
       this.$el.find('.left_column').addClass('ui_notes');
       this.$followers = this.$('.follower');
       this.$followers = this.$followers.slice(1, this.$followers.length);
-      this.$followerSearch = new FollowerSearch({
+      this.$followerSearch = new FollowerSearchComponent({
         state: this.state,
         model: this.model,
         el: $('#invite_someone')
@@ -118,7 +121,8 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       });
     },
     renderFollower(model) {
-      const follower = new FollowerItem({ model });
+      const { FollowerItemComponent } = this.dependencies;
+      const follower = new FollowerItemComponent({ model });
       follower.render();
       this.attachNode.append(follower.$el);
       return follower.$el[0];
@@ -132,6 +136,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       this.$followers = this.$followers.slice(1, this.$followers.length);
     },
     renderSnowman(view) {
+      const { FollowerItemComponent } = this.dependencies;
       const tumblelogData = view.find('[data-tumblelog-popover]').data('tumblelog-popover');
       if (!tumblelogData) {
         return;
@@ -152,16 +157,12 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
         }
       };
       new Tumblr.Prima.Snowman(snowman);
-      new FollowerItem({
+      new FollowerItemComponent({
         model: tumblelogModel,
         el: view
       });
     }
   });
 
-  if (window.location.href === 'https://www.tumblr.com/following') {
-    Tumblr.Fox.FollowerList = new FollowerList({
-      el: $('#following')
-    });
-  }
+  Tumblr.Fox.register('FollowerListComponent', FollowerList);
 });

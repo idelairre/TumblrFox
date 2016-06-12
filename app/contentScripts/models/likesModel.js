@@ -1,23 +1,22 @@
 module.exports = (function likeModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { assign } = _;
-  const { chromeMixin, searchOptions } = Tumblr.Fox;
+  const { assign, omit } = _;
+  const { get, searchOptions } = Tumblr.Fox;
+  const ChromeMixin = get('ChromeMixin');
 
   const LikesModel = Model.extend({
-    mixins: [chromeMixin],
-    initialize() {
-      this.listenTo(Tumblr.Events, 'post:like:set', this.updateLikesCache.bind(this, 'like'));
-      this.listenTo(Tumblr.Events, 'post:unlike:set', this.updateLikesCache.bind(this, 'unlike'));
+    mixins: [ChromeMixin],
+    initialize(e) {
+      this.state = e.state;
       if (window.location.href.includes('https://www.tumblr.com/likes')) {
         console.log('@likes');
         this.listenTo(Tumblr.Events, 'postsView:createPost', ::this.sendLike);
       }
-      console.log('[LIKES]', this);
     },
     fetch(slug) {
       if (searchOptions.get('tag')) {
         return this.fetchLikesByTag(slug)
-        } else {
+      } else {
         return this.fetchLikesByTerm(slug)
       }
     },
@@ -31,9 +30,10 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
       this.chromeTrigger('chrome:search:likesByTerm', slug, deferred.resolve);
       return deferred.promise();
     },
-    search(query) { // TODO: fix this wreck, the setTimeout is to fux a bug with values not being assigned on time
+    search(query) {
       Tumblr.Events.trigger('fox:autopaginator:start');
-      const slug = assign({}, {
+      let slug = assign({}, { // can change this to 'toJSON' and omit
+        blogname: query.blogname,
         term: query.term,
         post_role: query.post_role,
         post_type: query.post_type,
@@ -41,26 +41,19 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
         filter_nsfw: query.filter_nsfw,
         before: query.before
       });
+      if (this.state.get('likes')) {
+        slug = omit(slug, 'blogname');
+      }
       return this.fetch(slug);
     },
-    sendLike(post) { // NOTE: major problems: 1. this sends the like while the heart animation is still playing, 2. no timestamp
+    sendLike(post) {
       const slug = {
         id: $(post.el).data('id'),
         html: $(post.el).prop('outerHTML')
       };
       this.chromeTrigger('chrome:sync:likes', slug);
-    },
-    updateLikesCache(type, postId) {
-      const html = $(`[data-pageable="post_${postId}"]`).html();
-      // const timestamp = Tumblr.Thoth.get('start_timestamp'); // NOTE: find another way to get a timestamp
-      const slug = {
-        postId,
-        type,
-        html
-      };
-      this.chromeTrigger('chrome:update:likes', slug);
     }
   });
 
-  Tumblr.Fox.Likes = LikesModel;
+  Tumblr.Fox.register('LikesModel', LikesModel);
 });

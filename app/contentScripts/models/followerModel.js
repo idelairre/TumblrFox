@@ -1,14 +1,15 @@
 module.exports = (function followerModel(Tumblr, Backbone, _) {
   const { $, Model }= Backbone;
-  const { chromeMixin } = Tumblr.Fox;
+  const { get } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
+  const ChromeMixin = get('ChromeMixin');
 
   const FollowerModel = Model.extend({
     defaults: {
       offset: 25,
       limit: 25
     },
-    mixins: [chromeMixin],
+    mixins: [ChromeMixin],
     initialize() {
       this.options = this.defaults;
       this.items = Tumblelog.collection;
@@ -51,18 +52,19 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     updatePosts(following) {
-      const posts = Tumblr.Fox.Posts.items.where({
-        tumblelog: following.attributes.name
-      });
-      posts.map(post => {
-        post.attributes['tumblelog-data'].following = true;
-        post.set(post.attributes);
-      });
-      this.chromeTrigger('chrome:update:following', {
-        following: following.attributes
-      });
+      // NOTE: this should only fire when in the likes state
+      // const posts = Tumblr.Fox.Posts.items.where({
+      //   tumblelog: following.attributes.name
+      // });
+      // posts.map(post => {
+      //   post.attributes['tumblelog-data'].following = true;
+      //   post.set(post.attributes);
+      // });
+      // this.chromeTrigger('chrome:update:following', {
+      //   following: following.attributes
+      // });
     }
   });
 
-  Tumblr.Fox.FollowerModel = new FollowerModel();
+  Tumblr.Fox.register('FollowerModel', FollowerModel);
 });

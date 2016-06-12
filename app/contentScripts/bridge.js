@@ -9,6 +9,7 @@ import { camelCase } from 'lodash';
 const Bridge = {
   initialize() {
     this.bindListeners([
+      'chrome:fetch:blogPosts',
       'chrome:fetch:posts',
       'chrome:fetch:likes',
       'chrome:search:likesByTag',
@@ -21,12 +22,10 @@ const Bridge = {
       'chrome:update:following',
       'chrome:update:likes',
       'chrome:sync:likes',
-      'chrome:initialize',
-      'chrome:search:setBlog'
+      'chrome:initialize'
     ]);
   },
   listenTo(eventName, callback) {
-    console.log('[BRIDGE LISTEN]', eventName);
     const eventSlug = camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
       const req = {};
@@ -40,7 +39,6 @@ const Bridge = {
     });
   },
   trigger(eventName, payload) {
-    // console.log('[EVENT NAME]: ', eventName, '[PAYLOAD]: ', payload);
     let req = {};
     if (typeof payload === 'undefined') {
       req = new Event(eventName);

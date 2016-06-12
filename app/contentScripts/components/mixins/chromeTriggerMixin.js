@@ -1,16 +1,16 @@
 module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
-  const { get } = Tumblr.Fox;
-  const Mixin = get('Mixin');
+  const { $ } = Backbone;
+  const { Utils } = Tumblr.Fox;
+  const Mixin = Utils.ComponentFetcher.get('Mixin');
 
   /**
    * @param {String} eventName The name of the window event corresponding to a chrome action
    * @param {String} payload The data to send to the extension backend
    * @param {String} callback Optional function to perform on response
    */
-  const chromeMixin = new Mixin({
+
+  const ChromeMixin = new Mixin({
     chromeTrigger(eventName, payload, callback) {
-      console.log('[CHROME TRIGGER]', arguments);
       let req = {};
       if (!payload) {
         req = new Event(eventName);
@@ -23,13 +23,11 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
       let responseEvent = eventName.split(':');
       responseEvent[1] = 'response';
       responseEvent = responseEvent.join(':');
-      console.log('[CHROME RESPONSE]', responseEvent);
-      const onFinish = ((response) => {
+      const onFinish = response => {
         callback ? callback(response.detail) : null;
-        setTimeout(() => {
-          window.removeEventListener(responseEvent, onFinish);
-        }, 1);
-      });
+        window.removeEventListener(responseEvent, onFinish);
+        this.trigger('chrome', { eventName, payload });
+      }
       window.dispatchEvent(req);
       window.addEventListener(responseEvent, onFinish);
     },
@@ -41,7 +39,5 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.chromeMixin = chromeMixin;
-
-  return Tumblr.Fox.chromeMixin;
+  Tumblr.Fox.register('ChromeMixin', ChromeMixin);
 });

@@ -1,18 +1,19 @@
 module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
   const { invoke, omit } = _;
-  const { chromeMixin } = Tumblr.Fox;
+  const { get } = Tumblr.Fox;
+  const ChromeMixin = get('ChromeMixin');
 
   const TextSearchAutocompleteModel = Model.extend({
-    mixins: [chromeMixin],
+    mixins: [ChromeMixin],
     defaults: {
       matchTerm: '',
       maxRender: 20,
       typeAheadMatches: []
     },
-    initialize() {
+    initialize(options) {
       this.fetched = false;
-      this.state = Tumblr.Fox.state;
+      this.state = options.state;
       this.items = new Backbone.Collection();
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
     },
@@ -72,5 +73,5 @@ module.exports = (function textSearchAutocompleteModel(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.TextSearchAutocompleteModel = new TextSearchAutocompleteModel();
+  Tumblr.Fox.register('TextSearchAutocompleteModel', TextSearchAutocompleteModel);
 });

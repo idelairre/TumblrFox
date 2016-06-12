@@ -1,20 +1,16 @@
 module.exports = (function filterDropdown(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
-  const { mapKeys } = _;
-  const { get } = Tumblr.Fox;
-  const SearchFiltersPopover = get('SearchFiltersPopover');
-  const SearchFilters = get('SearchFilters');
-  const transition = get('animation').transition;
-  const ClickHandler = get('ClickHandler');
-  const PopoverComponent = get('PopoverComponent');
-  const popover = get('PopoverMixin');
+  const { assign, mapKeys, pick } = _;
+  const { get, Utils } = Tumblr.Fox;
+  const { ComponentFetcher, TemplateCache } = Utils;
+  const { ClickHandler, SearchFilters, SearchFiltersPopover, TumblrView } = ComponentFetcher.getAll('ClickHandler', 'SearchFilters', 'SearchFiltersPopover', 'TumblrView');
+  const { transition } = get('animation');
 
   // TODO: apply popover mixin to this class
 
-  const FilterComponent = PopoverComponent.extend({
+  const FiltersDropDownComponent = TumblrView.extend({
     className: 'popover--blog-search blog-search-filters-popover',
     mixins: [].concat(SearchFiltersPopover.prototype.mixins),
-    template: $('#filterTemplate').html(),
+    template: TemplateCache.get('filterTemplate'),
     events: {
       'change input.date-filter-input': 'contentChanged',
       'click [data-filter]': 'onFilterClick',
@@ -22,15 +18,14 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       'click .option-radio': 'onCheckboxClick',
       'change [type=checkbox]': 'onCheckboxChange'
     },
-    initialize() {
+    initialize(options) {
       const ignores = ['template', 'render', 'initialize', 'bindEvents', 'events'];
       mapKeys(SearchFilters.prototype, (val, key) => {
         if (typeof val === 'function' && !ignores.includes(key)) {
           this.__proto__[key] = val;
         }
       });
-      this.state = Tumblr.Fox.state;
-      this.searchOptions = Tumblr.Fox.searchOptions;
+      assign(this, pick(options, ['searchOptions', 'state']));
       this.bindEvents();
     },
     render() {
@@ -92,5 +87,5 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Filters = FilterComponent;
+  Tumblr.Fox.register('FiltersDropDownComponent', FiltersDropDownComponent);
 });

@@ -53,9 +53,7 @@ class Constants extends Eventor {
       });
       console.log('[USER]', response);
       const postsCount = await db.posts.toCollection().count();
-      // const canFetchApiLikes = await Likes.check(response.user.name);
       this.set('userName', response.user.name);
-      // this.set('canFetchApiLikes', canFetchApiLikes);
       this.set('cachedPostsCount', postsCount);
       this.set('totalPostsCount', response.user.likes);
       this.set('totalFollowingCount', response.user.following);

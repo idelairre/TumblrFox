@@ -31,9 +31,16 @@ export const log = (database, items, sendResponse, save) => {
     };
     // console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
     if (itemsLeft === 0) {
-      sendResponse({ type: 'done', payload });
+      sendResponse({
+        type: 'done',
+        payload,
+        message: 'Finished processing items'
+      });
     } else {
-      sendResponse({ type: 'progress', payload });
+      sendResponse({
+        type: 'progress',
+        payload
+      });
     }
   } catch (e) {
     console.error(e);
@@ -45,6 +52,9 @@ export const logError = (error, next, sendResponse) => {
   console.error(error);
   if (error.message) {
     error = error.message;
+  }
+  if (error.responseText) {
+    error = error.responseText;
   }
   let isAsync = true;
   if (!sendResponse) {

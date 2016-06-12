@@ -1,15 +1,16 @@
 module.exports = (function settings(Tumblr, Backbone, _) {
   const $ = Backbone.$;
-  const { assign, clone, defer } = _;
-  const { get, Popover } = Tumblr.Fox;
-  const PopoverComponent = get('PopoverComponent');
+  const { assign, clone, defer, findKey } = _;
+  const { get } = Tumblr.Fox;
+  const Popover = get('PopoverComponent');
+  const TumblrView = get('TumblrView');
 
   const settingsPopoverTemplate = `
     <script id="settingsPopoverTemplate" type="text/template">
       <i class="icon_search toggle-search nav_icon"></i>
     </script>`;
 
-  const Settings = PopoverComponent.extend({
+  const Settings = TumblrView.extend({
     className: 'search-settings',
     defaults: {
       popoverOptions: [{
@@ -41,8 +42,20 @@ module.exports = (function settings(Tumblr, Backbone, _) {
       if (!Tumblr.Fox.options.enableTextSearch) {
         this.options.popoverOptions[1].hidden = true;
       }
+      this.setSearchStateMenu(this.state.getState());
+      return this;
     },
     setSearchStateMenu(state) {
+      this.options.popoverOptions.map(opt => {
+        const item = findKey(opt.listItems, i => {
+          return i.data === state;
+        });
+        if (item) {
+          opt.listItems.map(li => {
+            li.checked = (li.data === state ? true : false);
+          });
+        }
+      });
       if (!Tumblr.Fox.options.cachedTags && state === 'likes') {
         this.options.popoverOptions[1].listItems.splice(0, 1);
       } else {
@@ -93,7 +106,9 @@ module.exports = (function settings(Tumblr, Backbone, _) {
             break;
           case 'text':
             this.searchOptions.setState(setting);
-            this.state.setState('user');
+            if (this.state.getState() !== 'likes') {
+              this.state.setState('likes');
+            }
             break;
           default: // this controls everything besides searchOptions, so state, e.g., user/dashboard/likes
             this.state.setState(setting);
@@ -103,5 +118,5 @@ module.exports = (function settings(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Settings = Settings;
+  Tumblr.Fox.register('SettingsComponent', Settings);
 });

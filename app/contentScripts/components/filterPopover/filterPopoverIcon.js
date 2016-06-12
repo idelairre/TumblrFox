@@ -1,6 +1,9 @@
 module.exports = (function filterIcon(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
-  const { FilterPopoverContainer } = Tumblr.Fox;
+  const { View, $ } = Backbone;
+  const { assign } = _;
+  const { get } = Tumblr.Fox;
+  const { ComponentFetcher } = Tumblr.Fox.Utils;
+  const FilterPopoverContainer = get('FilterPopoverContainer');
 
   const filterIconTemplate = `
     <script id="filterIconTemplate" type="text/template">
@@ -14,33 +17,41 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
       </span>
     </script>`;
 
-  const FilterIcon = Backbone.View.extend({
+  const FilterIcon = View.extend({
     template: $(filterIconTemplate).html(),
     className: 'tab iconic tab_filtered_posts',
     id: 'filter_button',
     events: {
       'click button': 'togglePopover'
     },
+    initialize(e) {
+      this.options = assign({}, e);
+    },
     render() {
       this.$el.html(this.template);
       $('.tab_bar').append(this.$el);
-      this.popover = new FilterPopoverContainer();
+      this.popover = new FilterPopoverContainer({
+        viewOptions: {
+          state: this.options.state,
+          searchOptions: this.options.searchOptions,
+          options: this.options.options
+        },
+        silent: false
+      });
     },
     togglePopover() {
-      if (!Tumblr.Fox.options.rendered) {
+      if (!this.options.rendered) {
         this.popover.render();
-        Tumblr.Fox.options.rendered = true;
+        this.options.rendered = true;
         return;
       }
       this.popover.show();
     }
   });
 
-  const filterPopoverIcon = new FilterIcon();
+  // if (!Tumblr.Fox.options.test) {
+  //   filterPopoverIcon.render();
+  // }
 
-  if (!Tumblr.Fox.options.test) {
-    filterPopoverIcon.render();
-  }
-
-  Tumblr.Fox.FilterPopoverIcon = filterPopoverIcon;
+  Tumblr.Fox.register('FilterPopoverIcon', FilterIcon);
 });

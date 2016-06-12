@@ -1,8 +1,10 @@
 module.exports = (function followerSearch(Tumblr, Backbone, _) {
+  const { View } = Backbone;
+  const { get } = Tumblr.Fox;
   const { assign, defer, omit } = _;
-  const { Popover } = Tumblr.Fox;
+  const Popover = get('PopoverComponent');
 
-  const FollowerSearch = Backbone.View.extend({
+  const FollowerSearch = View.extend({
     defaults: {
       popoverOptions: [{
         header: 'Sort',
@@ -71,5 +73,5 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.FollowerSearch = FollowerSearch;
+  Tumblr.Fox.register('FollowerSearchComponent', FollowerSearch);
 });

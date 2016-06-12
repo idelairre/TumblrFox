@@ -4,7 +4,7 @@ module.exports = (function loaderMixin(Tumblr, Backbone, _) {
   const Mixin = get('Mixin');
   const Loader = get('Loader');
 
-  const loader = new Mixin({
+  const LoaderBar = new Mixin({
     toggleLoading(loading) {
       console.log('[LOADING]', loading);
       if (!this.loader) {
@@ -19,7 +19,5 @@ module.exports = (function loaderMixin(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.loaderMixin = loader;
-
-  return Tumblr.Fox.loaderMixin;
+  Tumblr.Fox.register('LoaderMixin', LoaderBar);
 });

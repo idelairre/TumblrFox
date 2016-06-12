@@ -2,6 +2,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
   const $ = Backbone.$;
   const { template } = _;
   const { constants, Utils } = Tumblr.Fox;
+  const { TemplateCache, Time } = Utils
 
   $.fn.removeAttributes = function (args) {
     const ignore = args.ignore;
@@ -18,41 +19,13 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     });
   };
 
-  const followerTemplate = `
-    <script type="text/template">
-      <a href="http://<%= attributes.name %>.tumblr.com/" class="avatar" style="background-image:url('<%= attributes.avatar %>')" data-tumblelog-popover="<%- JSON.stringify(attributes) %>">
-        <img class="avatar_img" alt="" src="<%= attributes.avatar.url %>" width="40" height="40">
-      </a>
-      <div class="info">
-        <div class="name">
-          <a href="http://<%= attributes.name %>.tumblr.com/"><%= attributes.name %></a>
-        </div>
-        <div class="description">
-          <span class="last_updated" style="color:#606060;">Updated <%= attributes.updated %></span>
-        </div>
-      </div>
-      <div class="poptica_header popover_standalone">
-        <a data-name="<%= attributes.name %>" class="info_popover_button nav_icon user_dropdown_lockup">
-          <span class="snowman-container">
-            <i data-subscription-indicator="" class="subscribe-activity"></i>
-            <i class="snowman-icon"></i>
-          </span>
-        </a>
-      </div>
-      <div class="controls">
-        <span id="loading_<%= attributes.name %>" class="loading_animation" style="display: none;"></span>
-        <button class="chrome clear big unfollow_button" id="unfollow_button_<%= attributes.name %>" data-name="<%= attributes.name %>" data-formkey="<%= attributes.formkey %>">Unfollow</button>
-        <button class="chrome blue big follow_button" id="follow_button_<%= attributes.name %>" style="display: none;" data-name="<%= attributes.name %>" data-formkey="<%= attributes.formkey %>">Follow</button>
-      </div>
-    </script>`;
-
   const FollowerItem = Backbone.View.extend({
-    template: template($(followerTemplate).html()),
+    template: template(TemplateCache.get('followerItemTemplate')),
     className: 'follower clearfix',
     initialize(e) {
       this.model = e.model;
       this.model.attributes.avatar = this.model.attributes.avatar_url || this.model.attributes.avatar[1].url;
-      this.model.attributes.updated = Utils.prettyDate(Utils.fromTumblrTime(this.model.attributes.updated));
+      this.model.attributes.updated = Time.prettyDate(Time.fromTumblrTime(this.model.attributes.updated));
       this.model.attributes.formkey = constants.formkey;
     },
     render() {
@@ -60,7 +33,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
       if (this.model.collection.indexOf(this.model) % 2 === 0) {
         this.$el.addClass('alt');
       }
-      this.$el = this.$el.html(this.template(this.model));
+      this.$el.html(this.template(this.model));
       this.$popover = new Tumblr.TumblelogPopover.PopticaInfoPopover({
         el: this.$el.find('.poptica_header'),
         auto_show: false,
@@ -81,7 +54,6 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
       });
       this.$el.data('has-popover', true);
       this.$el.data('ref-popover', this.$popover);
-      console.log(this);
     },
     events: {
       'click button.unfollow_button': 'unfollow',
@@ -138,5 +110,5 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.FollowerItem = FollowerItem;
+  Tumblr.Fox.register('FollowerItemComponent', FollowerItem);
 });

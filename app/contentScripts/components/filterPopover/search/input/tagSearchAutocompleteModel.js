@@ -1,23 +1,28 @@
 module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { countBy, identity, invoke, omit } = _;
-  const { chromeMixin } = Tumblr.Fox;
+  const { countBy, identity, invoke, forIn, omit } = _;
+  const { get } = Tumblr.Fox;
+  const ChromeMixin = get('ChromeMixin');
 
   const TagSearchAutocompleteModel = Model.extend({
-    mixins: [chromeMixin],
+    mixins: [ChromeMixin],
     defaults: {
       matchTerm: '',
       maxRender: 20,
       typeAheadMatches: []
     },
-    initialize() {
+    initialize(options) {
       this.fetched = false;
-      this.state = Tumblr.Fox.state;
+      this.state = options.state;
       this.items = new Backbone.Collection();
+      this.$$rawTags = [];
+      this.$$dashboardTags = [];
       this.bindEvents();
+      this.initialFetch();
     },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
+      this.listenTo(Tumblr.Events, 'fox:updateTags', ::this.getTags);
       this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
       this.listenTo(this, 'change:matchTerm', ::this.setMatches);
       this.listenTo(this.state, 'change:state', ::this.flushTags);
@@ -27,6 +32,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.stopListening(this, 'change:matchTerm');
     },
     setState(state) {
+      console.log('[STATE]', state);
       switch (state) {
         case 'text':
           this.unbindEvents();
@@ -35,6 +41,18 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
           this.bindEvents();
           break;
       }
+    },
+    getTags(tags) {
+      this.$$rawTags = this.$$rawTags.concat(tags.slice(0, tags.length - 1));
+    },
+    processTags(tagArray, tagCounts) {
+      tagArray.map(rawTag => {
+        const tag = {
+          tag: rawTag,
+          count: tagCounts[rawTag]
+        };
+        this.$$dashboardTags.push(tag);
+      });
     },
     flushTags(state) {
       this.fetched = false;
@@ -46,36 +64,29 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       }
       return this.chromeFetch();
     },
-    // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
-    // need a trigger to flush tags
-    dashboardFetch() {
-      const deferred = $.Deferred();
-      const tagArray = [];
-      deferred.resolve(this.items);
+    initialFetch() {
       Tumblr.postsView.postViews.filter(post => {
-        const tagElems = post.$el.find('.post_tags');
+        const tagElems = ($(post.$el) || post.$el).find('.post_tags');
         if (tagElems.length > 0) {
-          let rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
-          rawTags = rawTags.filter(tag => {
+          const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
+          rawTags.filter(tag => {
             if (tag !== '') {
-              tagArray.push(tag);
+              this.$$rawTags.push(tag);
             }
           });
         }
       });
-      const tags = [];
+    },
+    // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
+    // need a trigger to flush tags
+    dashboardFetch() {
+      console.log('[FETCHING TAGS], raw tags: ', this.$$rawTags.length, 'parsed tags: ', this.$$dashboardTags.length);
+      const deferred = $.Deferred();
+      const tagArray = this.$$rawTags;
       const tagCounts = countBy(tagArray, identity);
-      for (const key in tagCounts) {
-        if ({}.hasOwnProperty.call(tagCounts, key)) {
-          const tag = {
-            tag: key,
-            count: tagCounts[key]
-          };
-          tags.push(tag);
-        }
-      }
-      this.parse(tags);
-      return deferred.promise();
+      this.processTags(tagArray, tagCounts);
+      this.parse(this.$$dashboardTags);
+      return deferred.resolve(this.items);
     },
     chromeFetch() {
       const deferred = $.Deferred();
@@ -111,8 +122,9 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
          this.set('typeAheadMatches', this.items.toJSON());
        }
       omit(e, 'tags');
+      // console.log('[RAW TAGS]', this.$$rawTags, this.$$dashboardTags);
     }
   });
 
-  Tumblr.Fox.TagSearchAutocompleteModel = new TagSearchAutocompleteModel();
+  Tumblr.Fox.register('TagSearchAutocompleteModel', TagSearchAutocompleteModel);
 });

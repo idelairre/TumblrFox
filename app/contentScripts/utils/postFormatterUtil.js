@@ -1,6 +1,7 @@
 module.exports = (function postFormatter(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
-  const { escape, unescape } = _;
+  const { $ } = Backbone;
+  const { defaultsDeep, escape, extend, omit, unescape, union } = _;
+  const { get } = Tumblr.Fox;
 
   const escapeQuotes = string => {
     return string.replace(/"/g, '\\"');
@@ -10,277 +11,53 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     return string.replace(/\\"/g, '"');
   }
 
-  const formatType = postData => {
-    if (postData.type === 'text') {
-      return 'regular';
-    } else if (postData.type === 'answer') {
-      return 'note';
-    } else if (postData.type === 'chat') {
-      return 'conversation';
-    } else {
-      return postData.type;
-    }
-  }
+  const PostFormatter = function () { };
 
-  const formatFooter = postDiv => {
-    const postFooter = postDiv.find('.post_footer');
-    postFooter.addClass('clearfix').attr('data-subview', 'footer').find('.post_notes').attr('data-subview', 'notes').find('.post_notes').wrapInner('<div class="post_notes_inner"></div>');
-    const postControls = postFooter.find('.post_controls');
-    postControls.attr('role', 'toolbar').attr('data-subview', 'controls').wrapInner('<div class="post_controls_inner"></div>');
-    postFooter.find('.note_link_current').replaceWith(function () {
-      const notes = $(this);
-      if (notes.data('count') !== 0) {
-        return $(`<span class="note_link_current" title="${notes.attr('title')}" data-less="${notes.attr('data-less')}" data-count="${notes.attr('data-count')}" data-more="${notes.attr('data-more')}">${notes.text()}</span>`);
+  extend(PostFormatter.prototype, {
+    formatType(postData) {
+      if (postData.type === 'text') {
+        return 'regular';
+      } else if (postData.type === 'answer') {
+        return 'note';
+      } else if (postData.type === 'chat') {
+        return 'conversation';
       } else {
-        return $(`<span class="note_link_current" title="${notes.attr('title')}" data-less="${notes.attr('data-less')}" data-count="${notes.attr('data-count')}" data-more="${notes.attr('data-more')}"></span>`);
+        return postData.type;
       }
-    });
-    const postReply = postControls.find('.reply');
-    postControls.find('.reply_container').replaceWith(postReply);
-  }
-
-  const formatPostHeader = (postData, postView, postDiv) => {
-    const postHeader = $(postView.$el).find('.post_header');
-    postHeader.attr('class', 'post_header').wrapInner('<div class="post_info"><div class="post_info_fence"></div></div>');
-    const postInfoLink = `<a class="post_info_link" href="http://${postData['tumblelog-data'].uuid}" data-tumblog-popover="${escape(JSON.stringify(postData['tumblelog-data']))}">${postData.tumblelog}</a>`;
-    const reblogFollowButton = postHeader.find('.reblog_follow_button').detach();
-    postHeader.find('.post_info_fence').prepend(postInfoLink);
-    if (postHeader.find('.reblog_info').length) {
-      postHeader.find('.reblog_info').wrap('<span class="reblog_source"></span>');
-      if (postInfoLink) {
-        postHeader.find('.post_info_fence').addClass('has_follow_button').after(reblogFollowButton);
-      }
-    } else {
-      postDiv.find('.post_info').append(reblogFollowButton);
-    }
-  }
-
-  const createAvatar = postData => {
-    const avatar =  `
-      <div class="post_avatar  show_user_menu">
-        <div class="post_avatar_wrapper">
-          <a class="post_avatar_link"
-            href="${postData['tumblelog-data'].url}"
-            target="_blank"
-            title="${postData['tumblelog-data'].title}"
-            id="post_avatar${postData.id}"
-            style="background-image:url('${postData['tumblelog-data'].avatar_url}')"
-            data-user-avatar-url="${postData['tumblelog-data'].avatar_url}"
-            data-avatar-url="${postData['tumblelog-data'].avatar_url}"
-            data-blog-url="${postData['tumblelog-data'].url}"
-            data-tumblelog-name="${postData.tumblelog}"
-            data-use-channel-avatar="1"
-            data-use-sub-avatar=""></a>
-        </div>
-      </div>`;
-      return avatar;
-  }
-
-  const createPostWrapper = postData => {
-    // NOTE: pt is probably premium_tracked, don't need to set that
-    const wrapper = `
-      <div id="post_${postData.id}" class="post post_full with_permalink pt reblog_ui_refresh is_${postData.type}
-        ${Tumblr.Prima.currentUser().attributes.name === postData.tumblelog ? 'is_mine' : 'not_mine'}
-        ${postData['tumblelog-parent-data'] ? 'is_reblog' : 'is_original'}
-        ${postData.source_title ? 'has_source' : 'no_source'}
-        ${postData.post_html.includes('View On') ? 'app_source' : 'generic_source'}
-        ${postData.notes.count === 0 ? 'no_notes' : ''}"
-        ${postData.can_reply ? 'data-can_reply="1"' : ''}
-        data-id="${postData.id}"
-        data-type="${postData.type}"
-        data-reblog_source="${postData.reblog_source}"
-        data-reblog_key="${postData.reblog_key}"
-        data-reblog-key="${postData.reblog_key}"
-        data-root_id="${postData.root_id}"
-        data-tumblelog="${postData.tumblelog}"
-        data-is-reblog="${postData['tumblelog-parent-data'] ? 1 : 0}"
-        data-tumblog-key="${postData['tumblelog-data'].key}"
-        data-tumblrfox-post="true">`;
-      return wrapper;
-  }
-
-  /**
-  * Tumblelog model
-  * @namespace Tumblr.Prima.Models.Tumbelog
-  * @property anonymous_asks: {Number}
-  * @property asks: {Boolean}
-  * @property avatar_url: {String}
-  * @property can_receive_messages: {Boolean}
-  * @property can_send_messages: {Boolean}
-  * @property can_subscribe: {Boolean}
-  * @property cname: {String}
-  * @property customizable: {Boolean}
-  * @property dashboard_url: {String} - Short url relative to dashboard, e.g., "/blog/theladymisandry"
-  * @property description: {String}
-  * @property description_sanitized: {String}
-  * @property following: {Boolean}
-  * @property is_group: {Boolean}
-  * @property is_private: {Boolean}
-  * @property is_subscribed: {Boolean}
-  * @property likes: {Boolean}
-  * @property name: {String}
-  * @property premium_partner: {Boolean}
-  * @property share_following: {Boolean}
-  * @property title: {String}
-  * @property url: {String}
-  * @property uuid: {String} - Full Tumblr url, e.g., "http://themisandrylady.tumble.com"
-  */
-
-  const marshalPostAttributes = (postData) => {
-    postData.type = formatType(postData);
-    postData.blog.avatar_url = postData.blog.avatar[1].url
-    delete postData.blog.avatar;
-    postData.share_popover_data.show_reporting_link = false;
-    postData.tumblelog = postData.blog.name;
-    postData['tumblelog-name'] = postData.blog.name;
-    postData['reblog-key'] = postData.reblog_key;
-    postData.reblog_source = 'POST_CONTEXT_UNKOWN';
-    postData['log-index'] = '2';
-    postData.renameProperty('blog', 'tumblelog-data');
-    postData.premium_partner = false;
-    postData['tumblelog-data'].renameProperty('share_likes', 'likes');
-    postData['tumblelog-data'].renameProperty('tumblelog_uuid', 'uuid');
-    postData['tumblelog-data'].can_receive_messages = postData['tumblelog-data'].can_send_in_message;
-    postData['tumblelog-data'].dashboard_url = `blog/${postData.tumblelog}`;
-    postData['tumblelog-data'].description_sanitized = escape(postData.description);
-    postData['tumblelog-data'].following = postData.followed;
-    postData['tumblelog-data'].customizable = false;
-
-    if (postData.hasOwnProperty('reblogged_from_name')) {
-      postData['tumblelog-parent-data'] = {
-        anonymous_asks: null,
-        avatar_url: null,
-        can_send_messages: postData.reblogged_from_can_message,
-        can_receive_messages: null,
-        cname: '',
-        dashboard_url: `/blog/${postData.reblogged_from_name}`,
-        following: postData.reblogged_from_following,
-        is_group: null,
-        is_private: null,
-        is_subscribed: null,
-        likes: null,
-        name: postData.reblogged_from_name,
-        premium_partner: null,
-        share_following: null,
-        title: postData.reblogged_from_title,
-        url: postData.reblogged_from_tumblr_url,
-        uuid: postData.reblogged_from_uuid
-      }
-    }
-
-    if (postData.hasOwnProperty('reblogged_root_name')) {
-      postData['tumblelog-root-data'] = {
-        anonymous_asks: null,
-        avatar_url: null,
-        can_send_messages: postData.reblogged_root_can_message,
-        cname: '',
-        following: postData.reblogged_root_following,
-        is_group: null,
-        is_private: null,
-        is_subscribed: null,
-        likes: null,
-        name: postData.reblogged_root_name,
-        premium_partner: null,
-        share_following: null,
-        title: postData.reblogged_root_title,
-        url: postData.reblogged_root_url,
-        uuid: postData.reblogged_root_uuid
-      };
-    }
-
-    for (const key in postData) {
-      if ({}.hasOwnProperty.call(postData, key)) {
-        if (key.includes('reblogged')) {
-          delete postData[key];
-        }
-      }
-    }
-    return postData;
-  }
-
-  const PostFormatter = {
-    formatDashboardPost(postData) {
-      const postModel = new Tumblr.Prima.Models.Post(postData);
-      const postView = new Tumblr.IndashBlog.PostView({
-        model: postModel
-      });
-      postView.render();
-
-      postModel.attributes = marshalPostAttributes(postModel.attributes);
-      postModel.set(postModel.attributes);
-      postModel.initialize(postModel.attributes);
-
-      const postAvatar = createAvatar(postModel.attributes);
-      const postWrapper = createPostWrapper(postModel.attributes);
-
-      const postDiv = $(postView.$el).find('.post_chrome');
-      postDiv.attr('class', 'post_wrapper').removeAttr('data-post-id').find('.post_content').wrapInner('<div class="post_content_inner clearfix"></div>').addClass('clearfix');
-
-      if (postData.type === 'note') {
-        const askButton = `<a class="post_tag ask post_ask_me_link" href="http://${postData.tumblelog}.tumblr.com/ask" data-tumblelog-name="${postData.tumblelog}">Ask ${postData.tumblelog} a question</a>`;
-        if (!postDiv.find('.post_tags_inner').length && postDiv.find('.note_wrapper').length < 2) {
-          postDiv.find('.post_content').after(`<div class="post_tags"><div class="post_tags_inner">${askButton}</div></div>`);
-        } else {
-          postDiv.find('.post_tags_inner').prepend(askButton);
-        }
-      }
-
-      formatPostHeader(postModel.attributes, postView, postDiv);
-      formatFooter(postDiv);
-
-      const postElement = $(`${postWrapper}${postAvatar}${postView.$el.html()}</div>`).attr('data-json', JSON.stringify(postData));
-      const postContainer = $(`<li class="post_container" data-pageable="post_${postModel.id}"></li>`).append(postElement);
-      postView.remove();
-      return { postContainer, postElement, postModel };
     },
-    // TODO: fix the like button for liked posts that are from blogs that aren't followed
     renderPostFromHtml(post) {
-      if (typeof post.html !== 'undefined' && $.parseHTML(post.html)) {
+      if (typeof post.html !== 'undefined') {
+        const PostView = get('PostViewComponent');
         const escapedHtml = unescapeQuotes(unescapeQuotes(post.html)); // NOTE: make it so you don't have to run this twice
         const postElement = $($.parseHTML(escapedHtml));
         const postModel = new Tumblr.Prima.Models.Post($(postElement).data('json'));
-        const postContainer = $(`<li class="post_container" data-pageable="post_${postModel.get('id')}"></li>`).append(postElement);
-        Tumblr.Fox.constants.attachNode.before(postContainer);
-        Tumblr.Fox.Utils.PostFormatter.createPostView(postElement, postModel);
-        Tumblr.Posts.add(postModel);
-        Tumblr.postsView.postViews.push(postElement);
+        postModel.set('html', escapedHtml);
+        new PostView({
+          model: postModel
+        });
       }
     },
     renderPostsFromHtml(posts) {
-      posts.map(Tumblr.Fox.Utils.PostFormatter.renderPostFromHtml);
+      posts.map(this.renderPostFromHtml);
     },
-    createPostView(postElement, postModel) {
-      if (typeof postModel.get('id') !== 'undefined') {
-        const postView = new Tumblr.PostView({
-          el: postElement,
-          model: postModel
+    renderPosts(items) {
+      if (!items) {
+        throw new Error('Attempted to render empty array of posts');
+      }
+      items.map(item => { // NOTE: posts do not come out in order due to different formatting times
+        const PostView = get('PostViewComponent');
+        const { post, tumblelog } = item;
+        postModel = this.marshalPostAttributes(post, tumblelog);
+        new PostView({
+          model: new Tumblr.Prima.Models.Post(postModel)
         });
-        postElement.attr('data-likeable-view-exists', true);
-        if (postView.$el.find('.reblog-list').length) {
-          postView.$reblog_list = postView.$el.find('.reblog-list');
-        }
-        Tumblr.postsView.postViews.push(postView);
-        Tumblr.Events.trigger('postsView:createPost', postView);
-        Tumblr.Events.trigger('DOMEventor:updateRect');
-      }
-    },
-    renderPosts(response) {
-      if (!response) {
-        return;
-      }
-      const posts = response.posts || response;
-      posts.map(post => { // NOTE: posts do not come out in order due to different formatting times
-        Tumblr.Fox.Utils.PostFormatter.renderPost(post);
       });
     },
-    renderPost(post) {
-      const { postContainer, postElement, postModel } = Tumblr.Fox.Utils.PostFormatter.formatDashboardPost(post);
-      Tumblr.Fox.constants.attachNode.before(postContainer);
-      Tumblr.Fox.Utils.PostFormatter.createPostView(postElement, postModel);
-      Tumblr.Posts.add(postModel);
-    },
     parseTags(post) {
-      const postHtml = typeof post.get === 'function' ? $(post.get('html')) : $(post.html);
+      if (post.tags) {
+        return;
+      }
+      const postHtml = $(post.$el);
       const tagElems = postHtml.find('.post_tags');
       if (tagElems.length > 0) {
         const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
@@ -289,26 +66,193 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
             return tag;
           }
         });
-        typeof post.set === 'function' ? post.set('tags', tags) : post.tags = tags;
+        post.tags = tags;
       } else {
-        typeof post.set === 'function' ? post.set('tags', []) : post.tags = [];
+        post.tags = [];
       }
+      post.model.set('tags', post.tags);
       return post;
     },
+    // NOTE: this results in duplicates
     renderDashboardPosts(posts) {
-      posts = $(posts);
-      const views = [];
-      $.each(posts, (i, post) => {
-        const model = $(post).find('[data-json]').data('json');
-        const postView = new Tumblr.PostView({
-          el: $(post).html(),
-          model: new Tumblr.Prima.Models.Post(model)
+      posts.map(post => {
+        const PostView = get('PostViewComponent');
+        const postData = post.model.toJSON();
+        const postModel = new Tumblr.Prima.Models.Post(postData);
+        Tumblr.postsView.postViews = [];
+        new PostView({
+          model: postModel
         });
-        views.push(postView);
+        post.remove();
       });
-      return views;
-    }
-  }
+    },
 
-  Tumblr.Fox.Utils.PostFormatter = PostFormatter;
+    /**
+    * Tumblelog model
+    * @namespace Tumblr.Prima.Models.Tumbelog
+    * @property anonymous_asks: {Number}
+    * @property asks: {Boolean}
+    * @property avatar_url: {String}
+    * @property can_receive_messages: {Boolean}
+    * @property can_send_messages: {Boolean}
+    * @property can_subscribe: {Boolean}
+    * @property cname: {String}
+    * @property customizable: {Boolean}
+    * @property dashboard_url: {String} - Short url relative to dashboard, e.g., "/blog/theladymisandry"
+    * @property description: {String}
+    * @property description_sanitized: {String}
+    * @property following: {Boolean}
+    * @property is_group: {Boolean}
+    * @property is_private: {Boolean}
+    * @property is_subscribed: {Boolean}
+    * @property likes: {Boolean}
+    * @property name: {String}
+    * @property premium_partner: {Boolean}
+    * @property share_following: {Boolean}
+    * @property title: {String}
+    * @property url: {String}
+    * @property uuid: {String} - Full Tumblr url, e.g., "http://themisandrylady.tumble.com"
+    */
+
+    /**
+    * PostView viewModel
+    * @namespace Tumblr.PostView
+    * @property accepts-answers: {Boolean}
+    * @property can_reply: {Boolean}
+    * @property direct-video: {Boolean}
+    * @property id: {Number}
+    * @property is-animated: {Boolean}
+    * @property is-pinned: {Boolean}
+    * @property is-mine: {Boolean}
+    * @property is_reblog: {Boolean}
+    * @property is-recommended: {Boolean}
+    * @property liked: {Boolean}
+    * @property log-index: {String}
+    * @property placement_id: {Number}
+    * @property post-id: {Number}
+    * @property premium-tracked: {Number}
+    * @property pt: {String}
+    * @property reblog-key: {String}
+    * @property reblog_key: {String}
+    * @property reblog_source: {String}
+    * @property recommendation_reason: {String}
+    * @property root_id: {String}
+    * @property share_popover_data: {Object}
+    * @property sponsered: {String}
+    * @property tumblelog: {String}
+    * @property tumblelog-data: {Object} recognzed parameters:
+    *   "avatar": {Array} element parameters:
+    *      "height": {Number}
+    *       "url": {String}
+    *       "width": {Number}
+    *   "can_message": {Boolean}
+    *   "description": {String}
+    *   "key": {String}
+    *   "name": {String}
+    *   "share_following": {Boolean}
+    *   "share_likes": {Boolean}
+    *   "theme": {Object}
+    *   "title": {String}
+    *   "updated": {Number}
+    *   "url": {String}
+    *   "uuid": {String}
+    * @property tumblelog-key: {String}
+    * @property tumblelog-name: {String}
+    * @property tumblelog-parent-data: {Object}
+    * @property tumblelog-root-data: {Object}
+    * @property type: {String}
+    */
+
+    marshalPostAttributes(postData, blogData) {
+      postData = postData.post || postData;
+      postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
+      blogData = blogData || {
+        anonymous_asks: null,
+        asks: null,
+        avatar_url: postData.blog.avatar[1].url,
+        can_receive_messages: null,
+        can_send_in_message: null,
+        can_subscribe: null,
+        cname: '',
+        customizable: false,
+        dashboard_url: `blog/${postData.tumblelog}`,
+        description_sanitized: postData.blog.description.trim(),
+        following: null,
+        is_group: null,
+        is_subscribed: null,
+        likes: postData.blog.share_likes,
+        name: postData.blog.name,
+        premium_partner: false,
+        share_following: false,
+        title: postData.blog.title,
+        url: postData.blog.url,
+        uuid: postData.blog.uuid
+      };
+      postData = defaultsDeep({
+        'accepts-answers': null,
+        can_reply: postData.can_reply,
+        'direct-video': null,
+        id: postData.id,
+        'is-animated': null,
+        'is-mine': null,
+        is_reblog: typeof postData.reblogged_from_tumblr_url === 'string' ? true : false,
+        'is-recommended': null,
+        'is-tumblrfox-post': true,
+        liked: postData.liked,
+        'log-index': '2',
+        name: postData.blog.name,
+        'post-id': postData.id,
+        show_reporting_links: false,
+        tumblelog: postData.blog.name,
+        'tumblelog-name': postData.blog.name,
+        'tumblelog-key': postData.blog.key,
+        'reblog-key': postData.reblog_key,
+        reblog_key: postData.reblog_key,
+        reblog_source: 'POST_CONTEXT_UNKOWN',
+        root_id: postData.reblogged_root_id,
+        type: this.formatType(postData),
+        'tumblelog-data': blogData,
+        'tumblelog-parent-data': typeof postData.reblogged_from_tumblr_url === 'string' ? {
+          anonymous_asks: null,
+          avatar_url: null,
+          can_send_messages: postData.reblogged_from_can_message,
+          can_receive_messages: null,
+          cname: '',
+          dashboard_url: `/blog/${postData.reblogged_from_name}`,
+          following: postData.reblogged_from_following,
+          is_group: null,
+          is_private: null,
+          is_subscribed: null,
+          likes: null,
+          name: postData.reblogged_from_name,
+          premium_partner: false,
+          share_following: null,
+          title: postData.reblogged_from_title,
+          url: postData.reblogged_from_tumblr_url,
+          uuid: postData.reblogged_from_uuid
+        } : false,
+        'tumblelog-root-data': typeof postData.reblogged_from_tumblr_url === 'string' ?  {
+          anonymous_asks: null,
+          avatar_url: null,
+          can_send_messages: postData.reblogged_root_can_message,
+          cname: '',
+          following: postData.reblogged_root_following,
+          is_group: null,
+          is_private: null,
+          is_subscribed: null,
+          likes: null,
+          name: postData.reblogged_root_name,
+          premium_partner: null,
+          share_following: null,
+          title: postData.reblogged_root_title,
+          url: postData.reblogged_root_url,
+          uuid: postData.reblogged_root_uuid
+        } : false
+      }, postData);
+      postData = omit(postData, ['blog', 'reblog', 'reblogged_from_can_message', 'reblogged_from_following', 'reblogged_from_followed', 'reblogged_from_id', 'reblogged_from_name', 'reblogged_from_title', 'reblogged_from_tumblr_url', 'reblogged_from_url', 'reblogged_from_uuid', 'reblogged_root_can_message', 'reblogged_root_following', 'reblogged_root_name', 'reblogged_root_title', 'reblogged_root_url', 'reblogged_root_uuid']);
+      return postData;
+    }
+  });
+
+  Tumblr.Fox.Utils.PostFormatter = new PostFormatter();
 });

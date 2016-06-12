@@ -1,6 +1,7 @@
 import { Deferred } from 'jquery';
 import { keyBy } from 'lodash';
 import db from '../lib/db';
+import Eventor from '../lib/eventor';
 import Fuse from '../lib/fuse';
 import constants from '../constants';
 import 'babel-polyfill';
@@ -9,7 +10,7 @@ import 'babel-polyfill';
 
 const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
 
-class FuseSearch {
+class FuseSearch extends Eventor {
   options = {
     caseSensitive: false,
     include: ['score', 'matches'],
@@ -24,37 +25,31 @@ class FuseSearch {
     id: 'id'
   }
   constructor() {
+    super();
+    this.initialized = false;
     constants.addListener('ready', () => {
       if (constants.get('fullTextSearch')) {
         db.posts.toCollection().toArray().then(posts => {
           this.posts = keyBy(posts, 'id');
           this.fuse = new Fuse(posts, this.options);
-          console.log(this.fuse);
+          this.initialized = true;
+          this.trigger('ready');
+          console.log('[FUSE]', this.fuse);
         });
       }
     });
   }
-
-  async setBlog(slug) {
-    const tumblelog = slug.payload;
-    try {
-      console.log('[SET BLOG]', tumblelog);
-      const posts = await db.posts.where('blog_name').equalsIgnoreCase(tumblelog).toArray();
-      this.posts = keyBy(posts, 'id');
-      this.fuse = new Fuse(posts, this.options);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
+  
   async search(query) {
     const deferred = Deferred();
     try {
       const posts = [];
       const results = this.fuse.search(query.term);
-      results.map(result => {
+      console.log('[RESULTS]', results.length);
+      for (let i = 0; results.length > i; i += 1) {
+        const result = results[i];
         posts.push(this.posts[result.item]);
-      });
+      }
       deferred.resolve(posts);
     } catch (e) {
       console.error(e);

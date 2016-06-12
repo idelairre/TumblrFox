@@ -1,7 +1,7 @@
 module.exports = (function loader(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { get } = Tumblr.Fox;
-  const View = get('PopoverComponent');
+  const View = get('TumblrView');
 
   const Loader = View.extend({
     id: 'Loader',
@@ -27,5 +27,5 @@ module.exports = (function loader(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Loader = Loader;
+  Tumblr.Fox.register('LoaderComponent', Loader);
 });

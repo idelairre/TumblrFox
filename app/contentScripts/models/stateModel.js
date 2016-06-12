@@ -1,14 +1,14 @@
 module.exports = (function (Tumblr, Backbone, _) {
   const { Model } = Backbone;
-  const { assign, mapKeys } = _;
+  const { assign, isEqual, mapKeys } = _;
+  const { ComponentFetcher } = Tumblr.Fox.Utils;
 
   const State = Model.extend({
     initialize(e) {
       assign(this, e);
     },
     set() {
-      Backbone.Model.prototype.set.apply(this, arguments);
-      Backbone.Model.prototype.set.call(this, 'state', this.getState());
+      Model.prototype.set.apply(this, arguments);
       this.trigger('change:state', this.getState());
     },
     getState() {
@@ -20,6 +20,13 @@ module.exports = (function (Tumblr, Backbone, _) {
     },
     setState(state) {
       const attributes = this.attributes;
+      if (!Object.keys(this.attributes).includes(state)) {
+        console.error(`Error: "${state}" is not a valid state. Valid states: "${Object.keys(this.attributes)}"`);
+        return;
+      } else if (this.getState() === state) {
+        console.error(`Error: state model is already in state "${state}"`);
+        return;
+      }
       mapKeys(attributes, (value, key) => {
         attributes[key] = false;
         if (key === state) {
@@ -30,16 +37,5 @@ module.exports = (function (Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.state = new State({
-    dashboard: false,
-    user: true,
-    likes: false
-  });
-
-  Tumblr.Fox.searchOptions = new State({
-    tag: true,
-    text: false
-  });
-
-  Tumblr.Fox.State = State;
+  Tumblr.Fox.register('StateModel', State);
 });

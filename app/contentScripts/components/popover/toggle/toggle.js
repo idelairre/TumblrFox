@@ -1,9 +1,10 @@
 module.exports = (function followerItem(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $ } = Backbone;
   const { assign, template } = _;
-
+  const { Utils } = Tumblr.Fox;
+  
   const Toggle = Backbone.View.extend({
-    template: template($('#toggleTemplate').html()),
+    template: template(Utils.TemplateCache.get('toggleTemplate')),
     tagName: 'a',
     events: {
       'click': 'toggle'
@@ -37,5 +38,5 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Toggle = Toggle;
+  Tumblr.Fox.register('ToggleComponent', Toggle);
 })

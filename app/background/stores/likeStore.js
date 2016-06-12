@@ -3,7 +3,7 @@
 
 import $, { ajax, Deferred } from 'jquery';
 import async from 'async';
-import { differenceBy, isString } from 'lodash';
+import { differenceBy, findIndex, isString } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import { log, logError } from '../services/loggingService';
@@ -11,6 +11,8 @@ import Tags from './tagStore';
 import FuseSearch from '../services/fuseSearchService';
 import Source from '../source/likeSource';
 import 'babel-polyfill';
+
+const LIMIT = 4000;
 
 export default class Likes {
   static async send(request, sender, sendResponse) {
@@ -33,7 +35,7 @@ export default class Likes {
         if (posts.length === 0) {
           sendResponse({
             type: 'done',
-            payload: { message: 'Maximum fetchable posts reached.' }
+            payload: { message: Source.MAX_ITEMS_MESSAGE }
           });
           next(null, items);
         } else {
@@ -79,111 +81,149 @@ export default class Likes {
     }
   }
 
-  static async searchLikesByTerm(query, port) {
-    console.log('[QUERY]', query);
-    try {
-      let matches = await FuseSearch.search(query);
-      await Likes._sortByPopularity(matches);
-      matches = await Likes._filterByType(query, matches);
-      matches = await Likes._filterByDate(query, matches);
-      matches = await Likes._filterNSFW(query, matches);
-      return matches;
-    } catch (e) {
-      console.error(e);
+  static _applyFilters(query, matches) {
+    if (query.blogname) {
+      matches = matches.filter(post => {
+        if (post.blog_name === query.blogname) {
+          return post;
+        }
+      });
     }
+    if (query.post_type !== 'any') {
+      matches = Likes._filterByType(query, matches);
+    }
+    if (query.post_role) {
+      matches = Likes._filterOriginal(query, matches);
+    }
+    if (query.filter_nsfw) {
+      matches = Likes._filterNSFW(query, matches);
+    }
+    if (query.sort === 'POPULARITY_DESC') {
+      Likes._sortByPopularity(matches);
+    }
+    return matches;
   }
 
-  static async _getLikesByTag(args) {
+  static async searchLikesByTerm(query, port) {
     const deferred = Deferred();
-    try {
-      const matches = await db.posts.where('tags').anyOfIgnoreCase(args.term).reverse().toArray();
-      return deferred.resolve(matches);
-    } catch (e) {
-      console.error(e);
-      return deferred.reject(e);
+    if (query.term.length === 0) {
+      deferred.reject('Term cannot be empty');
     }
+    query = Likes._marshalQuery(query);
+    let posts = [];
+    try {
+      if (FuseSearch.initialized) {
+        let matches = await FuseSearch.search(query);
+        matches = Likes._applyFilters(query, matches);
+        if (matches.length > 1000) {
+          matches = matches.slice(0, 1000);
+        }
+        deferred.resolve(matches);
+      } else {
+        FuseSearch.addListener('ready', async () => {
+          let matches = await FuseSearch.search(query);
+          matches = Likes._applyFilters(query, matches);
+          if (matches.length > 1000) {
+            matches = matches.slice(0, 1000);
+          }
+          deferred.resolve(matches);
+        });
+      }
+    } catch (e) {
+      deferred.reject(e);
+    }
+    return deferred.promise();
   }
 
   static async _filterByDate(query, posts) {
     const deferred = Deferred();
-    if (query.before) {
-      const date = query.before / 1000;
-      posts = posts.filter(post => {
-        if (date >= post.liked_timestamp) {
-          return post;
-        }
-      });
-    }
-    return deferred.resolve(posts);
+    const date = query.before / 1000;
+    return posts.filter(post => {
+      if (date >= post.liked_timestamp) {
+        return post;
+      }
+    });
   }
 
   static _filterByType(query, posts) {
-    const deferred = Deferred();
-    if (query.post_type !== 'ANY') {
-      const type = query.post_type.toLowerCase();
-      posts = posts.filter(post => {
-        if (post.type === type) {
-          return post;
-        }
-      });
-    }
-    return deferred.resolve(posts);
+    const type = query.post_type.toLowerCase();
+    return posts.filter(post => {
+      if (post.type === type) {
+        return post;
+      }
+    });
   }
 
-  static _sortByPopularity(query, posts) {
-    const deferred = Deferred();
-    if (query.sort === 'POPULARITY_DESC') {
-      posts = posts.sort((a, b) => {
-        return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1 : 0);
-      }).reverse();
-    }
-    return deferred.resolve(posts);
+  static _sortByPopularity(posts) {
+    return posts.sort((a, b) => {
+      return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1 : 0);
+    }).reverse();
+    return posts;
   }
 
   static _filterNSFW(query, posts) {
-    const deferred = Deferred();
-    if (query.filter_nsfw) {
-      posts = posts.filter(post => {
-        if (!post.hasOwnProperty('tumblelog-content-rating')) {
-          return post;
-        }
-      });
-    }
-    return deferred.resolve(posts);
+    return posts.filter(post => {
+      if (!post.hasOwnProperty('tumblelog-content-rating')) {
+        return post;
+      }
+    });
   }
 
   static _filterOriginal(query, posts) {
-    const deferred = Deferred();
-    if (query.post_role === 'ORIGINAL') {
-      posts = posts.filter(post => {
-        if (!post.is_reblog) {
-          return post;
-        }
-      });
+    return posts.filter(post => {
+      if (!post.is_reblog) {
+        return post;
+      }
+    });
+  }
+
+  static _marshalQuery(query) {
+    const type = query.post_type.toLowerCase();
+    if (type === 'text') {
+      query.post_type = 'regular';
+    } else if (type === 'answer') {
+      query.post_type = 'note';
+    } else if (type === 'chat') {
+      query.post_type = 'conversation';
+    } else {
+      query.post_type = type;
     }
-    return deferred.resolve(posts);
+    console.log('[SEARCH LIKES]', query);
+    return query;
   }
 
   static async searchLikesByTag(query) {
-    console.log('[SEARCH LIKES]', query);
+    query = Likes._marshalQuery(query);
     const deferred = Deferred();
     try {
-      const term = (typeof query === 'string' ? query : query.term);
       let matches = [];
-      if (term.length > 0) {
-        matches = await Likes._getLikesByTag(query);
-      } else {
-        matches = await db.posts.orderBy('tags').reverse().toArray(); // return all
+      // Note: wrong
+      if (query.post_type !== 'any' && query.term.length === 0) {
+        matches = await db.posts.where('type').equals(query.post_type).limit(LIMIT).reverse().toArray(); // return all of a certain type
+      } else if (query.post_type !== 'any' && query.term.length > 0) {
+        matches = await db.posts.where('tags').anyOfIgnoreCase(query.term).or('type').equals(query.post_type).limit(LIMIT).reverse().toArray();
+      } else if (query.post_type === 'any' && query.term.length === 0) {
+        matches = await db.posts.toCollection().limit(LIMIT).reverse().toArray(); // dangerous, why not just query from the likes page
+      } else if (query.post_type === 'any' && query.term.length > 0) {
+        matches = await db.posts.where('tags').anyOfIgnoreCase(query.term).limit(LIMIT).reverse().toArray();
       }
-      await Likes._sortByPopularity(matches);
-      matches = await Likes._filterByType(query, matches);
-      matches = await Likes._filterByDate(query, matches);
-      matches = await Likes._filterNSFW(query, matches);
-      matches = await Likes._filterOriginal(query, matches);
+      if (query.sort === 'POPULARITY_DESC') {
+        Likes._sortByPopularity(matches);
+      }
+      if (query.before) {
+        matches = Likes._filterByDate(query, matches);
+      }
+      if (query.filter_nsfw) {
+        matches = Likes._filterNSFW(query, matches);
+      }
+      if (query.post_role === 'ORIGINAL') {
+        matches = Likes._filterOriginal(query, matches);
+      }
       if (query.offset && query.limit) {
         const { offset, limit } = query;
         matches = matches.slice(offset, offset + limit);
       }
+      console.log(matches);
       deferred.resolve(matches);
     } catch (e) {
       deferred.reject(e);
@@ -192,10 +232,12 @@ export default class Likes {
   }
 
   static async update(request) {
-    const { type, html, postId, timestamp } = request.payload;
+    console.log(request);
+    const { type, postId } = request.payload;
     if (type === 'like') {
-      const postData = Source.processPost(html, timestamp);
-      await db.posts.put(postData);
+      const posts = await Source.fetchMostRecent();
+      const post = posts[findIndex(posts, { id: postId })];
+      await db.posts.put(post);
       const count = await db.posts.toCollection().count();
       constants.set('cachedPostsCount', count);
       console.log('[ADDED LIKE]', count);

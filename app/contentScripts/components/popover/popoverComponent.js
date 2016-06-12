@@ -1,8 +1,10 @@
 module.exports = (function popover(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $ } = Backbone;
   const { assign, template } = _;
-  const { get, PopoverMixin } = Tumblr.Fox;
-  const PopoverComponent = get('PopoverComponent');
+  const { get } = Tumblr.Fox;
+  const { TemplateCache } = Tumblr.Fox.Utils;
+  const TumblrView = get('TumblrView');
+  const ExtendedPopoverMixin = get('ExtendedPopoverMixin');
 
   /**
    * Constructor - passed in through controller component
@@ -53,9 +55,9 @@ module.exports = (function popover(Tumblr, Backbone, _) {
    *   },
    */
 
-  const Popover = PopoverComponent.extend({
-    mixins: [PopoverMixin],
-    template: template($('#popoverTemplate').html()),
+  const Popover = TumblrView.extend({
+    mixins: [ExtendedPopoverMixin],
+    template: template(TemplateCache.get('popoverTemplate')),
     events: {
       'click li.popover_menu_item': 'toggleSelected'
     },
@@ -123,5 +125,5 @@ module.exports = (function popover(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.Popover = Popover;
+  Tumblr.Fox.register('PopoverComponent', Popover);
 });

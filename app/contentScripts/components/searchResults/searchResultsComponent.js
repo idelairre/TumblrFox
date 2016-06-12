@@ -1,13 +1,14 @@
 module.exports = (function searchResults(Tumblr, Backbone, _) {
   const { $, View } = Backbone;
   const { assign, template, isObject } = _;
+  const { Utils } = Tumblr.Fox;
 
   const SearchResults = View.extend({
     defaults: {
       initialized: false,
       term: ''
     },
-    template: template($('#searchResultsTemplate').html()),
+    template: template(Utils.TemplateCache.get('searchResultsTemplate')),
     className: 'search_posts_bottom',
     initialize(e) {
       this.initialized = false;
@@ -53,5 +54,5 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.SearchResults = new SearchResults();
+  Tumblr.Fox.register('SearchResults', SearchResults);
 });

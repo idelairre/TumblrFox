@@ -30,6 +30,7 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 
 + Since TumblrFox makes heavy use of local storage, clearing your browser cache can wipeout TumblrFox's database!
 + Tumblr api is inconsistent when it comes to fetching follower and dashboard data (i.e., data where you have to specify offsets: https://groups.google.com/forum/#!topic/tumblr-api/aFiFJ9DB-us).
++ Full text search is slow since it runs client-side. With 30,000+ records Fuse.js starts to get crashy.
 
 ## The future
 
@@ -37,11 +38,11 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 + Select from multiple users
 + Filter seen posts
 + Look ahead on dashboard posts/cache sessions
++ Better dashboard tag search
 
 ## To do
 
 + Find a way to speed up caching process
-+ Find better template system (Mustache is looking like a good lightweight option)
 + Thin out post model
 + Improve file structure organization
 + Remove event listeners where possible

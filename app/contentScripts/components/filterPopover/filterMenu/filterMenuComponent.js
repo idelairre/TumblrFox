@@ -1,12 +1,13 @@
 module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
-  const { $, View } = Backbone;
+  const { View } = Backbone;
+  const { TemplateCache } = Tumblr.Fox.Utils;
 
   const FilterMenuComponent = View.extend({
     defaults: {
       disabled: false
     },
     className: 'popover--filter-select-dropdown',
-    template: $('#filterMenuTemplate').html(),
+    template: TemplateCache.get('filterMenuTemplate'),
     initialize() {
       this.state = Tumblr.Fox.state;
       this.disabled = this.defaults.disabled;
@@ -39,7 +40,7 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       if (this.disabled) {
         return;
       }
-      const type = $(e.target).data('js-menu-item-link');
+      const type = this.$(e.target).data('js-menu-item-link');
       this.resetChecks();
       this.$(`i[data-check="${type}"]`).show();
       if (this.state.get('dashboard')) {
@@ -55,6 +56,7 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
         }
       };
       Tumblr.Events.trigger('fox:setFilter', querySlug);
+      Tumblr.Events.trigger('fox:autopaginator:start');
     },
     filterAndFetchPosts(type) {
       Tumblr.Events.trigger('fox:apiFetch:initial', type);
@@ -62,5 +64,5 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.FilterMenuComponent = FilterMenuComponent;
+  Tumblr.Fox.register('FilterMenuComponent', FilterMenuComponent);
 });

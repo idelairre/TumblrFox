@@ -1,6 +1,6 @@
 module.exports = (function popoverMixin(Tumblr, Backbone, _) {
   const { assign } = _;
-  const { get } = Tumblr.Fox;
+  const { get, put } = Tumblr.Fox;
   const Popover = get('PopoverMixin');
   const Mixin = get('Mixin');
   const transition = get('animation').transition;
@@ -59,7 +59,5 @@ module.exports = (function popoverMixin(Tumblr, Backbone, _) {
 
   assign(PopoverMixin.properties, Popover.properties);
 
-  Tumblr.Fox.PopoverMixin = PopoverMixin;
-
-  return Tumblr.Fox.PopoverMixin;
+  Tumblr.Fox.register('ExtendedPopoverMixin', PopoverMixin);
 });
