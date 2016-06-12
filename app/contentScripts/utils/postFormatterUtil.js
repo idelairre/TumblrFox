@@ -46,11 +46,18 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       }
       items.map(item => { // NOTE: posts do not come out in order due to different formatting times
         const PostView = get('PostViewComponent');
-        const { post, tumblelog } = item;
-        postModel = this.marshalPostAttributes(post, tumblelog);
-        new PostView({
-          model: new Tumblr.Prima.Models.Post(postModel)
-        });
+        if (item.hasOwnProperty('post')) {
+          const { post, tumblelog } = item;
+          postModel = this.marshalPostAttributes(post, tumblelog);
+          new PostView({
+            model: new Tumblr.Prima.Models.Post(postModel)
+          });
+        } else {
+          postModel = this.marshalPostAttributes(item);
+          new PostView({
+            model: new Tumblr.Prima.Models.Post(postModel)
+          });
+        }
       });
     },
     parseTags(post) {
@@ -164,7 +171,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     */
 
     marshalPostAttributes(postData, blogData) {
-      postData = postData.post || postData;
+      postData = postData.hasOwnProperty('post') ? postData.post : postData;
       postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
       blogData = blogData || {
         anonymous_asks: null,
