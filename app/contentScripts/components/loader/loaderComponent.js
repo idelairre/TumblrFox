@@ -7,7 +7,7 @@ module.exports = (function loader(Tumblr, Backbone, _) {
     id: 'Loader',
     defaults: {
       loading: false,
-      error: false
+      error: false // TODO: expand this to handle errors
     },
     initialize() {
       this.set(this.defaults);

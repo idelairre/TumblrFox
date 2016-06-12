@@ -141,11 +141,12 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         return;
       }
       this.slug.set('type', type);
+      console.log(this.blogModel.get('term'));
       if (this.autopaginator.get('defaultPaginationEnabled')) {
         this.autopaginator.disableDefaultPagination();
       }
       this.filterPosts().then(() => {
-        if (this.blogModel.get('term').length > 0) {
+        if (this.blogModel.get('term') && this.blogModel.get('term').length > 0) {
           return this.search(this.blogModel.toJSON());
         }
         this.slug.set('offset', 0);

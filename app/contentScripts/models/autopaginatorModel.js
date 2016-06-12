@@ -2,9 +2,6 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
   const { debounce } = _;
   const { Model } = Backbone;
 
-  // NOTE: all this does is poop out posts. No component should be in charge of rendering posts except this one
-  // this component should not fetch posts except upon scrolling
-
   const AutoPaginator = Model.extend({
     id: 'Autopaginator',
     defaults: {

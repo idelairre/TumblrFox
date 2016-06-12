@@ -45,7 +45,7 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       SearchFilters.prototype.bindEvents.apply(this);
       this.listenTo(this.model, 'change:filter_nsfw', ::this.hide);
     },
-    bindClickOutside() { // this no longer closes when you click on the filter icon
+    bindClickOutside() {
       const options = {
         preventInteraction: true,
         ignoreSelectors: ['.popover_content_wrapper', '.tumblelog_popover']
