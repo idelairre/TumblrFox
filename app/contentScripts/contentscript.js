@@ -1,9 +1,14 @@
+/* global chrome:true */
+/* global document:true */
+/* global window:true */
+
 import AutopaginatorModel from './models/autopaginatorModel';
 import Bridge from './bridge';
 import BlogModel from './models/blogModel';
 import ComponentFetcher from './utils/componentFetcherUtil';
 import DashboardModel from './models/dashboardModel';
 import ChromeMixin from './components/mixins/chromeTriggerMixin';
+import ControllerModel from './models/controllerModel';
 import TagSearchAutocompleteModel from './components/filterPopover/search/input/tagSearchAutocompleteModel';
 import TextSearchAutocompleteModel from './components/filterPopover/search/input/textSearchAutocompleteModel';
 import FiltersComponent from './components/filterPopover/search/filters/filtersComponent';
@@ -36,6 +41,7 @@ import PopoverComponent from './components/popover/popoverComponent';
 import LoaderComponent from './components/loader/loaderComponent';
 import LoaderMixin from './components/mixins/loaderBarMixin';
 import SearchComponent from './components/filterPopover/search/searchComponent';
+import SearchModel from './models/searchModel';
 import SearchResultsTemplate from './components/searchResults/searchResultsTemplate.html';
 import SearchResultsComponent from './components/searchResults/searchResultsComponent';
 import SearchTemplate from './components/filterPopover/search/searchTemplate.html';
@@ -46,28 +52,36 @@ import Time from './utils/timeUtil';
 import ToggleComponent from './components/popover/toggle/toggle';
 import ToggleTemplate from './components/popover/toggle/toggle.html';
 
-// NOTE: reblog follow button is broken
+const bindListeners = () => {
+  chrome.runtime.onMessage.addListener(request => {
+    if (request.type === 'postFound') {
+      Bridge.trigger('chrome:response:postFound', request.payload);
+    }
+  });
+};
 
 const inject = modules => {
   for (let i = 0; modules.length > i; i += 1) {
     const module = modules[i];
     const app = document.createElement('script');
     app.setAttribute('type', 'text/javascript');
-    app.appendChild(document.createTextNode('(' + module + ')(Tumblr, Backbone, _);'));
+    app.appendChild(document.createTextNode(`(${module})(Tumblr, Backbone, _);`));
     (document.body || document.head || document.documentElement).appendChild(app);
   }
-}
+};
 
 const injectTemplates = templates => {
   for (let i = 0; templates.length > i; i += 1) {
     document.body.insertAdjacentHTML('beforeend', templates[i]);
   }
-}
+};
 
 if (window.location.href.includes('https://www.tumblr.com')) {
   console.log('@tumblr');
 
   Bridge.initialize();
+
+  bindListeners();
 
   injectTemplates([
     FiltersDropdownTemplate,
@@ -93,6 +107,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     ChromeMixin,
     LoaderMixin,
     PopoverMixin,
+    ControllerModel,
     StateModel,
     BlogModel,
     DashboardModel,
@@ -100,6 +115,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     LikesModel,
     AutopaginatorModel,
     LoaderComponent, // must be loaded after PostModel or doesn't listen correctly
+    SearchModel,
     PostModel,
     PostView,
     ToggleComponent,

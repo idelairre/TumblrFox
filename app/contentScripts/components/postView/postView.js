@@ -1,6 +1,6 @@
 module.exports = (function postView(Tumblr, Backbone, _) {
-  const { $, Model } = Backbone;
-  const { assign, forIn, omit, template } = _;
+  const { $ } = Backbone;
+  const { template } = _;
   const { state, Utils } = Tumblr.Fox;
   const { TemplateCache } = Utils;
   const { PostView } = Tumblr;
@@ -46,22 +46,18 @@ module.exports = (function postView(Tumblr, Backbone, _) {
     tagName: 'li',
     className: 'post_container',
     template: template(TemplateCache.get('postViewTemplate')),
-    initialize(e) {
-      if (e.model.get('html')) {
-        const postContainer = $(`<li class="post_container" data-pageable="post_${e.model.get('id')}"></li>`).append(e.model.get('html'));
-        this.$el.html(postContainer);
-        this.model = e.model;
+    initialize(options) { // TODO: note count should be comma seperated
+      if (options.model && options.model.get('html')) {
+        this.$el.html(options.model.get('html'));
+        this.model = options.model;
         Tumblr.Fox.constants.attachNode.before(this.$el);
-      } else if (e.model.get('is-tumblrfox-post')) {
-        this.model = e.model;
+        this.$el.attr('data-pageable', `post_${this.model.get('id')}`);
+      } else if (options.model && options.model.get('is-tumblrfox-post')) {
+        this.model = options.model;
         this.render();
       }
       this._parseTags();
       PostView.prototype.initialize.apply(this);
-      Tumblr.Events.trigger('postsView:createPost', this);
-      Tumblr.Events.trigger('DOMEventor:updateRect');
-      this.model.collection = Tumblr.postsView.collection;
-      this.model.collection.add(this.model);
       Tumblr.postsView.postViews.push(this);
       if (this.model.get('liked')) { // its probably coming from the backend
         setTimeout(() => {
@@ -69,6 +65,10 @@ module.exports = (function postView(Tumblr, Backbone, _) {
           this.sync();
         }, 0);
       }
+      Tumblr.Events.trigger('postsView:createPost', this);
+      Tumblr.Events.trigger('DOMEventor:updateRect');
+      this.model.collection = Tumblr.postsView.collection;
+      this.model.collection.add(this.model);
     },
     render() {
       this.$el.html(this.template({
@@ -85,7 +85,7 @@ module.exports = (function postView(Tumblr, Backbone, _) {
       currentUser().get('name') === this.model.get('tumblelog') ? this.$post.addClass('is_mine') : this.$post.addClass('not_mine');
       this.model.get('tumblelog-parent-data') ? this.$post.addClass('is_reblog') : this.$post.addClass('is_original');
       this.model.get('source_title') ? this.$post.addClass('has_source') : this.$post.addClass('no_source');
-      this.model.get('post_html').includes('View On') ? this.$post.addClass('app_source') : this.$post.addClass('generic_source');
+      // this.model.get('post_html').includes('View On') ? this.$post.addClass('app_source') : this.$post.addClass('generic_source');
       this.model.get('notes.count') === 0 ? this.post.addClass('no_notes') : null;
     },
     _initializeSelectors() {
@@ -98,9 +98,6 @@ module.exports = (function postView(Tumblr, Backbone, _) {
       this.$notes = this.$el.find('.note_link_current');
       this.$tags = this.$el.find('.post_tags_inner');
       this.$post = this.$el.find('.post');
-    },
-    _marshalAttributes(model) {
-      return Utils.PostFormatter.marshalPostAttributes(model);
     },
     _post_action_follow(action, el) {
       $(el).fadeOut(300);
@@ -163,7 +160,7 @@ module.exports = (function postView(Tumblr, Backbone, _) {
       this.$notes.data('more', model.notes.more);
       this.$notes.text(model.notes.current);
       let tagElems = '';
-      const tags = model.tags.map(tag => {
+      model.tags.map(tag => {
         const tagEl = tagTemplate({ tag });
         tagElems += tagEl;
       });

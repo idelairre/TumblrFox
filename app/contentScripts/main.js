@@ -1,10 +1,5 @@
-/* global window:true */
-/* global module:true */
-/* eslint no-undef: "error" */
-
 module.exports = (function main(Tumblr, Backbone, _) {
   const { ComponentFetcher } = Tumblr.Fox.Utils;
-  const { require } = Tumblr.Fox;
   const { extend } = _;
 
   ComponentFetcher.getComponent('PrimaComponent', '.uniqueId("component")');
@@ -32,5 +27,4 @@ module.exports = (function main(Tumblr, Backbone, _) {
   extend(Backbone.Model, ComponentFetcher.get('TumblrModel'));
 
   Tumblr.Fox.trigger('fox:components:ready');
-
 });

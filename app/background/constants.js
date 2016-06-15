@@ -23,6 +23,7 @@ class Constants extends Eventor {
     canFetchApiLikes: true,
     debug: false,
     defaultKeys: true,
+    formKey: '',
     fullTextSearch: true,
     saveViaFirebase: true,
     setUser: false,
@@ -48,18 +49,18 @@ class Constants extends Eventor {
   async initialize() {
     try {
       await this._initializeStorageValues();
-      const response = await oauthRequest({
-        url: 'https://api.tumblr.com/v2/user/info'
-      });
-      console.log('[USER]', response);
-      const postsCount = await db.posts.toCollection().count();
-      this.set('userName', response.user.name);
-      this.set('cachedPostsCount', postsCount);
-      this.set('totalPostsCount', response.user.likes);
-      this.set('totalFollowingCount', response.user.following);
+      if (!this.get('userName') || !this.get('cachedPostsCount') || !this.get('totalPostsCount') || !this.get('totalFollowingCount')) {
+        const response = await oauthRequest({
+          url: 'https://api.tumblr.com/v2/user/info'
+        });
+        const postsCount = await db.posts.toCollection().count();
+        this.set('userName', response.user.name);
+        this.set('cachedPostsCount', postsCount);
+        this.set('totalPostsCount', response.user.likes);
+        this.set('totalFollowingCount', response.user.following);
+      }
       this.initialized = true;
       this.trigger('ready');
-      console.log('[CONSTANTS]', this);
     } catch (e) {
       console.error(e);
     }

@@ -1,3 +1,5 @@
+/* global window:true */
+
 module.exports = (function likeModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
   const { assign, omit } = _;
@@ -15,10 +17,9 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
     },
     fetch(slug) {
       if (searchOptions.get('tag')) {
-        return this.fetchLikesByTag(slug)
-      } else {
-        return this.fetchLikesByTerm(slug)
+        return this.fetchLikesByTag(slug);
       }
+      return this.fetchLikesByTerm(slug);
     },
     fetchLikesByTag(slug) {
       const deferred = $.Deferred();

@@ -61,11 +61,9 @@
     <% if (typeof model.get('tags') !== 'undefined' && model.get('tags').length > 0) { %>
       <div class="post_tags">
         <div class="post_tags_inner">
-          <% if (typeof model.get('tags') !== 'undefined') { %>
-            <% _.each(model.tags, function(tag) { %>
-              <a class="post_tag" data-tag="<%- tag %>" href="<%- Tumblr.Utils.PostTags.tag_url(tag) %>">#<%- tag %></a>
-            <% }); %>
-          <% } %>
+          <% _.each(model.get('tags'), function(tag) { %>
+            <a class="post_tag" data-tag="<%- tag %>" href="<%- Tumblr.Utils.PostTags.tag_url(tag) %>">#<%- tag %></a>
+          <% }); %>
           </div>
         </div>
       <% } %>

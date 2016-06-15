@@ -1,8 +1,7 @@
 module.exports = (function filterDropdown(Tumblr, Backbone, _) {
   const { assign, pick } = _;
-  const { get, Utils } = Tumblr.Fox;
-  const { ComponentFetcher } = Utils;
-  const PeeprBlogSearch = get('PeeprBlogSearch')
+  const { get } = Tumblr.Fox;
+  const PeeprBlogSearch = get('PeeprBlogSearch');
 
   const Filters = PeeprBlogSearch.prototype.subviews.filters.constructor;
 
@@ -20,10 +19,10 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
         });
         this.popover.render();
         this.listenTo(this.popover, 'close', this.onPopoverClose);
-      }
+      };
       Filters.prototype.initialize.apply(this, arguments);
     }
   });
 
   Tumblr.Fox.register('FiltersComponent', FiltersComponent);
-})
+});

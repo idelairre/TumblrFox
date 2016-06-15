@@ -21,6 +21,21 @@ import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
 
+// (() => {
+//   const log = console.log;
+//   console.log = function () {
+//     const message = Array.prototype.slice.call(arguments);
+//     log.apply(this, Array.prototype.slice.call(arguments));
+//     const port = chrome.runtime.connect({
+//       name: 'options'
+//     });
+//     port.postMessage({
+//       type: 'log',
+//       payload: message.join(' ')
+//     })
+//   }
+// })();
+
 const Options = Backbone.View.extend({
   defaults: {
     initialized: false
@@ -60,10 +75,9 @@ const Options = Backbone.View.extend({
     });
     if (this.port) {
       this.port.onMessage.addListener(bindListeners);
-      this.postMessage({
-        type: 'fetchConstants'
-      });
+      this.postMessage({ type: 'fetchConstants' });
     }
+    console.log('modal initialized');
   },
   renderSubviews() {
     this._subviews = Array.prototype.slice.call(this.$('[data-subview]'));
@@ -99,7 +113,6 @@ const Options = Backbone.View.extend({
     this.$el.append(this.$errorModal.$el);
   },
   showDone(response) {
-    console.log('[DONE]', response);
     this.$doneModal = new Modal({
       parent: $('.container'),
       header: 'Done',

@@ -24,9 +24,9 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
         recentlyUpdated: false
       }
     },
-    initialize(e) {
+    initialize(options) {
       const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = this.dependencies;
-      this.options = assign({}, e, this.defaults);
+      this.options = assign({}, options, this.defaults);
       this.state = new StateModel(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
       this.model = new FollowerModel();

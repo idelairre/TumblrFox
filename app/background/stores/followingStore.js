@@ -77,7 +77,8 @@ export default class Following {
         } else if (following.length === 0) {
           sendResponse({
             type: 'done',
-            payload: { message: Source.MAX_ITEMS_MESSAGE }
+            payload: constants,
+            message: Source.MAX_ITEMS_MESSAGE
           });
           next(null, following);
         } else {

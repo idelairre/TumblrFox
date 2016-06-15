@@ -1,16 +1,15 @@
-module.exports = (function templateCache() {
+module.exports = (function templateCache(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { extend } = _;
-  const { ComponentFetcher } = Tumblr.Fox.Utils;
 
-  const TemplateCache = function() {
+  const TemplateCache = function () {
     this.templates = {};
     this.initialize();
-  }
+  };
 
   extend(TemplateCache.prototype, {
     get(templateId) {
-      let cachedTemplate = this.templates[templateId];
+      const cachedTemplate = this.templates[templateId];
       if (typeof cachedTemplate === 'undefined') {
         throw new Error(`Template "${templateId}" not found`);
       }
@@ -29,5 +28,4 @@ module.exports = (function templateCache() {
   });
 
   Tumblr.Fox.Utils.TemplateCache = new TemplateCache();
-  ComponentFetcher.put('TemplateCache', TemplateCache);
-})
+});

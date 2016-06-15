@@ -1,6 +1,7 @@
+/* global window:true */
+
 module.exports = (function componentFetcher(Tumblr, Backbone, _) {
-  const { extend, cloneDeep, each, isArray } = _;
-  const { $ } = Backbone;
+  const { extend, isArray } = _;
 
   window.webpackJsonp(0, [function (module, exports, require) {
     window.webpackModules = Array.prototype.slice.call(arguments);
@@ -8,10 +9,12 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
     Tumblr.Fox.require = require;
   }]);
 
+  // perhaps there is a way to memoize fetched component numbers?
+
   const ComponentFetcher = function () {
     this.$$componentCache = {};
     Tumblr.Events.trigger('fox:components:fetcherInitialized', this);
-  }
+  };
 
   extend(ComponentFetcher.prototype, Tumblr.Events, Backbone.Events);
 
@@ -50,7 +53,7 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
       if (!isArray(componentArray)) {
         componentArray = Array.prototype.slice.call(arguments);
       }
-      let response = {};
+      const response = {};
       componentArray.map(component => {
         if (typeof this.$$componentCache[component] === 'undefined') {
           throw new Error(`Component "${component}" in "${componentArray}" not found or not yet loaded`);

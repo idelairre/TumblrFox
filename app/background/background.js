@@ -3,6 +3,7 @@
 
 import chromeReceiver from './receivers/chromeReceiver';
 import optionsReceiver from './receivers/optionsReceiver';
+import sendMessage from './services/messageService';
 import './lib/livereload';
 import 'babel-polyfill';
 
@@ -23,8 +24,4 @@ if (inExtension) {
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
-});
-
-chrome.tabs.onUpdated.addListener(tabId => {
-  console.log('[TAB ID]', tabId);
 });

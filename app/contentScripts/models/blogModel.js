@@ -1,51 +1,66 @@
 module.exports = (function blogModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { assign, each, extend, omit } = _;
-  const { get, Posts, Utils } = Tumblr.Fox;
-  const { Tumblelog } = Tumblr.Prima.Models;
-  const PeeprPostsModel = get('PeeprPostsModel');
+  const { isEmpty } = _;
+  const { get } = Tumblr.Fox;
   const ChromeMixin = get('ChromeMixin');
 
   const BlogModel = Model.extend({
     mixins: [ChromeMixin],
-    initialize(e) {
-      this.blogSearch = e.blogSearch;
+    initialize(options) {
+      this.blogSearch = options.blogSearch;
       this.attributes = this.blogSearch.attributes;
-      this.blogPosts = new PeeprPostsModel();
-      this.blogPosts.blogNameOrId = this.blogSearch.get('blogname');
-      this.blogPosts.stopListening();
-      this.attributes = {};
+      this.set(this.attributes);
       this.bindEvents();
     },
     bindEvents() {
-      this.listenTo(this.blogSearch, 'change:blogname', () => {
-        this.blogPosts.blogNameOrId = this.blogSearch.get('blogname');
+      this.listenTo(this.blogSearch, 'sync', model => {
+        Tumblr.Events.trigger('fox:blogSearch:update', model.posts.toJSON());
       });
-      this.listenTo(this.blogSearch, 'change', () => {
+      this.listenTo(this.blogSearch.posts, 'reset', collection => {
+        if (!isEmpty(collection.toJSON())) {
+          Tumblr.Events.trigger('fox:blogSearch:started', collection.toJSON());
+        }
+      });
+      this.listenTo(this.blogSearch, 'change', model => {
         this.set(this.blogSearch.attributes);
+        this.trigger('change', model);
       });
-      this.listenTo(Tumblr.Events, 'indashblog:search:post-added', Utils.PostFormatter.renderPost);
+      this.listenTo(this, 'change', () => {
+        this.blogSearch.attributes = this.attributes;
+      });
+      this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.setFilter);
       this.listenTo(Tumblr.Events, 'peepr-open-request', ::this.unbindEvents);
     },
     unbindEvents() {
       this.stopListening();
       this.listenTo(Tumblr.Events, 'peepr:close', ::this.bindEvents);
     },
-    search() {
+    setFilter(type) {
+      this.blogSearch.set('post_type', type);
+    },
+    search() { // NOTE: this fetch used to be wrapped in a promise but it had funky behavior
+      this.blogSearch.fetch();
+    },
+    _fetch(query) {
       const deferred = $.Deferred();
-      deferred.resolve(this.blogSearch.fetch());
+      const slug = {
+        tumblelog_name_or_id: query.blogname,
+        limit: query.limit,
+        offset: query.next_offset
+      };
+      this._request(slug).then(posts => {
+        deferred.resolve(posts);
+      });
       return deferred.promise();
     },
-    fetch() {
-      const deferred = $.Deferred();
-      const slug = assign({}, omit(this.blogSearch.attributes, ['blog', 'loggingData']));
-      if (slug.post_type === 'ANY') {
-        delete slug.post_type;
+    fetch(query) {
+      console.log('[QUERY]', query);
+      if (query.post_type === 'ANY') {
+        return this._fetch(query);
       }
-      this.chromeTrigger('chrome:fetch:blogPosts', slug, response => {
-        this.collateData(response.posts).then(posts => {
-          let offset = this.blogSearch.get('next_offset');
-          this.blogSearch.set('next_offset', offset += posts.length);
+      const deferred = $.Deferred();
+      this.chromeTrigger('chrome:fetch:blogPosts', query, response => {
+        this.collateData(response).then(posts => {
           deferred.resolve(posts);
         });
       });
@@ -71,6 +86,7 @@ module.exports = (function blogModel(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     _request(data) {
+      console.log(data);
       const deferred = $.Deferred();
       $.ajax({
         url: 'https://www.tumblr.com/svc/indash_blog/posts',
@@ -79,24 +95,14 @@ module.exports = (function blogModel(Tumblr, Backbone, _) {
         },
         data,
         success: data => {
-          deferred.resolve({
-            post: data.response.posts[0],
-            tumblelog: data.response.tumblelog
-          });
+          Tumblr.Prima.Models.Tumblelog.collection.add(data.response.tumblelog);
+          deferred.resolve(data.response.posts); // this needs to return a full array
         },
         fail: error => {
           deferred.reject(error);
         }
       });
       return deferred.promise();
-    },
-    initialIndashSearch(posts) {
-      const deferred = $.Deferred();
-      Tumblr.Events.trigger('fox:autopaginator:start');
-      posts = posts.filter(post => {
-        return post.post_html;
-      });
-      return deferred.resolve(posts);
     }
   });
 

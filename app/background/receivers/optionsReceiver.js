@@ -5,10 +5,13 @@ import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
 
 const sendConstants = postMessage => {
-  postMessage({ type: 'replyConstants', payload: constants });
+  postMessage({
+    type: 'replyConstants',
+    payload: constants
+  });
 };
 
-const updateConstants = (request, postMessage) => {
+const updateConstants = request => {
   constants.set(request);
 };
 
@@ -29,7 +32,12 @@ const restoreCache = (request, postMessage) => {
   }
 };
 
+const log = request => {
+  console.log(request);
+}
+
 const optionsReceiver = portHandler({
+  log: log,
   cacheLikes: Likes.cache,
   cacheFollowing: Following.cache,
   downloadCache: downloadCache,

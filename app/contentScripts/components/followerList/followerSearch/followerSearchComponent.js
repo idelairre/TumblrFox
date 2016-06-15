@@ -17,9 +17,9 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
         ]
       }]
     },
-    initialize(e) {
-      this.state = e.state;
-      this.options = assign({}, this.defaults, omit(e, 'state'));
+    initialize(options) {
+      this.state = options.state;
+      this.options = assign({}, this.defaults, omit(options, 'state'));
       this.$form = this.$('form');
       this.$form.css('display', 'inline-block');
       this.$form.css('width', '89%');

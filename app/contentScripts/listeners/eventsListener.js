@@ -1,8 +1,7 @@
 module.exports = (function eventsListener(Tumblr, Backbone, _) {
   const { assign, extend, pick } = _;
-  const { ComponentFetcher } = Tumblr.Fox.Utils;
 
-  const EventsListener = function (options) {
+  const EventsListener = function(options) {
     assign(this, pick(options, ['events', 'options']));
     this.ignore = [
       'LSLog:impression',
@@ -34,7 +33,7 @@ module.exports = (function eventsListener(Tumblr, Backbone, _) {
       'DOMEventor:flatscroll'
     ];
     this.getDependencies();
-  }
+  };
 
   extend(EventsListener.prototype, Tumblr.Events, Backbone.Events);
 

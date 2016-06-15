@@ -1,5 +1,5 @@
 module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
-  const { $, Model } = Backbone;
+  const { $, Collection, Model } = Backbone;
   const { countBy, identity, invoke, forIn, omit } = _;
   const { get } = Tumblr.Fox;
   const ChromeMixin = get('ChromeMixin');
@@ -14,7 +14,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     initialize(options) {
       this.fetched = false;
       this.state = options.state;
-      this.items = new Backbone.Collection();
+      this.items = new Collection();
       this.$$rawTags = [];
       this.$$dashboardTags = [];
       this.bindEvents();
@@ -32,7 +32,6 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.stopListening(this, 'change:matchTerm');
     },
     setState(state) {
-      console.log('[STATE]', state);
       switch (state) {
         case 'text':
           this.unbindEvents();
@@ -43,18 +42,19 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       }
     },
     getTags(tags) {
-      this.$$rawTags = this.$$rawTags.concat(tags.slice(0, tags.length - 1));
+      this.$$rawTags = this.$$rawTags.concat(tags.slice(0, tags.length - 1)); // omits loggingData
     },
-    processTags(tagArray, tagCounts) {
-      tagArray.map(rawTag => {
+    processTags(tagCounts) {
+      this.$$dashboardTags = [];
+      forIn(tagCounts, (value, key) => {
         const tag = {
-          tag: rawTag,
-          count: tagCounts[rawTag]
+          tag: key,
+          count: value
         };
         this.$$dashboardTags.push(tag);
       });
     },
-    flushTags(state) {
+    flushTags() {
       this.fetched = false;
       this.items.reset([]);
     },
@@ -64,7 +64,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       }
       return this.chromeFetch();
     },
-    initialFetch() {
+    initialFetch() { // NOTE: if this is empty, fetch tags from the tumblr search bar
       Tumblr.postsView.postViews.filter(post => {
         const tagElems = ($(post.$el) || post.$el).find('.post_tags');
         if (tagElems.length > 0) {
@@ -80,12 +80,12 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
     // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
     // need a trigger to flush tags
     dashboardFetch() {
-      console.log('[FETCHING TAGS], raw tags: ', this.$$rawTags.length, 'parsed tags: ', this.$$dashboardTags.length);
       const deferred = $.Deferred();
       const tagArray = this.$$rawTags;
       const tagCounts = countBy(tagArray, identity);
-      this.processTags(tagArray, tagCounts);
+      this.processTags(tagCounts);
       this.parse(this.$$dashboardTags);
+      // console.log('[FETCHING TAGS], raw tags: ', this.$$rawTags.length, 'parsed tags: ', this.$$dashboardTags.length);
       return deferred.resolve(this.items);
     },
     chromeFetch() {
@@ -113,11 +113,11 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
     parse(e) {
-      let tags = e.detail || e;
-      if (!this.fetched) {
+      const tags = e.detail || e;
+      // if (!this.fetched) {
         this.items.reset(tags);
         this.fetched = true;
-      }
+      // }
       if (this.get('matchTerm') === '') {
          this.set('typeAheadMatches', this.items.toJSON());
        }

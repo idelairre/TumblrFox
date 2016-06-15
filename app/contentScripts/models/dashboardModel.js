@@ -1,27 +1,13 @@
 module.exports = (function dashboardModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { assign, omit } = _;
-  const { extend, get, Utils } = Tumblr.Fox;
+  const { assign, isEmpty, omit, pick } = _;
+  const { get, Utils } = Tumblr.Fox;
   const ChromeMixin = get('ChromeMixin');
-
-  /**
-  * Dashboard filter states:
-  * no tag / no filter / no filter options => default tumblr behavior
-  * no tag / no filter / filter options => default tumble behavior + filter posts as they are added
-  * no tag / filter / filter options => fetch posts from api + filter posts as they are added
-  * no tag / filter / no filter options => fetch filtered posts from api
-  * tag selected / no filter / no filter options => select from dashboard posts + disable pagination
-  * tag selected / filter / no filter options => select from filtered dashboard posts + disable pagination
-  * tag selected / filter / filter options => select from filtered dashboard posts + disable pagination
-  * ...
-  */
 
   const DashboardModel = Model.extend({
     mixins: [ChromeMixin],
-    initialize(e) {
-      this.attributes = assign({}, this.defaults, omit(e, ['slug', 'state', 'filter']));
-      this.filter = e.filter;
-      this.state = e.state;
+    initialize(options) {
+      assign(this, pick(options, ['state', 'filter']));
       this.postViews = Tumblr.postsView;
       this.posts = this.postViews.postViews;
       this.postViews.stopListening(Tumblr.AutoPaginator, 'after');
@@ -52,7 +38,7 @@ module.exports = (function dashboardModel(Tumblr, Backbone, _) {
         post.model.set('html', $(post.$el).prop('outerHTML'));
       });
     },
-    applyFilter(model) {
+    applyFilter() {
       if (this.filter.get('filter_nsfw')) {
         this.postViews.collection.whereBy({
           'tumblelog-content-rating': 'nsfw'
@@ -73,44 +59,49 @@ module.exports = (function dashboardModel(Tumblr, Backbone, _) {
     },
     fetch(slug) {
       const deferred = $.Deferred();
-      if (slug.type === 'any') {
-        slug = omit(slug, 'type');
+      if (slug.post_type === 'ANY') {
+        slug = omit(slug, 'post_type');
       }
-      this.chromeTrigger('chrome:fetch:posts', slug, deferred.resolve);
+      this.chromeTrigger('chrome:fetch:dashboardPosts', slug, deferred.resolve);
       return deferred.promise();
     },
     // NOTE: when posts are removed from the DOM Tumblr reduces pictures to 1x1 pixel with no content,
     // this means that the model will be forced to re-fetch them
     search(query) {
       const deferred = $.Deferred();
-      let results = [];
-      this.posts.map(post => { // TODO: make sure to filter by other query parameters
-        if (post.model.get('tags').includes(query.term)) {
-          results.push(post);
+      this.chromeTrigger('chrome:fetch:following', query, followers => {
+        followers = followers.slice(0, 100);
+        const promises = followers.map(follower => {
+          query.blogname = follower.name;
+          return this._request(query);
+        });
+        $.when.apply($, promises).done((...posts) => {
+          deferred.resolve([].concat(...posts));
+        });
+      });
+      return deferred.promise();
+    },
+    _request(slug) {
+      const deferred = $.Deferred();
+      $.ajax({
+        type: 'GET',
+        url: `https://www.tumblr.com/svc/search/blog_search/${slug.blogname}/${slug.term}`,
+        data: omit(slug, ['blogname', 'showOriginalPostsSwitch', 'showNsfwSwitch', 'term', 'themeParams', 'unsetTerm']),
+        beforeSend: xhr => {
+          xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
+        },
+        success: data => {
+          if (isEmpty(data.response.posts)) {
+            deferred.resolve([]);
+            return;
+          }
+          Tumblr.Events.trigger('fox:search:postFound', data.response.posts[0]);
+          deferred.resolve(data.response.posts[0]);
+        },
+        error: error => {
+          deferred.reject(error);
         }
       });
-      if (query.post_type !== 'ANY') {
-        results = results.filter(post => {
-          if (post.model.get('type') === query.post_type.toLowerCase()) {
-            return post;
-          }
-        });
-      }
-      if (query.post_role === 'ORIGINAL') {
-        results = results.filter(post => {
-          if (!post.model.get('is-reblog')) {
-            return post;
-          }
-        });
-      }
-      if (query.filter_nsfw) {
-        results = results.filter(post => {
-          if (!post.model.get('tumblelog-content-rating') === 'adult' || !post.model.get('tumblelog-content-rating') === 'nsfw') {
-            return post;
-          }
-        });
-      }
-      deferred.resolve(results);
       return deferred.promise();
     }
   });

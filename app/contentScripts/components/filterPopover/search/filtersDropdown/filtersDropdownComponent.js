@@ -5,7 +5,7 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
   const { ClickHandler, SearchFilters, SearchFiltersPopover, TumblrView } = ComponentFetcher.getAll('ClickHandler', 'SearchFilters', 'SearchFiltersPopover', 'TumblrView');
   const { transition } = get('animation');
 
-  // TODO: apply popover mixin to this class
+  // TODO: __proto__ is depricated and this component looks funky, find a nicer way to extend this component
 
   const FiltersDropDownComponent = TumblrView.extend({
     className: 'popover--blog-search blog-search-filters-popover',

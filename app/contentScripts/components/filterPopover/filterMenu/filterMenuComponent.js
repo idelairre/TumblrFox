@@ -13,13 +13,8 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       this.disabled = this.defaults.disabled;
     },
     render() {
-      const querySlug = {
-        loggingData: {
-          post_type: 'ANY'
-        }
-      };
       this.$el.html(this.template);
-      Tumblr.Events.trigger('fox:setFilter', querySlug);
+      Tumblr.Events.trigger('fox:setFilter', 'ANY');
       this.resetChecks();
       this.$('i[data-check="any"]').show();
       this.rendered = true;
@@ -50,16 +45,11 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       }
     },
     selectFilter(type) {
-      const querySlug = {
-        loggingData: {
-          post_type: type.toUpperCase()
-        }
-      };
-      Tumblr.Events.trigger('fox:setFilter', querySlug);
+      Tumblr.Events.trigger('fox:setFilter', type.toUpperCase());
       Tumblr.Events.trigger('fox:autopaginator:start');
     },
     filterAndFetchPosts(type) {
-      Tumblr.Events.trigger('fox:apiFetch:initial', type);
+      Tumblr.Events.trigger('fox:apiFetch:initial', type.toUpperCase());
       Tumblr.Events.trigger('fox:autopaginator:start');
     }
   });

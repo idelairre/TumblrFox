@@ -1,58 +1,56 @@
 module.exports = (function searchResults(Tumblr, Backbone, _) {
-  const { $, View } = Backbone;
-  const { assign, template, isObject } = _;
-  const { Utils } = Tumblr.Fox;
+  const { $, View, Model } = Backbone;
+  const { template } = _;
+  const { TemplateCache } = Tumblr.Fox.Utils;
 
   const SearchResults = View.extend({
-    defaults: {
-      initialized: false,
-      term: ''
-    },
-    template: template(Utils.TemplateCache.get('searchResultsTemplate')),
+    template: template(TemplateCache.get('searchResultsTemplate')),
     className: 'search_posts_bottom',
-    initialize(e) {
-      this.initialized = false;
-      this.options = assign({}, e, this.defaults);
+    initialize(options) {
+      this.blogModel = options.blogModel;
       this.bindEvents();
+      this.state = new Model({
+        visible: false
+      });
+      this.render();
+    },
+    set(key, value) {
+      this.state.set(key, value);
+    },
+    get(key) {
+      return this.state.get(key);
     },
     bindEvents() {
-      // this.listenTo(Tumblr.Events, 'peeprsearch:change:term', ::this.hide);
-      // this.listenTo(Tumblr.Events, 'indashblog:search:results-end', this.update);
-      // this.listenTo(Tumblr.Events, 'fox:filterFetch:started', this.hide);
-      // this.listenTo(Tumblr.Events, 'fox:search:finished', this.update);
-      // this.listenTo(Tumblr.Events, 'fox:postFetch:empty', this.update);
+      this.listenTo(this.blogModel, 'change', ::this.renderTerm);
+      this.listenTo(Tumblr.Events, 'fox:search:renderedResults', ::this.show);
+      this.listenTo(Tumblr.Events, 'fox:search:finished', ::this.show);
+      this.listenTo(Tumblr.Events, 'fox:search:started', ::this.hide);
     },
-    hide(e) {
-      console.log('[SEARCH RESULTS HIDE]', e);
-      if (this.initialized) {
+    hide() {
+      if (this.get('visible')) {
         this.$el.hide();
+        this.set('visible', false);
       }
     },
     show() {
-      console.log('[SEARCH RESULTS SHOW]');
-      this.$el.show();
-    },
-    update(query) {
-      console.log('[QUERY]', query);
-      // this.renderTerm(term);
-    },
-    setTerm(e) {
-      this.options.term = e.term;
-    },
-    renderTerm(term) {
-      if (!this.initialized) {
-        this.render({ term });
-      } else {
-        this.$('span.search_query_highlight').text(term);
-        this.show();
+      if (!this.get('visible')) {
+        this.$el.show();
+        this.set('visible', true);
       }
     },
-    render(query) {
-      this.initialized = true;
-      this.$el = this.$el.html(this.template(query));
+    renderTerm() {
+      const term = this.blogModel.get('term');
+      this.$('span.search_query_highlight').text(term);
+    },
+    render() {
+      this.$el.html(this.template({
+        term: this.blogModel.get('term')
+      }));
       $('#posts').append(this.$el);
+      this.$el.hide();
+      this.set('visible', false);
     }
   });
 
-  Tumblr.Fox.register('SearchResults', SearchResults);
+  Tumblr.Fox.register('SearchResultsComponent', SearchResults);
 });

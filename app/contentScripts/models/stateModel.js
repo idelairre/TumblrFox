@@ -1,11 +1,10 @@
 module.exports = (function (Tumblr, Backbone, _) {
   const { Model } = Backbone;
-  const { assign, isEqual, mapKeys } = _;
-  const { ComponentFetcher } = Tumblr.Fox.Utils;
+  const { assign, mapKeys } = _;
 
   const State = Model.extend({
-    initialize(e) {
-      assign(this, e);
+    initialize(options) {
+      assign(this, options);
     },
     set() {
       Model.prototype.set.apply(this, arguments);

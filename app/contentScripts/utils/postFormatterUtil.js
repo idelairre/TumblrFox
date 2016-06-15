@@ -1,15 +1,11 @@
 module.exports = (function postFormatter(Tumblr, Backbone, _) {
   const { $ } = Backbone;
-  const { defaultsDeep, escape, extend, omit, unescape, union } = _;
+  const { defaultsDeep, extend, omit } = _;
   const { get } = Tumblr.Fox;
-
-  const escapeQuotes = string => {
-    return string.replace(/"/g, '\\"');
-  }
 
   const unescapeQuotes = string => {
     return string.replace(/\\"/g, '"');
-  }
+  };
 
   const PostFormatter = function () { };
 
@@ -21,12 +17,14 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         return 'note';
       } else if (postData.type === 'chat') {
         return 'conversation';
-      } else {
-        return postData.type;
       }
+      return postData.type;
     },
     renderPostFromHtml(post) {
       if (typeof post.html !== 'undefined') {
+        if (Tumblr.postsView.collection.get(post.id)) {
+          return;
+        }
         const PostView = get('PostViewComponent');
         const escapedHtml = unescapeQuotes(unescapeQuotes(post.html)); // NOTE: make it so you don't have to run this twice
         const postElement = $($.parseHTML(escapedHtml));
@@ -40,24 +38,32 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     renderPostsFromHtml(posts) {
       posts.map(this.renderPostFromHtml);
     },
-    renderPosts(items) {
+    renderPost(postData, marshalAttributes) {
+      const PostView = get('PostViewComponent');
+      if (marshalAttributes) {
+        const postModel = this.marshalPostAttributes(postData);
+        new PostView({
+          model: new Tumblr.Prima.Models.Post(postModel)
+        });
+      } else {
+        new PostView({
+          model: new Tumblr.Prima.Models.Post(postData)
+        });
+      }
+    },
+    renderPosts(items, marshalAttributes) {
       if (!items) {
         throw new Error('Attempted to render empty array of posts');
       }
       items.map(item => { // NOTE: posts do not come out in order due to different formatting times
-        const PostView = get('PostViewComponent');
-        if (item.hasOwnProperty('post')) {
-          const { post, tumblelog } = item;
-          postModel = this.marshalPostAttributes(post, tumblelog);
-          new PostView({
-            model: new Tumblr.Prima.Models.Post(postModel)
-          });
-        } else {
-          postModel = this.marshalPostAttributes(item);
-          new PostView({
-            model: new Tumblr.Prima.Models.Post(postModel)
-          });
+        if (Tumblr.postsView.collection.get(item.id)) {
+          return;
         }
+        if (marshalAttributes) {
+          this.renderPost(item, true);
+          return;
+        }
+        this.renderPost(item);
       });
     },
     parseTags(post) {
@@ -170,10 +176,9 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
     * @property type: {String}
     */
 
-    marshalPostAttributes(postData, blogData) {
-      postData = postData.hasOwnProperty('post') ? postData.post : postData;
+    marshalPostAttributes(postData) {
       postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
-      blogData = blogData || {
+      const blogData = Tumblr.Prima.Models.Tumblelog.collection.get({ name: postData.blog.name }) || {
         anonymous_asks: null,
         asks: null,
         avatar_url: postData.blog.avatar[1].url,
@@ -197,27 +202,28 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       };
       postData = defaultsDeep({
         'accepts-answers': null,
-        can_reply: postData.can_reply,
+        'can_reply': postData.can_reply,
         'direct-video': null,
-        id: postData.id,
+        'id': postData.id,
         'is-animated': null,
         'is-mine': null,
-        is_reblog: typeof postData.reblogged_from_tumblr_url === 'string' ? true : false,
+        'is_reblog': typeof postData.reblogged_from_tumblr_url === 'string',
         'is-recommended': null,
         'is-tumblrfox-post': true,
-        liked: postData.liked,
+        'liked': postData.liked,
         'log-index': '2',
-        name: postData.blog.name,
+        'name': postData.blog.name,
         'post-id': postData.id,
-        show_reporting_links: false,
-        tumblelog: postData.blog.name,
+        'show_reporting_links': false,
+        'tumblelog': postData.blog.name,
         'tumblelog-name': postData.blog.name,
         'tumblelog-key': postData.blog.key,
         'reblog-key': postData.reblog_key,
-        reblog_key: postData.reblog_key,
-        reblog_source: 'POST_CONTEXT_UNKOWN',
-        root_id: postData.reblogged_root_id,
-        type: this.formatType(postData),
+        'reblog_key': postData.reblog_key,
+        'reblog_source': 'POST_CONTEXT_UNKOWN',
+        'root_id': postData.reblogged_root_id,
+        'tags': postData.tags,
+        'type': this.formatType(postData),
         'tumblelog-data': blogData,
         'tumblelog-parent-data': typeof postData.reblogged_from_tumblr_url === 'string' ? {
           anonymous_asks: null,
@@ -238,7 +244,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
           url: postData.reblogged_from_tumblr_url,
           uuid: postData.reblogged_from_uuid
         } : false,
-        'tumblelog-root-data': typeof postData.reblogged_from_tumblr_url === 'string' ?  {
+        'tumblelog-root-data': typeof postData.reblogged_from_tumblr_url === 'string' ? {
           anonymous_asks: null,
           avatar_url: null,
           can_send_messages: postData.reblogged_root_can_message,

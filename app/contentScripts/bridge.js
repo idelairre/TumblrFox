@@ -8,9 +8,10 @@ import { camelCase } from 'lodash';
 
 const Bridge = {
   initialize() {
-    this.bindListeners([
+    this.bindListeners([ // binds window events coming from injected scripts
       'chrome:fetch:blogPosts',
-      'chrome:fetch:posts',
+      'chrome:fetch:dashboardPosts',
+      'chrome:fetch:dashboardPostsByTag',
       'chrome:fetch:likes',
       'chrome:search:likesByTag',
       'chrome:search:likesByTerm',
@@ -61,6 +62,6 @@ const Bridge = {
       });
     });
   }
-}
+};
 
 export default Bridge;

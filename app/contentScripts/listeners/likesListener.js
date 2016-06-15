@@ -1,10 +1,10 @@
 module.exports = (function likesListener(Tumblr, Backbone, _) {
-  const { assign, extend } = _;
+  const { extend } = _;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
 
   const LikesListener = function () {
     this.getDependencies();
-  }
+  };
 
   extend(LikesListener.prototype, Tumblr.Events, Backbone.Events);
 

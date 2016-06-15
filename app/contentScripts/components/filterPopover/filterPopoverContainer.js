@@ -21,7 +21,7 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
     show() {
       this.view.show();
     },
-    render(e) {
+    render() {
       this.view.render();
       this.trigger('append');
     }

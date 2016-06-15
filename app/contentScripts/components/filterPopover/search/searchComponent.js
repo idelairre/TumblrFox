@@ -1,9 +1,8 @@
 module.exports = (function searchComponent(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
-  const { assign, capitalize, cloneDeep, debounce, each, extend, isEmpty, isString, mapKeys, omit, pick } = _;
+  const { assign, each, omit, pick } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher, TemplateCache } = Utils;
-  const { ChromeMixin, EventBus, FiltersDropDownComponent, InboxCompose, LoaderMixin, PeeprBlogSearch } = ComponentFetcher.getAll('ChromeMixin', 'ConversationsCollection', 'EventBus', 'FiltersDropDownComponent', 'InboxCompose', 'LoaderMixin', 'PeeprBlogSearch');
+  const { EventBus, InboxCompose, LoaderMixin, PeeprBlogSearch } = ComponentFetcher.getAll('ChromeMixin', 'ConversationsCollection', 'EventBus', 'FiltersDropDownComponent', 'InboxCompose', 'LoaderMixin', 'PeeprBlogSearch');
 
 /**
  *  SearchComponent states:
@@ -16,14 +15,10 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
  *       b. (TODO) select user (no tags) => select liked posts filter => post model fetches user likes from api
  */
 
-  const defaultFilter = cloneDeep(PeeprBlogSearch.prototype.subviews.filters.constructor.prototype);
-
-  // console.log(get('FiltersComponent').prototype, PeeprBlogSearch.prototype.subviews.filters.constructor.prototype);
-
   const SearchComponent = PeeprBlogSearch.extend({
     className: 'filter-search',
     template: TemplateCache.get('searchFilterTemplate'),
-    mixins: [ChromeMixin, LoaderMixin],
+    mixins: [LoaderMixin],
     dependencies: ComponentFetcher.getAll(['BlogSearch', 'PostsModel']),
     subviews: {
       filters: {
@@ -34,7 +29,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
             state: opts.state,
             searchOptions: opts.searchOptions,
             FiltersDropDown: get('FiltersDropDownComponent')
-          }
+          };
         }
       },
       input: {
@@ -45,7 +40,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
             conversations: opts.conversations,
             state: opts.state,
             searchOptions: opts.searchOptions
-          }
+          };
         }
       },
       searchResultView: {
@@ -55,7 +50,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
             eventBus: new EventBus(), // what is this thing?
             collection: opts.conversations,
             context: 'input'
-          }
+          };
         }
       },
       settings: {
@@ -81,7 +76,9 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         themeParams: this.blog.get('global_theme_params')
       });
       this.posts = new PostsModel({
-        blogSearch: this.model
+        blogSearch: this.model,
+        state: this.state,
+        searchOptions: this.searchOptions
       });
       this.initializeSubviews();
     },
@@ -121,11 +118,11 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.listenTo(this.model, 'change:next_offset', ::this.onOffsetChange);
       this.listenTo(this.model, 'change:term', this.log.bind(this, 'search-start', {}));
       this.listenTo(this.state, 'change:state', ::this.updateSearchSettings);
+      this.listenTo(this.searchOptions, 'change:state', ::this.setSearchOption);
       this.listenTo(Tumblr.Events, 'indashblog:search:start', ::this.onFetchRequested);
       this.listenTo(Tumblr.Events, 'peepr-search:search-complete', this.toggleLoading.bind(this, false));
       this.listenTo(Tumblr.Events, 'peepr-search:search-reset', ::this.resetTerm);
       this.listenTo(Tumblr.Events, 'fox:setFilter', ::this.setFilter);
-      this.listenTo(Tumblr.Fox.searchOptions, 'change:state', ::this.setSearchOption);
     },
     unbindEvents() {
       this.stopListening();
@@ -154,12 +151,12 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         this.posts.state.setState('user');
       }
     },
-    setFilter(slug) {
-      this.model.set('post_type', slug.loggingData.post_type);
+    setFilter() { // TODO: figure out why this doesn't work but filtering does work
+      // this.model.set('post_type', type);
       this.model.set('next_offset', 0);
       Tumblr.Events.trigger('indashblog:search:start'); // NOTE: toggles #onFetchFequested()
     },
-    onChangeBlog() { // perhaps make this options?
+    onChangeBlog() {
       this.model.set('term', '');
       this.model.set('next_offset', 0);
       Tumblr.Events.trigger('indashblog:search:start');
@@ -170,8 +167,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       }
       this.model.set('next_offset', 0);
       this.toggleLoading(true);
-      Tumblr.Events.trigger('fox:searchStarted');
-      this.posts.search(this.model.attributes).then(() => {
+      this.posts.search(this.model.toJSON()).then(() => {
         this.toggleLoading(false);
       });
     },

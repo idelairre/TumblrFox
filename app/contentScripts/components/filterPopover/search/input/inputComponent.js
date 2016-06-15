@@ -1,6 +1,5 @@
 module.exports = (function (Tumblr, Backbone, _) {
-  const { $ } = Backbone;
-  const { assign, debounce, isEmpty, pick } = _;
+  const { assign, debounce, pick } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher } = Utils;
   const SearchInput = get('SearchInput');
@@ -36,11 +35,11 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.listenTo(this.model, 'change:term', ::this.onTermChange);
       this.listenTo(this.model, 'reset', ::this.onModelReset);
       this.listenTo(this.state, 'change:state', ::this.updateSearchSettings);
-      this.listenTo(Tumblr.Events, 'fox:changeUser', ::this.setUserPlaceholder)
+      this.listenTo(Tumblr.Events, 'fox:changeUser', ::this.setUserPlaceholder);
       this.listenTo(this.searchOptions, 'change:state', ::this.delegateInputEvents);
     },
     delegateInputEvents(state) { // NOTE: turns off tag popover while backend is being sorted out
-      switch(state) {
+      switch (state) {
         case 'tag':
           this.blogSearchAutocompleteHelper.delegateEvents();
           this.blogSearchAutocompleteHelper.bindEvents();
@@ -74,7 +73,6 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.$el.find('input').attr('placeholder', placeholder);
     },
     updateSearchSettings() {
-      let placeholder = '';
       if (Tumblr.Fox.state.getState() === 'user') {
         this.blogSearchAutocompleteHelper.model = this.blogSearchAutocompleteModel;
         this.setUserPlaceholder();
@@ -108,4 +106,4 @@ module.exports = (function (Tumblr, Backbone, _) {
   // extend(InputComponent, SearchInput);
 
   Tumblr.Fox.register('InputComponent', InputComponent);
-})
+});

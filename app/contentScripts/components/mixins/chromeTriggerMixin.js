@@ -1,7 +1,7 @@
 module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
   const { $ } = Backbone;
-  const { Utils } = Tumblr.Fox;
-  const Mixin = Utils.ComponentFetcher.get('Mixin');
+  const { get } = Tumblr.Fox;
+  const Mixin = get('Mixin');
 
   /**
    * @param {String} eventName The name of the window event corresponding to a chrome action
@@ -31,7 +31,7 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
       window.dispatchEvent(req);
       window.addEventListener(responseEvent, onFinish);
     },
-    chromeListenTo(eventName, callback) {
+    chromeListenTo(eventName, callback) { // this could also just trigger a backbone event
       window.addEventListener(eventName, callback);
     },
     chromeRemoveListener(eventName) {

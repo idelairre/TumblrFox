@@ -3,7 +3,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   const { assign, omit, pick } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher } = Utils;
-  const { transition  } = get('animation');
+  const { transition } = get('animation');
   const { ConversationsCollection, ClickHandler, PopoverMixin, TumblrView } = ComponentFetcher.getAll('ConversationsCollection', 'ClickHandler', 'PopoverMixin', 'TumblrView');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
@@ -40,7 +40,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
             searchOptions: opts.searchOptions,
             blogname: currentUser().id,
             blog: Tumblelog.collection.models[0]
-          }
+          };
         }
       }
     },
