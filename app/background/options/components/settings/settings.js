@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
-import View from '../view/view';
+import View from '../../view/view';
 import settingsTemplate from './settings.html';
 
 const Settings = View.extend({
@@ -30,7 +30,7 @@ const Settings = View.extend({
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
     this.props.set(key, check);
-    Backbone.Events.trigger('CHANGE_PROPS', this.props.attributes);
+    // Backbone.Events.trigger('CHANGE_PROPS', this.props.toJSON());
   },
   renderProps(props) {
     mapKeys(props, (value, key) => {

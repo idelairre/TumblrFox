@@ -21,7 +21,7 @@ gulp.task('scripts', (cb) => {
     .pipe(gulpWebpack({
       entry: {
         onload: ['./app/background/lib/chromeExOauth.js', './app/background/lib/chromeExOauthsimple.js', './app/background/lib/onload.js'],
-        options: './app/background/options/options.js',
+        options: './app/background/options/components/options.js',
         contentscript: './app/contentScripts/contentscript.js',
         background: './app/background/background.js',
         vendor: ['jquery', 'lodash', 'backbone']

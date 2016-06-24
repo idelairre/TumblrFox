@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import Backbone from 'backbone';
-import View from '../view/view';
+import View from '../../view/view';
 import progressBar from './progressBar.html';
 import ProgressBar from 'progressbar.js';
 

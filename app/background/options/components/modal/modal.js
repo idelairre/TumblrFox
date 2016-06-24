@@ -1,10 +1,10 @@
 import $ from 'jquery';
 import { template } from 'lodash';
-import Backbone from 'backbone';
+import { View } from 'backbone';
 import modalTemplate from './modal.html';
 import './modal.less';
 
-const Modal = Backbone.View.extend({
+const Modal = View.extend({
   className: 'modal',
   template: template($(modalTemplate).html()),
   initialize(e) {

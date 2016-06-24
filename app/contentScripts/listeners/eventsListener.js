@@ -4,11 +4,11 @@ module.exports = (function eventsListener(Tumblr, Backbone, _) {
   const EventsListener = function(options) {
     assign(this, pick(options, ['events', 'options']));
     this.ignore = [
+      'fox:updateTags',
       'LSLog:impression',
       'DOMEventor:updateRect',
       'DOMEventor:keyup:backspace',
       'posts:destroyed',
-      'postsView:createPost',
       'Header:mouseenter',
       'Header:mouseleave',
       'VideoPlayer:timeupdate',
@@ -27,9 +27,6 @@ module.exports = (function eventsListener(Tumblr, Backbone, _) {
       'VideoPlayer:autoplay',
       'VideoPlayer:initialLoad',
       'VideoPlayer:cacheUnload',
-      'fox:postFetch:started',
-      'fox:postFetch:finished',
-      'fox:updateTags',
       'DOMEventor:flatscroll'
     ];
     this.getDependencies();
@@ -39,23 +36,24 @@ module.exports = (function eventsListener(Tumblr, Backbone, _) {
 
   extend(EventsListener.prototype, {
     getDependencies() {
-      this.listenTo(Tumblr.Events, 'fox:constants:initialized', ::this.initialize);
+      this.listenTo(Tumblr.Fox.Events, 'fox:constants:initialized', ::this.initialize);
     },
     initialize(constants, options) {
       this.options = options;
       if (this.options.get('logging')) {
         this.start();
-        this.stopListening(Tumblr.Events, 'fox:constants:initialized');
+        this.stopListening(Tumblr.Fox.Events, 'fox:constants:initialized');
+        console.log('[EVENTS LISTENER]: initialized');
       }
     },
     log(e) {
       if (this.options.get('logging')) {
         if (!this.ignore.includes(e)) {
           if (e.includes('fox')) {
-            console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
+            console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', Array.prototype.slice.call(arguments));
             return;
           }
-          console.log('[LOG]', arguments);
+          console.log('[TUMBLR]', arguments);
         }
       }
     },

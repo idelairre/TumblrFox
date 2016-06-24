@@ -1,36 +1,72 @@
 module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
-  const { View } = Backbone;
-  const { TemplateCache } = Tumblr.Fox.Utils;
+  const { assign, defaults, pick, template, omit } = _;
+  const { View, Model } = Backbone;
+  const { TemplateCache, ComponentFetcher } = Tumblr.Fox.Utils;
+  const { TumblrView, BlogSearchPopover, KeyCommandsMixin } = ComponentFetcher.getAll('TumblrView', 'BlogSearchPopover', 'KeyCommandsMixin');
 
-  const FilterMenuComponent = View.extend({
-    defaults: {
-      disabled: false
-    },
+  const FilterMenuComponent = TumblrView.extend({
     className: 'popover--filter-select-dropdown',
-    template: TemplateCache.get('filterMenuTemplate'),
-    initialize() {
-      this.state = Tumblr.Fox.state;
-      this.disabled = this.defaults.disabled;
+    template: template(TemplateCache.get('filterMenuTemplate')),
+    mixins: [KeyCommandsMixin],
+    defaults: {
+      keyboardFocusClass: 'keyboard_focus',
+      keycommands: false
     },
-    render() {
-      this.$el.html(this.template);
-      Tumblr.Events.trigger('fox:setFilter', 'ANY');
-      this.resetChecks();
-      this.$('i[data-check="any"]').show();
-      this.rendered = true;
-      this.trigger('rendered', this);
+    keycommands: {
+      'keydown:down': 'targetNextLi',
+      'keydown:tab': 'targetNextLi',
+      'keydown:up': 'targetPrevLi',
+      'keydown:shift+tab': 'targetPrevLi',
+      'keyup:enter': 'selectLi'
     },
     events: {
       'click [data-js-menu-item]': 'toggleSelection'
     },
+    initialize(options) {
+      assign(this, pick(options, ['state', 'model']));
+      this.options = defaults(omit(options, 'state', 'model'), this.defaults);
+      this.bindEvents();
+    },
+    render() {
+      this.$el.html(this.template);
+      this.resetChecks();
+      if (this.state.get('disabled')) {
+        this.$('.popover_menu_item').addClass('disabled');
+        return;
+      }
+      this.$('i[data-check="any"]').show();
+    },
+    afterRender() {
+      if (this.options.keycommands) {
+        setTimeout(::this.focusKeys, 0);
+      }
+    },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'peepr-open-request', this.set('disabled', true));
-      this.listenTo(Tumblr.Events, 'peepr:close', this.set('disabled', false));
+      if (!this.options.keycommands) {
+        // this.disableKeys();
+        // Tumblr.Events.trigger('keycommands:suspend', true);
+      }
+    },
+    targetNextLi() {
+      BlogSearchPopover.prototype.targetNextLi.apply(this, arguments);
+    },
+    targetPrevLi() {
+      BlogSearchPopover.prototype.targetPrevLi.apply(this, arguments);
+    },
+    selectLi(e) {
+      e.preventDefault();
+      const type = this.$active.find('[data-js-menu-item-link]').data('js-menu-item-link');
+      this.resetChecks();
+      this.$(`i[data-check="${type}"]`).show();
+      this.model.set('post_type', type.toUpperCase());
+    },
+    scrollToActive() {
+      BlogSearchPopover.prototype.scrollToActive.apply(this, arguments);
     },
     resetChecks() {
       this.$('i[data-check]').hide();
     },
-    toggleSelection(e) { // NOTE: make sure to put this back while the states are half-functional
+    toggleSelection(e) {
       e.preventDefault();
       if (this.disabled) {
         return;
@@ -38,19 +74,10 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       const type = this.$(e.target).data('js-menu-item-link');
       this.resetChecks();
       this.$(`i[data-check="${type}"]`).show();
-      if (this.state.get('dashboard')) {
-        this.filterAndFetchPosts(type);
-      } else {
-        this.selectFilter(type);
-      }
+      this.selectFilter(type.toUpperCase());
     },
     selectFilter(type) {
-      Tumblr.Events.trigger('fox:setFilter', type.toUpperCase());
-      Tumblr.Events.trigger('fox:autopaginator:start');
-    },
-    filterAndFetchPosts(type) {
-      Tumblr.Events.trigger('fox:apiFetch:initial', type.toUpperCase());
-      Tumblr.Events.trigger('fox:autopaginator:start');
+      this.model.set('post_type', type);
     }
   });
 

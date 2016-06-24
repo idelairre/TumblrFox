@@ -17,8 +17,8 @@ class LikeSource extends Source {
 
   constructor() {
     super();
-    this.constants.addListener('ready', ::this.initializeConstants);
-    this.constants.addListener('reset', ::this.initializeConstants);
+    this.constants.on('ready', ::this.initializeConstants);
+    this.constants.on('reset', ::this.initializeConstants);
   }
 
   initializeConstants() {
@@ -33,7 +33,7 @@ class LikeSource extends Source {
     return super.start(retry);
   }
 
-  async _run(retry) {
+  async run(retry) {
     const deferred = Deferred();
     try {
       if (this.options.timestamp <= this.options.untilTimestamp || this.options.page >= this.options.untilPage) {

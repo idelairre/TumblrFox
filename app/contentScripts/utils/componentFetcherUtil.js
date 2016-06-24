@@ -1,7 +1,7 @@
 /* global window:true */
 
 module.exports = (function componentFetcher(Tumblr, Backbone, _) {
-  const { extend, isArray } = _;
+  const { extend, forIn, isArray } = _;
 
   window.webpackJsonp(0, [function (module, exports, require) {
     window.webpackModules = Array.prototype.slice.call(arguments);
@@ -13,7 +13,7 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
 
   const ComponentFetcher = function () {
     this.$$componentCache = {};
-    Tumblr.Events.trigger('fox:components:fetcherInitialized', this);
+    Tumblr.Fox.trigger('fox:components:fetcherInitialized', this);
   };
 
   extend(ComponentFetcher.prototype, Tumblr.Events, Backbone.Events);
@@ -39,9 +39,14 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
         console.error('[GET COMPONENT FAILED]', object);
       }
       // if (Tumblr.Fox.options.get('logging')) {
-        // console.log('[GET COMPONENT]', object, results);
+        console.log('[GET COMPONENT]', object, results);
       // }
       return results;
+    },
+    getComponents(manifest) {
+      forIn(manifest, (value, key) => {
+        this.getComponent(key, value);
+      });
     },
     get(componentName) {
       if (typeof this.$$componentCache[componentName] === 'undefined') {
@@ -65,7 +70,7 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
     },
     put(name, component) {
       this.$$componentCache[name] = component;
-      Tumblr.Events.trigger('fox:components:add', name);
+      Tumblr.Fox.trigger('fox:components:add', name, this.$$componentCache[name]);
     }
   });
 

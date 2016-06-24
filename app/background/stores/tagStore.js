@@ -1,14 +1,10 @@
 import constants from '../constants';
+import { countBy, forIn, identity } from 'lodash';
 import db from '../lib/db';
 import 'babel-polyfill';
 
 export default class Tags {
-  static async send(request, sender, sendResponse) {
-    const response = await Tags.fetch(request.payload);
-    sendResponse(response);
-  }
-
-  static async fetch(port) {
+  static async fetchLikedTags() {
     const tags = await db.tags.orderBy('count').reverse().limit(250).toArray();
     return tags;
   }
@@ -16,6 +12,20 @@ export default class Tags {
   static async add(tags) {
     const promises = tags.map(Tags._putAndIncrementTags);
     return Promise.all(promises);
+  }
+
+  static async fetchTagsByUser(blogname) {
+    const posts = await db.posts.where('blogname').anyOfIgnoreCase(blogname).toArray();
+    const tags = [];
+    const tagCounts = countBy(tagArray, identity);
+    forIn(tagCounts, (value, key) => {
+      const tag = {
+        tag: key,
+        count: value
+      };
+      tags.push(tag);
+    });
+    return tags;
   }
 
   static async _putAndIncrementTags(tagName) {

@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { snakeCase, toUpper } from 'lodash';
 import Backbone from 'backbone';
-import View from '../view/view';
+import View from '../../view/view';
 import buttonsTemplate from './buttons.html';
 
 const parseFile = (file, callback) => {
@@ -92,7 +92,6 @@ const Buttons = View.extend({
   },
   toggleButton(e) {
     const key = this.$(e.currentTarget).prop('id');
-    console.log('[KEY]', key);
     if (key === 'restoreCache') {
       this.restoreCache();
     } else { // all other events are sent to settings component and posted to the background script

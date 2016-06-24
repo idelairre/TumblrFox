@@ -14,7 +14,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
   */
 
   const FollowerList = View.extend({
-    dependencies: ComponentFetcher.getAll(['FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel']),
+    dependencies: ['FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel'],
     defaults: {
       offset: 25,
       limit: 25,
@@ -25,7 +25,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       }
     },
     initialize(options) {
-      const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = this.dependencies;
+      const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = ComponentFetcher.getAll(this.dependencies);
       this.options = assign({}, options, this.defaults);
       this.state = new StateModel(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
@@ -40,29 +40,28 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       });
       this.$pagination = this.$('#pagination'); // insert followers before pagination element
       this.$pagination.remove();
-      this.$loader = new Tumblr.Prima.KnightRiderLoader({
+      this.loader = new Tumblr.Prima.KnightRiderLoader({
         variation: 'leviathan',
         className: 'Knight-Rider-loader centered'
        });
-      this.$loader.render();
+      this.loader.render();
       this.$el.find('.left_column').prepend('<div class="load_cont"></div>');
-      this.$('.load_cont').append(this.$loader.$el);
+      this.$('.load_cont').append(this.loader.$el);
       this.bindEvents();
     },
     events: {
       'click input.text_field': 'togglePopover'
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'fox:following:refresh', ::this.refresh);
-      this.listenTo(Tumblr.Events, 'fox:following:state', ::this.state.setState);
+      this.listenTo(Tumblr.Fox.Events, 'fox:following:refresh', ::this.refresh);
+      this.listenTo(Tumblr.Fox.Events, 'fox:following:state', ::this.state.setState);
       this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 100));
       this.listenTo(this.model.items, 'reset', ::this.populate);
       this.listenTo(this.state, 'change:state', ::this.fetch);
     },
     togglePopover(e) {
       e.preventDefault();
-      // TODO: make this component actually useful
-      // console.log('[AUTOCOMPLETE POPOVER]', e);
+      // TODO: implement following search
     },
     refresh() {
       this.model.options.offset = 0;
@@ -87,22 +86,23 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     onScroll(e) {
+      console.log('scroll');
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
-        if (this.$loader.get('loading')) {
+        if (this.loader.get('loading')) {
           return;
         }
         if (this.state.get('orderFollowed')) {
-          this.$loader.set('loading', true);
+          this.loader.set('loading', true);
           this.model.fetch(this.state.getState()).then(followers => {
             this.renderFollowerViews(followers);
-            this.$loader.set('loading', false);
+            this.loader.set('loading', false);
           });
         } else {
           const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
-          this.$loader.set('loading', true);
+          this.loader.set('loading', true);
           followers.map(follower => {
             setTimeout(() => {
-              this.$loader.set('loading', false);
+              this.loader.set('loading', false);
               this.renderFollower(follower);
             }, 100);
           });
@@ -121,7 +121,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       });
     },
     renderFollower(model) {
-      const { FollowerItemComponent } = this.dependencies;
+      const { FollowerItemComponent } = ComponentFetcher.getAll(this.dependencies);
       const follower = new FollowerItemComponent({ model });
       follower.render();
       this.attachNode.append(follower.$el);
@@ -136,7 +136,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       this.$followers = this.$followers.slice(1, this.$followers.length);
     },
     renderSnowman(view) {
-      const { FollowerItemComponent } = this.dependencies;
+      const { FollowerItemComponent } = ComponentFetcher.getAll(this.dependencies);
       const tumblelogData = view.find('[data-tumblelog-popover]').data('tumblelog-popover');
       if (!tumblelogData) {
         return;

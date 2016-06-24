@@ -1,26 +1,33 @@
 module.exports = (function filterDropdown(Tumblr, Backbone, _) {
   const { assign, pick } = _;
-  const { get } = Tumblr.Fox;
-  const PeeprBlogSearch = get('PeeprBlogSearch');
+  const { get, Utils } = Tumblr.Fox;
+  const { BlogSearchPopover, PeeprBlogSearch, SearchFiltersPopover } = Utils.ComponentFetcher.getAll('BlogSearchPopover', 'PeeprBlogSearch', 'SearchFiltersPopover');
 
   const Filters = PeeprBlogSearch.prototype.subviews.filters.constructor;
 
+  const FilterPopoverContainer = SearchFiltersPopover.extend({
+    Subview: get('FiltersDropDownComponent')
+  });
+
   const FiltersComponent = Filters.extend({
     initialize(options) {
-      assign(this, pick(options, ['model', 'state', 'searchOptions']));
-      const { FiltersDropDown } = options;
-      this.showPopover = () => {
-        this.popover = new FiltersDropDown({
+      assign(this, pick(options, ['model', 'state']));
+      Filters.prototype.initialize.apply(this, arguments);
+    },
+    showPopover() {
+      if (!this.popover) {
+        this.popover = new FilterPopoverContainer({
           pinnedTarget: this.$el,
           model: this.model,
           state: this.state,
-          searchOptions: this.searchOptions,
           preventInteraction: true
         });
         this.popover.render();
         this.listenTo(this.popover, 'close', this.onPopoverClose);
-      };
-      Filters.prototype.initialize.apply(this, arguments);
+      }
+    },
+    onPopoverClose() {
+      Filters.prototype.onPopoverClose.apply(this, arguments);
     }
   });
 

@@ -1,4 +1,5 @@
 import constants from '../constants';
+import { noop } from 'lodash';
 
 export default class Source {
   initialized = false;
@@ -9,17 +10,17 @@ export default class Source {
 
   constructor() {
     this.constants = constants;
-    this.constants.addListener('ready', () => {
+    this.constants.on('ready', () => {
       this.initialized = true;
     });
   }
 
   start(retry, refresh) {
     if (this.initialized) {
-      return this._run(retry);
+      return this.run(retry);
     } else {
-      this.constants.addListener('ready', () => {
-        return this._run(retry);
+      this.constants.on('ready', () => {
+        return this.run(retry);
       });
     }
   }
@@ -37,7 +38,11 @@ export default class Source {
     }
     setTimeout(() => {
       this.retriedTimes += 1;
-      return this._run(true);
+      return this.run(true);
     }, 3000);
+  }
+
+  run() {
+    return noop;
   }
 }

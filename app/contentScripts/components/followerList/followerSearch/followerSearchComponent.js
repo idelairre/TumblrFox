@@ -35,21 +35,23 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
     },
     togglePopover(e) {
       e.preventDefault();
-      this.popover || (this.popover = new Popover({
-        pinnedTarget: this.$followerFilter,
-        pinnedSide: 'bottom',
-        class: 'popover--follower-popover',
-        selection: 'checkmark',
-        items: this.options.popoverOptions,
-        onSelect: (e) => {
-          if (this.state.get(e)) {
-            return;
+      if (!this.popover) {
+        this.popover = new Popover({
+          pinnedTarget: this.$followerFilter,
+          pinnedSide: 'bottom',
+          class: 'popover--follower-popover',
+          selection: 'checkmark',
+          items: this.options.popoverOptions,
+          onSelect: state => {
+            if (this.state.get(state)) {
+              return;
+            }
+            Tumblr.Fox.Events.trigger('fox:following:state', state);
           }
-          Tumblr.Events.trigger('fox:following:state', e);
-        }
-      }),
-      this.popover.render(),
-      this.listenTo(this.popover, 'close', this.onPopoverClose));
+        });
+        this.popover.render();
+        this.listenTo(this.popover, 'close', this.onPopoverClose);
+      }
     },
     hidePopover() {
       this.popover && this.popover.hide();
@@ -68,7 +70,7 @@ module.exports = (function followerSearch(Tumblr, Backbone, _) {
         source: 'FOLLOW_SOURCE_FOLLOWING_PAGE'
       });
       if (this.state.get('orderFollowed')) {
-        Tumblr.Events.trigger('fox:following:refresh');
+        Tumblr.Fox.Events.trigger('fox:following:refresh');
       }
     }
   });

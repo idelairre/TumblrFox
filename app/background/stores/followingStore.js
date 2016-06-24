@@ -7,14 +7,6 @@ import constants from '../constants';
 import 'babel-polyfill';
 
 export default class Following {
-  static async send(request, sender, sendResponse) {
-    request.type = kebabCase(request.type);
-    request.type = request.type.split('-');
-    const func = request.type[0];
-    const response = await Following[func](request.payload);
-    sendResponse(response);
-  }
-
   static async fetch(query) {
     let response = {};
     if (query && query === 'alphabetically') {
@@ -22,7 +14,7 @@ export default class Following {
     } else if (query && query === 'orderFollowed') {
       response = await db.following.orderBy('order').toArray(); // maybe fetch each user individually and update? delegate to front end?
     } else { // recently updated
-      Following.refresh();
+      await Following.refresh(); // TODO: add flag to indicate whether to refresh or not
       response = await db.following.orderBy('updated').reverse().toArray();
     }
     return response;
@@ -53,9 +45,14 @@ export default class Following {
     async.doWhilst(async next => {
       try {
         const following = await Source.start(null, slug);
-        await Following.bulkPut(following);
-        slug.offset += slug.limit;
-        next(null, following);
+        if (typeof following === 'undefined') {
+          console.error(Source.MAX_RETRIES_MESSAGE);
+          next(Source.MAX_RETRIES_MESSAGE);
+        } else {
+          await Following.bulkPut(following);
+          slug.offset += slug.limit;
+          next(null, following);
+        }
       } catch (e) {
         next(e);
       }

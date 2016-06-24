@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
-import View from '../view/view';
-import Tipped from '../../lib/tipped';
+import View from '../../view/view';
+import Tipped from '../../../lib/tipped';
 import experimentalTemplate from './experimental.html';
 import clientCachingTooltip from './tooltips/clientCachingTooltip.html';
 import fullTextSearchTooltip from './tooltips/fullTextSearchTooltip.html';
@@ -46,7 +46,7 @@ const Experimental = View.extend({
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
     this.props.set(key, check);
-    Backbone.Events.trigger('CHANGE_PROPS', this.props.attributes);
+    // Backbone.Events.trigger('CHANGE_PROPS', this.props.toJSON());
   },
   renderProps(props) {
     mapKeys(props, (value, key) => {

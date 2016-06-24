@@ -3,15 +3,16 @@
 
 import { Deferred } from 'jquery';
 import { oauthRequest } from './lib/oauthRequest';
+import { pick } from 'lodash';
 import db from './lib/db';
-import Eventor from './lib/eventor';
+import EventEmitter from 'eventemitter3';
 import tokens from './tokens.json';
 import 'babel-polyfill';
 
 const CONSUMER_KEY = tokens.consumerKey;
 const CONSUMER_SECRET = tokens.consumerSecret;
 
-class Constants extends Eventor {
+class Constants extends EventEmitter {
   defaults = {
     cachedPostsCount: 0,
     cachedFollowingCount: 0,
@@ -42,7 +43,6 @@ class Constants extends Eventor {
   constructor() {
     super();
     this.initialized = false;
-    this._events = {};
     this.initialize();
   }
 
@@ -60,7 +60,7 @@ class Constants extends Eventor {
         this.set('totalFollowingCount', response.user.following);
       }
       this.initialized = true;
-      this.trigger('ready');
+      this.emit('ready');
     } catch (e) {
       console.error(e);
     }
@@ -93,7 +93,13 @@ class Constants extends Eventor {
     this.set('cachedPostsCount', this.defaults.cachedPostsCount);
     this.set('cachedFollowingCount', this.defaults.cachedFollowingCount);
     this.set('nextSlug', this.defaults.nextSlug);
-    this.trigger('reset');
+    this.emit('reset');
+  }
+
+  toJSON() {
+    const keys = Object.keys(this.defaults);
+    const vals =  pick(this, keys);
+    return vals;
   }
 
   _assign(items) {

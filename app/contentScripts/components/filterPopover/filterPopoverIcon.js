@@ -24,8 +24,8 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
     events: {
       'click button': 'togglePopover'
     },
-    initialize(e) {
-      this.options = assign({}, e);
+    initialize(options) {
+      this.options = assign({}, options);
     },
     render() {
       this.$el.html(this.template);
@@ -33,10 +33,8 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
       this.popover = new FilterPopoverContainer({
         viewOptions: {
           state: this.options.state,
-          searchOptions: this.options.searchOptions,
           options: this.options.options
-        },
-        silent: false
+        }
       });
     },
     togglePopover() {
@@ -48,10 +46,6 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
       this.popover.show();
     }
   });
-
-  // if (!Tumblr.Fox.options.test) {
-  //   filterPopoverIcon.render();
-  // }
 
   Tumblr.Fox.register('FilterPopoverIcon', FilterIcon);
 });

@@ -14,8 +14,8 @@ class FollowingSource extends Source {
   }
   constructor() {
     super();
-    this.constants.addListener('ready', ::this.initializeConstants);
-    this.constants.addListener('reset', ::this.initializeConstants);
+    this.constants.on('ready', ::this.initializeConstants);
+    this.constants.on('reset', ::this.initializeConstants);
   }
 
   initializeConstants() {
@@ -30,7 +30,7 @@ class FollowingSource extends Source {
     return super.start(retry);
   }
 
-  async _run(retry) {
+  async run(retry) {
     const deferred = Deferred();
     try {
       const following = await this.crawlFollowing(retry);

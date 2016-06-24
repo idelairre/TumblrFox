@@ -15,10 +15,6 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
       this.items = Tumblelog.collection;
       this.$views = [];
       this.chromeTrigger('chrome:refresh:following');
-      this.bindEvents();
-    },
-    bindEvents() {
-      this.listenTo(Tumblr.Events, 'post:follow:success', ::this.updatePosts);
     },
     fetch(query) {
       const deferred = $.Deferred();
@@ -50,19 +46,6 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
         }
       });
       return deferred.promise();
-    },
-    updatePosts(following) {
-      // NOTE: this should only fire when in the likes state
-      // const posts = Tumblr.Fox.Posts.items.where({
-      //   tumblelog: following.attributes.name
-      // });
-      // posts.map(post => {
-      //   post.attributes['tumblelog-data'].following = true;
-      //   post.set(post.attributes);
-      // });
-      // this.chromeTrigger('chrome:update:following', {
-      //   following: following.attributes
-      // });
     }
   });
 

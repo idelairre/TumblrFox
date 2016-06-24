@@ -1,21 +1,5 @@
 import Dexie from 'dexie';
 
-Object.defineProperty(Object.prototype, 'renameProperty', {
-  writable: false,
-  enumerable: false,
-  configurable: false,
-  value(oldName, newName) {
-    if (oldName === newName) {
-      return this;
-    }
-    if (this.hasOwnProperty(oldName)) {
-      this[newName] = this[oldName];
-      delete this[oldName];
-    }
-    return this;
-  }
-});
-
 const db = new Dexie('TumblrFox');
 
 db.version(1).stores({
@@ -126,7 +110,7 @@ db.version(17).stores({
 
 
 db.open().then(() => {
-  // port.postMessage('initialized');
+  console.log(db);
 }).catch(error => {
   console.error(error);
 });

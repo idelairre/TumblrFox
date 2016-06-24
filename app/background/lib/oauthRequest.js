@@ -27,9 +27,7 @@ const onAuthorized = (slug, callback) => {
     parameters: slug
   };
 
-  const url = slug.url || 'https://api.tumblr.com/v2/user/dashboard';
-
-  oauth.sendSignedRequest(url, (data, xhr) => {
+  oauth.sendSignedRequest(slug.url, (data, xhr) => {
     if (data !== '') {
       const response = JSON.parse(data).response;
       callback(null, response);

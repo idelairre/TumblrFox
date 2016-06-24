@@ -1,5 +1,5 @@
 module.exports = (function followerItem(Tumblr, Backbone, _) {
-  const $ = Backbone.$;
+  const { $, View } = Backbone;
   const { template } = _;
   const { constants, Utils } = Tumblr.Fox;
   const { TemplateCache, Time } = Utils
@@ -19,7 +19,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     });
   };
 
-  const FollowerItem = Backbone.View.extend({
+  const FollowerItem = View.extend({
     template: template(TemplateCache.get('followerItemTemplate')),
     className: 'follower clearfix',
     initialize(e) {
@@ -105,8 +105,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     },
     togglePopover(e) {
       e.preventDefault();
-      this.$popover.show(),
-      console.log('[POPOVER] open');
+      this.$popover.show()
     }
   });
 

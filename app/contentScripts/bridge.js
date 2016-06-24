@@ -6,27 +6,33 @@
 
 import { camelCase } from 'lodash';
 
-const Bridge = {
+class Bridge {
   initialize() {
-    this.bindListeners([ // binds window events coming from injected scripts
+    this.bindOutgoing([
       'chrome:fetch:blogPosts',
       'chrome:fetch:dashboardPosts',
       'chrome:fetch:dashboardPostsByTag',
       'chrome:fetch:likes',
+      'chrome:setFilter',
       'chrome:search:likesByTag',
       'chrome:search:likesByTerm',
       'chrome:fetch:constants',
       'chrome:fetch:following',
       'chrome:fetch:keys',
-      'chrome:fetch:tags',
+      'chrome:fetch:tagsByUser',
+      'chrome:fetch:likedTags',
       'chrome:refresh:following',
       'chrome:update:following',
       'chrome:update:likes',
-      'chrome:sync:likes',
+      'chrome:sync:like',
       'chrome:initialize'
     ]);
-  },
+    chrome.runtime.onMessage.addListener(this.bindRecievers);
+    console.log('[BRIDGE]: initialized');
+  }
+
   listenTo(eventName, callback) {
+    console.log(`[BRIDGE] listening: "${eventName}"`);
     const eventSlug = camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
       const req = {};
@@ -38,7 +44,8 @@ const Bridge = {
         return callback ? callback(response) : null;
       });
     });
-  },
+  }
+
   trigger(eventName, payload) {
     let req = {};
     if (typeof payload === 'undefined') {
@@ -49,11 +56,22 @@ const Bridge = {
       });
     }
     window.dispatchEvent(req);
-  },
-  bindListeners(handlers) {
+  }
+
+  bindRecievers(request) {
+    if (request.payload) {
+      Bridge.trigger(`chrome:response:${request.type}`, request.payload);
+    } else {
+      Bridge.trigger(`chrome:response:${request.type}`);
+    }
+  }
+
+  bindOutgoing(handlers) {
     handlers.map(eventName => {
       this.listenTo(eventName, response => {
+        console.log(`[BRIDGE] trigger: "${eventName}"`);
         if (response) {
+          console.log('[BRIDGE] response:', response);
           let responseEvent = eventName.split(':');
           responseEvent[1] = 'response';
           responseEvent = responseEvent.join(':');
@@ -62,6 +80,8 @@ const Bridge = {
       });
     });
   }
-};
+}
 
-export default Bridge;
+const bridge = new Bridge();
+
+export default bridge;

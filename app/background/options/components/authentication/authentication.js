@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { isString, mapKeys } from 'lodash';
-import View from '../view/view';
+import View from '../../view/view';
 import authenticationTemplate from './authentication.html';
 
 const Authentication = View.extend({

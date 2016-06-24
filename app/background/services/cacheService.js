@@ -1,7 +1,6 @@
 import async from 'async';
 import { maxBy } from 'lodash';
 import Papa from '../lib/papaParse';
-import CacheWorker from './cacheWorkerService';
 import constants from '../constants';
 import { log, logError, calculatePercent } from './loggingService';
 import db from '../lib/db';
@@ -12,6 +11,7 @@ import 'babel-polyfill';
 export default class Cache {
   static async assembleCacheAsCsv(port) {
     try {
+      const CacheWorker = require('./cacheWorkerService');
       const posts = await db.posts.toCollection().toArray();
       const file = await CacheWorker.convertJsonToCsv(posts);
       const result = await CacheWorker.assembleFileBlob(file);
@@ -75,6 +75,7 @@ export default class Cache {
 
   static async restoreCache(fileSlug, port) { // this only works for files < 100 mb
     try {
+      const CacheWorker = require('./cacheWorkerService');
       const { offset, fileSize } = fileSlug;
       const response = calculatePercent(offset, fileSize);
       port({

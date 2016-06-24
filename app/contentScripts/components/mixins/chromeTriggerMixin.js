@@ -26,7 +26,9 @@ module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
       const onFinish = response => {
         callback ? callback(response.detail) : null;
         window.removeEventListener(responseEvent, onFinish);
-        this.trigger('chrome', { eventName, payload });
+        if (typeof this.trigger === 'function') {
+          this.trigger('chrome', { eventName, payload });
+        }
       }
       window.dispatchEvent(req);
       window.addEventListener(responseEvent, onFinish);

@@ -5,12 +5,13 @@
 import AutopaginatorModel from './models/autopaginatorModel';
 import Bridge from './bridge';
 import BlogModel from './models/blogModel';
+import BlogSource from './source/blogSource';
 import ComponentFetcher from './utils/componentFetcherUtil';
 import DashboardModel from './models/dashboardModel';
+import DashboardSource from './source/dashboardSource';
 import ChromeMixin from './components/mixins/chromeTriggerMixin';
 import ControllerModel from './models/controllerModel';
 import TagSearchAutocompleteModel from './components/filterPopover/search/input/tagSearchAutocompleteModel';
-import TextSearchAutocompleteModel from './components/filterPopover/search/input/textSearchAutocompleteModel';
 import FiltersComponent from './components/filterPopover/search/filters/filtersComponent';
 import FiltersDropdownTemplate from './components/filterPopover/search/filtersDropdown/filtersDropdownTemplate.html';
 import FiltersDropdownComponent from './components/filterPopover/search/filtersDropdown/filtersDropdownComponent';
@@ -22,10 +23,10 @@ import FilterPopoverContainer from './components/filterPopover/filterPopoverCont
 import FollowerItemTemplate from './components/followerList/followerItem/followerItemTemplate.html';
 import FollowerItem from './components/followerList/followerItem/followerItemComponent';
 import FollowerList from './components/followerList/followerListComponent';
-import FollowerModel from './models/followerModel';
+import FollowerModel from './components/followerList/followerModel';
 import FollowerSearch from './components/followerList/followerSearch/followerSearchComponent';
 import EventsListener from './listeners/eventsListener';
-import Init from './init';
+import App from './app';
 import InputComponent from './components/filterPopover/search/input/inputComponent';
 import LikesListener from './listeners/likesListener';
 import LikesModel from './models/likesModel';
@@ -34,31 +35,24 @@ import ObjectUtil from './utils/objectUtil';
 import PostFormatter from './utils/postFormatterUtil';
 import PostView from './components/postView/postView';
 import PostViewTemplate from './components/postView/postViewTemplate.html';
-import PostModel from './models/postModel';
+import PostsModel from './models/postsModel';
 import PopoverMixin from './components/mixins/popoverMixin';
 import PopoverTemplate from './components/popover/popoverTemplate.html';
 import PopoverComponent from './components/popover/popoverComponent';
 import LoaderComponent from './components/loader/loaderComponent';
 import LoaderMixin from './components/mixins/loaderBarMixin';
+import LikeSource from './source/likeSource';
 import SearchComponent from './components/filterPopover/search/searchComponent';
 import SearchModel from './models/searchModel';
 import SearchResultsTemplate from './components/searchResults/searchResultsTemplate.html';
 import SearchResultsComponent from './components/searchResults/searchResultsComponent';
 import SearchTemplate from './components/filterPopover/search/searchTemplate.html';
-import SettingsComponent from './components/filterPopover/settings/settingsComponent';
+import SettingsComponent from './components/filterPopover/search/settings/settingsComponent';
 import StateModel from './models/stateModel';
 import TemplateFetcher from './utils/templateFetcherUtil';
 import Time from './utils/timeUtil';
 import ToggleComponent from './components/popover/toggle/toggle';
 import ToggleTemplate from './components/popover/toggle/toggle.html';
-
-const bindListeners = () => {
-  chrome.runtime.onMessage.addListener(request => {
-    if (request.type === 'postFound') {
-      Bridge.trigger('chrome:response:postFound', request.payload);
-    }
-  });
-};
 
 const inject = modules => {
   for (let i = 0; modules.length > i; i += 1) {
@@ -79,9 +73,11 @@ const injectTemplates = templates => {
 if (window.location.href.includes('https://www.tumblr.com')) {
   console.log('@tumblr');
 
-  Bridge.initialize();
+  const inExtension = chrome.runtime.onMessage;
 
-  bindListeners();
+  if (inExtension) {
+    Bridge.initialize();
+  }
 
   injectTemplates([
     FiltersDropdownTemplate,
@@ -95,7 +91,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
   ]);
 
   inject([
-    Init,
+    App,
     ComponentFetcher,
     TemplateFetcher,
     Main,
@@ -109,21 +105,23 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     PopoverMixin,
     ControllerModel,
     StateModel,
+    BlogSource,
     BlogModel,
+    DashboardSource,
     DashboardModel,
     FollowerModel,
+    LikeSource,
     LikesModel,
     AutopaginatorModel,
     LoaderComponent, // must be loaded after PostModel or doesn't listen correctly
     SearchModel,
-    PostModel,
+    PostsModel,
     PostView,
     ToggleComponent,
     PopoverComponent,
     TagSearchAutocompleteModel,
-    TextSearchAutocompleteModel,
-    FiltersComponent,
     FiltersDropdownComponent,
+    FiltersComponent,
     InputComponent,
     SettingsComponent,
     SearchComponent,
@@ -136,6 +134,4 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     FollowerSearch,
     FollowerList
   ]);
-
-  Bridge.trigger('fox:scripts:initialized');
 }

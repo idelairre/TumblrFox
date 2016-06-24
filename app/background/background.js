@@ -5,7 +5,6 @@ import chromeReceiver from './receivers/chromeReceiver';
 import optionsReceiver from './receivers/optionsReceiver';
 import sendMessage from './services/messageService';
 import './lib/livereload';
-import 'babel-polyfill';
 
 const inExtension = chrome.runtime.onMessage;
 

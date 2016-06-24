@@ -1,10 +1,11 @@
 module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   const { $, Collection, Model } = Backbone;
   const { countBy, identity, invoke, forIn, omit } = _;
-  const { get } = Tumblr.Fox;
+  const { get, require } = Tumblr.Fox;
   const ChromeMixin = get('ChromeMixin');
+  const AutoComplete = get('AutoComplete');
 
-  const TagSearchAutocompleteModel = Model.extend({
+  const TagSearchAutocompleteModel = AutoComplete.extend({
     mixins: [ChromeMixin],
     defaults: {
       matchTerm: '',
@@ -12,34 +13,26 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       typeAheadMatches: []
     },
     initialize(options) {
-      this.fetched = false;
       this.state = options.state;
       this.items = new Collection();
+      this.set(this.defaults);
       this.$$rawTags = [];
       this.$$dashboardTags = [];
       this.bindEvents();
-      this.initialFetch();
+      if (!this.state.get('disabled')) {
+        this.initialFetch();
+      }
     },
     bindEvents() {
-      this.listenTo(Tumblr.Events, 'fox:setSearchOption', ::this.setState);
-      this.listenTo(Tumblr.Events, 'fox:updateTags', ::this.getTags);
-      this.listenTo(Tumblr.Events, 'peeprsearch:change:unsetTerm', ::this.onUnsetTermChange);
-      this.listenTo(this, 'change:matchTerm', ::this.setMatches);
+      this.listenTo(Tumblr.Fox.Events, 'fox:updateTags', ::this.getTags);
+      this.listenTo(Tumblr.Fox.Events, 'fox:changeTerm', ::this.setMatches);
+      this.listenTo(Tumblr.Fox.Events, 'fox:search:unsetTerm', ::this.onUnsetTermChange);
+      this.listenTo(this, 'change:matchTerm sync', ::this.setMatches);
       this.listenTo(this.state, 'change:state', ::this.flushTags);
     },
     unbindEvents() {
-      this.stopListening(Tumblr.Events, 'peeprsearch:change:unsetTerm');
+      this.stopListening(Tumblr.Fox.Events, 'fox:search:unsetTerm');
       this.stopListening(this, 'change:matchTerm');
-    },
-    setState(state) {
-      switch (state) {
-        case 'text':
-          this.unbindEvents();
-          break;
-        case 'tag':
-          this.bindEvents();
-          break;
-      }
     },
     getTags(tags) {
       this.$$rawTags = this.$$rawTags.concat(tags.slice(0, tags.length - 1)); // omits loggingData
@@ -55,14 +48,18 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
       });
     },
     flushTags() {
-      this.fetched = false;
       this.items.reset([]);
     },
     fetch() {
+      this.trigger('request');
       if (this.state.get('dashboard')) {
         return this.dashboardFetch();
+      } else if (this.state.get('likes')) {
+        return this.fetchLikedTags();
+      } else if (this.state.get('disabled')) {
+        return $.Deferred().reject();
       }
-      return this.chromeFetch();
+      return this.fetchTagsFromLikes();
     },
     initialFetch() { // NOTE: if this is empty, fetch tags from the tumblr search bar
       Tumblr.postsView.postViews.filter(post => {
@@ -76,53 +73,56 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
           });
         }
       });
+      this.trigger('request');
     },
-    // NOTE: sometimes doesn't fetch new tags after API fetch and having initially fetched dashboard tags
-    // need a trigger to flush tags
     dashboardFetch() {
       const deferred = $.Deferred();
       const tagArray = this.$$rawTags;
       const tagCounts = countBy(tagArray, identity);
       this.processTags(tagCounts);
       this.parse(this.$$dashboardTags);
-      // console.log('[FETCHING TAGS], raw tags: ', this.$$rawTags.length, 'parsed tags: ', this.$$dashboardTags.length);
-      return deferred.resolve(this.items);
+      deferred.resolve(this.items);
+      return deferred.promise();
     },
-    chromeFetch() {
+    fetchLikedTags() {
       const deferred = $.Deferred();
-      this.chromeTrigger('chrome:fetch:tags', tags => {
+      this.chromeTrigger('chrome:fetch:likedTags', tags => {
+        this.parse(tags);
+        deferred.resolve(tags);
+      });
+      return deferred.promise();
+    },
+    fetchTagsByUser() {
+      const deferred = $.Deferred();
+      this.chromeTrigger('chrome:fetch:tagsByUser', tags => {
         this.parse(tags);
         deferred.resolve(tags);
       });
       return deferred.promise();
     },
     getItems() {
-      return this.fetch(arguments);
+      return this.fetch();
     },
     onUnsetTermChange(e) {
       this.set('matchTerm', e.term);
     },
     hasMatches() {
-      return this.items.length && this.get('typeAheadMatches').length || this.fetched;
+      return this.items.length && this.get('typeAheadMatches').length;
     },
     setMatches() {
       const term = this.get('matchTerm');
-      const matches = this.items.filter(tag => {
-        return tag.get('tag').indexOf(term) > -1;
+      if (!term.length) {
+        this.set('typeAheadMatches', this.items.toJSON());
+        return;
+      }
+      const matches = this.items.filter(tag => { // NOTE: this is a lodash filter not a normal js filter
+        return tag.get('tag').toLowerCase().includes(term.toLowerCase());
       });
       this.set('typeAheadMatches', invoke(matches, 'toJSON'));
     },
-    parse(e) {
-      const tags = e.detail || e;
-      // if (!this.fetched) {
-        this.items.reset(tags);
-        this.fetched = true;
-      // }
-      if (this.get('matchTerm') === '') {
-         this.set('typeAheadMatches', this.items.toJSON());
-       }
-      omit(e, 'tags');
-      // console.log('[RAW TAGS]', this.$$rawTags, this.$$dashboardTags);
+    parse(tags) {
+      this.items.reset(tags);
+      this.trigger('sync');
     }
   });
 

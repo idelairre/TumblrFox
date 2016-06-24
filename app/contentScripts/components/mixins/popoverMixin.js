@@ -3,7 +3,7 @@ module.exports = (function popoverMixin(Tumblr, Backbone, _) {
   const { get, put } = Tumblr.Fox;
   const Popover = get('PopoverMixin');
   const Mixin = get('Mixin');
-  const transition = get('animation').transition;
+  const { transition } = get('animation');
   const ClickHandler = get('ClickHandler');
 
   const PopoverMixin = new Mixin({

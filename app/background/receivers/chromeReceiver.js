@@ -6,27 +6,29 @@ import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
 
-const setConstants = (request, sender, sendResponse) => {
-  constants.set('formKey', request.payload.formKey);
-}
+const setConstants = payload => {
+  constants.set('formKey', payload.formKey);
+};
 
-const sendConstants = (request, sender, sendResponse) => {
-  sendResponse(constants);
+const sendConstants = () => {
+  return constants;
 };
 
 const chromeReciever = receiverHandler({
   initialize: setConstants,
   fetchConstants: sendConstants,
-  fetchDashboardPosts: PostSource.send,
-  fetchBlogPosts: PostSource.send,
-  fetchDashboardPostsByTag: PostSource.send,
-  fetchTags: Tags.send,
-  searchLikesByTag: Likes.send,
-  searchLikesByTerm: Likes.send,
-  syncLikes: Likes.sync,
-  updateLikes: Likes.update,
-  fetchFollowing: Following.send,
-  updateFollowing: Following.send
+  fetchDashboardPosts: PostSource.fetchDashboardPosts,
+  fetchBlogPosts: PostSource.fetchBlogPosts,
+  fetchDashboardPostsByTag: PostSource.fetchDashboardPostsByTag,
+  fetchLikedTags: Tags.fetchLikedTags,
+  fetchTagsByUser: Tags.fetchTagsByUser,
+  setFilter: Likes.setFilter,
+  searchLikesByTag: Likes.searchLikesByTag,
+  searchLikesByTerm: Likes.searchLikesByTerm,
+  syncLike: Likes.syncLike,
+  updateLikes: Likes.updateLikes,
+  fetchFollowing: Following.fetch,
+  updateFollowing: Following.update
 });
 
 export default chromeReciever;

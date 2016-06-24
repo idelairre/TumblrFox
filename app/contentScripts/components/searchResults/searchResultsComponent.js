@@ -1,30 +1,29 @@
 module.exports = (function searchResults(Tumblr, Backbone, _) {
   const { $, View, Model } = Backbone;
-  const { template } = _;
+  const { assign, template, pick } = _;
   const { TemplateCache } = Tumblr.Fox.Utils;
 
   const SearchResults = View.extend({
     template: template(TemplateCache.get('searchResultsTemplate')),
     className: 'search_posts_bottom',
     initialize(options) {
-      this.blogModel = options.blogModel;
+      assign(this, pick(options, ['searchModel', 'state']));
       this.bindEvents();
-      this.state = new Model({
+      this.status = new Model({
         visible: false
       });
       this.render();
     },
     set(key, value) {
-      this.state.set(key, value);
+      this.status.set(key, value);
     },
     get(key) {
-      return this.state.get(key);
+      return this.status.get(key);
     },
     bindEvents() {
-      this.listenTo(this.blogModel, 'change', ::this.renderTerm);
-      this.listenTo(Tumblr.Events, 'fox:search:renderedResults', ::this.show);
-      this.listenTo(Tumblr.Events, 'fox:search:finished', ::this.show);
-      this.listenTo(Tumblr.Events, 'fox:search:started', ::this.hide);
+      this.listenTo(this.searchModel, 'change', ::this.renderTerm);
+      this.listenTo(Tumblr.Fox.Events, 'fox:search:renderedResults', ::this.show);
+      this.listenTo(Tumblr.Fox.Events, 'fox:search:start', ::this.hide);
     },
     hide() {
       if (this.get('visible')) {
@@ -33,18 +32,24 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       }
     },
     show() {
+      console.log(arguments);
       if (!this.get('visible')) {
-        this.$el.show();
+        if (this.searchModel.get('term') && this.searchModel.get('term').length > 0) {
+          this.$el.show();
+        } else {
+          this.$el.find('.results_end_body').text('That\'s it!');
+          this.$el.show();
+        }
         this.set('visible', true);
       }
     },
     renderTerm() {
-      const term = this.blogModel.get('term');
+      const term = this.searchModel.get('term');
       this.$('span.search_query_highlight').text(term);
     },
     render() {
       this.$el.html(this.template({
-        term: this.blogModel.get('term')
+        term: this.searchModel.get('term')
       }));
       $('#posts').append(this.$el);
       this.$el.hide();

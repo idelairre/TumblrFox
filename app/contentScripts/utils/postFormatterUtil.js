@@ -2,10 +2,23 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { defaultsDeep, extend, omit } = _;
   const { get } = Tumblr.Fox;
+  const { currentUser } = Tumblr.Prima;
+  const { Tumblelog } = Tumblr.Prima.Models;
 
   const unescapeQuotes = string => {
     return string.replace(/\\"/g, '"');
   };
+
+  const stripScripts = s => {
+   var div = document.createElement('div');
+   div.innerHTML = s;
+   var scripts = div.getElementsByTagName('script');
+   var i = scripts.length;
+   while (i--) {
+     scripts[i].parentNode.removeChild(scripts[i]);
+   }
+   return div.innerHTML;
+ }
 
   const PostFormatter = function () { };
 
@@ -35,9 +48,6 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         });
       }
     },
-    renderPostsFromHtml(posts) {
-      posts.map(this.renderPostFromHtml);
-    },
     renderPost(postData, marshalAttributes) {
       const PostView = get('PostViewComponent');
       if (marshalAttributes) {
@@ -51,24 +61,23 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         });
       }
     },
-    renderPosts(items, marshalAttributes) {
-      if (!items) {
-        throw new Error('Attempted to render empty array of posts');
-      }
-      items.map(item => { // NOTE: posts do not come out in order due to different formatting times
-        if (Tumblr.postsView.collection.get(item.id)) {
+    renderPosts(posts) {
+      posts.map(post => { // NOTE: posts do not come out in order due to different formatting times
+        if (Tumblr.postsView.collection.get(post.id)) {
           return;
         }
-        if (marshalAttributes) {
-          this.renderPost(item, true);
-          return;
+        if (typeof post.html !== 'undefined') {
+          return this.renderPostFromHtml(post);
         }
-        this.renderPost(item);
+        if (post.hasOwnProperty('tumblelog-data')) {
+          return this.renderPost(post);
+        }
+        this.renderPost(post, true); // second argument signals to marshal the post
       });
     },
     parseTags(post) {
-      if (post.tags) {
-        return;
+      if (post.hasOwnProperty('tags')) {
+        return post;
       }
       const postHtml = $(post.$el);
       const tagElems = postHtml.find('.post_tags');
@@ -84,9 +93,11 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         post.tags = [];
       }
       post.model.set('tags', post.tags);
+      if (Tumblr.Fox.state.get('dashboard')) {
+        Tumblr.Events.trigger('fox:updateTags', post.model.get('tags'));
+      }
       return post;
     },
-    // NOTE: this results in duplicates
     renderDashboardPosts(posts) {
       posts.map(post => {
         const PostView = get('PostViewComponent');
@@ -188,7 +199,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         cname: '',
         customizable: false,
         dashboard_url: `blog/${postData.tumblelog}`,
-        description_sanitized: postData.blog.description.trim(),
+        description_sanitized: stripScripts(postData.blog.description),
         following: null,
         is_group: null,
         is_subscribed: null,
@@ -203,12 +214,10 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       postData = defaultsDeep({
         'accepts-answers': null,
         'can_reply': postData.can_reply,
-        'direct-video': null,
         'id': postData.id,
-        'is-animated': null,
-        'is-mine': null,
+        'is_mine': postData.blog.name === currentUser().name,
         'is_reblog': typeof postData.reblogged_from_tumblr_url === 'string',
-        'is-recommended': null,
+        'is-recommended': false,
         'is-tumblrfox-post': true,
         'liked': postData.liked,
         'log-index': '2',
@@ -262,6 +271,14 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
           uuid: postData.reblogged_root_uuid
         } : false
       }, postData);
+      if (postData.type === 'video') {
+        postData['direct-video'] = 1;
+      } else {
+        postData['direct-video'] = '';
+      }
+      if (postData.type === 'photo' && postData.post_html.includes('.gif')) {
+        postData['is-animated'] = 1;
+      }
       postData = omit(postData, ['blog', 'reblog', 'reblogged_from_can_message', 'reblogged_from_following', 'reblogged_from_followed', 'reblogged_from_id', 'reblogged_from_name', 'reblogged_from_title', 'reblogged_from_tumblr_url', 'reblogged_from_url', 'reblogged_from_uuid', 'reblogged_root_can_message', 'reblogged_root_following', 'reblogged_root_name', 'reblogged_root_title', 'reblogged_root_url', 'reblogged_root_uuid']);
       return postData;
     }

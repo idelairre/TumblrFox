@@ -1,6 +1,6 @@
 module.exports = (function popover(Tumblr, Backbone, _) {
   const { $ } = Backbone;
-  const { assign, template } = _;
+  const { assign, isArray, forIn, template } = _;
   const { get } = Tumblr.Fox;
   const { TemplateCache } = Tumblr.Fox.Utils;
   const TumblrView = get('TumblrView');
@@ -42,16 +42,18 @@ module.exports = (function popover(Tumblr, Backbone, _) {
    * Then in the body of the Backbone.View class set a method like the following:
    *   ...
    *   togglePopover() {
-   *     this.popover || (this.popover = new Popover({
-   *       pinnedTarget: this.$el,
-   *       pinnedSide: 'bottom',
-   *       class: 'popover--settings-popover',
-   *       selection: 'checkmark',
-   *       items: this.options.popoverOptions,
-   *       onSelect: this.onSelect
-   *     }),
-   *     this.popover.render(),
-   *     this.listenTo(this.popover, 'close', this.onPopoverClose));
+   *     if (!this.popover) {
+   *        this.popover = new Popover({
+   *        pinnedTarget: this.$el,
+   *        pinnedSide: 'bottom',
+   *        class: 'popover--settings-popover',
+   *        selection: 'checkmark',
+   *        items: this.options.popoverOptions,
+   *        onSelect: this.onSelect
+   *      });
+   *     this.popover.render();
+   *     this.listenTo(this.popover, 'close', this.onPopoverClose);
+   *     }
    *   },
    */
 
@@ -66,23 +68,36 @@ module.exports = (function popover(Tumblr, Backbone, _) {
       this.initialized = false;
     },
     render() {
-      this.$el = this.$el.html(this.template(this.options));
+      this.$el.html(this.template(this.options));
       this.$el.addClass(this.options.class);
       let hiddenItems = null;
-      this.options.items.map(item => {
-        if (item.hidden) {
-          hiddenItems =+ 1;
-          this.$(`#${item.name}`).hide();
-        }
-        item.listItems.map(li => {
-          if (li.hidden) {
-            this.$(`[data-js-menu-item="${li.data}"]`).hide();
-          }
+      if (isArray(this.options.items)) {
+        this.options.items.map(item => {
+          this._evalHidden(item, hiddenItems);
+          this._setHidden(item.listItems);
         });
-      });
+      } else {
+        forIn(this.options.items.listItems, item => {
+          this._evalHidden(item, hiddenItems);
+        });
+        this._setHidden(this.options.items.listItems);
+      }
       if (hiddenItems && (this.options.items.length - hiddenItems === 1)) {
         this.$('ul.popover_inner_list').css('border-bottom', '0px');
       }
+    },
+    _evalHidden(item, hiddenItems) {
+      if (item.hidden) {
+        hiddenItems += 1;
+        this.$(`#${item.name}`).hide();
+      }
+    },
+    _setHidden(listItems) {
+      listItems.map(li => {
+        if (li.hidden) {
+          this.$(`[data-js-menu-item="${li.data}"]`).hide();
+        }
+      });
     },
     toggleSelected(e) {
       const target = $(e.currentTarget);

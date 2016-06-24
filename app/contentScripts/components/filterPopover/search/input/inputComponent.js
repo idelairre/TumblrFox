@@ -1,28 +1,70 @@
 module.exports = (function (Tumblr, Backbone, _) {
-  const { assign, debounce, pick } = _;
+  const { assign, debounce, defaults, extend, pick, template } = _;
   const { get, Utils } = Tumblr.Fox;
-  const { ComponentFetcher } = Utils;
-  const SearchInput = get('SearchInput');
+  const { ComponentFetcher, TemplateCache } = Utils;
+  const { BlogSearchAutocompleteHelper, BlogSearchPopover, SearchInput, TagsPopover } = ComponentFetcher.getAll('BlogSearchAutocompleteHelper', 'BlogSearchPopover', 'SearchInput', 'TagsPopover');
+
+  const FoxTagsPopover = TagsPopover.extend({
+    selectTerm(el) {
+      Tumblr.Fox.Events.trigger('fox:search:changeTerm', {
+        term: el.attr('data-term')
+      });
+    }
+  });
+
+  const FoxTagsPopoverContainer = BlogSearchPopover.extend({
+    className: `${BlogSearchPopover.prototype.className} blog-search-autocomplete-popover`,
+    bindEvents() {
+      BlogSearchPopover.prototype.bindEvents.apply(this, arguments);
+      this.listenTo(this, 'itemSelected', this.subview.selectTerm)
+    },
+    Subview: FoxTagsPopover
+  });
+
+  const FoxBlogSearchAutocompleteHelper = BlogSearchAutocompleteHelper.extend({
+    showPopover() {
+      this.model.getItems().then(() => {
+        if (!this.popover && this.model.hasMatches()) {
+          this.popover = new FoxTagsPopoverContainer({
+            pinnedTarget: this.$el,
+            model: this.model,
+            shift: {
+              x: -this.getLeftOffset(),
+              y: 0
+            },
+            preventInteraction: true,
+            keycommands: true
+          }).render();
+          this.listenTo(this.popover, 'close', this.onPopoverClose);
+        }
+      });
+    }
+  });
 
   const InputComponent = SearchInput.extend({
+    dependencies: ['TagSearchAutocompleteModel'],
     initialize(options) {
-      assign(this, pick(options, ['conversations', 'model', 'searchOptions', 'state']));
+      const { TagSearchAutocompleteModel } = ComponentFetcher.getAll(this.dependencies);
+      assign(this, pick(options, ['conversations', 'model', 'state']));
       SearchInput.prototype.initialize.apply(this);
-      const { TagSearchAutocompleteModel, TextSearchAutocompleteModel } = ComponentFetcher.getAll('TagSearchAutocompleteModel', 'TextSearchAutocompleteModel');
       this.tagSearchAutocompleteModel = new TagSearchAutocompleteModel({
-        state: options.state
-      });
-      this.textSearchAutocompleteModel = new TextSearchAutocompleteModel({
-        state: options.state
+        state: this.state
       });
       this.conversations.fetchFavorites({
         data: {
          limit: 4
         }
       });
-      setTimeout(() => {
-        this.updateSearchSettings();
-      }, 0);
+    },
+    afterRender() {
+      this.blogSearchAutocompleteHelper = new FoxBlogSearchAutocompleteHelper({
+        model: this.blogSearchAutocompleteModel,
+        el: this.$$('.blog-search-input')
+      });
+      setTimeout(::this.updateSearchSettings, 0);
+      if (this.state.get('disabled')) {
+        this.setDisabled();
+      }
     },
     events: {
       'blur .blog-search-input': 'inputBlurHandler',
@@ -35,50 +77,48 @@ module.exports = (function (Tumblr, Backbone, _) {
       this.listenTo(this.model, 'change:term', ::this.onTermChange);
       this.listenTo(this.model, 'reset', ::this.onModelReset);
       this.listenTo(this.state, 'change:state', ::this.updateSearchSettings);
-      this.listenTo(Tumblr.Events, 'fox:changeUser', ::this.setUserPlaceholder);
-      this.listenTo(this.searchOptions, 'change:state', ::this.delegateInputEvents);
-    },
-    delegateInputEvents(state) { // NOTE: turns off tag popover while backend is being sorted out
-      switch (state) {
-        case 'tag':
-          this.blogSearchAutocompleteHelper.delegateEvents();
-          this.blogSearchAutocompleteHelper.bindEvents();
-          break;
-        case 'text':
-          this.blogSearchAutocompleteHelper.undelegateEvents();
-          this.blogSearchAutocompleteHelper.stopListening();
-          break;
-      }
+      this.listenTo(Tumblr.Fox.Events, 'fox:changeUser', ::this.setUserPlaceholder);
     },
     inputKeyDownHandler(e) {
       if (e.keyCode === 13) {
         this.model.set('term', this.getTerm());
         this.blogSearchAutocompleteModel.set('matchTerm', this.getTerm());
-        Tumblr.Events.trigger('peeprsearch:change:term', this.model.attributes);
+        Tumblr.Fox.Events.trigger('fox:search:changeTerm', this.model.toJSON()); // might not need this
       }
     },
     inputBlurHandler() {
       if (this.getTerm() === '') {
-        Tumblr.Events.trigger('peepr-search:search-reset');
+        Tumblr.Fox.Events.trigger('fox:search:reset');
+        return;
       }
       SearchInput.prototype.inputBlurHandler.apply(this, arguments);
+    },
+    setTerm(term) {
+      if (term.length > 0) {
+        SearchInput.prototype.setTerm.apply(this, arguments);
+      }
     },
     flushTags() {
       const blogname = this.model.get('blogname');
       this.blogSearchAutocompleteHelper.model.set('blogname', blogname);
       this.blogSearchAutocompleteHelper.model.fetch();
     },
+    setDisabled() {
+      this.undelegateEvents();
+      this.stopListening();
+    },
     setUserPlaceholder() {
       const placeholder = `Search ${this.model.get('blogname')}`;
       this.$el.find('input').attr('placeholder', placeholder);
     },
     updateSearchSettings() {
-      if (Tumblr.Fox.state.getState() === 'user') {
+      if (this.state.get('user')) {
         this.blogSearchAutocompleteHelper.model = this.blogSearchAutocompleteModel;
         this.setUserPlaceholder();
       } else {
-        this.blogSearchAutocompleteHelper.model = (Tumblr.Fox.searchOptions.get('tag') ? this.tagSearchAutocompleteModel : this.textSearchAutocompleteModel);
-        this.$el.find('input').attr('placeholder', `Search ${Tumblr.Fox.state.getState()}`);
+        this.blogSearchAutocompleteHelper.model = this.tagSearchAutocompleteModel;
+        this.$el.find('input').attr('placeholder', `Search ${this.state.getState()}`);
+
       }
     },
     fetchResults(query) {
@@ -102,8 +142,6 @@ module.exports = (function (Tumblr, Backbone, _) {
       this._debouncedSearch(this.$(e.target).val());
     }
   });
-
-  // extend(InputComponent, SearchInput);
 
   Tumblr.Fox.register('InputComponent', InputComponent);
 });

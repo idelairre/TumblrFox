@@ -1,9 +1,9 @@
 module.exports = (function followerItem(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
+  const { $, View, Model } = Backbone;
   const { assign, template } = _;
   const { Utils } = Tumblr.Fox;
-  
-  const Toggle = Backbone.View.extend({
+
+  const Toggle = View.extend({
     template: template(Utils.TemplateCache.get('toggleTemplate')),
     tagName: 'a',
     events: {
@@ -11,8 +11,9 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     },
     initialize(e) {
       this.options = assign({}, e);
-      this.state = new Backbone.Model({
-        toggled: false
+      this.state = new Model({
+        toggled: false,
+        disabled: false
       }),
       this.bindEvents();
     },
@@ -32,8 +33,12 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     setState(toggled) {
       if (this.state.get('toggled')) {
         this.$button.text('-');
-      } else {
+      } else if (!this.state.get('toggled')) {
         this.$button.text('+');
+      } else if (this.state.get('disabled')) {
+        this.state.set('toggled', false);
+        this.undelegateEvents();
+        this.stopListening();
       }
     }
   });

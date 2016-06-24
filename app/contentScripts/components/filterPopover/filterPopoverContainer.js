@@ -13,7 +13,7 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
       assign(e, {
         pinnedTarget: $('#filter_button'),
         isFixedPosition: true,
-        autoTeardown: false,
+        autoTeardown: false, // NOTE: do not touch these
         teardownOnEscape: false
       });
       return new FilterPopoverComponent(e);
@@ -24,6 +24,7 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
     render() {
       this.view.render();
       this.trigger('append');
+      return this;
     }
   });
 

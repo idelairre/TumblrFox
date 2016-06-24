@@ -1,7 +1,7 @@
 import { Deferred } from 'jquery';
 import { keyBy } from 'lodash';
 import db from '../lib/db';
-import Eventor from '../lib/eventor';
+import EventEmitter from 'eventemitter3';
 import Fuse from '../lib/fuse';
 import constants from '../constants';
 import 'babel-polyfill';
@@ -10,7 +10,7 @@ import 'babel-polyfill';
 
 const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
 
-class FuseSearch extends Eventor {
+class FuseSearch extends EventEmitter {
   options = {
     caseSensitive: false,
     include: ['score', 'matches'],
@@ -27,30 +27,53 @@ class FuseSearch extends Eventor {
   constructor() {
     super();
     this.initialized = false;
-    constants.addListener('ready', () => {
-      if (constants.get('fullTextSearch')) {
-        db.posts.toCollection().toArray().then(posts => {
-          this.posts = keyBy(posts, 'id');
-          this.fuse = new Fuse(posts, this.options);
-          this.initialized = true;
-          this.trigger('ready');
-          console.log('[FUSE]', this.fuse);
-        });
-      }
+    this.posts = [];
+    this.fuse = {};
+    this.on('ready', () => {
+      this.initialized = true;
     });
   }
-  
+
+  setCollection(posts) {
+    this.posts = keyBy(posts, 'id');
+    this.fuse = new Fuse(posts, this.options);
+    this.emit('ready');
+  }
+
+  setMatches(matches) {
+    this.$$matches = matches;
+  }
+
+  getMatches() {
+    return this.$$matches;
+  }
+
+  fetchMatches(query) {
+    return this.$$matches.slice(query.next_offset, query.next_offset + query.limit);
+  }
+
+  _search(query) {
+    const results = this.fuse.search(query.term);
+    console.log('[RESULTS]', results.length);
+    for (let i = 0; results.length > i; i += 1) {
+      const result = results[i];
+      this.$$matches.push(this.posts[result.item]);
+    }
+    return this.$$matches;
+  }
+
   async search(query) {
     const deferred = Deferred();
     try {
-      const posts = [];
-      const results = this.fuse.search(query.term);
-      console.log('[RESULTS]', results.length);
-      for (let i = 0; results.length > i; i += 1) {
-        const result = results[i];
-        posts.push(this.posts[result.item]);
+      this.$$matches = [];
+      if (this.initialized) {
+        const posts = this._search(query);
+        return deferred.resolve(posts);
       }
-      deferred.resolve(posts);
+      this.on('ready', () => {
+        const posts = this._search(query);
+        deferred.resolve(posts);
+      });
     } catch (e) {
       console.error(e);
       deferred.reject(e);

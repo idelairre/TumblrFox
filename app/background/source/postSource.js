@@ -7,25 +7,19 @@ import tokens from '../tokens.json';
 import 'babel-polyfill';
 
 export default class PostSource {
-  static async send(request, sender, sendResponse) {
-    try {
-      const response = await PostSource[request.type](request.payload);
-      sendResponse(response);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
   static async fetchDashboardPosts(request) {
     const slug = {
       offset: request.next_offset || 0,
-      limit: request.limit
+      limit: request.post_role === 'ORIGINAL' ? 15 : 10,
+      url: 'https://api.tumblr.com/v2/user/dashboard'
     };
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
     }
     try {
-      return oauthRequest(slug);
+       return oauthRequest(slug).then(response => {
+         return response.posts;
+       });
     } catch (e) {
       console.error(e);
     }
@@ -40,7 +34,6 @@ export default class PostSource {
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
     }
-    console.log(slug);
     return PostSource._blogRequest(slug);
   }
 
@@ -60,17 +53,14 @@ export default class PostSource {
         deferred.resolve(data.response.posts);
       },
       error: error => {
-        deferred.resolve([]);
-        console.error(slug.blogname);
+        deferred.reject(error);
+        console.error(error, slug.blogname);
       }
     });
     return deferred.promise();
   }
 
-  // 1. fetch most recently updated users
-  // 2. fetch 1 post by tag from the first 500 or so users
-  // 3. vomit posts
-
+  // NOT USED
   static async fetchDashboardPostsByTag(query) {
     const deferred = Deferred();
     try {

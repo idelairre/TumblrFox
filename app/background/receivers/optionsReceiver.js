@@ -7,7 +7,7 @@ import Following from '../stores/followingStore';
 const sendConstants = postMessage => {
   postMessage({
     type: 'replyConstants',
-    payload: constants
+    payload: constants.toJSON()
   });
 };
 

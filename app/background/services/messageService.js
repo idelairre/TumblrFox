@@ -1,20 +1,20 @@
 let tumblr = {};
 
+const initializeTab = response => {
+  const tab = response[0];
+  if (tab) {
+    tumblr = tab.id;
+  }
+}
+
 chrome.tabs.query({
   url: 'https://www.tumblr.com/*',
-}, response => {
-  const tab = response[0];
-  tumblr = tab.id;
-});
+}, initializeTab);
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  console.log('[TAB ID]', tabId);
   chrome.tabs.query({
     url: 'https://www.tumblr.com/*',
-  }, response => {
-    const tab = response[0];
-    tumblr = tab.id;
-  });
+  }, initializeTab);
 });
 
 const sendMessage = payload => {

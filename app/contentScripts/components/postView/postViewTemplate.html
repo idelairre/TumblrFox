@@ -1,7 +1,10 @@
 <script id="postViewTemplate" type="text/template">
-  <div id="post_<%- model.id %>" class="post post_full with_permalink pt reblog_ui_refresh is_<%- model.get('type') %>"
+  <li class="post_container" data-pageable="post_<%- this.model.get('id') %>">
+  <% var popoverData = ['avatar_url', 'dashboard_url', 'url', 'name', 'cname', 'description', 'description_sanitized', 'title', 'likes', 'share_following', 'is_private', 'is_group', 'customizable', 'following', 'premium_partner', 'can_receive_messages', 'can_send_messages', 'uuid', 'asks', 'anonymous_asks', 'is_subscribed', 'can_subscribe', 'global_theme_params'] %>
+  <div id="post_<%- model.id %>" class="post post_full with_permalink pt reblog_ui_refresh is_<%- model.get('type') %> <%- model.get('is_mine') ? 'is_mine' : 'not_mine' %> <%- model.get('is-direct-video') ? model.get('is-direct-video') : null %>"
     data-id="<%- model.id %>"
     data-type="<%- model.get('type') %>"
+    data-is_reblog="<%- model.get('is_reblog') %>"
     data-reblog_source="<%- model.get('reblog_source') %>"
     data-reblog_key="<%- model.get('reblog_key') %>"
     data-reblog-key="<%- model.get('reblog-key') %>"
@@ -27,7 +30,7 @@
           data-tumblelog-name="<%- model.get('tumblelog') %>"
           data-use-channel-avatar="1"
           data-peepr='{"tumblelog": "<%- model.get('tumblelog') %>" }'
-          data-tumblelog-popover="<%- JSON.stringify(model.get('tumblelog-data')) %>"></a>
+          data-tumblelog-popover="<%- JSON.stringify(_.pick(model.get('tumblelog-data'), popoverData)) %>"></a>
       </div>
     </div>
     <div class="post_wrapper">
@@ -48,8 +51,8 @@
         </div>
       </div>
       <div class="post_content clearfix">
-        <div class="post_content_inner">
-          <%= model.get('post_html') %>
+        <div class="post_content_inner clearfix">
+          <%= model.get('post_html').toString() %>
         </div>
       </div>
     <% if (typeof model.get('source_url') !== 'undefined' && model.get('source_title')) { %>
@@ -100,4 +103,5 @@
       <a class="post_permalink" href="<%- model.get('post_url') %>" target="_blank" title="View post -  <%- model.get('posted_on_tooltip') %>" rel="noopener"></a>
     </div>
   </div>
+</li>
 </script>

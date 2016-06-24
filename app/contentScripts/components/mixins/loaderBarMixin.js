@@ -12,7 +12,7 @@ module.exports = (function loaderMixin(Tumblr, Backbone, _) {
            type: 'bar',
            classModifiers: 'top',
            loading: true
-       });
+        });
       }
       this.loader.set('loading', loading);
     }

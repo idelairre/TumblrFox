@@ -25,31 +25,40 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
     defaults: {
       preventInteraction: true
     },
+    dependencies: ['SearchModel'],
     mixins: [PopoverMixin],
     template: $(filterPopoverTemplate).html(),
     subviews: {
       filterMenu: {
-        constructor: get('FilterMenuComponent')
+        constructor: get('FilterMenuComponent'),
+        options: opts => {
+          return {
+            model: opts.model,
+            state: opts.state,
+            keycommands: true
+          }
+        }
       },
       searchFilter: {
         constructor: get('SearchComponent'),
         options: opts => {
           return {
             conversations: opts.conversations,
-            state: opts.state,
-            searchOptions: opts.searchOptions,
-            blogname: currentUser().id,
-            blog: Tumblelog.collection.models[0]
+            model: opts.model,
+            state: opts.state
           };
         }
       }
     },
-    initialize(e) {
-      this.options = assign({}, this.defaults, omit(e, ['state', 'searchOptions', 'options']));
+    initialize(options) {
+      const { SearchModel } = ComponentFetcher.getAll(this.dependencies);
+      assign(this, pick(options, ['state', 'options']));
+      this.options = assign({}, this.defaults, omit(options, ['state', 'options']));
       this.conversations = new ConversationsCollection();
-      assign(this, pick(e, ['state', 'searchOptions', 'options']));
-      this.listenTo(Tumblr.Events, 'fox:setSearchState', ::this.state.setState);
-      this.listenTo(Tumblr.Events, 'fox:apiFetch:initial', ::this.hide);
+      this.model = new SearchModel({
+        blogname: Tumblr.Prima.currentUser().id,
+        state: this.state
+      });
     },
     render() {
       this.$el.html(this.template);
@@ -82,7 +91,7 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
     hide() {
       Tumblr.Events.trigger('popover:close', this);
       this.unbindClickOutside();
-      this.searchFilter.unbindEvents();
+      // this.searchFilter.unbindEvents(); NOTE: this needs to be looked at
       this.$pinned.removeClass('active');
       this.$filterPopoverMenu.removeClass('popover--active');
       transition(this.$el, ::this.afterHide);

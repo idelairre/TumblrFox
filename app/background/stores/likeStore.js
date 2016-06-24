@@ -15,11 +15,6 @@ import 'babel-polyfill';
 const LIMIT = 4000;
 
 export default class Likes {
-  static async send(request, sender, sendResponse) {
-    const response = await Likes[request.type](request.payload);
-    sendResponse(response);
-  }
-
   static cache(sendResponse) {
     const items = {
       cachedPostsCount: constants.get('cachedPostsCount'),
@@ -35,7 +30,9 @@ export default class Likes {
         if (posts.length === 0) {
           sendResponse({
             type: 'done',
-            payload: { message: Source.MAX_ITEMS_MESSAGE }
+            payload: {
+              message: Source.MAX_ITEMS_MESSAGE
+            }
           });
           next(null, items);
         } else {
@@ -82,13 +79,6 @@ export default class Likes {
   }
 
   static _applyFilters(query, matches) {
-    if (query.blogname) {
-      matches = matches.filter(post => {
-        if (post.blog_name === query.blogname) {
-          return post;
-        }
-      });
-    }
     if (query.post_type !== 'any') {
       matches = Likes._filterByType(query, matches);
     }
@@ -104,31 +94,48 @@ export default class Likes {
     return matches;
   }
 
-  static async searchLikesByTerm(query, port) {
-    const deferred = Deferred();
-    if (query.term.length === 0) {
-      deferred.reject('Term cannot be empty');
-    }
-    query = Likes._marshalQuery(query);
-    let posts = [];
+  static setFilter(query) {
+    let matches = FuseSearch.getMatches();
+    matches = Likes._applyFilters(query, matches);
+    FuseSearch.setMatches(matches);
+  }
+
+  static async _fuseSearch(query) {
     try {
-      if (FuseSearch.initialized) {
-        let matches = await FuseSearch.search(query);
-        matches = Likes._applyFilters(query, matches);
-        if (matches.length > 1000) {
-          matches = matches.slice(0, 1000);
-        }
-        deferred.resolve(matches);
-      } else {
-        FuseSearch.addListener('ready', async () => {
-          let matches = await FuseSearch.search(query);
-          matches = Likes._applyFilters(query, matches);
-          if (matches.length > 1000) {
-            matches = matches.slice(0, 1000);
-          }
-          deferred.resolve(matches);
-        });
+    if (query.post_type.blogname && query.post_type.blogname !== '' && query.post_type !== 'any') {
+      const filterByBlog = post => {
+        return post.blog_name.toLowerCase() === query.blogname.toLowerCase();
       }
+      const posts = await db.posts.where('type').equals(query.post_type).and(filterByBlog).toArray();
+      FuseSearch.setCollection(posts);
+    } else if (query.blogname && query.blogname !== '' && query.post_type === 'any') {
+      const posts = await db.posts.where('blog_name').anyOfIgnoreCase(query.blogname).toArray();
+      FuseSearch.setCollection(posts);
+    } else if (query.post_type !== 'any') {
+        const posts = await db.posts.where('type').equals(query.post_type).limit(LIMIT).reverse().toArray();
+        FuseSearch.setCollection(posts);
+      } else {
+        const posts = await db.posts.toCollection().limit(LIMIT).reverse().toArray();
+        FuseSearch.setCollection(posts);
+      }
+      let matches = await FuseSearch.search(query);
+      matches = Likes._applyFilters(query, matches);
+      FuseSearch.setMatches(matches);
+      return matches.slice(0, query.limit);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  static async searchLikesByTerm(query) {
+    const deferred = Deferred();
+    try {
+      query = Likes._marshalQuery(query);
+      if (query.next_offset !== 0) {
+        return deferred.resolve(FuseSearch.fetchMatches(query));
+      }
+      const matches = await Likes._fuseSearch(query);
+      deferred.resolve(matches);
     } catch (e) {
       deferred.reject(e);
     }
@@ -158,14 +165,14 @@ export default class Likes {
     return posts.sort((a, b) => {
       return a.note_count > b.note_count ? 1 : (a.note_count < b.note_count ? -1 : 0);
     }).reverse();
-    return posts;
   }
 
   static _filterNSFW(query, posts) {
     return posts.filter(post => {
-      if (!post.hasOwnProperty('tumblelog-content-rating')) {
-        return post;
+      if (post.hasOwnProperty('tumblelog-content-rating') && post['tumblelog-content-rating'] === 'nsfw' || post['tumblelog-content-rating'] === 'adult') {
+        return;
       }
+      return post;
     });
   }
 
@@ -188,7 +195,6 @@ export default class Likes {
     } else {
       query.post_type = type;
     }
-    console.log('[SEARCH LIKES]', query);
     return query;
   }
 
@@ -197,11 +203,22 @@ export default class Likes {
     const deferred = Deferred();
     try {
       let matches = [];
-      // Note: wrong
-      if (query.post_type !== 'any' && query.term.length === 0) {
+      if (query.post_type.blogname && query.post_type.blogname !== '' && query.post_type !== 'any') {
+        const filterByBlog = post => {
+          return post.blog_name.toLowerCase() === query.blogname.toLowerCase();
+        }
+        matches = await db.posts.where('type').equals(query.post_type).and(filterByBlog).toArray();
+      } else if (query.blogname && query.blogname !== '' && query.post_type === 'any') {
+        matches = await db.posts.where('blog_name').anyOfIgnoreCase(query.blogname).toArray();
+      } else if (query.post_type !== 'any' && query.term.length === 0) {
         matches = await db.posts.where('type').equals(query.post_type).limit(LIMIT).reverse().toArray(); // return all of a certain type
       } else if (query.post_type !== 'any' && query.term.length > 0) {
-        matches = await db.posts.where('tags').anyOfIgnoreCase(query.term).or('type').equals(query.post_type).limit(LIMIT).reverse().toArray();
+        const filterType = item => {
+          if (item.type) {
+            return item.type.toLowerCase() === query.post_type.toLowerCase();
+          }
+        }
+        matches = await db.posts.where('tags').anyOfIgnoreCase(query.term).limit(LIMIT).filter(filterType).reverse().toArray();
       } else if (query.post_type === 'any' && query.term.length === 0) {
         matches = await db.posts.toCollection().limit(LIMIT).reverse().toArray(); // dangerous, why not just query from the likes page
       } else if (query.post_type === 'any' && query.term.length > 0) {
@@ -219,11 +236,8 @@ export default class Likes {
       if (query.post_role === 'ORIGINAL') {
         matches = Likes._filterOriginal(query, matches);
       }
-      if (query.offset && query.limit) {
-        const { offset, limit } = query;
-        matches = matches.slice(offset, offset + limit);
-      }
-      console.log(matches);
+      const { next_offset, limit } = query;
+      matches = matches.slice(next_offset, next_offset + limit);
       deferred.resolve(matches);
     } catch (e) {
       deferred.reject(e);
@@ -231,8 +245,14 @@ export default class Likes {
     return deferred.promise();
   }
 
-  static async update(request) {
-    console.log(request);
+  static async syncLike(request) {
+    const { postId, html } = request;
+    const postData = $(html).find('[data-json]').data('json');
+    console.log(postData);
+    // await Likes.put()
+  }
+
+  static async updateLikes(request) {
     const { type, postId } = request.payload;
     if (type === 'like') {
       const posts = await Source.fetchMostRecent();

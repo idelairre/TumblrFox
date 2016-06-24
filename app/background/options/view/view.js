@@ -27,9 +27,8 @@ const View = Backbone.View.extend({
     this._setup();
   },
   _setup() {
-    // const e = extend({}, result(this.constructor.__super__, 'defaults'), result(this, 'defaults'));
     let render = this.render;
-    this.render = bind(() => {
+    this.render = () => {
       this._beforeRender.apply(this, arguments);
       this.beforeRender.apply(this, arguments);
       render = render.apply(this, arguments);
@@ -37,12 +36,17 @@ const View = Backbone.View.extend({
       this._afterRender.apply(this, arguments);
       this.renderProps.apply(this);
       return render;
-    });
+    };
     this.renderProps = this.renderProps.bind(this, this.props.attributes);
     this._bindListeners();
   },
   _bindListeners() {
     this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
+    this.listenTo(this.props, 'change', () => {
+      if (this.initialized) {
+        Backbone.Events.trigger('CHANGE_PROPS', this.props.toJSON());
+      }
+    });
   },
   initialize: noop,
   afterRender: noop,

@@ -6,7 +6,7 @@
 /* eslint no-undef: "error" */
 
 import $ from 'jquery';
-import Backbone from 'backbone';
+import Backbone, { Model } from 'backbone';
 import { camelCase, capitalize } from 'lodash';
 import Authentication from './authentication/authentication';
 import Buttons from './buttons/buttons';
@@ -20,21 +20,6 @@ import bindListeners from './events';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
-
-// (() => {
-//   const log = console.log;
-//   console.log = function () {
-//     const message = Array.prototype.slice.call(arguments);
-//     log.apply(this, Array.prototype.slice.call(arguments));
-//     const port = chrome.runtime.connect({
-//       name: 'options'
-//     });
-//     port.postMessage({
-//       type: 'log',
-//       payload: message.join(' ')
-//     })
-//   }
-// })();
 
 const Options = Backbone.View.extend({
   defaults: {
@@ -65,7 +50,7 @@ const Options = Backbone.View.extend({
   },
   initialize() {
     this.initialized = false;
-    this.props = new Backbone.Model();
+    this.props = new Model();
     this.bindEvents();
     this.initializePort();
   },
@@ -75,9 +60,10 @@ const Options = Backbone.View.extend({
     });
     if (this.port) {
       this.port.onMessage.addListener(bindListeners);
-      this.postMessage({ type: 'fetchConstants' });
+      this.postMessage({
+        type: 'fetchConstants'
+      });
     }
-    console.log('modal initialized');
   },
   renderSubviews() {
     this._subviews = Array.prototype.slice.call(this.$('[data-subview]'));

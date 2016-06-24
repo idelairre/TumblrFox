@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import { isNumber, mapKeys, snakeCase, toUpper } from 'lodash';
 import Backbone from 'backbone';
-import View from '../view/view';
-import Tipped from '../../lib/tipped';
+import View from '../../view/view';
+import Tipped from '../../../lib/tipped';
 import cacheTemplate from './cache.html';
 import cacheTooltip from './tooltips/cacheTooltip.html';
 
@@ -37,7 +37,6 @@ const Cache = View.extend({
   bindEvents() {
     this.listenTo(this.model, 'change', () => {
       this.props.set('fetchLikesUntil', this.model.attributes);
-      Backbone.Events.trigger('CHANGE_PROPS', this.props.attributes);
     });
   },
   render() {
