@@ -42,7 +42,7 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
       }
     },
     bindEvents() {
-      if (!this.options.keycommands) {
+      if (!this.options.keycommands) { // TODO: look at this
         // this.disableKeys();
         // Tumblr.Events.trigger('keycommands:suspend', true);
       }
@@ -55,6 +55,9 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
     },
     selectLi(e) {
       e.preventDefault();
+      if (!this.$active) {
+        return;
+      }
       const type = this.$active.find('[data-js-menu-item-link]').data('js-menu-item-link');
       this.resetChecks();
       this.$(`i[data-check="${type}"]`).show();

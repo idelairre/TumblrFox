@@ -6,8 +6,15 @@ import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
 
+chrome.runtime.onInstalled.addListener(details => {
+  console.log('previousVersion', details.previousVersion);
+  // constants.set('version', details.previousVersion);
+});
+
 const setConstants = payload => {
-  constants.set('formKey', payload.formKey);
+  if (typeof payload !== 'undefined') {
+    constants.set(payload);
+  }
 };
 
 const sendConstants = () => {
@@ -15,12 +22,13 @@ const sendConstants = () => {
 };
 
 const chromeReciever = receiverHandler({
-  initialize: setConstants,
+  initializeConstants: setConstants,
   fetchConstants: sendConstants,
   fetchDashboardPosts: PostSource.fetchDashboardPosts,
   fetchBlogPosts: PostSource.fetchBlogPosts,
   fetchDashboardPostsByTag: PostSource.fetchDashboardPostsByTag,
   fetchLikedTags: Tags.fetchLikedTags,
+  fetchNsfwBlogs: Following.fetchNsfwBlogs,
   fetchTagsByUser: Tags.fetchTagsByUser,
   setFilter: Likes.setFilter,
   searchLikesByTag: Likes.searchLikesByTag,

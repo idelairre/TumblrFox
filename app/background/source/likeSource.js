@@ -56,12 +56,14 @@ class LikeSource extends Source {
   async fetch() {
     const deferred = Deferred();
     let url = 'https://www.tumblr.com/likes';
+
     if (this.options.page) {
       url += `/page/${this.options.page}`;
     }
     if (this.options.timestamp) {
       url += `/${this.options.timestamp}`;
     }
+
     ajax({
       type: 'GET',
       url,
@@ -124,6 +126,7 @@ class LikeSource extends Source {
   processPost(postHtml, timestamp) {
     const post = $(postHtml).data('json');
     post.id = parseInt(post.id, 10);
+    post['is-tumblrfox-post'] = true;
     post.html = $(postHtml).prop('outerHTML');
     if (timestamp) {
       post.liked_timestamp = parseInt(timestamp, 10);
@@ -135,7 +138,7 @@ class LikeSource extends Source {
   }
 
   processTags(post) {
-    const tagElems = $(post).find('.post_tags');
+    const tagElems = $(post).find('div.post_tags');
     if (tagElems && tagElems.length > 0) {
       const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#').filter(tag => {
         if (tag !== '') {
@@ -143,6 +146,8 @@ class LikeSource extends Source {
         }
       });
       return rawTags;
+    } else {
+      return [];
     }
   }
 

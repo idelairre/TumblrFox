@@ -1,5 +1,5 @@
 <script id="filterMenuTemplate" type="text/template">
-  <% var routes = ['dashboard', 'likes', 'blog'] %>
+  <% var routes = ['dashboard', 'likes', Tumblr.Prima.currentUser().id] %>
   <% var route = _.last(window.location.href.split('/')) %>
   <% var awayFromPosts = !routes.includes(route) %>
   <li class="popover_subsection">

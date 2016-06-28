@@ -32,12 +32,11 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
       }
     },
     show() {
-      console.log(arguments);
       if (!this.get('visible')) {
-        if (this.searchModel.get('term') && this.searchModel.get('term').length > 0) {
+        if (this.searchModel.get('term').length > 0) {
           this.$el.show();
         } else {
-          this.$el.find('.results_end_body').text('That\'s it!');
+          this.$el.find('.results_end_body').text('That\'s it! Try another search?');
           this.$el.show();
         }
         this.set('visible', true);
@@ -46,6 +45,8 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
     renderTerm() {
       const term = this.searchModel.get('term');
       this.$('span.search_query_highlight').text(term);
+      this.$el.hide();
+      this.set('visible', false);
     },
     render() {
       this.$el.html(this.template({

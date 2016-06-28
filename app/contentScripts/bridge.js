@@ -4,35 +4,27 @@
 /* global Event:true */
 /* eslint no-undef: "error" */
 
-import { camelCase } from 'lodash';
+import { camelCase, capitalize, first, last, snakeCase, replace } from 'lodash';
+
+const log = console.log.bind(console, '[BRIDGE]');
 
 class Bridge {
   initialize() {
-    this.bindOutgoing([
-      'chrome:fetch:blogPosts',
-      'chrome:fetch:dashboardPosts',
-      'chrome:fetch:dashboardPostsByTag',
-      'chrome:fetch:likes',
-      'chrome:setFilter',
-      'chrome:search:likesByTag',
-      'chrome:search:likesByTerm',
-      'chrome:fetch:constants',
-      'chrome:fetch:following',
-      'chrome:fetch:keys',
-      'chrome:fetch:tagsByUser',
-      'chrome:fetch:likedTags',
-      'chrome:refresh:following',
-      'chrome:update:following',
-      'chrome:update:likes',
-      'chrome:sync:like',
-      'chrome:initialize'
-    ]);
+    const fetchConstants = {
+      type: 'fetchConstants'
+    };
     chrome.runtime.onMessage.addListener(this.bindRecievers);
-    console.log('[BRIDGE]: initialized');
+    chrome.runtime.sendMessage(fetchConstants, ::this.bindOutgoing);
+  }
+
+  debug() { // NOTE: there is a slight delay here, not sure why
+    if (this.logging) {
+      log.apply(log, Array.prototype.slice.call(arguments));
+    }
   }
 
   listenTo(eventName, callback) {
-    console.log(`[BRIDGE] listening: "${eventName}"`);
+    this.debug(`listening: "${eventName}"`);
     const eventSlug = camelCase(eventName.split(':').splice(1).join(' '));
     window.addEventListener(eventName, e => {
       const req = {};
@@ -50,10 +42,12 @@ class Bridge {
     let req = {};
     if (typeof payload === 'undefined') {
       req = new Event(eventName);
+      this.debug(`trigger: "${eventName}"`);
     } else {
       req = new CustomEvent(eventName, {
         detail: payload
       });
+      this.debug(`trigger: "${eventName}"`, payload);
     }
     window.dispatchEvent(req);
   }
@@ -66,12 +60,17 @@ class Bridge {
     }
   }
 
-  bindOutgoing(handlers) {
+  bindOutgoing(constants) {
+    this.logging = constants.debug;
+    const handlers = constants.eventManifest;
     handlers.map(eventName => {
+      const splitName = snakeCase(eventName).split('_');
+      const action = first(splitName);
+      const object = camelCase(replace(eventName, action, ''));
+      eventName = `chrome:${action}:${object}`;
       this.listenTo(eventName, response => {
-        console.log(`[BRIDGE] trigger: "${eventName}"`);
         if (response) {
-          console.log('[BRIDGE] response:', response);
+          this.debug('response:', response);
           let responseEvent = eventName.split(':');
           responseEvent[1] = 'response';
           responseEvent = responseEvent.join(':');
@@ -79,6 +78,8 @@ class Bridge {
         }
       });
     });
+    this.trigger('bridge:initialized');
+    this.debug('initialized');
   }
 }
 

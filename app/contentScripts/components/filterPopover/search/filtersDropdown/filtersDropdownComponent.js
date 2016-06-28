@@ -11,6 +11,7 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
       'change .date-filter-input': 'setDate',
       'click .toggle': 'onToggleFilterClick',
       'click .option-radio': 'onCheckboxClick',
+      'click [data-filter]': 'onFilterClick',
       'change [type=checkbox]': 'onCheckboxChange'
     },
     initialize(options) {
@@ -25,14 +26,12 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
     },
     bindEvents() {
       SearchFilters.prototype.bindEvents.apply(this);
-      this.listenTo(this.model, 'change', () => {
-        Tumblr.Fox.Events.trigger('fox:setFilter', {
-          query: this.model.toJSON()
-        });
-      });
     },
     setDate(e) {
       this.model.set('before', Date.parse(e.currentTarget.value));
+    },
+    onFilterClick() {
+      SearchFilters.prototype.onFilterClick.apply(this, arguments);
     }
   });
 

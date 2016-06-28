@@ -1,4 +1,4 @@
-import { kebabCase } from 'lodash';
+import { forIn, kebabCase } from 'lodash';
 import async from 'async';
 import db from '../lib/db';
 import Source from '../source/followingSource';
@@ -20,17 +20,26 @@ export default class Following {
     return response;
   }
 
-  // TODO: right now this only works for liked posts from users that are not followed
-  static async update(payload) {
+  static async fetchNsfwBlogs() {
+    let following = await db.following.filter(follower => {
+      if (follower.hasOwnProperty('content_rating')) {
+        return follower;
+      }
+    }).toArray();
+    const response = {};
+    following.forEach(follower => {
+      response[follower.name] = follower.content_rating;
+    });
+    return response;
+  }
+
+  static async update(postData) {
     try {
-      const { following } = payload;
-      await Following.put(following);
-      const posts = await db.posts.where('blog_name').equalsIgnoreCase(following.name).toArray();
-      posts.map(post => {
-        post['tumblelog-data'].following = true;
-        db.posts.put(post);
-        return post;
-      });
+      const follower = await db.following.get(postData.tumblelog);
+      if (follower && !follower.content_rating) {
+        follower.content_rating = postData['tumblelog-content-rating'];
+        db.following.put(follower);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -94,7 +103,7 @@ export default class Following {
     });
   }
 
-  static async put(follower) {
+  static async put(follower) { // TODO: this needs to be made into an actual put so it doesn't increment unnecessarily
     try {
       const count = await db.following.toCollection().count();
       follower.order = count + 1;

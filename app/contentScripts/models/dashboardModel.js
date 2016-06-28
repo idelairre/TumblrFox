@@ -1,6 +1,6 @@
 module.exports = (function dashboardModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { assign, pick, take, union } = _;
+  const { assign, pick, take, union, last, first, uniq } = _;
   const { Utils } = Tumblr.Fox;
   const { DashboardSource } = Tumblr.Fox.Source;
 
@@ -20,6 +20,9 @@ module.exports = (function dashboardModel(Tumblr, Backbone, _) {
         post.model.set('html', $(post.$el).prop('outerHTML'));
       });
     },
+    dashboardFetch() {
+      return DashboardSource.clientFetch();
+    },
     filteredFetch() {
       return DashboardSource.fetch(query).then(response => {
         return this._applyFilter(query, response);
@@ -28,17 +31,23 @@ module.exports = (function dashboardModel(Tumblr, Backbone, _) {
     fetch(query) {
       let posts = [];
       const deferred = $.Deferred();
+
       const filteredFetch = () => {
+        if (query.post_type === 'ANY' && query.term.length === 0) {
+          return DashboardSource.clientFetch().then(response => {
+            return this._applyFilters(query, response);
+          });
+        }
         return DashboardSource.fetch(query).then(response => {
-          return this._applyFilter(query, response);
+          return this._applyFilters(query, response);
         });
       }
+
       const recursiveFetch = posts => {
         return filteredFetch().then(response => {
           posts = take(posts.concat(response), query.limit);
-          // console.log('[DASHBOARD]: fetched ', posts.length, 'need:', query.limit - posts.length);
           if (posts.length < query.limit) {
-            query.next_offset += 15;
+            query.next_offset += 15; // default was 15
             return recursiveFetch(posts);
           } else {
             deferred.resolve({ posts, query });
@@ -53,13 +62,23 @@ module.exports = (function dashboardModel(Tumblr, Backbone, _) {
     search(query) {
       return DashboardSource.search(query);
     },
-    _applyFilter(query, posts) {
-      return posts.filter(post => {
-        if (query.post_role === 'ORIGINAL' && post.hasOwnProperty('reblogged_from_name')) {
-          return;
-        }
-        return post;
-      });
+    _applyFilters(query, posts) {
+      if (query.post_role === 'ORIGINAL') {
+        posts = posts.filter(post => {
+          if (post.hasOwnProperty('is_reblog') && post['is_reblog'] || post.hasOwnProperty('reblogged_from_name')) {
+            return;
+          }
+          return post;
+        });
+      }
+      if (query.filter_nsfw) {
+        posts = posts.filter(post => {
+          if (!post.hasOwnProperty('tumblelog-content-rating')) {
+            return post;
+          }
+        });
+      }
+      return posts;
     }
   });
 

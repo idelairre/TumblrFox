@@ -1,4 +1,5 @@
-import { isFunction } from 'lodash';
+import { isFunction, toArray } from 'lodash';
+import constants from '../constants';
 
 /**
  * takes a list of handlers as object and play role of middleware when events occured.
@@ -7,7 +8,8 @@ import { isFunction } from 'lodash';
  */
 
 const receiverHandler = handlers => {
-	console.log('[HANDLERS]: ', handlers);
+	console.log('[HANDLERS]: ', Object.keys(handlers));
+	constants.set('eventManifest', Object.keys(handlers));
 	return (request, sender, sendResponse) => {
 		console.log('[REQUEST]: ', request.type);
 		if (handlers.hasOwnProperty(request.type)) {

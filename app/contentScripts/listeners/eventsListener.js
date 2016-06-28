@@ -1,8 +1,7 @@
 module.exports = (function eventsListener(Tumblr, Backbone, _) {
   const { assign, extend, pick } = _;
 
-  const EventsListener = function(options) {
-    assign(this, pick(options, ['events', 'options']));
+  const EventsListener = function() {
     this.ignore = [
       'fox:updateTags',
       'LSLog:impression',
@@ -29,28 +28,26 @@ module.exports = (function eventsListener(Tumblr, Backbone, _) {
       'VideoPlayer:cacheUnload',
       'DOMEventor:flatscroll'
     ];
-    this.getDependencies();
+    this.listenTo(Tumblr.Fox, 'fox:constants:initialized', ::this.initialize);
   };
 
-  extend(EventsListener.prototype, Tumblr.Events, Backbone.Events);
-
-  extend(EventsListener.prototype, {
-    getDependencies() {
-      this.listenTo(Tumblr.Fox.Events, 'fox:constants:initialized', ::this.initialize);
-    },
+  extend(EventsListener.prototype, Backbone.Events, {
     initialize(constants, options) {
       this.options = options;
       if (this.options.get('logging')) {
         this.start();
-        this.stopListening(Tumblr.Fox.Events, 'fox:constants:initialized');
-        console.log('[EVENTS LISTENER]: initialized');
+        this.trigger(Tumblr.Fox.Events, 'fox:constants:initialized', {
+          constants,
+          options: options.toJSON()
+        });
       }
+      this.stopListening(Tumblr.Fox, 'fox:constants:initialized');
     },
     log(e) {
       if (this.options.get('logging')) {
         if (!this.ignore.includes(e)) {
           if (e.includes('fox')) {
-            console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', Array.prototype.slice.call(arguments));
+            console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
             return;
           }
           console.log('[TUMBLR]', arguments);
@@ -58,10 +55,11 @@ module.exports = (function eventsListener(Tumblr, Backbone, _) {
       }
     },
     start() {
-      this.listenTo(this.events, 'all', ::this.log);
+      this.listenTo(Tumblr.Fox.Events, 'all', ::this.log);
+      this.listenTo(Tumblr.Events, 'all', ::this.log);
     },
     stop() {
-      this.stopListening(this.events, 'all', ::this.log);
+      this.stopListening();
     }
   });
 

@@ -20,7 +20,6 @@ module.exports = (function dashboardSource(Tumblr, Backbone, _) {
         },
         data: slug,
         success: data => {
-          console.log(data);
           deferred.resolve(data.response);
         },
         error: error => {
@@ -30,13 +29,16 @@ module.exports = (function dashboardSource(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     fetch(query) {
-      if (query.term.length === 0 && query.post_type === 'ANY') {
+      if (!query.term || (query.term && query.term.length === 0) && query.post_type === 'ANY') {
         return this.clientFetch(query);
       }
       const deferred = $.Deferred();
       const slug = pick(query, 'blogname', 'next_offset', 'limit', 'sort', 'post_type');
       this.chromeTrigger('chrome:fetch:blogPosts', slug, response => {
-        this.collateData(response).then(deferred.resolve);
+        this.collateData(response).then(data => {
+          const posts = this._handleCollatedData(data.response.posts);
+          deferred.resolve(posts);
+        });
       });
       return deferred.promise();
     },
@@ -98,7 +100,17 @@ module.exports = (function dashboardSource(Tumblr, Backbone, _) {
         deferred.resolve([].concat(...posts));
       });
       return deferred.promise();
-    }
+    },
+    _handleCollatedData(data) {
+      const results = [];
+      data.forEach(item => {
+        const { posts, tumblelog } = item.response;
+        Tumblelog.collection.add(new Tumblelog(tumblelog));
+        console.log(tumblelog);
+        results.push(posts[0]);
+      });
+      return results;
+    },
   });
 
   ChromeMixin.applyTo(BlogSource.prototype);

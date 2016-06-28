@@ -3,7 +3,6 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
   const { assign, pick } = _;
 
   const AutoPaginator = Model.extend({
-    id: 'Autopaginator',
     defaults: {
       enabled: false,
       defaultPaginationEnabled: true
@@ -12,10 +11,6 @@ module.exports = (function autopaginator(Tumblr, Backbone, _) {
       assign(this, pick(options, ['model', 'posts']));
       this.attributes = {};
       this.set(this.defaults);
-      this.bindEvents();
-    },
-    bindEvents() {
-      this.listenTo(Tumblr.Fox.Events, 'fox:disablePagination', ::this.disableAll);
     },
     start() {
       if (this.get('enabled')) {

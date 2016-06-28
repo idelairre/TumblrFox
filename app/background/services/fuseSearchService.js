@@ -8,7 +8,7 @@ import 'babel-polyfill';
 
 // TODO: add weights
 
-const POST_KEYS = ['summary', 'blogname', 'blog_name', 'tumblelog', 'title', 'body', 'description', 'caption', 'question', 'answer', 'text', 'tags'];
+const POST_KEYS = ['html', 'tags'];
 
 class FuseSearch extends EventEmitter {
   options = {
@@ -17,9 +17,9 @@ class FuseSearch extends EventEmitter {
     includeScore: true,
     shouldSort: true,
     tokenize: true,
-    threshold: 0.5,
+    threshold: 0.3,
     location: 0,
-    distance: 100,
+    distance: 50,
     maxPatternLength: 32,
     keys: POST_KEYS,
     id: 'id'
@@ -54,11 +54,9 @@ class FuseSearch extends EventEmitter {
 
   _search(query) {
     const results = this.fuse.search(query.term);
-    console.log('[RESULTS]', results.length);
-    for (let i = 0; results.length > i; i += 1) {
-      const result = results[i];
+    results.forEach(result => {
       this.$$matches.push(this.posts[result.item]);
-    }
+    });
     return this.$$matches;
   }
 

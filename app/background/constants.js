@@ -17,32 +17,36 @@ class Constants extends EventEmitter {
     cachedPostsCount: 0,
     cachedFollowingCount: 0,
     cachedTagsCount: 0,
-    maxPostsCount: 0, // NOTE: find a way to determine this
-    totalPostsCount: 0,
-    totalFollowingCount: 0,
-    totalTagsCount: 0,
     canFetchApiLikes: true,
+    currentUser: {},
     debug: false,
     defaultKeys: true,
-    formKey: '',
-    fullTextSearch: true,
-    saveViaFirebase: true,
-    setUser: false,
-    currentUser: {},
+    eventManifest: [],
+    firstRun: false,
     fetchLikesUntil: {
       date: new Date(2007, 1, 1),
       page: 'max'
     },
+    formKey: '',
+    fullTextSearch: true,
+    maxPostsCount: 0, // NOTE: find a way to determine this
     nextSlug: {
       timestamp: null,
       page: 1
     },
-    userName: ''
+    saveViaFirebase: true,
+    setUser: false,
+    totalPostsCount: 0,
+    totalFollowingCount: 0,
+    totalTagsCount: 0,
+    userName: '',
+    version: 0
   };
 
   constructor() {
     super();
     this.initialized = false;
+    this._previous = {};
     this.initialize();
   }
 
@@ -60,6 +64,13 @@ class Constants extends EventEmitter {
         this.set('totalFollowingCount', response.user.following);
       }
       this.initialized = true;
+      this.set('version', require('../manifest.json').version);
+      if (this.get('version') !== this.previous('version')) {
+        this.set('firstRun', true);
+      } else {
+        this.set('firstRun', false);
+      }
+      console.log(this.previous('version'), this.get('version'));
       this.emit('ready');
     } catch (e) {
       console.error(e);
@@ -88,6 +99,13 @@ class Constants extends EventEmitter {
     }
   }
 
+  previous(key) {
+    if (!key) {
+      return this._previous;
+    }
+    return this._previous[key];
+  }
+
   reset() {
     this.set('cachedTagsCount', this.defaults.cachedTagsCount);
     this.set('cachedPostsCount', this.defaults.cachedPostsCount);
@@ -98,13 +116,18 @@ class Constants extends EventEmitter {
 
   toJSON() {
     const keys = Object.keys(this.defaults);
-    const vals =  pick(this, keys);
+    const vals = pick(this, keys);
     return vals;
   }
 
   _assign(items) {
     for (const key in items) {
       if ({}.hasOwnProperty.call(items, key)) {
+        if (typeof this.key !== 'undefined') {
+          this._previous[key] = this[key];
+        } else {
+          this._previous[key] = items[key]; // we'll assume here this is on initialization
+        }
         this[key] = items[key];
       }
     }

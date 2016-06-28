@@ -16,9 +16,7 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
     Tumblr.Fox.trigger('fox:components:fetcherInitialized', this);
   };
 
-  extend(ComponentFetcher.prototype, Tumblr.Events, Backbone.Events);
-
-  extend(ComponentFetcher.prototype, {
+  extend(ComponentFetcher.prototype, Backbone.Events, {
     getComponent(object, searchTerm) {
       const modules = window.webpackModules[2].m;
       let putFlag = true;
@@ -38,9 +36,9 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
       if (results.length === 0) {
         console.error('[GET COMPONENT FAILED]', object);
       }
-      // if (Tumblr.Fox.options.get('logging')) {
+      if (Tumblr.Fox.options.get('logging')) {
         console.log('[GET COMPONENT]', object, results);
-      // }
+      }
       return results;
     },
     getComponents(manifest) {

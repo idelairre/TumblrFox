@@ -1,7 +1,7 @@
 <script id="postViewTemplate" type="text/template">
   <li class="post_container" data-pageable="post_<%- this.model.get('id') %>">
   <% var popoverData = ['avatar_url', 'dashboard_url', 'url', 'name', 'cname', 'description', 'description_sanitized', 'title', 'likes', 'share_following', 'is_private', 'is_group', 'customizable', 'following', 'premium_partner', 'can_receive_messages', 'can_send_messages', 'uuid', 'asks', 'anonymous_asks', 'is_subscribed', 'can_subscribe', 'global_theme_params'] %>
-  <div id="post_<%- model.id %>" class="post post_full with_permalink pt reblog_ui_refresh is_<%- model.get('type') %> <%- model.get('is_mine') ? 'is_mine' : 'not_mine' %> <%- model.get('is-direct-video') ? model.get('is-direct-video') : null %>"
+  <div id="post_<%- model.id %>" class="post post_full with_permalink pt has_source reblog_ui_refresh is_<%- model.get('type') %> <%- model.get('is_mine') ? 'is_mine' : 'not_mine' %> <%- model.get('is-direct-video') ? model.get('is-direct-video') : null %>"
     data-id="<%- model.id %>"
     data-type="<%- model.get('type') %>"
     data-is_reblog="<%- model.get('is_reblog') %>"
@@ -14,6 +14,7 @@
     data-tumblog-key="<%- model.get('tumblelog-data').key %>"
     data-can_reply="<%- model.get('can_reply') ? 1 : 0 %>"
     data-json="<%- JSON.stringify(_.omit(model.attributes, 'post_html', 'tags')) %>"
+    data-view-exists="true"
     data-tumblrfox-post="true">
     <div class="post_avatar  show_user_menu">
       <div class="post_avatar_wrapper">
@@ -41,7 +42,7 @@
             <% if (model.get('tumblelog-parent-data')) { %>
               <span class="reblog_source">
                 <span class="reblog_icon" title="<%- model.get('tumblelog-data').name %> reblogged <%- model.get('tumblelog-parent-data').name %>">reblogged</span>
-                <a class="post_info_link" href="<%- model.get('tumblelog-parent-data').url %>" data-tumblelog-name="<%- model.get('tumblelog-parent-data').name %>" rel="noopener" data-peepr='{"tumblelog":"<%- model.get('tumblelog-parent-data').name %>", "postId":"<%- model.get('root_id') %>"}'><%- model.get('tumblelog-parent-data').name %></a>
+                <a class="post_info_link" href="<%- model.get('tumblelog-parent-data').url %>" title="<%-model.get('tumblelog-parent-data').name %>" data-tumblelog-name="<%- model.get('tumblelog-parent-data').name %>" rel="noopener" data-peepr='{"tumblelog":"<%- model.get('tumblelog-parent-data').name %>", "postId":"<%- model.get('root_id') %>"}'><%- model.get('tumblelog-parent-data').name %></a>
               </span>
             <% } %>
           </div>
@@ -49,6 +50,7 @@
             <a href="/follow/<%- model.get('tumblelog-parent-data').name %>" class="reblog_follow_button" data-tumblelog-name="<%- model.get('tumblelog-parent-data').name %>" title="Follow <%- model.get('tumblelog-parent-data').name %>"><span class="follow-text">Follow</span></a>
           <% } %>
         </div>
+        <div class="post_source"></div>
       </div>
       <div class="post_content clearfix">
         <div class="post_content_inner clearfix">

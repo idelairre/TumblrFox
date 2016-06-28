@@ -33,6 +33,7 @@ import LikesModel from './models/likesModel';
 import Main from './main';
 import ObjectUtil from './utils/objectUtil';
 import PostFormatter from './utils/postFormatterUtil';
+import PostsListener from './listeners/postsListener';
 import PostView from './components/postView/postView';
 import PostViewTemplate from './components/postView/postViewTemplate.html';
 import PostsModel from './models/postsModel';
@@ -55,19 +56,18 @@ import ToggleComponent from './components/popover/toggle/toggle';
 import ToggleTemplate from './components/popover/toggle/toggle.html';
 
 const inject = modules => {
-  for (let i = 0; modules.length > i; i += 1) {
-    const module = modules[i];
+  modules.map(module => {
     const app = document.createElement('script');
     app.setAttribute('type', 'text/javascript');
     app.appendChild(document.createTextNode(`(${module})(Tumblr, Backbone, _);`));
     (document.body || document.head || document.documentElement).appendChild(app);
-  }
+  });
 };
 
 const injectTemplates = templates => {
-  for (let i = 0; templates.length > i; i += 1) {
-    document.body.insertAdjacentHTML('beforeend', templates[i]);
-  }
+  templates.map(template => {
+    document.body.insertAdjacentHTML('beforeend', template);
+  });
 };
 
 if (window.location.href.includes('https://www.tumblr.com')) {
@@ -97,6 +97,7 @@ if (window.location.href.includes('https://www.tumblr.com')) {
     Main,
     LikesListener,
     EventsListener,
+    PostsListener,
     Time,
     ObjectUtil,
     PostFormatter,

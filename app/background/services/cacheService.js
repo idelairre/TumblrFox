@@ -46,8 +46,8 @@ export default class Cache {
 
   static async uploadCache(port) {
     const limit = 10;
-    const last = await db.posts.toCollection().last().id;
-    let start = await db.posts.toCollection().first().id;
+    const last = await db.posts.toCollection().last();
+    let start = await db.posts.toCollection().first();
     const count = await db.posts.toCollection().count();
     const items = {
       cachedPostsCount: 0,
@@ -57,8 +57,7 @@ export default class Cache {
     async.doWhilst(async next => {
       try {
         const posts = await db.posts.where('id').aboveOrEqual(start.id).limit(limit).toArray();
-        start = maxBy(posts, 'id').id;
-        console.log('[UPLOADING]', posts);
+        start = maxBy(posts, 'id');
         await Firebase.bulkPut('posts', posts);
         items.cachedPostsCount += posts.length;
         log('posts', items, response => {
@@ -69,7 +68,7 @@ export default class Cache {
         logError(e, next, port);
       }
     }, (start, last) => {
-      return start !== last;
+      return start.id !== last.id;
     });
   }
 
@@ -77,10 +76,10 @@ export default class Cache {
     try {
       const CacheWorker = require('./cacheWorkerService');
       const { offset, fileSize } = fileSlug;
-      const response = calculatePercent(offset, fileSize);
+      const progress = calculatePercent(offset, fileSize);
       port({
         type: 'progress',
-        payload: response
+        payload: progress
       });
       const file = await CacheWorker.assembleFile(fileSlug);
       Papa.parse(file, {
@@ -127,10 +126,18 @@ export default class Cache {
 
   static async restoreViaFirebase(port) {
     try {
-       const posts = await Firebase.get('posts');
+       const posts = await Firebase.get('posts', port);
        Cache._addPostsToDb(posts, port);
      } catch (e) {
        logError(e, port);
      }
+  }
+
+  static async deleteFirebaseCache(port) {
+    try {
+      await Firebase.delete('posts');
+    } catch (e) {
+      logError(e, port);
+    }
   }
 }

@@ -1,10 +1,9 @@
 import { camelCase } from 'lodash';
 import constants from '../constants';
 
-export const calculatePercent = (count, objects) => {
-  const percentComplete = ((count / objects) * 100).toFixed(2);
-  const itemsLeft = objects - count;
-  const total = objects;
+export const calculatePercent = (count, total) => {
+  const percentComplete = ((count / total) * 100).toFixed(2);
+  const itemsLeft = total - count;
   return { percentComplete, itemsLeft, total };
 };
 

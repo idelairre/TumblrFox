@@ -7,19 +7,33 @@ import tokens from '../tokens.json';
 import 'babel-polyfill';
 
 export default class PostSource {
+  static async applyFilter(query, posts) {
+    if (query.filter_nsfw) {
+      return posts = posts.filter(async post => {
+        const following = await db.following.get(post.blog_name);
+        if (following && following.hasOwnProperty('content_rating')) {
+          console.log('nsfw', post);
+          return;
+        }
+        return post
+      });
+    }
+    return posts;
+  }
   static async fetchDashboardPosts(request) {
     const slug = {
       offset: request.next_offset || 0,
-      limit: request.post_role === 'ORIGINAL' ? 15 : 10,
+      limit: request.limit,
       url: 'https://api.tumblr.com/v2/user/dashboard'
     };
+    console.log(slug);
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
     }
     try {
-       return oauthRequest(slug).then(response => {
-         return response.posts;
-       });
+      const response = await oauthRequest(slug)
+      const posts = await PostSource.applyFilter(request, response.posts);
+      return posts;
     } catch (e) {
       console.error(e);
     }
@@ -60,7 +74,6 @@ export default class PostSource {
     return deferred.promise();
   }
 
-  // NOT USED
   static async fetchDashboardPostsByTag(query) {
     const deferred = Deferred();
     try {

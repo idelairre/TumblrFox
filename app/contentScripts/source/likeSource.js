@@ -8,6 +8,7 @@ module.exports = (function likeSource(Tumblr, Backbone, _) {
   const LikeSource = function () { }
 
   extend(LikeSource.prototype, {
+    // NOTE: this is slightly confusing, fetch is more like a helper method and search is more like fetch
     fetch(slug) {
       if (Tumblr.Fox.options.get('enableTextSearch')) {
         if (slug.term.length === 0) {

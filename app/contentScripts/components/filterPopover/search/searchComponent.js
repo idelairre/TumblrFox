@@ -85,8 +85,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
       this.$filters = this.filters.$el;
       this.$settings = this.settings.$el;
       this.$input = this.input.$el;
-      // this.$input.find('input').attr('data-js-textinput', '');
-      // this.input.model.set(this.options); // this enables the nsfw filter
+      this.$input.find('input').attr('data-js-textinput', ''); // NOTE: DO NOT TOUCH! this allows InboxCompose events to be delegated
       this.set('showUserList', false);
       this.updateSearchSettings(this.state.getState());
     },
@@ -100,10 +99,9 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     bindEvents() {
       this.listenTo(this, 'change:showUserList', ::this.toggleUserList);
       this.listenTo(this.model, 'search:reset', ::this.onSearchReset);
-      this.listenTo(this.model, 'change:term change:post_type', this.log.bind(this, 'search-start', {}));
+      this.listenTo(this.model, 'change:term change:post_type change:sort', this.log.bind(this, 'search-start', {}));
       this.listenTo(this.state, 'change:state', ::this.updateSearchSettings);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:start', ::this.onFetchRequested);
-      this.listenTo(Tumblr.Fox.Events, 'fox:fetch:complete', this.toggleLoading.bind(this, false));
       this.listenTo(Tumblr.Fox.Events, 'fox:search:reset', ::this.resetTerm);
     },
     unbindEvents() {
@@ -116,7 +114,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     onSearchReset() {
       const term = this.model.get('term').length > 0;
       this.$el.toggleClass('term-entered', term);
-      Tumblr.Fox.Events.trigger('fox:search:start');
+      // Tumblr.Fox.Events.trigger('fox:search:start');
     },
     resetTerm() {
       this.model.set('term', ''); // NOTE: there is maybe a method apart of the PeeprBlogSearch class that does this
@@ -137,9 +135,11 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
     },
     onFetchRequested() {
       if (this.loader && this.loader.get('loading')) {
+        console.log('filter still loading');
         return;
       }
       if (this.posts.get('loading')) {
+        console.log('posts still loading');
         return;
       }
       this.model.set('next_offset', 0);
@@ -196,11 +196,9 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
         }
       } else {
         this.$userList.hide();
-        if (this.state.get('user') || this.state.get('dashboard')) {
-          this.$settings.css({
-            visibility: 'visible'
-          });
-        }
+        this.$settings.css({
+          visibility: 'visible'
+        });
         this.$filters.find('i').show();
       }
     },

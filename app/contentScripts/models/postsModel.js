@@ -81,17 +81,23 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       this.toggleLoading(true);
 
       const fetchHelper = posts => {
-        Utils.PostFormatter.renderPosts(posts);
-        Tumblr.Fox.Events.trigger('fox:fetch:complete', posts); // this turns off the loader bar
+        if (posts.length > 0) {
+          Utils.PostFormatter.renderPosts(posts);
+        }
         this.incrementOffset(posts.length);
         this.evalAndLogResults(posts);
+        Tumblr.Fox.Events.trigger('fox:fetch:complete', posts); // this turns off the loader bar
         this.toggleLoading(false);
         deferred.resolve();
       };
 
       switch (this.state.getState()) {
         case 'user':
-          this.blogModel.fetch(slug).then(fetchHelper);
+          this.blogModel.fetch(slug).then(response => {
+            const { posts, query } = response;
+            this.searchModel.set(query);
+            fetchHelper(posts);
+          });
           break;
         case 'dashboard':
           if (slug.term.length > 0) {
@@ -104,7 +110,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
           });
           break;
         case 'likes':
-          this.likesModel.search(slug).then(fetchHelper);
+          this.likesModel.search(slug).then(fetchHelper); // NOTE: this is not returning the right amount of posts
           break;
       }
       return deferred.promise();
@@ -118,12 +124,16 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         this.toggleLoading(false);
         this.incrementOffset(results.length);
         this.evalAndLogResults(results);
-        Utils.PostFormatter.renderPosts(results);
+        if (results.length && results.length > 0) {
+          Utils.PostFormatter.renderPosts(results);
+        }
         deferred.resolve();
       };
 
-      this.set('searching', true);
       this.resetSlug();
+      this.set('searching', true);
+      Tumblr.Fox.Events.trigger('fox:search:started');
+
       switch (this.state.getState()) {
         case 'likes':
           this.toggleLoading(true);
@@ -150,7 +160,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         return deferred.reject();
       }
       this.searchModel.getSearchResults(slug).then(matches => {
-        if (matches.length > slug.limit && !this.get('searching')) {
+        if (matches.length < slug.limit && !this.get('searching')) {
           Tumblr.Fox.Events.trigger('fox:search:renderedResults', {
             loggingData: slug
           });
@@ -164,7 +174,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     evalAndLogResults(results) {
-      if (results.length < this.searchModel.toJSON().limit) {
+      if (results.length < this.searchModel.get('limit')) {
         this.searchModel.set('renderedResults', true);
         Tumblr.Fox.Events.trigger('fox:search:renderedResults', {
           loggingData: this.searchModel.toJSON()
@@ -204,13 +214,12 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
       if (this.autopaginator.get('enableDefaultPagination')) {
         this.autopaginator.disableDefaultPagination();
       }
-      this.resetSlug();
-      $('li[data-pageable]').fadeOut(300, () => {
-        Tumblr.Posts.reset();
+      $('li[data-pageable]').fadeOut(300).promise().then(() => {
         invoke(this.posts, 'remove');
         this.postViews.collection.reset();
-        $('.standalone-ad-container').remove();
+        this.posts = [];
         $('li[data-pageable]').remove();
+        $('.standalone-ad-container').remove();
         deferred.resolve();
       });
       return deferred.promise();

@@ -3,7 +3,7 @@ module.exports = (function postView(Tumblr, Backbone, _) {
     return;
   }
   const { $ } = Backbone;
-  const { template } = _;
+  const { isFunction, template } = _;
   const { state, Utils } = Tumblr.Fox;
   const { TemplateCache } = Utils;
   const { PostView } = Tumblr;
@@ -53,15 +53,17 @@ module.exports = (function postView(Tumblr, Backbone, _) {
     initialize(options) { // TODO: note count should be comma seperated
       if (options.model && options.model.get('html')) {
         this.$el.html(options.model.get('html'));
+        this.$el.attr('data-pageable', `post_${options.model.get('id')}`);
         Tumblr.Fox.constants.attachNode.before(this.$el);
         this.model = options.model;
-        this.$el.attr('data-pageable', `post_${this.model.get('id')}`);
+        Tumblr.Events.trigger('postsView:createPost', this);
       } else if (options.model && options.model.get('is-tumblrfox-post')) {
         this.model = options.model;
         this.render();
-      } else if (options.el) {
+      } else if (options.el) { // probably a normal post
         this.model = options.model;
         this.setElement(options.el);
+        Tumblr.Fox.Events.trigger('fox:postsView:createPost', { el: options.el.prop('outerHTML'), model: options.model });
       }
       PostView.prototype.initialize.apply(this);
       if (this.model.get('liked')) { // its probably coming from the backend
@@ -70,21 +72,20 @@ module.exports = (function postView(Tumblr, Backbone, _) {
           this.sync();
         }, 0);
       }
-      Tumblr.Events.trigger('postsView:createPost', this);
       Tumblr.Events.trigger('DOMEventor:updateRect');
-      this.model.collection = Tumblr.postsView.collection;
-      this.model.collection.add(this.model);
-      Tumblr.postsView.postViews.push(this);
-      this.parseTags();
+      Tumblr.postsView.collection.add(this.model);
+      if (isFunction(this.parseTags)) { // NOTE: find out why this doesn't work
+        this.parseTags();
+      }
     },
     render() {
       Tumblr.Fox.constants.attachNode.before(this.template({
         model: this.model
       }));
       this.setElement($(`#post_${this.model.get('id')}`));
-      this.$el.find('.post').attr('data-view-exists', true);
       this._initializeSelectors();
       this.setAttributes();
+      Tumblr.Events.trigger('postsView:createPost', this);
       return this;
     },
     setAttributes() {
@@ -108,7 +109,7 @@ module.exports = (function postView(Tumblr, Backbone, _) {
       PostView.prototype._post_action_follow.apply(this, arguments);
     },
     parseTags() {
-      if (!this.model.toJSON().hasOwnProperty('tags')) {
+      if (!this.model.get('tags')) {
         Utils.PostFormatter.parseTags(this); // TODO: grab tags from ajax instead
       }
       if (Tumblr.Fox.state.get('dashboard')) {
@@ -154,6 +155,12 @@ module.exports = (function postView(Tumblr, Backbone, _) {
         tagElems += tagEl;
       });
       this.$tags.html(tagElems);
+    },
+    remove() {
+      PostView.prototype.remove.apply(this);
+      this.model.stopListening();
+      delete this.$el;
+      delete this.model;
     }
   });
 

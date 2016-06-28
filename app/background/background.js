@@ -3,7 +3,6 @@
 
 import chromeReceiver from './receivers/chromeReceiver';
 import optionsReceiver from './receivers/optionsReceiver';
-import sendMessage from './services/messageService';
 import './lib/livereload';
 
 const inExtension = chrome.runtime.onMessage;
@@ -20,7 +19,3 @@ if (inExtension) {
   loadChromeEventHandlers();
   loadOptionsEventHandlers();
 }
-
-chrome.runtime.onInstalled.addListener(details => {
-  console.log('previousVersion', details.previousVersion);
-});

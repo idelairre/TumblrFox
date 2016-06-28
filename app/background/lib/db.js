@@ -1,4 +1,6 @@
 import Dexie from 'dexie';
+import { first } from 'lodash';
+import 'babel-polyfill';
 
 const db = new Dexie('TumblrFox');
 
@@ -108,6 +110,24 @@ db.version(17).stores({
   tags: 'tag, count'
 });
 
+db.version(18).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, type, terms',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
+});
+
+db.transaction('rw', db.following, db.posts, function *() {
+  const following = yield db.following.toCollection().toArray();
+  following.map(follower => {
+    db.posts.where('blog_name').equals(follower.name).toArray().then(posts => {
+      const post = first(posts);
+      if (post && post.hasOwnProperty('tumblelog-content-rating')) {
+        follower.content_rating = post['tumblelog-content-rating'];
+        db.following.put(follower);
+      }
+    });
+  });
+});
 
 db.open().then(() => {
   console.log(db);

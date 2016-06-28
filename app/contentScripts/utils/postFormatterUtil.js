@@ -76,12 +76,9 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
       });
     },
     parseTags(post) {
-      if (post.hasOwnProperty('tags')) {
-        return post;
-      }
       const postHtml = $(post.$el);
       const tagElems = postHtml.find('.post_tags');
-      if (tagElems.length > 0) {
+      if (tagElems && tagElems.length > 0) {
         const rawTags = tagElems.find('a.post_tag').not('.ask').text().split('#');
         const tags = rawTags.filter(tag => {
           if (tag !== '') {

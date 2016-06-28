@@ -30,7 +30,6 @@ const Settings = View.extend({
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
     this.props.set(key, check);
-    // Backbone.Events.trigger('CHANGE_PROPS', this.props.toJSON());
   },
   renderProps(props) {
     mapKeys(props, (value, key) => {

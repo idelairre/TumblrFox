@@ -1,34 +1,40 @@
 module.exports = (function likesListener(Tumblr, Backbone, _) {
   const { extend } = _;
-  const { ComponentFetcher } = Tumblr.Fox.Utils;
+  const { get } = Tumblr.Fox;
 
   const LikesListener = function () {
-    this.getDependencies();
+    this.listenTo(Tumblr.Fox, 'initialize:dependency:chromeMixin', this.initialize);
+    this.listenTo(Tumblr.Fox, 'initialize:dependency:stateModel', this.syncLikes);
   };
 
-  extend(LikesListener.prototype, Tumblr.Events, Backbone.Events);
+  extend(LikesListener.prototype, Backbone.Events, {
+    initialize(ChromeMixin) {
+      ChromeMixin.applyTo(LikesListener.prototype);
+      this.listenTo(Tumblr.Events, 'post:like:set', this.sendLike.bind(this, 'like'));
+      this.listenTo(Tumblr.Events, 'post:unlike:set', this.sendLike.bind(this, 'unlike'));
 
-  extend(LikesListener.prototype, {
-    getDependencies() {
-      this.listenTo(Tumblr.Events, 'fox:components:add', ::this.initialize);
+      this.stopListening(Tumblr.Fox, 'initialize:dependency:chromeMixin');
     },
-    initialize(name) {
-      if (name === 'ChromeMixin') {
-        extend(LikesListener.prototype, ComponentFetcher.get('ChromeMixin').properties);
-        this.stopListening();
-        this.bindEvents();
-      }
-    },
-    bindEvents() {
-      this.listenTo(Tumblr.Events, 'post:like:set', this.updateLikesCache.bind(this, 'like'));
-      this.listenTo(Tumblr.Events, 'post:unlike:set', this.updateLikesCache.bind(this, 'unlike'));
-    },
-    updateLikesCache(type, postId) {
+    sendLike(type, postId) {
       const slug = {
         postId,
         type
       };
       this.chromeTrigger('chrome:update:likes', slug);
+    },
+    syncLike(postData) {
+      if (!postData.model.get('is-tumblrfox-post')) {
+        const post = postData.model.toJSON();
+        post.html = postData.el;
+        post.blog_name = post.tumblelog;
+        post['is-tumblrfox-post'] = true;
+        this.chromeTrigger('chrome:sync:like', post);
+      }
+    },
+    syncLikes() {
+      if (Tumblr.Fox.state.get('likes')) {
+        this.listenTo(Tumblr.Fox.Events, 'fox:postsView:createPost', ::this.syncLike);
+      }
     }
   });
 

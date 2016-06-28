@@ -1,5 +1,5 @@
-import Backbone from 'backbone';
-import { bind, noop } from 'lodash';
+import Backbone, { Model } from 'backbone';
+import { isFunction, noop } from 'lodash';
 
 const assignProps = (target, source) => {
   if (!target) {
@@ -21,12 +21,13 @@ const View = Backbone.View.extend({
       return;
     }
     const _props = assignProps(this.defaults.props, props);
-    this.props = new Backbone.Model(_props);
+    this.props = new Model(_props);
     this.attributes = {};
     Backbone.View.prototype.constructor.call(this, props);
     this._setup();
   },
   _setup() {
+    this.rendered = false;
     let render = this.render;
     this.render = () => {
       this._beforeRender.apply(this, arguments);
@@ -43,7 +44,7 @@ const View = Backbone.View.extend({
   _bindListeners() {
     this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
     this.listenTo(this.props, 'change', () => {
-      if (this.initialized) {
+      if (this.rendered) {
         Backbone.Events.trigger('CHANGE_PROPS', this.props.toJSON());
       }
     });
@@ -52,7 +53,6 @@ const View = Backbone.View.extend({
   afterRender: noop,
   _afterRender() {
     this.rendered = true;
-    this.initialized = true;
     this.trigger('rendered', this);
   },
   beforeRender: noop,

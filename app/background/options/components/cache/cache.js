@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { isNumber, mapKeys, snakeCase, toUpper } from 'lodash';
-import Backbone from 'backbone';
+import Backbone, { Model } from 'backbone';
 import View from '../../view/view';
 import Tipped from '../../../lib/tipped';
 import cacheTemplate from './cache.html';
@@ -29,7 +29,7 @@ const Cache = View.extend({
     this.pageOpts.unshift('max');
     this.pageOpts = this.pageOpts.reverse();
 
-    this.model = new Backbone.Model({
+    this.model = new Model({
       page: 'max',
       date: new Date(2007, 1, 1)
     });
