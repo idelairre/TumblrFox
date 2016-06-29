@@ -1,9 +1,9 @@
-module.exports = (function search(Tumblr, Backbone, _) {
+function searchModel(Tumblr, Backbone, _) {
   const { $, Collection } = Backbone;
   const { assign, omit, pick } = _;
-  const { Utils, get } = Tumblr.Fox;
-  const BlogSearch = get('BlogSearch');
-  const ChromeMixin = get('ChromeMixin');
+  const { get } = Tumblr.Fox;
+  const { ComponentFetcher } = Tumblr.Fox.Utils;
+  const { BlogSearch, ChromeMixin } = ComponentFetcher.getAll('BlogSearch', 'ChromeMixin');
 
   const Search = BlogSearch.extend({
     mixins: [ChromeMixin],
@@ -101,4 +101,8 @@ module.exports = (function search(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('SearchModel', Search);
-});
+}
+
+searchModel.prototype.dependencies = ['ChromeMixin', 'StateModel'];
+
+module.exports = searchModel;

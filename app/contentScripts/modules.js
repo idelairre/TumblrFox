@@ -1,5 +1,5 @@
 export App from './app';
-export AutopaginatorModel from './models/autopaginatorModel';
+export AutoPaginatorModel from './models/autopaginatorModel';
 export BlogModel from './models/blogModel';
 export BlogSource from './source/blogSource';
 export ComponentFetcher from './utils/componentFetcherUtil';

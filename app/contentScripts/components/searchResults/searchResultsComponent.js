@@ -1,4 +1,4 @@
-module.exports = (function searchResults(Tumblr, Backbone, _) {
+function searchResults(Tumblr, Backbone, _) {
   const { $, View, Model } = Backbone;
   const { assign, template, pick } = _;
   const { TemplateCache } = Tumblr.Fox.Utils;
@@ -59,4 +59,8 @@ module.exports = (function searchResults(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('SearchResultsComponent', SearchResults);
-});
+}
+
+searchResults.prototype.dependencies = ['TemplateCache', 'SearchModel', 'StateModel'];
+
+module.exports = searchResults;

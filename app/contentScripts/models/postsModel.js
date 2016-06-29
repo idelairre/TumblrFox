@@ -1,8 +1,8 @@
-module.exports = (function postModel(Tumblr, Backbone, _) {
+function postModel(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { assign, each, invoke, pick } = _;
   const { get, Utils } = Tumblr.Fox;
-  const Controller = get('ControllerModel');
+  const { AutoPaginatorModel, ControllerModel, LoaderComponent, SearchResultsComponent } = Utils.ComponentFetcher.getAll('AutoPaginatorModel', 'ControllerModel', 'LoaderComponent', 'SearchResultsComponent');
 
   // NOTE: this strikes me as a "super model", maybe thin this out?
   // further, this doesn't really resemble a model, perhaps there
@@ -10,7 +10,7 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   // TODO: 1. redirect to dashboard if the route is other than the dashboard
   //       2. thin this the fuck out
 
-  const PostsModel = Controller.extend({
+  const PostsModel = ControllerModel.extend({
     models: {
       blogModel: {
         constructor: get('BlogModel')
@@ -27,14 +27,13 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
         constructor: get('LikesModel')
       }
     },
-    dependencies: ['AutoPaginatorModel', 'LoaderComponent', 'SearchResultsComponent'],
+    // dependencies: ['AutoPaginatorModel', 'LoaderComponent', 'SearchResultsComponent'],
     defaults: {
       loading: false,
       searching: false
     },
     initialize(options) {
       assign(this, pick(options, ['searchModel', 'state']));
-      const { AutoPaginatorModel, LoaderComponent, SearchResultsComponent } = Utils.ComponentFetcher.getAll(this.dependencies);
 
       if (this.state.get('disabled')) {
         return this;
@@ -236,4 +235,8 @@ module.exports = (function postModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('PostsModel', PostsModel);
-});
+}
+
+postModel.prototype.dependencies = ['AutoPaginatorModel', 'BlogModel', 'ControllerModel', 'DashboardModel', 'LikesModel', 'LoaderComponent', 'SearchResultsComponent'];
+
+module.exports = postModel;

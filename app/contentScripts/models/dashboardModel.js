@@ -1,4 +1,4 @@
-module.exports = (function dashboardModel(Tumblr, Backbone, _) {
+function dashboardModel(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
   const { assign, pick, take, union, last, first, uniq } = _;
   const { Utils } = Tumblr.Fox;
@@ -83,4 +83,8 @@ module.exports = (function dashboardModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('DashboardModel', DashboardModel);
-});
+}
+
+dashboardModel.prototype.dependencies = ['DashboardSource'];
+
+module.exports = dashboardModel;

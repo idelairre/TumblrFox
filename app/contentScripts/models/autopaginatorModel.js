@@ -81,6 +81,6 @@ function autopaginator(Tumblr, Backbone, _) {
   Tumblr.Fox.register('AutoPaginatorModel', AutoPaginator);
 }
 
-autopaginator.prototype.dependencies = ['App', 'ComponentFetcher'];
+autopaginator.prototype.dependencies = ['ComponentFetcher'];
 
 module.exports = autopaginator;

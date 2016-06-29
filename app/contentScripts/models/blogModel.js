@@ -109,6 +109,6 @@ function blogModel(Tumblr, Backbone, _) {
   Tumblr.Fox.register('BlogModel', BlogModel);
 }
 
-blogModel.prototype.dependencies = ['App', 'BlogSource'];
+blogModel.prototype.dependencies = ['BlogSource'];
 
 module.exports = blogModel;

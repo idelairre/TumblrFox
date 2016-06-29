@@ -4,7 +4,7 @@ function filterPopoverComponent(Tumblr, Backbone, _) {
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher } = Utils;
   const { transition } = get('animation');
-  const { ConversationsCollection, ClickHandler, PopoverMixin, TumblrView } = ComponentFetcher.getAll('ConversationsCollection', 'ClickHandler', 'PopoverMixin', 'TumblrView');
+  const { ConversationsCollection, ClickHandler, PopoverMixin, SearchModel, TumblrView } = ComponentFetcher.getAll('ConversationsCollection', 'ClickHandler', 'PopoverMixin', 'SearchModel', 'TumblrView');
   const { Tumblelog } = Tumblr.Prima.Models;
   const { currentUser } = Tumblr.Prima;
 
@@ -25,7 +25,7 @@ function filterPopoverComponent(Tumblr, Backbone, _) {
     defaults: {
       preventInteraction: true
     },
-    dependencies: ['SearchModel'],
+    // dependencies: ['SearchModel'],
     mixins: [PopoverMixin],
     template: $(filterPopoverTemplate).html(),
     subviews: {
@@ -51,7 +51,7 @@ function filterPopoverComponent(Tumblr, Backbone, _) {
       }
     },
     initialize(options) {
-      const { SearchModel } = ComponentFetcher.getAll(this.dependencies);
+      // const { SearchModel } = ComponentFetcher.getAll(this.dependencies);
       assign(this, pick(options, ['state', 'options']));
       this.options = assign({}, this.defaults, omit(options, ['state', 'options']));
       this.conversations = new ConversationsCollection();

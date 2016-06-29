@@ -1,4 +1,4 @@
-module.exports = (function likeModel(Tumblr, Backbone, _) {
+function likeModel(Tumblr, Backbone, _) {
   const { Model } = Backbone;
   const { LikeSource } = Tumblr.Fox.Source;
 
@@ -12,4 +12,8 @@ module.exports = (function likeModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('LikesModel', LikesModel);
-});
+}
+
+likeModel.prototype.dependencies = ['LikeSource'];
+
+module.exports = likeModel;
