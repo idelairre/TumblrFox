@@ -1,4 +1,4 @@
-module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
+function filterMenuComponent(Tumblr, Backbone, _) {
   const { assign, defaults, pick, template, omit } = _;
   const { View, Model } = Backbone;
   const { TemplateCache, ComponentFetcher } = Tumblr.Fox.Utils;
@@ -85,4 +85,8 @@ module.exports = (function filterMenuComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FilterMenuComponent', FilterMenuComponent);
-});
+}
+
+filterMenuComponent.prototype.dependencies = ['ComponentFetcher', 'TemplateCache'];
+
+module.exports = filterMenuComponent;

@@ -8,7 +8,6 @@ import Following from '../stores/followingStore';
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
-  // constants.set('version', details.previousVersion);
 });
 
 const setConstants = payload => {

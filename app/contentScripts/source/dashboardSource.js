@@ -1,4 +1,4 @@
-module.exports = (function dashboardSource(Tumblr, Backbone, _) {
+function dashboardSource(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { extend, findIndex, omit, pick } = _;
   const { get } = Tumblr.Fox;
@@ -118,4 +118,8 @@ module.exports = (function dashboardSource(Tumblr, Backbone, _) {
   ChromeMixin.applyTo(DashboardSource.prototype);
 
   Tumblr.Fox.register('DashboardSource', DashboardSource);
-});
+}
+
+dashboardSource.prototype.dependencies = ['ChromeMixin'];
+
+module.exports = dashboardSource;

@@ -1,4 +1,4 @@
-module.exports = (function likeSource(Tumblr, Backbone, _) {
+function likeSource(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { extend, omit, pick } = _;
   const { get } = Tumblr.Fox;
@@ -46,4 +46,8 @@ module.exports = (function likeSource(Tumblr, Backbone, _) {
   ChromeMixin.applyTo(LikeSource.prototype);
 
   Tumblr.Fox.register('LikeSource', LikeSource);
-});
+}
+
+likeSource.prototype.dependencies = ['ChromeMixin'];
+
+module.exports = likeSource;

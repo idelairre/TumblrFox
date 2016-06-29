@@ -1,4 +1,4 @@
-module.exports = (function postFormatter(Tumblr, Backbone, _) {
+function postFormatter(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { defaultsDeep, extend, omit } = _;
   const { get } = Tumblr.Fox;
@@ -282,4 +282,8 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Utils.PostFormatter = new PostFormatter();
-});
+}
+
+postFormatter.prototype.dependencies = ['StateModel'];
+
+module.exports = postFormatter;

@@ -1,4 +1,4 @@
-module.exports = (function blogModel(Tumblr, Backbone, _) {
+function blogModel(Tumblr, Backbone, _) {
   const { isArray, take } = _;
   const { $, Model, Collection } = Backbone;
   const { Tumblelog } = Tumblr.Prima.Models;
@@ -107,4 +107,8 @@ module.exports = (function blogModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('BlogModel', BlogModel);
-});
+}
+
+blogModel.prototype.dependencies = ['App', 'BlogSource'];
+
+module.exports = blogModel;

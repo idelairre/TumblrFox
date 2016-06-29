@@ -1,4 +1,4 @@
-module.exports = (function dashboardSource(Tumblr, Backbone, _) {
+function blogSource(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { extend, pick } = _;
   const { get } = Tumblr.Fox;
@@ -105,8 +105,9 @@ module.exports = (function dashboardSource(Tumblr, Backbone, _) {
       const results = [];
       data.forEach(item => {
         const { posts, tumblelog } = item.response;
-        Tumblelog.collection.add(new Tumblelog(tumblelog));
-        console.log(tumblelog);
+        if (tumblelog) {
+          Tumblelog.collection.add(new Tumblelog(tumblelog));
+        }
         results.push(posts[0]);
       });
       return results;
@@ -116,4 +117,8 @@ module.exports = (function dashboardSource(Tumblr, Backbone, _) {
   ChromeMixin.applyTo(BlogSource.prototype);
 
   Tumblr.Fox.register('BlogSource', BlogSource);
-});
+};
+
+blogSource.prototype.dependencies = ['ChromeMixin'];
+
+module.exports = blogSource;

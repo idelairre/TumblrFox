@@ -1,4 +1,4 @@
-module.exports = (function (Tumblr, Backbone, _) {
+module.exports = (function search(Tumblr, Backbone, _) {
   const { $, Collection } = Backbone;
   const { assign, omit, pick } = _;
   const { Utils, get } = Tumblr.Fox;

@@ -1,18 +1,14 @@
-module.exports = (function postsListener(Tumblr, Backbone, _) {
+function postsListener(Tumblr, Backbone, _) {
   const { extend } = _;
   const { get } = Tumblr.Fox;
+  const ChromeMixin = get('ChromeMixin');
 
   const PostsListener = function () {
     this.nsfwBlogs = {};
-    this.listenTo(Tumblr.Fox, 'initialize:dependency:chromeMixin', this.initialize);
+    this.bindEvents();
   };
 
   extend(PostsListener.prototype, Backbone.Events, {
-    initialize(ChromeMixin) {
-      ChromeMixin.applyTo(PostsListener.prototype);
-      this.stopListening(Tumblr.Fox, 'initialize:dependency:chromeMixin');
-      this.bindEvents();
-    },
     bindEvents() {
       this.listenTo(Tumblr.Events, 'postsView:createPost', ::this.sendPostData);
       this.chromeListenTo('bridge:initialized', ::this.fetchNsfwBlogs);
@@ -29,5 +25,11 @@ module.exports = (function postsListener(Tumblr, Backbone, _) {
     }
   });
 
+  ChromeMixin.applyTo(PostsListener.prototype);
+
   Tumblr.Fox.register('PostsListener', PostsListener);
-});
+}
+
+postsListener.prototype.dependencies = ['ChromeMixin'];
+
+module.exports = postsListener;

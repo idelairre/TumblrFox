@@ -63,14 +63,13 @@ class Constants extends EventEmitter {
         this.set('totalPostsCount', response.user.likes);
         this.set('totalFollowingCount', response.user.following);
       }
-      this.initialized = true;
       this.set('version', require('../manifest.json').version);
       if (this.get('version') !== this.previous('version')) {
         this.set('firstRun', true);
       } else {
         this.set('firstRun', false);
       }
-      console.log(this.previous('version'), this.get('version'));
+      this.initialized = true;
       this.emit('ready');
     } catch (e) {
       console.error(e);

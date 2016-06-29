@@ -1,7 +1,7 @@
 /* global window:true */
 
-module.exports = (function componentFetcher(Tumblr, Backbone, _) {
-  const { extend, forIn, isArray } = _;
+function componentFetcher(Tumblr, Backbone, _) {
+  const { camelCase, extend, forIn, isArray } = _;
 
   window.webpackJsonp(0, [function (module, exports, require) {
     window.webpackModules = Array.prototype.slice.call(arguments);
@@ -34,11 +34,11 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
         this.put(object, Tumblr.Fox.require(results[0]));
       }
       if (results.length === 0) {
-        console.error('[GET COMPONENT FAILED]', object);
+        console.error('[FETCHING COMPONENT FAILED]', object);
       }
-      if (Tumblr.Fox.options.get('logging')) {
-        console.log('[GET COMPONENT]', object, results);
-      }
+      // if (Tumblr.Fox.options.get('logging')) {
+        // console.log('[FETCHING COMPONENT]', object, results);
+      // }
       return results;
     },
     getComponents(manifest) {
@@ -73,4 +73,6 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Utils.ComponentFetcher = new ComponentFetcher();
-});
+}
+
+module.exports = componentFetcher;

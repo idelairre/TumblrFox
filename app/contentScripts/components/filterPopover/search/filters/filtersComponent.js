@@ -1,15 +1,15 @@
-module.exports = (function filterDropdown(Tumblr, Backbone, _) {
+function filters(Tumblr, Backbone, _) {
   const { assign, pick } = _;
-  const { get, Utils } = Tumblr.Fox;
-  const { BlogSearchPopover, PeeprBlogSearch, SearchFiltersPopover } = Utils.ComponentFetcher.getAll('BlogSearchPopover', 'PeeprBlogSearch', 'SearchFiltersPopover');
+  const { ComponentFetcher } = Tumblr.Fox.Utils;
+  const { BlogSearchPopover, FiltersDropDownComponent, PeeprBlogSearch, SearchFiltersPopover } = ComponentFetcher.getAll('BlogSearchPopover', 'FiltersDropDownComponent', 'PeeprBlogSearch', 'SearchFiltersPopover');
 
   const Filters = PeeprBlogSearch.prototype.subviews.filters.constructor;
 
   const FilterPopoverContainer = SearchFiltersPopover.extend({
-    Subview: get('FiltersDropDownComponent')
+    Subview: FiltersDropDownComponent
   });
 
-  const FiltersComponent = Filters.extend({
+  const FiltersIconComponent = Filters.extend({
     initialize(options) {
       assign(this, pick(options, ['model', 'state']));
       Filters.prototype.initialize.apply(this, arguments);
@@ -31,5 +31,9 @@ module.exports = (function filterDropdown(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.register('FiltersComponent', FiltersComponent);
-});
+  Tumblr.Fox.register('FiltersComponent', FiltersIconComponent);
+}
+
+filters.prototype.dependencies = ['FiltersDropDownComponent'];
+
+module.exports = filters;

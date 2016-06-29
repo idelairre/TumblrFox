@@ -1,4 +1,4 @@
-module.exports = (function (Tumblr, Backbone, _) {
+module.exports = (function input(Tumblr, Backbone, _) {
   const { assign, debounce, defaults, extend, pick, template } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher, TemplateCache } = Utils;

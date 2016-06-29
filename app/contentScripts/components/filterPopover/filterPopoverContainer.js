@@ -1,4 +1,4 @@
-module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
+function filterPopoverContainer(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { assign } = _;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
@@ -11,7 +11,7 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
     },
     view(e) {
       assign(e, {
-        pinnedTarget: $('#filter_button'),
+        pinnedTarget: $('#filter'),
         isFixedPosition: true,
         autoTeardown: false, // NOTE: do not touch these
         teardownOnEscape: false
@@ -29,4 +29,8 @@ module.exports = (function filterPopoverContainer(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FilterPopoverContainer', FilterPopoverContainer);
-});
+}
+
+filterPopoverContainer.prototype.dependencies = ['FilterPopoverComponent'];
+
+module.exports = filterPopoverContainer;

@@ -1,4 +1,4 @@
-module.exports = (function chromeTriggerMixin(Tumblr, Backbone, _) {
+module.exports = (function chromeMixin(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { get } = Tumblr.Fox;
   const Mixin = get('Mixin');

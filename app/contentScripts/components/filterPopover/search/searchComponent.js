@@ -1,4 +1,4 @@
-module.exports = (function searchComponent(Tumblr, Backbone, _) {
+function searchComponent(Tumblr, Backbone, _) {
   const { assign, each, omit, pick } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher, TemplateCache } = Utils;
@@ -219,4 +219,8 @@ module.exports = (function searchComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('SearchComponent', SearchComponent);
-});
+}
+
+searchComponent.prototype.dependencies = ['FiltersComponent', 'InputComponent', 'LoaderMixin', 'SettingsComponent', 'ToggleComponent'];
+
+module.exports = searchComponent;

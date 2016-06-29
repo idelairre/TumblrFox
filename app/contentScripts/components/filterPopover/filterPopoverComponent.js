@@ -1,4 +1,4 @@
-module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
+function filterPopoverComponent(Tumblr, Backbone, _) {
   const { $ } = Backbone;
   const { assign, omit, pick } = _;
   const { get, Utils } = Tumblr.Fox;
@@ -114,4 +114,8 @@ module.exports = (function filterPopoverComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FilterPopoverComponent', FilterPopoverComponent);
-});
+}
+
+filterPopoverComponent.prototype.dependencies = ['FilterMenuComponent', 'SearchComponent', 'SearchModel'];
+
+module.exports = filterPopoverComponent;

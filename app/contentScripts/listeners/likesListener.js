@@ -1,19 +1,18 @@
-module.exports = (function likesListener(Tumblr, Backbone, _) {
+function likesListener(Tumblr, Backbone, _) {
   const { extend } = _;
   const { get } = Tumblr.Fox;
+  const ChromeMixin = get('ChromeMixin');
 
   const LikesListener = function () {
-    this.listenTo(Tumblr.Fox, 'initialize:dependency:chromeMixin', this.initialize);
     this.listenTo(Tumblr.Fox, 'initialize:dependency:stateModel', this.syncLikes);
+    this.initialize();
   };
 
   extend(LikesListener.prototype, Backbone.Events, {
-    initialize(ChromeMixin) {
-      ChromeMixin.applyTo(LikesListener.prototype);
+    initialize() {
       this.listenTo(Tumblr.Events, 'post:like:set', this.sendLike.bind(this, 'like'));
       this.listenTo(Tumblr.Events, 'post:unlike:set', this.sendLike.bind(this, 'unlike'));
 
-      this.stopListening(Tumblr.Fox, 'initialize:dependency:chromeMixin');
     },
     sendLike(type, postId) {
       const slug = {
@@ -38,5 +37,11 @@ module.exports = (function likesListener(Tumblr, Backbone, _) {
     }
   });
 
+  ChromeMixin.applyTo(LikesListener.prototype);
+
   Tumblr.Fox.register('LikesListener', LikesListener);
-});
+}
+
+likesListener.prototype.dependencies = ['ChromeMixin', 'StateModel'];
+
+module.exports = likesListener

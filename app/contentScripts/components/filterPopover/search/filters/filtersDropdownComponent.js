@@ -38,6 +38,6 @@ function filterDropdown(Tumblr, Backbone, _) {
   Tumblr.Fox.register('FiltersDropDownComponent', FiltersDropDownComponent);
 }
 
-filterDropdown.prototype.dependencies = ['ComponentFetcher', 'TemplateCache'];
+filterDropdown.prototype.dependencies = ['TemplateCache'];
 
 module.exports = filterDropdown;

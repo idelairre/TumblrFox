@@ -1,9 +1,9 @@
-module.exports = (function filterIcon(Tumblr, Backbone, _) {
+function filterIcon(Tumblr, Backbone, _) {
   const { View, $ } = Backbone;
   const { assign, pick } = _;
   const { get } = Tumblr.Fox;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
-  const FilterPopoverContainer = get('FilterPopoverContainer');
+  const { FilterPopoverContainer, StateModel } = ComponentFetcher.getAll('FilterPopoverContainer', 'StateModel');
 
   const filterIconTemplate = `
     <script id="filterIconTemplate" type="text/template">
@@ -18,15 +18,18 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
     </script>`;
 
   const FilterIcon = View.extend({
+    startWithParent: true,
     template: $(filterIconTemplate).html(),
     className: 'tab iconic tab_filtered_posts',
-    id: 'filter_button',
+    id: 'filter',
     events: {
       'click button': 'togglePopover'
     },
     initialize(options) {
-      assign(this, pick(options, ['state', 'options']));
+      this.options = options.options;
+      this.state = new StateModel(options.state);
       this.options.set('initialized', true);
+      this.render();
     },
     render() {
       this.$el.html(this.template);
@@ -63,5 +66,9 @@ module.exports = (function filterIcon(Tumblr, Backbone, _) {
     }
   });
 
-  Tumblr.Fox.register('FilterPopoverIcon', FilterIcon);
-});
+  Tumblr.Fox.register('FilterPopoverIconComponent', FilterIcon);
+}
+
+filterIcon.prototype.dependencies = ['FilterPopoverContainer', 'StateModel'];
+
+module.exports = filterIcon;
