@@ -1,12 +1,10 @@
 import { Deferred } from 'jquery';
-import { keyBy } from 'lodash';
+import { isEqual, keyBy } from 'lodash';
 import db from '../lib/db';
 import EventEmitter from 'eventemitter3';
 import Fuse from '../lib/fuse';
 import constants from '../constants';
 import 'babel-polyfill';
-
-// TODO: add weights
 
 const POST_KEYS = ['html', 'tags'];
 
@@ -36,7 +34,11 @@ class FuseSearch extends EventEmitter {
 
   setCollection(posts) {
     this.posts = keyBy(posts, 'id');
-    this.fuse = new Fuse(posts, this.options);
+    if (isEqual(this.fuse, {})) {
+      this.fuse = new Fuse(posts, this.options);
+    } else {
+      this.fuse.set(posts);
+    }
     this.emit('ready');
   }
 
@@ -49,7 +51,11 @@ class FuseSearch extends EventEmitter {
   }
 
   fetchMatches(query) {
-    return this.$$matches.slice(query.next_offset, query.next_offset + query.limit);
+    try {
+      return this.$$matches.slice(query.next_offset, query.next_offset + query.limit);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   _search(query) {

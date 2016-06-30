@@ -1,4 +1,4 @@
-module.exports = (function followerList(Tumblr, Backbone, _) {
+module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel) {
   const { $, View } = Backbone;
   const { ComponentFetcher } = Tumblr.Fox.Utils
   const { assign, debounce, each } = _;
@@ -14,7 +14,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
   */
 
   const FollowerList = View.extend({
-    dependencies: ['FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel'],
+    // dependencies: ['FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel'],
     defaults: {
       offset: 25,
       limit: 25,
@@ -25,7 +25,7 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       }
     },
     initialize(options) {
-      const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = ComponentFetcher.getAll(this.dependencies);
+      // const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = ComponentFetcher.getAll(this.dependencies);
       this.options = assign({}, options, this.defaults);
       this.state = new StateModel(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
@@ -121,7 +121,6 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       });
     },
     renderFollower(model) {
-      const { FollowerItemComponent } = ComponentFetcher.getAll(this.dependencies);
       const follower = new FollowerItemComponent({ model });
       follower.render();
       this.attachNode.append(follower.$el);
@@ -136,7 +135,6 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
       this.$followers = this.$followers.slice(1, this.$followers.length);
     },
     renderSnowman(view) {
-      const { FollowerItemComponent } = ComponentFetcher.getAll(this.dependencies);
       const tumblelogData = view.find('[data-tumblelog-popover]').data('tumblelog-popover');
       if (!tumblelogData) {
         return;
@@ -165,4 +163,5 @@ module.exports = (function followerList(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FollowerListComponent', FollowerList);
+
 });

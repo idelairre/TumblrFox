@@ -1,9 +1,6 @@
-module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
+module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _, AutoComplete, ChromeMixin) {
   const { $, Collection, Model } = Backbone;
   const { countBy, identity, invoke, forIn, omit } = _;
-  const { get, require } = Tumblr.Fox;
-  const ChromeMixin = get('ChromeMixin');
-  const AutoComplete = get('AutoComplete');
 
   const TagSearchAutocompleteModel = AutoComplete.extend({
     mixins: [ChromeMixin],
@@ -127,4 +124,5 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('TagSearchAutocompleteModel', TagSearchAutocompleteModel);
+
 });

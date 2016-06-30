@@ -1,9 +1,5 @@
-function dashboardSource(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
+module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Source) {
   const { extend, findIndex, omit, pick } = _;
-  const { get } = Tumblr.Fox;
-  const { BlogSource } = Tumblr.Fox.Source;
-  const ChromeMixin = get('ChromeMixin');
 
   const b64EncodeUnicode = str => {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
@@ -29,12 +25,11 @@ function dashboardSource(Tumblr, Backbone, _) {
     return posts;
   }
 
-  const DashboardSource = function () {
-    this.streamCursor = $('#next_page_link').data('stream-cursor') || '';
-    this.endPoint = '/svc/post/dashboard';
-  };
-
-  extend(DashboardSource.prototype, {
+  const DashboardSource = Source.extend({
+    initialize() {
+      this.streamCursor = $('#next_page_link').data('stream-cursor') || '';
+      this.endPoint = '/svc/post/dashboard';
+    },
     collateData(postIds) {
       const deferred = $.Deferred();
       const promises = postIds.map(id => {
@@ -118,8 +113,5 @@ function dashboardSource(Tumblr, Backbone, _) {
   ChromeMixin.applyTo(DashboardSource.prototype);
 
   Tumblr.Fox.register('DashboardSource', DashboardSource);
-}
 
-dashboardSource.prototype.dependencies = ['ChromeMixin'];
-
-module.exports = dashboardSource;
+});

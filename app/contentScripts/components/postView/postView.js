@@ -1,14 +1,12 @@
-module.exports = (function postView(Tumblr, Backbone, _) {
+module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
   if (!Tumblr.PostView) {
     return;
   }
-  const { $ } = Backbone;
-  const { isFunction, template } = _;
-  const { state, Utils } = Tumblr.Fox;
+  const { isFunction, isEmpty, template } = _;
+  const { Utils } = Tumblr.Fox;
   const { TemplateCache } = Utils;
   const { PostView } = Tumblr;
   const { currentUser } = Tumblr.Prima;
-  const { BlogSource } = Tumblr.Fox.Source;
 
   /**
   * PostView viewModel
@@ -51,6 +49,10 @@ module.exports = (function postView(Tumblr, Backbone, _) {
     className: 'post_container',
     template: template(TemplateCache.get('postViewTemplate')),
     initialize(options) { // TODO: note count should be comma seperated
+      if (isEmpty(options)) {
+        console.info('Attempted to render an empty post, this is likely an error');
+        return;
+      }
       if (options.model && options.model.get('html')) {
         this.$el.html(options.model.get('html'));
         this.$el.attr('data-pageable', `post_${options.model.get('id')}`);
@@ -63,7 +65,9 @@ module.exports = (function postView(Tumblr, Backbone, _) {
       } else if (options.el) { // probably a normal post
         this.model = options.model;
         this.setElement(options.el);
-        Tumblr.Fox.Events.trigger('fox:postsView:createPost', { el: options.el.prop('outerHTML'), model: options.model });
+        if (Tumblr.Fox.state.get('likes')) {
+          Tumblr.Fox.Events.trigger('fox:postsView:createPost', { el: options.el.prop('outerHTML'), model: options.model.toJSON() });
+        }
       }
       PostView.prototype.initialize.apply(this);
       if (this.model.get('liked')) { // its probably coming from the backend
@@ -159,6 +163,7 @@ module.exports = (function postView(Tumblr, Backbone, _) {
     remove() {
       PostView.prototype.remove.apply(this);
       this.model.stopListening();
+      this.stopListening();
       delete this.$el;
       delete this.model;
     }
@@ -166,4 +171,5 @@ module.exports = (function postView(Tumblr, Backbone, _) {
 
   Tumblr.Fox.register('PostViewComponent', FoxPostView);
   Tumblr.PostView = FoxPostView;
+
 });

@@ -28,4 +28,5 @@ module.exports = (function templateCache(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.Utils.TemplateCache = new TemplateCache();
+
 });

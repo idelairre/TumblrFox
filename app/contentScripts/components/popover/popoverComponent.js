@@ -1,10 +1,7 @@
-module.exports = (function popover(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
+module.exports = (function popover(Tumblr, Backbone, $, _, ExtendedPopoverMixin, TumblrView) {
   const { assign, isArray, forIn, template } = _;
   const { get } = Tumblr.Fox;
   const { TemplateCache } = Tumblr.Fox.Utils;
-  const TumblrView = get('TumblrView');
-  const ExtendedPopoverMixin = get('ExtendedPopoverMixin');
 
   /**
    * Constructor - passed in through controller component
@@ -141,4 +138,5 @@ module.exports = (function popover(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('PopoverComponent', Popover);
+
 });

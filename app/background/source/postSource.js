@@ -26,7 +26,6 @@ export default class PostSource {
       limit: request.limit,
       url: 'https://api.tumblr.com/v2/user/dashboard'
     };
-    console.log(slug);
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
     }

@@ -84,7 +84,6 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     unfollow(e) {
       e.stopPropagation();
       e.preventDefault();
-      console.log($(e.currentTarget).next());
       const $followButton = $(e.currentTarget).next();
       const $unfollowButton = $(e.currentTarget);
       const tumblelog = this.model.get('name');
@@ -110,4 +109,5 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FollowerItemComponent', FollowerItem);
+
 });

@@ -1,8 +1,7 @@
-module.exports = (function followerModel(Tumblr, Backbone, _) {
+module.exports = (function followerModel(Tumblr, Backbone, _, ChromeMixin) {
   const { $, Model }= Backbone;
   const { get } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
-  const ChromeMixin = get('ChromeMixin');
 
   const FollowerModel = Model.extend({
     defaults: {
@@ -50,4 +49,5 @@ module.exports = (function followerModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FollowerModel', FollowerModel);
+
 });

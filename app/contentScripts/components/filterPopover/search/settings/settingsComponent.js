@@ -1,9 +1,8 @@
-function settings(Tumblr, Backbone, _) {
+module.exports = (function settings(Tumblr, Backbone, _, PopoverComponent, TumblrView) {
   const { $ } = Backbone;
   const { assign, clone, defer, findKey, pick } = _;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
   const { currentUser } = Tumblr.Prima;
-  const { PopoverComponent, TumblrView } = ComponentFetcher.getAll('PopoverComponent', 'TumblrView');
 
   const settingsPopoverTemplate = `
     <script id="settingsPopoverTemplate" type="text/template">
@@ -80,8 +79,5 @@ function settings(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('SettingsComponent', Settings);
-}
 
-settings.prototype.dependencies = ['PopoverComponent'];
-
-module.exports = settings;
+});

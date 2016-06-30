@@ -1,8 +1,8 @@
-function searchComponent(Tumblr, Backbone, _) {
+module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent, InputComponent, LoaderMixin, PostsModel, SettingsComponent, ToggleComponent) {
   const { assign, each, omit, pick } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher, TemplateCache } = Utils;
-  const { EventBus, InboxCompose, LoaderMixin, PeeprBlogSearch } = ComponentFetcher.getAll('EventBus', 'InboxCompose', 'LoaderMixin', 'PeeprBlogSearch');
+  const { EventBus, InboxCompose, PeeprBlogSearch } = ComponentFetcher.getAll('EventBus', 'InboxCompose', 'PeeprBlogSearch');
 
 /**
  *  SearchComponent states:
@@ -44,7 +44,7 @@ function searchComponent(Tumblr, Backbone, _) {
         constructor: get('SearchResultView'),
         options: opts => {
           return {
-            eventBus: new EventBus(), // what is this thing?
+            eventBus: opts.eventBus, // what is this thing?
             collection: opts.conversations,
             context: 'input'
           };
@@ -70,7 +70,7 @@ function searchComponent(Tumblr, Backbone, _) {
     },
     initialize(options) {
       assign(this, pick(options, ['model', 'conversations', 'state']));
-      const { PostsModel } = ComponentFetcher.getAll(this.dependencies);
+      this.eventBus = new EventBus();
       this.posts = new PostsModel({
         searchModel: this.model,
         state: this.state,
@@ -97,6 +97,7 @@ function searchComponent(Tumblr, Backbone, _) {
       'click .blog-search-input': 'onFormClick'
     },
     bindEvents() {
+      // this.listenTo(this.eventBus, 'all', console.log.bind(console, '[EVENTBUS]: '));
       this.listenTo(this, 'change:showUserList', ::this.toggleUserList);
       this.listenTo(this.model, 'search:reset', ::this.onSearchReset);
       this.listenTo(this.model, 'change:term change:post_type change:sort', this.log.bind(this, 'search-start', {}));
@@ -135,11 +136,9 @@ function searchComponent(Tumblr, Backbone, _) {
     },
     onFetchRequested() {
       if (this.loader && this.loader.get('loading')) {
-        console.log('filter still loading');
         return;
       }
       if (this.posts.get('loading')) {
-        console.log('posts still loading');
         return;
       }
       this.model.set('next_offset', 0);
@@ -219,8 +218,5 @@ function searchComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('SearchComponent', SearchComponent);
-}
 
-searchComponent.prototype.dependencies = ['FiltersComponent', 'InputComponent', 'LoaderMixin', 'SettingsComponent', 'ToggleComponent'];
-
-module.exports = searchComponent;
+});

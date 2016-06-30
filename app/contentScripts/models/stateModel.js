@@ -1,4 +1,4 @@
-module.exports = function state (Tumblr, Backbone, _) {
+module.exports = (function (Tumblr, Backbone, _) {
   const { Model } = Backbone;
   const { assign, mapKeys } = _;
 
@@ -37,4 +37,5 @@ module.exports = function state (Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('StateModel', State);
-}
+
+});

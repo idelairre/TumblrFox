@@ -1,8 +1,7 @@
-function dashboardModel(Tumblr, Backbone, _) {
+module.exports = (function (Tumblr, Backbone, _, DashboardSource) {
   const { $, Model } = Backbone;
   const { assign, pick, take, union, last, first, uniq } = _;
   const { Utils } = Tumblr.Fox;
-  const { DashboardSource } = Tumblr.Fox.Source;
 
   const DashboardModel = Model.extend({
     initialize(options) {
@@ -31,7 +30,6 @@ function dashboardModel(Tumblr, Backbone, _) {
     fetch(query) {
       let posts = [];
       const deferred = $.Deferred();
-
       const filteredFetch = () => {
         if (query.post_type === 'ANY' && query.term.length === 0) {
           return DashboardSource.clientFetch().then(response => {
@@ -42,7 +40,6 @@ function dashboardModel(Tumblr, Backbone, _) {
           return this._applyFilters(query, response);
         });
       }
-
       const recursiveFetch = posts => {
         return filteredFetch().then(response => {
           posts = take(posts.concat(response), query.limit);
@@ -54,9 +51,7 @@ function dashboardModel(Tumblr, Backbone, _) {
           }
         });
       }
-
       recursiveFetch(posts);
-
       return deferred.promise();
     },
     search(query) {
@@ -83,8 +78,5 @@ function dashboardModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('DashboardModel', DashboardModel);
-}
 
-dashboardModel.prototype.dependencies = ['DashboardSource'];
-
-module.exports = dashboardModel;
+});

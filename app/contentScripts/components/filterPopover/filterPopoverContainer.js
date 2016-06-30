@@ -1,8 +1,7 @@
-function filterPopoverContainer(Tumblr, Backbone, _) {
+module.exports = (function filterPopoverContainer(Tumblr, Backbone, _, FilterPopoverComponent, PrimaComponent) {
   const { $ } = Backbone;
   const { assign } = _;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
-  const { FilterPopoverComponent, PrimaComponent } = ComponentFetcher.getAll('FilterPopoverComponent', 'PrimaComponent');
 
   const FilterPopoverContainer = PrimaComponent.extend({
     name: 'FilterPopover',
@@ -29,8 +28,5 @@ function filterPopoverContainer(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FilterPopoverContainer', FilterPopoverContainer);
-}
 
-filterPopoverContainer.prototype.dependencies = ['FilterPopoverComponent'];
-
-module.exports = filterPopoverContainer;
+});

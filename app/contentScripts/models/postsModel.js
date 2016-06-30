@@ -1,8 +1,6 @@
-function postModel(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
+module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, ControllerModel, DashboardModel, LikesModel, LoaderComponent, SearchModel, SearchResultsComponent) => {
   const { assign, each, invoke, pick } = _;
   const { get, Utils } = Tumblr.Fox;
-  const { AutoPaginatorModel, ControllerModel, LoaderComponent, SearchResultsComponent } = Utils.ComponentFetcher.getAll('AutoPaginatorModel', 'ControllerModel', 'LoaderComponent', 'SearchResultsComponent');
 
   // NOTE: this strikes me as a "super model", maybe thin this out?
   // further, this doesn't really resemble a model, perhaps there
@@ -13,10 +11,10 @@ function postModel(Tumblr, Backbone, _) {
   const PostsModel = ControllerModel.extend({
     models: {
       blogModel: {
-        constructor: get('BlogModel')
+        constructor: BlogModel
       },
       dashboardModel: {
-        constructor: get('DashboardModel'),
+        constructor: DashboardModel,
         options: opts => {
           return {
             state: opts.state
@@ -24,10 +22,9 @@ function postModel(Tumblr, Backbone, _) {
         }
       },
       likesModel: {
-        constructor: get('LikesModel')
+        constructor: LikesModel
       }
     },
-    // dependencies: ['AutoPaginatorModel', 'LoaderComponent', 'SearchResultsComponent'],
     defaults: {
       loading: false,
       searching: false
@@ -224,6 +221,7 @@ function postModel(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     applyFilter() {
+      console.log(this.searchModel.get('filter_nsfw'));
       if (this.searchModel.get('filter_nsfw')) {
         this.postViews.collection.whereBy({ 'tumblelog-content-rating': 'nsfw' }).invoke('dismiss');
         this.postViews.collection.whereBy({ 'tumblelog-content-rating': 'adult' }).invoke('dismiss');
@@ -235,8 +233,5 @@ function postModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('PostsModel', PostsModel);
-}
 
-postModel.prototype.dependencies = ['AutoPaginatorModel', 'BlogModel', 'ControllerModel', 'DashboardModel', 'LikesModel', 'LoaderComponent', 'SearchResultsComponent'];
-
-module.exports = postModel;
+});

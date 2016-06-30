@@ -1,12 +1,9 @@
-function blogSource(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
+module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
   const { extend, pick } = _;
-  const { get } = Tumblr.Fox;
-  const ChromeMixin = get('ChromeMixin');
+  const { Tumblelog } = Tumblr.Prima.Models;
 
-  const BlogSource = function () { };
-
-  extend(BlogSource.prototype, {
+  const BlogSource = Source.extend({
+    mixins: [ChromeMixin],
     getInfo(blogname) {
       const deferred = $.Deferred();
       const slug = {
@@ -29,14 +26,20 @@ function blogSource(Tumblr, Backbone, _) {
       return deferred.promise();
     },
     fetch(query) {
-      if (!query.term || (query.term && query.term.length === 0) && query.post_type === 'ANY') {
-        return this.clientFetch(query);
+      if (query.term.length === 0 && query.post_type === 'ANY') {
+        return this.clientFetch(query).then(data => {
+          const { posts, tumblelog } = data.response;
+          if (tumblelog) {
+            Tumblelog.collection.add(new Tumblelog(tumblelog));
+          }
+          return posts;
+        });
       }
       const deferred = $.Deferred();
       const slug = pick(query, 'blogname', 'next_offset', 'limit', 'sort', 'post_type');
       this.chromeTrigger('chrome:fetch:blogPosts', slug, response => {
-        this.collateData(response).then(data => {
-          const posts = this._handleCollatedData(data.response.posts);
+        this.collateData(response).then(posts => {
+          posts = this._handleCollatedData(posts);
           deferred.resolve(posts);
         });
       });
@@ -104,7 +107,7 @@ function blogSource(Tumblr, Backbone, _) {
     _handleCollatedData(data) {
       const results = [];
       data.forEach(item => {
-        const { posts, tumblelog } = item.response;
+        const { posts, tumblelog } = item.response; // TODO: THERE IS A PROBLEM HERE
         if (tumblelog) {
           Tumblelog.collection.add(new Tumblelog(tumblelog));
         }
@@ -114,11 +117,6 @@ function blogSource(Tumblr, Backbone, _) {
     },
   });
 
-  ChromeMixin.applyTo(BlogSource.prototype);
-
   Tumblr.Fox.register('BlogSource', BlogSource);
-};
 
-blogSource.prototype.dependencies = ['ChromeMixin'];
-
-module.exports = blogSource;
+});

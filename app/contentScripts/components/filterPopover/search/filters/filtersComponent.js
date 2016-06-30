@@ -1,7 +1,6 @@
-function filters(Tumblr, Backbone, _) {
+module.exports = (function filters(Tumblr, Backbone, _, BlogSearchPopover, FiltersDropDownComponent, PeeprBlogSearch, SearchFiltersPopover) {
   const { assign, pick } = _;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
-  const { BlogSearchPopover, FiltersDropDownComponent, PeeprBlogSearch, SearchFiltersPopover } = ComponentFetcher.getAll('BlogSearchPopover', 'FiltersDropDownComponent', 'PeeprBlogSearch', 'SearchFiltersPopover');
 
   const Filters = PeeprBlogSearch.prototype.subviews.filters.constructor;
 
@@ -32,8 +31,5 @@ function filters(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FiltersComponent', FiltersIconComponent);
-}
 
-filters.prototype.dependencies = ['FiltersDropDownComponent'];
-
-module.exports = filters;
+});

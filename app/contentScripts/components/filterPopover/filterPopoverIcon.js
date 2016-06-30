@@ -1,9 +1,8 @@
-function filterIcon(Tumblr, Backbone, _) {
+module.exports = (function filterIcon(Tumblr, Backbone, _, FilterPopoverComponent, FilterPopoverContainer) {
   const { View, $ } = Backbone;
   const { assign, pick } = _;
   const { get } = Tumblr.Fox;
   const { ComponentFetcher } = Tumblr.Fox.Utils;
-  const { FilterPopoverContainer, StateModel } = ComponentFetcher.getAll('FilterPopoverContainer', 'StateModel');
 
   const filterIconTemplate = `
     <script id="filterIconTemplate" type="text/template">
@@ -26,8 +25,7 @@ function filterIcon(Tumblr, Backbone, _) {
       'click button': 'togglePopover'
     },
     initialize(options) {
-      this.options = options.options;
-      this.state = new StateModel(options.state);
+      assign(this, pick(options, ['options', 'state']));
       this.options.set('initialized', true);
       this.render();
     },
@@ -67,8 +65,5 @@ function filterIcon(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FilterPopoverIconComponent', FilterIcon);
-}
 
-filterIcon.prototype.dependencies = ['FilterPopoverContainer', 'StateModel'];
-
-module.exports = filterIcon;
+})

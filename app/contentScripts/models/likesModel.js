@@ -1,6 +1,5 @@
-function likeModel(Tumblr, Backbone, _) {
+module.exports = (function (Tumblr, Backbone, _, LikeSource) {
   const { Model } = Backbone;
-  const { LikeSource } = Tumblr.Fox.Source;
 
   const LikesModel = Model.extend({
     fetch(query) {
@@ -12,8 +11,5 @@ function likeModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('LikesModel', LikesModel);
-}
 
-likeModel.prototype.dependencies = ['LikeSource'];
-
-module.exports = likeModel;
+});

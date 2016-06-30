@@ -1,12 +1,8 @@
-module.exports = (function extendedPopoverMixin(Tumblr, Backbone, _) {
-  const { assign } = _;
-  const { get, put } = Tumblr.Fox;
-  const Popover = get('PopoverMixin');
-  const Mixin = get('Mixin');
-  const { transition } = get('animation');
-  const ClickHandler = get('ClickHandler');
+module.exports = (function extendedPopoverMixin(Tumblr, Backbone, _, animation, ClickHandler, Mixin, PopoverMixin) {
+  const { extend } = _;
+  const { transition } = animation
 
-  const PopoverMixin = new Mixin({
+  const ExtendedPopoverMixin = new Mixin({
     afterRender() {
       this.initialized = false;
       this.$main = this.$('.popover_menu');
@@ -57,7 +53,8 @@ module.exports = (function extendedPopoverMixin(Tumblr, Backbone, _) {
     }
   });
 
-  assign(PopoverMixin.properties, Popover.properties);
+  extend(ExtendedPopoverMixin.properties, PopoverMixin.properties);
 
-  Tumblr.Fox.register('ExtendedPopoverMixin', PopoverMixin);
+  Tumblr.Fox.register('ExtendedPopoverMixin', ExtendedPopoverMixin);
+
 });

@@ -1,9 +1,7 @@
-module.exports = (function loader(Tumblr, Backbone, _) {
+module.exports = (function loader(Tumblr, Backbone, _, TumblrView) {
   const { $ } = Backbone;
-  const { get } = Tumblr.Fox;
-  const View = get('TumblrView');
 
-  const Loader = View.extend({
+  const Loader = TumblrView.extend({
     id: 'Loader',
     defaults: {
       loading: false,
@@ -28,4 +26,5 @@ module.exports = (function loader(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('LoaderComponent', Loader);
+
 });

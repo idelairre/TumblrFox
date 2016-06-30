@@ -1,7 +1,4 @@
-module.exports = (function chromeMixin(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
-  const { get } = Tumblr.Fox;
-  const Mixin = get('Mixin');
+module.exports = (function chromeMixin(Tumblr, Backbone, $, _, Mixin) {
 
   /**
    * @param {String} eventName The name of the window event corresponding to a chrome action
@@ -42,4 +39,5 @@ module.exports = (function chromeMixin(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('ChromeMixin', ChromeMixin);
+
 });

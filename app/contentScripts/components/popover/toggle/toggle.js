@@ -44,4 +44,5 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('ToggleComponent', Toggle);
-})
+
+});

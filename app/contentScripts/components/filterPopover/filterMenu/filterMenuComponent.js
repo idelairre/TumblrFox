@@ -1,8 +1,7 @@
-function filterMenuComponent(Tumblr, Backbone, _) {
+module.exports = (function filterMenuComponent(Tumblr, Backbone, _, TumblrView, BlogSearchPopover, KeyCommandsMixin) {
   const { assign, defaults, pick, template, omit } = _;
   const { View, Model } = Backbone;
   const { TemplateCache, ComponentFetcher } = Tumblr.Fox.Utils;
-  const { TumblrView, BlogSearchPopover, KeyCommandsMixin } = ComponentFetcher.getAll('TumblrView', 'BlogSearchPopover', 'KeyCommandsMixin');
 
   const FilterMenuComponent = TumblrView.extend({
     className: 'popover--filter-select-dropdown',
@@ -85,8 +84,5 @@ function filterMenuComponent(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FilterMenuComponent', FilterMenuComponent);
-}
-
-filterMenuComponent.prototype.dependencies = ['ComponentFetcher', 'TemplateCache'];
-
-module.exports = filterMenuComponent;
+  
+});

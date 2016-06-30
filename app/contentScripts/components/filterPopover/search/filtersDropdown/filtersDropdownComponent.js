@@ -1,9 +1,8 @@
-function filterDropdown(Tumblr, Backbone, _) {
+module.exports = (function filterDropdown(Tumblr, Backbone, _, animation, ClickHandler, SearchFilters, TumblrView) {
   const { assign, isFunction, mapKeys, template, pick } = _;
   const { get, Utils } = Tumblr.Fox;
   const { ComponentFetcher, TemplateCache } = Utils;
-  const { ClickHandler, SearchFilters, TumblrView } = ComponentFetcher.getAll('ClickHandler', 'SearchFilters', 'TumblrView');
-  const { transition } = get('animation');
+  const { transition } = animation;
 
   const FiltersDropDownComponent = SearchFilters.extend({
     template: template(TemplateCache.get('filterTemplate')),
@@ -36,8 +35,5 @@ function filterDropdown(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('FiltersDropDownComponent', FiltersDropDownComponent);
-}
 
-filterDropdown.prototype.dependencies = ['ComponentFetcher', 'TemplateCache'];
-
-module.exports = filterDropdown;
+});

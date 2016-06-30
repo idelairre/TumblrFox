@@ -38,7 +38,9 @@ gulp.task('scripts', (cb) => {
         }),
         new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js', Infinity)
       ].concat(args.production ? [
-        new webpack.optimize.UglifyJsPlugin(), new webpack.optimize.DedupePlugin()
+        new webpack.optimize.UglifyJsPlugin({
+          mangle: false
+        }), new webpack.optimize.DedupePlugin()
       ] : []),
       module: {
         noParse: /node_modules\/json-schema\/lib\/validate\.js/,

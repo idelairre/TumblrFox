@@ -144,4 +144,5 @@ module.exports = (function input(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('InputComponent', InputComponent);
+  
 });

@@ -1,15 +1,10 @@
-function likeSource(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
-  const { extend, omit, pick } = _;
-  const { get } = Tumblr.Fox;
+module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
   const { currentUser } = Tumblr.Prima;
-  const ChromeMixin = get('ChromeMixin');
+  const { omit, pick } = _;
 
-  const LikeSource = function () { }
-
-  extend(LikeSource.prototype, {
-    // NOTE: this is slightly confusing, fetch is more like a helper method and search is more like fetch
-    fetch(slug) {
+  const LikeSource = Source.extend({
+    mixins: [ChromeMixin],
+    fetch(slug) { // NOTE: this is slightly confusing, fetch is more like a helper method and search is more like fetch
       if (Tumblr.Fox.options.get('enableTextSearch')) {
         if (slug.term.length === 0) {
           return this.fetchLikesByTag(slug);
@@ -43,11 +38,6 @@ function likeSource(Tumblr, Backbone, _) {
     }
   });
 
-  ChromeMixin.applyTo(LikeSource.prototype);
-
   Tumblr.Fox.register('LikeSource', LikeSource);
-}
 
-likeSource.prototype.dependencies = ['ChromeMixin'];
-
-module.exports = likeSource;
+});

@@ -1,8 +1,7 @@
-function blogModel(Tumblr, Backbone, _) {
+module.exports = (function (Tumblr, Backbone, _, BlogSource) {
   const { isArray, take } = _;
   const { $, Model, Collection } = Backbone;
-  const { Tumblelog } = Tumblr.Prima.Models;
-  const { BlogSource } = Tumblr.Fox.Source;
+  const { Tumblelog, Post } = Tumblr.Prima.Models;
 
   const BlogModel = Model.extend({
     defaults: {
@@ -12,7 +11,9 @@ function blogModel(Tumblr, Backbone, _) {
     },
     initialize() {
       this.model = new Model(this.defaults);
-      this.posts = new Collection();
+      this.posts = new Collection({
+        model: Post
+      });
       this.bindEvents();
     },
     bindEvents() {
@@ -70,20 +71,16 @@ function blogModel(Tumblr, Backbone, _) {
           if (posts.length < query.limit) {
             query.next_offset += 15;
             return recursiveFetch(posts);
-          } else {
-            deferred.resolve({ posts, query });
           }
+          deferred.resolve({ posts, query });
         });
       }
       recursiveFetch(posts);
       return deferred.promise();
     },
     _fetch(query) {
-      return BlogSource.fetch(query).then(data => {
-        if (data.response.tumblelog && !Tumblelog.collection.get(data.response.tumblelog.name)) {
-          Tumblelog.collection.add(new Tumblelog(data.response.tumblelog));
-        }
-        return data.response.posts;
+      return BlogSource.fetch(query).then(posts => {
+        return posts;
       });
     },
     _applyFilters(query, posts) {
@@ -107,8 +104,5 @@ function blogModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('BlogModel', BlogModel);
-}
 
-blogModel.prototype.dependencies = ['BlogSource'];
-
-module.exports = blogModel;
+});

@@ -1,4 +1,4 @@
-module.exports = function info(Tumblr, Backbone, _) {
+module.exports = (function info(Tumblr, Backbone, _) {
   const { $, View } = Backbone;
   const { TemplateCache } = Tumblr.Fox.Utils;
 
@@ -29,4 +29,5 @@ module.exports = function info(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('InfoComponent', Info);
-};
+
+});

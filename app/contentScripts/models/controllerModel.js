@@ -1,4 +1,4 @@
-module.exports = (function controllerModel(Tumblr, Backbone, _) {
+module.exports = (function (Tumblr, Backbone, _) {
   const { Model } = Backbone;
   const { assign, isFunction, isObject, noop } = _;
 
@@ -29,4 +29,5 @@ module.exports = (function controllerModel(Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.register('ControllerModel', Controller);
+
 });
