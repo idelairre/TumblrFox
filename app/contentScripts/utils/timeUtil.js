@@ -1,6 +1,4 @@
 module.exports = (function time(Tumblr, Backbone, _) {
-  const { Utils } = Tumblr.Fox;
-
   const Time = {
     toTumblrTime(date) {
       return Date.parse(date) / 1000;
@@ -24,7 +22,7 @@ module.exports = (function time(Tumblr, Backbone, _) {
     }
   };
 
-  Utils.Time = Time;
+  Tumblr.Fox.Utils.Time = Time;
 
   Date.prototype.subtractDays = function (days) {
     this.setDate(this.getDate() - days);

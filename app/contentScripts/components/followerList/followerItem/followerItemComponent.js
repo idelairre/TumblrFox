@@ -1,32 +1,19 @@
-module.exports = (function followerItem(Tumblr, Backbone, _) {
+module.exports = (function followerItem(Tumblr, Backbone, _, TumblrView) {
   const { $, View } = Backbone;
-  const { template } = _;
+  const { isNumber, template } = _;
   const { constants, Utils } = Tumblr.Fox;
-  const { TemplateCache, Time } = Utils
-
-  $.fn.removeAttributes = function (args) {
-    const ignore = args.ignore;
-    return this.each(function () {
-      const attributes = $.map(this.attributes, item => {
-        if (item.name !== ignore) {
-          return item.name;
-        }
-      });
-      const elem = $(this);
-      $.each(attributes, (i, item) => {
-        elem.removeAttr(item);
-      });
-    });
-  };
+  const { TemplateCache, Time } = Utils;
 
   const FollowerItem = View.extend({
     template: template(TemplateCache.get('followerItemTemplate')),
     className: 'follower clearfix',
-    initialize(e) {
-      this.model = e.model;
-      this.model.attributes.avatar = this.model.attributes.avatar_url || this.model.attributes.avatar[1].url;
-      this.model.attributes.updated = Time.prettyDate(Time.fromTumblrTime(this.model.attributes.updated));
-      this.model.attributes.formkey = constants.formkey;
+    initialize(options) {
+      this.model = options.model;
+      this.model.set('avatar', this.model.get('avatar_url') || this.model.toJSON().avatar[1].url);
+      if (isNumber(this.model.get('updated'))) {
+        this.model.set('updated', `Updated ${Utils.Time.prettyDate(Utils.Time.fromTumblrTime(this.model.get('updated')))}`);
+      }
+      this.model.set('formkey', constants.formkey);
     },
     render() {
       this.$el.removeAttributes({ ignore: 'class' });
@@ -34,31 +21,30 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
         this.$el.addClass('alt');
       }
       this.$el.html(this.template(this.model));
-      this.$popover = new Tumblr.TumblelogPopover.PopticaInfoPopover({
+
+      const info = {
+        el: this.$el.find('.poptica_header').find('.user_dropdown_lockup'),
+        model: this.model
+      };
+
+      info.infoPopover = {
         el: this.$el.find('.poptica_header'),
         auto_show: false,
-        trigger: this.$el.find('.info_popover_button'),
-        targetPost: this.$el,
-        recipient: this.model.get('name'),
-        url: this.model.get('url'),
+        trigger: this.$el.find('.poptica_header'),
+        targetPost: this.$el.find('.poptica_header').parent(),
         glassless: true,
-        skip_glass: false,
         model: this.model,
         standalone: true,
-        show_user_controls: false,
-        show_flag_button: false,
-        asks: true,
-        can_receive_messages: this.model.get('can_message'),
-        share_following: this.model.get('share_following'),
-        likes: this.model.get('share_likes')
-      });
+        show_flag_button: false
+      };
+
+      this.$popover = new Tumblr.Prima.Snowman(info);
       this.$el.data('has-popover', true);
       this.$el.data('ref-popover', this.$popover);
     },
     events: {
       'click button.unfollow_button': 'unfollow',
-      'click button.follow_button': 'follow',
-      'click div.poptica_header': 'togglePopover'
+      'click button.follow_button': 'follow'
     },
     follow(e) {
       e.stopPropagation();
@@ -101,10 +87,6 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
         }
       });
       this.capturing = Tumblr.Capture ? new Tumblr.Capture.CrushClick() : null;
-    },
-    togglePopover(e) {
-      e.preventDefault();
-      this.$popover.show()
     }
   });
 

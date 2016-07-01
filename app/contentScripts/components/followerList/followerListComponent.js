@@ -1,6 +1,7 @@
-module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel) {
+module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel, TumblrView) {
   const { $, View } = Backbone;
-  const { assign, debounce, each } = _;
+  const { assign, debounce, each, pick, template } = _;
+  const { TemplateCache } = Tumblr.Fox.Utils;
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
@@ -11,8 +12,9 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
   *     updated => clear elements => onScroll => populate followers from model
   */
 
-  const FollowerList = View.extend({
+  const FollowerList = TumblrView.extend({
     defaults: {
+      formkey: Tumblr.Fox.constants.formKey,
       offset: 25,
       limit: 25,
       state: {
@@ -21,60 +23,85 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
         recentlyUpdated: false
       }
     },
+    id: 'invite_someone',
+    className: 'follower invite_someone clearfix',
+    template: template(TemplateCache.get('followerListTemplate')),
+    subviews: {
+      followerSearch: {
+        constructor: FollowerSearchComponent,
+        options: opts => {
+          return {
+            state: opts.state,
+            model: opts.model
+          }
+        }
+      }
+    },
     initialize(options) {
-      this.options = assign({}, options, this.defaults);
+      this.options = assign({}, pick(options, Object.keys(this.defaults)));
       this.state = new StateModel(this.defaults.state);
-      this.attachNode = this.$el.find('.left_column');
-      this.model = new FollowerModel();
-      this.$el.find('.left_column').addClass('ui_notes');
-      this.$followers = this.$('.follower');
-      this.$followers = this.$followers.slice(1, this.$followers.length);
-      this.$followerSearch = new FollowerSearchComponent({
-        state: this.state,
-        model: this.model,
-        el: $('#invite_someone')
+      this.model = new FollowerModel({
+        offset: this.defaults.offset,
+        limit: this.defaults.limit,
+        state: this.state
       });
-      this.$pagination = this.$('#pagination'); // insert followers before pagination element
-      this.$pagination.remove();
       this.loader = new Tumblr.Prima.KnightRiderLoader({
         variation: 'leviathan',
         className: 'Knight-Rider-loader centered'
-       });
+      });
+      this.render();
+    },
+    render() {
+      this.$el.html(this.template(this.model));
+      $('#invite_someone').replaceWith(this.$el);
       this.loader.render();
-      this.$el.find('.left_column').prepend('<div class="load_cont"></div>');
-      this.$('.load_cont').append(this.loader.$el);
+      this.attachNode = $('.left_column');
+      this.attachNode.addClass('ui_notes');
+      $('#pagination').remove();
+      this.$followers = $('.follower');
+      this.$followers = this.$followers.slice(1, this.$followers.length);
+      this.$form = this.$('form');
+      this.$form.css('display', 'inline-block');
+      this.$el.css('background', '#f8f8f8 11px 5px no-repeat');
+      this.$el.css('padding', '5px 10px 5px 0');
+      this.$input = this.$el.find('input.text_field');
       this.bindEvents();
     },
+    afterRenderSubviews() {
+      this.attachNode.prepend('<div class="load_cont"></div>');
+      this.attachNode.find('.load_cont').append(this.loader.$el);
+    },
     events: {
-      'click input.text_field': 'togglePopover'
+      'click button.chrome': 'follow',
     },
     bindEvents() {
       this.listenTo(Tumblr.Fox.Events, 'fox:following:refresh', ::this.refresh);
       this.listenTo(Tumblr.Fox.Events, 'fox:following:state', ::this.state.setState);
-      this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 100));
+      this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 150));
+      this.listenTo(this.model, 'change:loading', ::this.setLoading);
       this.listenTo(this.model.items, 'reset', ::this.populate);
-      this.listenTo(this.state, 'change:state', ::this.fetch);
+      this.listenTo(this.model.items, 'add', this.createFollower);
+      this.listenTo(this.state, 'change:state', ::this.refresh);
     },
-    togglePopover(e) {
+    setLoading(model, value) {
+      this.loader.set('loading', value);
+    },
+    follow(e) {
       e.preventDefault();
-      // TODO: implement following search
+      e.stopPropagation();
+      const tumblelog = this.$input.val();
+      Tumblr.follow({
+        tumblelog,
+        source: 'FOLLOW_SOURCE_FOLLOWING_PAGE'
+      }, {
+        success() {
+          Tumblr.Fox.Events.trigger('fox:following:refresh');
+        }
+      });
     },
     refresh() {
-      this.model.options.offset = 0;
-      this.fetch();
-    },
-    fetch() {
-      this.options.offset = 0;
-      const query = this.state.getState();
-      if (query === 'orderFollowed') {
-        this.clearElements().then(() => {
-          this.model.fetch(query).then(::this.renderFollowerViews);
-        });
-      } else {
-        this.clearElements().then(() => {
-          this.model.fetch(query);
-        });
-      }
+      this.model.set('offset', 0);
+      this.clearElements().then(::this.model.fetch);
     },
     clearElements() {
       return this.$followers.fadeOut(300).promise();
@@ -84,74 +111,23 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
         if (this.loader.get('loading')) {
           return;
         }
-        if (this.state.get('orderFollowed')) {
-          this.loader.set('loading', true);
-          this.model.fetch(this.state.getState()).then(followers => {
-            this.renderFollowerViews(followers);
-            this.loader.set('loading', false);
-          });
-        } else {
-          const followers = this.model.items.slice(this.options.offset, this.options.offset += this.options.limit);
-          this.loader.set('loading', true);
-          followers.map(follower => {
-            setTimeout(() => {
-              this.loader.set('loading', false);
-              this.renderFollower(follower);
-            }, 100);
-          });
-        }
+        this.model.fetch();
       }
     },
-    populate(e) {
-      const followers = e.models.slice(0, this.options.limit);
+    populate(collection) {
+      const followers = collection.models.slice(0, this.model.get('limit'));
       this.clearElements().then(() => {
-        followers.map(follower => {
-          return this.renderFollower(follower);
-        });
-        this.$followers = this.$('.follower');
+        followers.map(::this.createFollower);
+        this.model.set('offset', this.model.get('limit'));
+        this.$followers = $('.follower');
         this.$followers = this.$followers.slice(1, this.$followers.length);
-        this.options.offset += followers.length;
       });
     },
-    renderFollower(model) {
+    createFollower(model) {
       const follower = new FollowerItemComponent({ model });
       follower.render();
       this.attachNode.append(follower.$el);
       return follower.$el[0];
-    },
-    renderFollowerViews(response) {
-      each(response, view => {
-        this.attachNode.append(view); // use the tumblr follower init code to append snowmen
-        this.renderSnowman(this.$(view));
-      });
-      this.$followers = this.$('.follower');
-      this.$followers = this.$followers.slice(1, this.$followers.length);
-    },
-    renderSnowman(view) {
-      const tumblelogData = view.find('[data-tumblelog-popover]').data('tumblelog-popover');
-      if (!tumblelogData) {
-        return;
-      }
-      const tumblelogModel = new Tumblr.Prima.Models.Tumblelog(tumblelogData);
-      const dropdown = view.find('.user_dropdown_lockup');
-      const snowman = {
-        el: dropdown,
-        model: tumblelogModel,
-        infoPopover: {
-          el: view,
-          auto_show: false,
-          trigger: view,
-          glassless: true,
-          standalone: true,
-          show_flag_button: false,
-          targetPost: view
-        }
-      };
-      new Tumblr.Prima.Snowman(snowman);
-      new FollowerItemComponent({
-        model: tumblelogModel,
-        el: view
-      });
     }
   });
 

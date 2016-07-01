@@ -70,7 +70,6 @@ class Bridge {
       eventName = `chrome:${action}:${object}`;
       this.listenTo(eventName, response => {
         if (response) {
-          this.debug('response:', response);
           let responseEvent = eventName.split(':');
           responseEvent[1] = 'response';
           responseEvent = responseEvent.join(':');

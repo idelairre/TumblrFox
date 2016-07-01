@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
-import { first } from 'lodash';
+import { first, union } from 'lodash';
+import Lunr from '../services/lunrSearchService';
 import 'babel-polyfill';
 
 const db = new Dexie('TumblrFox');
@@ -116,18 +117,40 @@ db.version(18).stores({
   tags: 'tag, count'
 });
 
-db.transaction('rw', db.following, db.posts, function *() {
-  const following = yield db.following.toCollection().toArray();
-  following.map(follower => {
-    db.posts.where('blog_name').equals(follower.name).toArray().then(posts => {
-      const post = first(posts);
-      if (post && post.hasOwnProperty('tumblelog-content-rating')) {
-        follower.content_rating = post['tumblelog-content-rating'];
-        db.following.put(follower);
-      }
-    });
-  });
-});
+db.version(19).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
+})
+
+// db.transaction('rw', db.posts, function *() {
+//   const posts = yield db.posts.toCollection().toArray();
+//   const promises = posts.filter(post => {
+//     if (!post.tokens) {
+//       post.tokens = Lunr.tokenizeHtml(post.html);
+//       post.tokens = union(post.tags, post.tokens, [post.blog_name]);
+//       return db.posts.put(post);
+//     }
+//   });
+//   return Promise.all(promises);
+// });
+
+// db.transaction('rw', db.following, db.posts, function *() {
+//   const following = yield db.following.toCollection().toArray();
+//   for (let i = 0; following.length > i; i += 1) {
+//     const follower = following[i];
+//     if (!follower.content_rating) {
+//       const posts = yield db.posts.where('blog_name').equals(follower.name).toArray();
+//       const post = first(posts);
+//       if (post && post.hasOwnProperty('tumblelog-content-rating')) {
+//         follower.content_rating = post['tumblelog-content-rating'];
+//         yield db.following.put(follower);
+//       } else {
+//         follower.content_rating = 'safe';
+//       }
+//     }
+//   }
+// });
 
 db.open().then(() => {
   console.log(db);

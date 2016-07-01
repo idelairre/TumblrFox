@@ -1,42 +1,68 @@
 module.exports = (function followerModel(Tumblr, Backbone, _, ChromeMixin) {
   const { $, Model }= Backbone;
+  const { assign, pick } = _;
   const { get } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
 
   const FollowerModel = Model.extend({
-    defaults: {
-      offset: 25,
-      limit: 25
-    },
     mixins: [ChromeMixin],
-    initialize() {
-      this.options = this.defaults;
+    initialize(options) {
+      this.set(pick(options, ['limit', 'offset']));
+      this.state = options.state;
       this.items = Tumblelog.collection;
-      this.$views = [];
-      this.chromeTrigger('chrome:refresh:following');
+      this.set('loading', false);
     },
-    fetch(query) {
+    toJSON() {
+      return {
+        offset: this.get('offset'),
+        limit: this.get('limit'),
+        order: this.state.getState()
+      };
+    },
+    fetch() {
       const deferred = $.Deferred();
-      if (query === 'orderFollowed') {
-        return this.pageFetch(this.options.offset);
-      }
-      this.options.offset = 0; // this is so the page fetch starts at zero when it is selected again
-      this.chromeTrigger('chrome:fetch:following', query, followers => {
-        deferred.resolve(this.items.reset(followers));
+      this.set('loading', true);
+      this._fetch().then(followers => {
+        if (this.get('offset') === 0) {
+          this.items.reset(followers);
+        } else {
+          followers.forEach(follower => {
+            this.items.add(follower);
+          });
+        }
+        this.set('offset', this.get('offset') + this.get('limit'));
+        this.set('loading', false);
+        deferred.resolve(this.items);
       });
       return deferred.promise();
     },
-    pageFetch(offset) {
+    _fetch() {
+      if (this.state.getState() === 'orderFollowed') {
+        return this.pageFetch(this.toJSON());
+      }
+      const deferred = $.Deferred();
+      this.chromeTrigger('chrome:fetch:following', this.toJSON(), followers => {
+        deferred.resolve(followers);
+      });
+      return deferred.promise();
+    },
+    pageFetch(query) {
       const deferred = $.Deferred();
       $.ajax({
         type: 'GET',
-        url: `https://www.tumblr.com/following/${offset}`,
+        url: `https://www.tumblr.com/following/${query.offset}`,
         success: data => {
-          let response = $(data).find('.follower');
-          if (this.options.offset === 0) {
-            response = response.slice(1, response.length);
-          }
-          this.options.offset += this.options.limit;
+          const following = Array.prototype.slice.call($(data).find('.follower'));
+          const response = [];
+          following.forEach(follower => {
+            follower = $(follower);
+            console.log(follower.html());
+            const json = $(follower).find('[data-tumblelog-popover]').data('tumblelog-popover');
+            if (json) {
+              json.updated = follower.find('.description').text();
+              response.push(json);
+            }
+          });
           deferred.resolve(response);
         },
         error: error => {

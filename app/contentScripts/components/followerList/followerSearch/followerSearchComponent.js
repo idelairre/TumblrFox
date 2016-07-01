@@ -1,11 +1,14 @@
-module.exports = (function followerSearch(Tumblr, Backbone, _, PopoverComponent) {
+module.exports = (function followerSearch(Tumblr, Backbone, _, PopoverComponent, TumblrView) {
   const { View } = Backbone;
   const { get } = Tumblr.Fox;
   const { assign, defer, omit } = _;
 
-  const FollowerSearch = View.extend({
+  const FollowerSearch = TumblrView.extend({
+    template: '<i class="icon_filter"></i>',
+    id: 'filter',
+    className: 'follower-filter',
     defaults: {
-      popoverOptions: [{
+      popoverOptions: {
         header: 'Sort',
         name: 'sort',
         multipleSelection: false,
@@ -14,29 +17,25 @@ module.exports = (function followerSearch(Tumblr, Backbone, _, PopoverComponent)
           { icon: 'icon_activity', name: 'Most recently updated', data: 'recentlyUpdated', checked: false },
           { icon: 'icon_followers', name: 'Order followed', data: 'orderFollowed', checked: true }
         ]
-      }]
+      }
+    },
+    events: {
+      'click i': 'togglePopover'
     },
     initialize(options) {
       this.state = options.state;
       this.options = assign({}, this.defaults, omit(options, 'state'));
-      this.$form = this.$('form');
-      this.$form.css('display', 'inline-block');
-      this.$form.css('width', '89%');
-      this.$el.css('background', '#f8f8f8 11px 5px no-repeat');
-      this.$el.css('padding', '5px 10px 5px 0px');
-      this.$el.prepend('<div class="follower-filter"><i class="icon_filter"></i></div>');
-      this.$followerFilter = this.$('.follower-filter');
-      this.$input = this.$el.find('input.text_field');
     },
-    events: {
-      'click button.chrome': 'follow',
-      'click .follower-filter': 'togglePopover'
+    render() {
+      this.$el.html(this.template);
+      console.log(this);
     },
     togglePopover(e) {
+      console.log(e);
       e.preventDefault();
       if (!this.popover) {
-        this.popover = new Popover({
-          pinnedTarget: this.$followerFilter,
+        this.popover = new PopoverComponent({
+          pinnedTarget: this.$el,
           pinnedSide: 'bottom',
           class: 'popover--follower-popover',
           selection: 'checkmark',
@@ -59,18 +58,6 @@ module.exports = (function followerSearch(Tumblr, Backbone, _, PopoverComponent)
       defer(() => {
         this.popover = null;
       });
-    },
-    follow(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const tumblelog = this.$input.val();
-      Tumblr.follow({
-        tumblelog,
-        source: 'FOLLOW_SOURCE_FOLLOWING_PAGE'
-      });
-      if (this.state.get('orderFollowed')) {
-        Tumblr.Fox.Events.trigger('fox:following:refresh');
-      }
     }
   });
 

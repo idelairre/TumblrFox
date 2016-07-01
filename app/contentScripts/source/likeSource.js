@@ -5,13 +5,10 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
   const LikeSource = Source.extend({
     mixins: [ChromeMixin],
     fetch(slug) { // NOTE: this is slightly confusing, fetch is more like a helper method and search is more like fetch
-      if (Tumblr.Fox.options.get('enableTextSearch')) {
-        if (slug.term.length === 0) {
-          return this.fetchLikesByTag(slug);
-        }
-        return this.fetchLikesByTerm(slug);
+      if (slug.term.length === 0) {
+        return this.fetchLikesByTag(slug);
       }
-      return this.fetchLikesByTag(slug);
+      return this.fetchLikesByTerm(slug);
     },
     fetchLikesByTag(slug) {
       const deferred = $.Deferred();

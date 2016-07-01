@@ -8,16 +8,16 @@ import 'babel-polyfill';
 
 export default class Following {
   static async fetch(query) {
-    let response = {};
-    if (query && query === 'alphabetically') {
-      response = await db.following.orderBy('name').toArray();
-    } else if (query && query === 'orderFollowed') {
-      response = await db.following.orderBy('order').toArray(); // maybe fetch each user individually and update? delegate to front end?
-    } else { // recently updated
+    console.log(query);
+    if (query && query.order === 'alphabetically') {
+      return await db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
+    } else if (query && query.order === 'orderFollowed') {
+      return await db.following.orderBy('order').offset(query.offset).limit(query.limit).toArray(); // maybe fetch each user individually and update? delegate to front end?
+    } else if (query && query.order === 'recentlyUpdated') { // recently updated
       await Following.refresh(); // TODO: add flag to indicate whether to refresh or not
-      response = await db.following.orderBy('updated').reverse().toArray();
+      return await db.following.orderBy('updated').offset(query.offset).limit(query.limit).reverse().toArray();
     }
-    return response;
+    return [];
   }
 
   static async fetchNsfwBlogs() {

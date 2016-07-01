@@ -7,6 +7,21 @@ module.exports = (function (Tumblr, Backbone, _) {
   const formKey = $('#tumblr_form_key').attr('content');
   const icon = 'iVBORw0KGgoAAAANSUhEUgAAAGcAAABpCAYAAAAnSz2JAAACkklEQVR42u3c0U3DMBDGcW/BGKzBGIzBGozRNToGY6C+RElkGtEHqIJoEvv8ne9/z0jE3+/OTZM0KVG+Kt+KJGwz34Qzz/OJ2MSGIf8oorOB2YUDUL267kznwzgA1Z+aQzgA1YU5jANQPZgiONd98p14y8MUwWF66sAUwwFo15nZhxkOQGWnpjgOQMm+2fPGIn7DRt+KwzU4wybPOwoKowzzzoLEIL98oKARxokOVD23XKCAEcaJdgZn1tC5UAEjjBMByDyrXLjAEcb56x9nRyXTxFYL9Ixj1QBmOGtncMCI4Hjc3lpnYx6WFyCFXJoEpQ50f2yXy+UpDM7awTxyn92i1p4watWwTTtYcXpUmrU5jtoZnFKjJoW9X+XzRzEHyWBad22Lzz9ZnJZAyg2aIu/5rc7MXOK0/lautG5JnGEYnltcaFRryqT6Td363onqmmUvo1jdq1der6trXDUePwJHoNOVzsy6wSkF5K0J3eCM4/hy5Dg9NqAbnCOfF57X5/q28X/H631t7h5ZevSY7/9mmqZX9zgegVbOzN56aLougbqGud3TOCkv6LpNffa6TacIC+sWxvsC1Y977btbCCCVx6yqTo1XoFAwnhYdEmapZZ/MlB6Mx9/VhIIBSBwGIAc4AAnDACQOA5A4DDjCMACJwwD0XfIvRWdqAr0TBhiA4sDc7qmcgWF6gAHody1v9Ug9FFMDEDDRgVKvpf68clgY79OTohQwAJW6mHlOEYupAQiYvWXx/kxgOpoeRESBkBAFKvabGYCYmjBApC4KRNqiOCQtCkTCwkCkKwpEqqJApCkKRIqiOCQoCkRyokDL61ZITRSItESBSEkUiHQa1/LGQmAcTQ+JiALJ/2iWoqiK9QXVEo0oBz0DhAAAAABJRU5ErkJggg==';
 
+  $.fn.removeAttributes = function (args) {
+    const ignore = args.ignore;
+    return this.each(function () {
+      const attributes = $.map(this.attributes, item => {
+        if (typeof ignore !== 'undefined' && item.name !== ignore) {
+          return item.name;
+        }
+      });
+      const elem = $(this);
+      $.each(attributes, (i, item) => {
+        elem.removeAttr(item);
+      });
+    });
+  };
+
   window.$ = $;
 
   window.webpackJsonp(0, [function (module, exports, require) {
@@ -156,55 +171,31 @@ module.exports = (function (Tumblr, Backbone, _) {
   });
 
   Tumblr.Fox.addInitializer('initialize:componentFetcher', function (ComponentFetcher) {
-    const AUTOCOMPLETE = '/svc/search/blog_search_typeahead';
-    const ANIMATION = 'webkitAnimationEnd';
-    const BLOG_SEARCH = 'this.onTermSelect';
-    const BLOG_SEARCH_AUTOCOMPLETE_HELPER = 'this.model.hasMatches()';
-    const BLOG_SEARCH_POPOVER = 'popover--blog-search';
-    const CONVERSATIONS_COLLECTION = '/svc/conversations/participant_suggestions';
-    const CLICK_HANDLER = 'document.addEventListener("click",this._onClick,!0)}';
-    const EVENT_BUS = '_addEventHandlerByString'
-    const INBOX_COMPOSE = '"inbox-compose"';
-    const PRIMA_COMPONENT = '.uniqueId("component")';
-    const POPOVER_MIXIN = '_crossesView';
-    const PEEPR_BLOG_SEARCH = 'peepr-blog-search';
-    const SEARCH_RESULT_VIEW = 'inbox-recipients';
-    const KEY_COMMANDS_MIXIN = '__keyFn';
-    const LOADER = 'this.createBarLoader()';
-    const MIXIN = 'this.mixins=';
-    const SEARCH_FILTERS = '[data-filter]';
-    const SEARCH_FILTERS_POPOVER = 'blog-search-filters-popover';
-    const SEARCH_INPUT = '$$(".blog-search-input")';
-    const TAGS_POPOVER = 'click [data-term]';
-    const TUMBLR_MODEL = '.Model.extend({})';
-    const TUMBLR_VIEW = 'this._beforeRender';
-
     ComponentFetcher.getComponents({
-      AutoComplete: AUTOCOMPLETE,
-      animation: ANIMATION,
-      BlogSearch: BLOG_SEARCH,
-      BlogSearchAutocompleteHelper: BLOG_SEARCH_AUTOCOMPLETE_HELPER,
-      BlogSearchPopover: BLOG_SEARCH_POPOVER,
-      ConversationsCollection: CONVERSATIONS_COLLECTION,
-      ClickHandler: CLICK_HANDLER,
-      EventBus: EVENT_BUS,
-      InboxCompose: INBOX_COMPOSE,
-      PrimaComponent: PRIMA_COMPONENT,
-      PopoverMixin: POPOVER_MIXIN,
-      PeeprBlogSearch: PEEPR_BLOG_SEARCH,
-      SearchResultView: SEARCH_RESULT_VIEW,
-      KeyCommandsMixin: KEY_COMMANDS_MIXIN,
-      Loader: LOADER,
-      Mixin: MIXIN,
-      SearchFilters: SEARCH_FILTERS,
-      SearchFiltersPopover: SEARCH_FILTERS_POPOVER,
-      SearchInput: SEARCH_INPUT,
-      TagsPopover: TAGS_POPOVER,
+      AutoComplete: '/svc/search/blog_search_typeahead',
+      animation: 'webkitAnimationEnd',
+      BlogSearch: 'this.onTermSelect',
+      BlogSearchAutocompleteHelper: 'this.model.hasMatches()',
+      BlogSearchPopover: 'popover--blog-search',
+      ConversationsCollection: '/svc/conversations/participant_suggestions',
+      ClickHandler: 'document.addEventListener("click",this._onClick,!0)}',
+      EventBus: '_addEventHandlerByString',
+      InboxCompose: '"inbox-compose"',
+      PrimaComponent: '.uniqueId("component")',
+      PopoverMixin:  '_crossesView',
+      PeeprBlogSearch: 'peepr-blog-search',
+      SearchResultView: 'inbox-recipients',
+      KeyCommandsMixin: '__keyFn',
+      Loader: 'this.createBarLoader()',
+      Mixin: 'this.mixins=',
+      SearchFilters: '[data-filter]',
+      SearchFiltersPopover: 'blog-search-filters-popover',
+      SearchInput: '$$(".blog-search-input")',
+      TagsPopover: 'click [data-term]',
       Toastr: "toastTime",
-      TumblrModel: TUMBLR_MODEL,
-      TumblrView: TUMBLR_VIEW
+      TumblrModel: '.Model.extend({})',
+      TumblrView: 'this._beforeRender'
     });
-
     this.get = ComponentFetcher.get.bind(ComponentFetcher);
     this.put = ComponentFetcher.put.bind(ComponentFetcher);
     extend(Backbone.Model, ComponentFetcher.get('TumblrModel'));
@@ -251,9 +242,7 @@ module.exports = (function (Tumblr, Backbone, _) {
 
   Tumblr.Fox.addInitializer('initialize:dependency:followerListComponent', function (FollowerList) {
     if (window.location.href.includes('following')) {
-      this.Application.following = new FollowerList({
-        el: $('#following')
-      });
+      this.Application.following = new FollowerList();
     }
   });
 });
