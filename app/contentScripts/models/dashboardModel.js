@@ -44,7 +44,7 @@ module.exports = (function (Tumblr, Backbone, _, DashboardSource) {
         return filteredFetch().then(response => {
           posts = take(posts.concat(response), query.limit);
           if (posts.length < query.limit) {
-            query.next_offset += 15; // default was 15
+            query.next_offset += 15;
             return recursiveFetch(posts);
           } else {
             deferred.resolve({ posts, query });

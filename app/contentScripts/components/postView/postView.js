@@ -164,8 +164,6 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
       PostView.prototype.remove.apply(this);
       this.model.stopListening();
       this.stopListening();
-      delete this.$el;
-      delete this.model;
     }
   });
 

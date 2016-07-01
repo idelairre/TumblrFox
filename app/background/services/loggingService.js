@@ -28,7 +28,7 @@ export const log = (database, items, sendResponse, save) => {
       itemsLeft,
       total
     };
-    // console.log(`[PERCENT COMPLETE]: ${percentComplete}%, [ITEMS LEFT]: ${itemsLeft}`);
+
     if (itemsLeft === 0) {
       sendResponse({
         type: 'done',

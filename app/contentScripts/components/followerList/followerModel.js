@@ -27,7 +27,7 @@ module.exports = (function followerModel(Tumblr, Backbone, _, ChromeMixin) {
           this.items.reset(followers);
         } else {
           followers.forEach(follower => {
-            this.items.add(follower);
+            this.items.add(new Tumblelog(follower));
           });
         }
         this.set('offset', this.get('offset') + this.get('limit'));
@@ -56,7 +56,6 @@ module.exports = (function followerModel(Tumblr, Backbone, _, ChromeMixin) {
           const response = [];
           following.forEach(follower => {
             follower = $(follower);
-            console.log(follower.html());
             const json = $(follower).find('[data-tumblelog-popover]').data('tumblelog-popover');
             if (json) {
               json.updated = follower.find('.description').text();

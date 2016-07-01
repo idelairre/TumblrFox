@@ -1,4 +1,4 @@
-module.exports = (function followerItem(Tumblr, Backbone, _, TumblrView) {
+module.exports = (function followerItem(Tumblr, Backbone, _) {
   const { $, View } = Backbone;
   const { isNumber, template } = _;
   const { constants, Utils } = Tumblr.Fox;
@@ -17,7 +17,7 @@ module.exports = (function followerItem(Tumblr, Backbone, _, TumblrView) {
     },
     render() {
       this.$el.removeAttributes({ ignore: 'class' });
-      if (this.model.collection.indexOf(this.model) % 2 === 0) {
+      if (Tumblr.Prima.Models.Tumblelog.collection.indexOf(this.model) % 2 === 0) {
         this.$el.addClass('alt');
       }
       this.$el.html(this.template(this.model));

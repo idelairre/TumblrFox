@@ -221,14 +221,11 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
       return deferred.promise();
     },
     applyFilter() {
-      if (this.searchModel.get('filter_nsfw')) {
-        this.postViews.collection.whereBy({ 'tumblelog-content-rating': 'nsfw' }).invoke('dismiss');
-        this.postViews.collection.whereBy({ 'tumblelog-content-rating': 'adult' }).invoke('dismiss');
+      this.postViews.collection.invoke('dismiss'); // just filter everything, this works around a bug where new posts would not attach in the correct location after filtering
+      if (!this.autopaginator.get('enabled')) {
+        this.autopaginator.start();
       }
-      if (this.searchModel.get('post_role') === 'ORIGINAL') {
-        this.postViews.collection.whereBy({ is_reblog: true }).invoke('dismiss');
-      }
-    },
+    }
   });
 
   Tumblr.Fox.register('PostsModel', PostsModel);

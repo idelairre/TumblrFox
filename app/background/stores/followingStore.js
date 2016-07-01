@@ -8,7 +8,6 @@ import 'babel-polyfill';
 
 export default class Following {
   static async fetch(query) {
-    console.log(query);
     if (query && query.order === 'alphabetically') {
       return await db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
     } else if (query && query.order === 'orderFollowed') {
@@ -17,7 +16,6 @@ export default class Following {
       await Following.refresh(); // TODO: add flag to indicate whether to refresh or not
       return await db.following.orderBy('updated').offset(query.offset).limit(query.limit).reverse().toArray();
     }
-    return [];
   }
 
   static async fetchNsfwBlogs() {
