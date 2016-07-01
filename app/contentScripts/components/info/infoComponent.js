@@ -1,15 +1,19 @@
-module.exports = (function info(Tumblr, Backbone, _) {
-  const { $, View } = Backbone;
+module.exports = (function info(Tumblr, Backbone, $, _) {
+  const { assign, template, pick } = _;
+  const { View } = Backbone;
   const { TemplateCache } = Tumblr.Fox.Utils;
 
   const Info = View.extend({
-    id: 'info',
+    name: 'info',
     startWithParent: true,
-    template: '<li class="sidebar_nav_item" id="tumblrFoxInfo"><a class="sidebar_link">TumblrFox</a></li>',
+    className: 'sidebar_nav_item',
+    tagName: 'li',
+    template: '<a class="sidebar_link" id="tumblrFoxInfo">TumblrFox</a>',
     events: {
       'click #tumblrFoxInfo': 'showDialog'
     },
     initialize(options) {
+      assign(this, pick(options, ['options']));
       this.render();
     },
     render() {
@@ -22,7 +26,7 @@ module.exports = (function info(Tumblr, Backbone, _) {
     showDialog() {
       Tumblr.Dialog.alert({
         templates: {
-          content: `<div class="text">TumblrFox ${Tumblr.Fox.options.get('version')} installed. Release notes: <a href="https://github.com/idelairre/TumblrFox/releases/tag/v${Tumblr.Fox.options.get('version')}" target="_blank">link</a></div>`
+          content: template(TemplateCache.get('infoTemplate'))
         }
       });
     }

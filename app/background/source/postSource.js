@@ -12,7 +12,6 @@ export default class PostSource {
       return posts = posts.filter(async post => {
         const following = await db.following.get(post.blog_name);
         if (following && following.hasOwnProperty('content_rating')) {
-          console.log('nsfw', post);
           return;
         }
         return post
@@ -20,6 +19,7 @@ export default class PostSource {
     }
     return posts;
   }
+
   static async fetchDashboardPosts(request) {
     const slug = {
       offset: request.next_offset || 0,

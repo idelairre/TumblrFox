@@ -1,5 +1,4 @@
-module.exports = (function templateCache(Tumblr, Backbone, _) {
-  const { $ } = Backbone;
+module.exports = (function templateCache(Tumblr, Backbone, $, _) {
   const { extend } = _;
 
   const TemplateCache = function () {

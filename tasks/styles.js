@@ -8,17 +8,17 @@ import minifyCSS from 'gulp-minify-css';
 import livereload from 'gulp-livereload';
 import args from './lib/args';
 
-gulp.task('styles:css', function () {
+gulp.task('styles:css', () => {
   return gulp.src('app/**/*.css')
     .pipe(gulpif(args.production, minifyCSS()))
     .pipe(gulp.dest(`dist/${args.vendor}`))
     .pipe(gulpif(args.watch, livereload()));
 });
 
-gulp.task('styles:less', function () {
+gulp.task('styles:less', () => {
   return gulp.src('app/**/*.less')
     .pipe(gulpif(args.sourcemaps, sourcemaps.init()))
-    .pipe(less({ paths: ['./app']}).on('error', function (error) {
+    .pipe(less({ paths: ['./app']}).on('error', error => {
       gutil.log(gutil.colors.red('Error (' + error.plugin + '): ' + error.message));
       this.emit('end');
     }))
@@ -28,10 +28,10 @@ gulp.task('styles:less', function () {
     .pipe(gulpif(args.watch, livereload()));
 });
 
-gulp.task('styles:sass', function () {
+gulp.task('styles:sass', () => {
   return gulp.src('app/**/*.scss')
     .pipe(gulpif(args.sourcemaps, sourcemaps.init()))
-    .pipe(sass({ includePaths: ['./app']}).on('error', function (error) {
+    .pipe(sass({ includePaths: ['./app']}).on('error', error => {
       gutil.log(gutil.colors.red('Error (' + error.plugin + '): ' + error.message));
       this.emit('end');
     }))

@@ -221,7 +221,6 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
       return deferred.promise();
     },
     applyFilter() {
-      console.log(this.searchModel.get('filter_nsfw'));
       if (this.searchModel.get('filter_nsfw')) {
         this.postViews.collection.whereBy({ 'tumblelog-content-rating': 'nsfw' }).invoke('dismiss');
         this.postViews.collection.whereBy({ 'tumblelog-content-rating': 'adult' }).invoke('dismiss');

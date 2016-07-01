@@ -20,6 +20,7 @@ module.exports = (function filterIcon(Tumblr, Backbone, _, FilterPopoverComponen
     startWithParent: true,
     template: $(filterIconTemplate).html(),
     className: 'tab iconic tab_filtered_posts',
+    name: 'filter',
     id: 'filter',
     events: {
       'click button': 'togglePopover'
@@ -46,7 +47,7 @@ module.exports = (function filterIcon(Tumblr, Backbone, _, FilterPopoverComponen
         this.$tabNotice.prop('class', 'tab_notice tab-notice--outlined new_post_notice_container  tab-notice--active');
         this.$tabNotice.find('.tab_notice_value').text(this.options.get('version'));
         setTimeout(() => {
-          this.$tabNotice.fadeOut(200).promise().then(() => {
+          this.$tabNotice.fadeOut(1000).promise().then(() => {
             Tumblr.Fox.updateConstants({
               firstRun: false
             });

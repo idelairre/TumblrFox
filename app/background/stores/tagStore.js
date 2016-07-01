@@ -4,14 +4,14 @@ import db from '../lib/db';
 import 'babel-polyfill';
 
 export default class Tags {
-  static async fetchLikedTags() {
-    const tags = await db.tags.orderBy('count').reverse().limit(250).toArray();
-    return tags;
-  }
-
   static async add(tags) {
     const promises = tags.map(Tags._putAndIncrementTags);
     return Promise.all(promises);
+  }
+  
+  static async fetchLikedTags() {
+    const tags = await db.tags.orderBy('count').reverse().limit(250).toArray();
+    return tags;
   }
 
   static async fetchTagsByUser(blogname) {

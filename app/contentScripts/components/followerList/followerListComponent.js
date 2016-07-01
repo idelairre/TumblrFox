@@ -1,8 +1,6 @@
 module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel) {
   const { $, View } = Backbone;
-  const { ComponentFetcher } = Tumblr.Fox.Utils
   const { assign, debounce, each } = _;
-  // const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = ComponentFetcher.getAll('FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel');
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
@@ -14,7 +12,6 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
   */
 
   const FollowerList = View.extend({
-    // dependencies: ['FollowerModel', 'FollowerItemComponent', 'FollowerSearchComponent', 'StateModel'],
     defaults: {
       offset: 25,
       limit: 25,
@@ -25,7 +22,6 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       }
     },
     initialize(options) {
-      // const { FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel } = ComponentFetcher.getAll(this.dependencies);
       this.options = assign({}, options, this.defaults);
       this.state = new StateModel(this.defaults.state);
       this.attachNode = this.$el.find('.left_column');
@@ -81,12 +77,9 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       }
     },
     clearElements() {
-      const deferred = $.Deferred();
-      this.$followers.fadeOut(300, deferred.resolve);
-      return deferred.promise();
+      return this.$followers.fadeOut(300).promise();
     },
     onScroll(e) {
-      console.log('scroll');
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
         if (this.loader.get('loading')) {
           return;

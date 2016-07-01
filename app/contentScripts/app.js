@@ -15,6 +15,9 @@ module.exports = (function (Tumblr, Backbone, _) {
   }]);
 
   const TumblrFox = function () {
+
+    this.require = window.require;
+
     this.constants = {
       attachNode,
       formKey,
@@ -48,8 +51,6 @@ module.exports = (function (Tumblr, Backbone, _) {
     this.Mixins = {};
 
     this._initializers = {};
-
-    this.require = window.require;
 
     extend(this.Events, Backbone.Events);
 
@@ -86,9 +87,9 @@ module.exports = (function (Tumblr, Backbone, _) {
     },
     initializeComponent(name, component) {
       const event = `initialize:dependency:${camelCase(name)}`;
-      if (component.prototype.hasOwnProperty('startWithParent') && component.prototype.hasOwnProperty('id') && !this._initializers[event]) {
+      if (component.prototype.hasOwnProperty('startWithParent') && component.prototype.hasOwnProperty('name') && !this._initializers[event]) {
         this.once(event, Component => {
-          this.Application[component.prototype.id] = new Component({
+          this.Application[component.prototype.name] = new Component({
             state: this.state,
             options: this.options
           });
@@ -199,6 +200,7 @@ module.exports = (function (Tumblr, Backbone, _) {
       SearchFiltersPopover: SEARCH_FILTERS_POPOVER,
       SearchInput: SEARCH_INPUT,
       TagsPopover: TAGS_POPOVER,
+      Toastr: "toastTime",
       TumblrModel: TUMBLR_MODEL,
       TumblrView: TUMBLR_VIEW
     });

@@ -11,7 +11,7 @@ import 'babel-polyfill';
 export default class Cache {
   static async assembleCacheAsCsv(port) {
     try {
-      const CacheWorker = require('./cacheWorkerService');
+      const CacheWorker = require('./cacheWorkerService').default;
       const posts = await db.posts.toCollection().toArray();
       const file = await CacheWorker.convertJsonToCsv(posts);
       const result = await CacheWorker.assembleFileBlob(file);
@@ -74,7 +74,7 @@ export default class Cache {
 
   static async restoreCache(fileSlug, port) { // this only works for files < 100 mb
     try {
-      const CacheWorker = require('./cacheWorkerService');
+      const CacheWorker = require('./cacheWorkerService').default;
       const { offset, fileSize } = fileSlug;
       const progress = calculatePercent(offset, fileSize);
       port({
