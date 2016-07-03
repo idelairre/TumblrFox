@@ -132,33 +132,37 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
       })
     },
     _updateAttributes(model, tumblelog) {
-      if (this.$followButton && this.$followButton.length > 0 && model.followed) {
-        this.$followButton.hide();
+      if (model) {
+        if (model.tags) {
+          this.model.set('tags', model.tags);
+        }
+        if (this.$followButton && this.$followButton.length > 0 && model.followed) {
+          this.$followButton.hide();
+        }
+        this.model.set('tumblelog-data', tumblelog);
+        const peeprData = JSON.stringify({
+          tumblelog: this.model.get('tumblelog')
+        });
+        this.$avatar.attr('data-peepr', peeprData);
+        const links = this.$el.find('.post_info_link');
+        $.each(links, (i, el) => {
+          const link = $(el);
+          link.attr('data-peepr', JSON.stringify({
+            tumblelog: link.text()
+          }));
+        });
+        this.$notes.data('count', model.notes.count);
+        this.$notes.attr('title', model.notes.current);
+        this.$notes.data('less', model.notes.less);
+        this.$notes.data('more', model.notes.more);
+        this.$notes.text(model.notes.current);
+        let tagElems = '';
+        model.tags.map(tag => {
+          const tagEl = tagTemplate({ tag });
+          tagElems += tagEl;
+        });
+        this.$tags.html(tagElems);
       }
-      this.model.set('tumblelog-data', tumblelog);
-      this.model.set('tags', model.tags || []);
-      const peeprData = JSON.stringify({
-        tumblelog: this.model.get('tumblelog')
-      });
-      this.$avatar.attr('data-peepr', peeprData);
-      const links = this.$el.find('.post_info_link');
-      $.each(links, (i, el) => {
-        const link = $(el);
-        link.attr('data-peepr', JSON.stringify({
-          tumblelog: link.text()
-        }));
-      });
-      this.$notes.data('count', model.notes.count);
-      this.$notes.attr('title', model.notes.current);
-      this.$notes.data('less', model.notes.less);
-      this.$notes.data('more', model.notes.more);
-      this.$notes.text(model.notes.current);
-      let tagElems = '';
-      model.tags.map(tag => {
-        const tagEl = tagTemplate({ tag });
-        tagElems += tagEl;
-      });
-      this.$tags.html(tagElems);
     },
     remove() {
       PostView.prototype.remove.apply(this);

@@ -97,13 +97,13 @@ module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent
       'click .blog-search-input': 'onFormClick'
     },
     bindEvents() {
-      // this.listenTo(this.eventBus, 'all', console.log.bind(console, '[EVENTBUS]: '));
       this.listenTo(this, 'change:showUserList', ::this.toggleUserList);
       this.listenTo(this.model, 'search:reset', ::this.onSearchReset);
       this.listenTo(this.model, 'change:term change:post_type change:sort', this.log.bind(this, 'search-start', {}));
       this.listenTo(this.state, 'change:state', ::this.updateSearchSettings);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:start', ::this.onFetchRequested);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:reset', ::this.resetTerm);
+      this.listenTo(Tumblr.Fox.Events, 'fox:fetch:complete', ::this.toggleLoading(false));
     },
     unbindEvents() {
       this.stopListening();

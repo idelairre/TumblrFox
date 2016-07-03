@@ -3,7 +3,7 @@
 /* global __ENV__:true */
 /* eslint no-undef: "error" */
 
-if (__ENV__ === 'development') {
+if (__ENV__ === 'development' || __ENV__ === 'test') {
   (() => {
     const LIVERELOAD_HOST = 'localhost';
     const LIVERELOAD_PORT = 35729;

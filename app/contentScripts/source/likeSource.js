@@ -27,9 +27,9 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         query = omit(query, 'blogname');
       }
       this.fetch(query).then(posts => {
-        setTimeout(() => {
+        // setTimeout(() => {
           deferred.resolve(posts);
-        }, 250);
+        // }, 250);
       });
       return deferred.promise();
     }

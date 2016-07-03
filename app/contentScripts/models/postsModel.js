@@ -97,7 +97,7 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
           break;
         case 'dashboard':
           if (slug.term.length > 0) {
-            return this.renderSearchResults(slug).then(fetchHelper);
+            this.renderSearchResults(slug).then(fetchHelper);
           }
           this.dashboardModel.fetch(slug).then(response => {
             const { posts, query } = response;

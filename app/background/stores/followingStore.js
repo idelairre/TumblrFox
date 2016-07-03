@@ -8,19 +8,20 @@ import 'babel-polyfill';
 
 export default class Following {
   static async fetch(query) {
+    // NOTE: these cases are for when the user is fetching from the following view
     if (query && query.order === 'alphabetically') {
-      return await db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
+      return db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
     } else if (query && query.order === 'orderFollowed') {
-      return await db.following.orderBy('order').offset(query.offset).limit(query.limit).toArray(); // maybe fetch each user individually and update? delegate to front end?
-    } else if (query && query.order === 'recentlyUpdated') { // recently updated
-      await Following.refresh(); // TODO: add flag to indicate whether to refresh or not
-      return await db.following.orderBy('updated').offset(query.offset).limit(query.limit).reverse().toArray();
+      return db.following.orderBy('order').offset(query.offset).limit(query.limit).toArray();
+    } else if (query && query.order === 'recentlyUpdated') {
+      return db.following.orderBy('updated').offset(query.offset).limit(query.limit).reverse().toArray();
     }
+    return db.following.toCollection().toArray();
   }
 
   static async fetchNsfwBlogs() {
-    let following = await db.following.filter(follower => {
-      if (follower.hasOwnProperty('content_rating')) {
+    const following = await db.following.filter(follower => {
+      if (follower.hasOwnProperty('content_rating') && follower.content_rating === 'adult' || follower.content_rating === 'nsfw') {
         return follower;
       }
     }).toArray();

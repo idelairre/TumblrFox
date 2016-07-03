@@ -16,16 +16,18 @@ const updateContentRating = async () => {
       const following = await db.following.toCollection().filter(follower => {
         return !follower.content_rating;
       }).offset(offset).limit(100).toArray();
-      offset += 100;
-      return Dexie.Promise.all(following.map(async follower => {
-        const post = await db.posts.where('blog_name').equals(follower.name).first();
-        if (post && post.hasOwnProperty('tumblelog-content-rating')) {
-          follower.content_rating = post['tumblelog-content-rating'];
-        } else {
-          follower.content_rating = 'safe';
-        }
-        return db.following.put(follower);
-      }));
+      offset += following.length;
+      if (following.length > 0) {
+        return Dexie.Promise.all(following.map(async follower => {
+          const post = await db.posts.where('blog_name').equals(follower.name).first();
+          if (post && post.hasOwnProperty('tumblelog-content-rating')) {
+            follower.content_rating = post['tumblelog-content-rating'];
+          } else {
+            follower.content_rating = 'safe';
+          }
+          return db.following.put(follower);
+        }));
+      }
       next(null, following.length);
     }).catch(e => {
       console.error(e.stack || e);
@@ -44,15 +46,17 @@ const updateTokens = async () => {
       const posts = await db.posts.toCollection().filter(post => {
         return !post.tokens;
       }).offset(offset).limit(100).toArray();
-      offset += 100;
-      const promises = posts.filter(post => {
-        if (!post.tokens) {
-          post.tokens = Lunr.tokenizeHtml(post.html);
-          post.tokens = union(post.tags, post.tokens, [post.blog_name]);
-          return db.posts.put(post);
-        }
-      });
-      Promise.all(promises);
+      offset += posts.length;
+      if (posts.length > 0) {
+        const promises = posts.filter(post => {
+          if (!post.tokens) {
+            post.tokens = Lunr.tokenizeHtml(post.html);
+            post.tokens = union(post.tags, post.tokens, [post.blog_name]);
+            return db.posts.put(post);
+          }
+        });
+        Promise.all(promises);
+      }
       next(null, posts.length);
     } catch (e) {
       next(e);
@@ -193,5 +197,7 @@ db.open().then(() => {
 updateTokens();
 
 updateContentRating();
+
+window.db = db;
 
 export default db;

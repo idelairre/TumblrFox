@@ -51,6 +51,10 @@ export default class Likes {
     });
   }
 
+  static async get(id) {
+    return await db.posts.get(id);
+  }
+
   static async put(post) {
     try {
       post.tags = Likes._updateTags(post);
@@ -98,19 +102,24 @@ export default class Likes {
   }
 
   static async searchLikesByTerm(query) {
-    query = Likes._marshalQuery(query);
-    const term = query.term;
-    const filters = Likes._testFilters.bind(this, query);
-    query.term = Lunr.tokenize(query.term)[0];
-    if (typeof query.term === 'undefined') {
-      query.term = term;
-    }
-    if (query.sort !== 'CREATED_DESC') {
-      let response = await db.posts.where('tokens').anyOfIgnoreCase(query.term).filter(filters).toArray();
-      response = Likes._sortByPopularity(response);
+    try {
+      query = Likes._marshalQuery(query);
+      const term = query.term;
+      const filters = Likes._testFilters.bind(this, query);
+      query.term = Lunr.tokenize(query.term)[0];
+      if (typeof query.term === 'undefined') {
+        query.term = term;
+      }
+      if (query.sort !== 'CREATED_DESC') {
+        let response = await db.posts.where('tokens').anyOfIgnoreCase(query.term).filter(filters).toArray();
+        response = Likes._sortByPopularity(response);
+        return response.slice(query.next_offset, query.next_offset + query.limit);
+      }
+      const response = await db.posts.where('tokens').anyOfIgnoreCase(query.term).filter(filters).toArray(); // NOTE: using dexie's native offset method here slows this down drastically since it has to iterate through the whole collection
       return response.slice(query.next_offset, query.next_offset + query.limit);
+    } catch (e) {
+      console.error(e);
     }
-    return await db.posts.where('tokens').anyOfIgnoreCase(query.term).filter(filters).offset(query.next_offset).limit(query.limit).reverse().toArray();
   }
 
   static _sortByPopularity(posts) {
@@ -136,25 +145,27 @@ export default class Likes {
   static async searchLikesByTag(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
     console.log(query);
     query = Likes._marshalQuery(query);
-    const deferred = Deferred();
     const filters = Likes._testFilters.bind(this, query);
     try {
       let matches = [];
       if (query.sort !== 'CREATED_DESC') {
-        matches = await db.posts.orderBy('note_count').filter(filters).offset(query.next_offset).limit(query.limit).reverse().toArray();
+        matches = await db.posts.orderBy('note_count').filter(filters).reverse().toArray();
+      } else if (query.post_type !== 'any') {
+        matches = await db.posts.where('type').anyOfIgnoreCase(query.post_type).filter(filters).toArray();
       } else {
-        matches = await db.posts.toCollection().filter(filters).offset(query.next_offset).limit(query.limit).reverse().toArray();
+        matches = await db.posts.toCollection().filter(filters).toArray();
       }
-      deferred.resolve(matches);
+      return matches.slice(query.next_offset, query.next_offset + query.limit);
     } catch (e) {
-      deferred.reject(e);
+      console.error(e);
     }
-    return deferred.promise();
   }
 
   static async syncLike(postData) {
-    postData.tags = Source.processTags(postData.html);
-    Likes.put(postData);
+    if (!Likes.get(postData.id)) {
+      postData.tags = Source.processTags(postData.html);
+      Likes.put(postData);
+    }
   }
 
   static async updateLikes(request) {

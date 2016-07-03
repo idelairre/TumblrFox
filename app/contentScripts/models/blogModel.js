@@ -72,7 +72,10 @@ module.exports = (function (Tumblr, Backbone, _, BlogSource) {
             query.next_offset += 15;
             return recursiveFetch(posts);
           }
-          deferred.resolve({ posts, query });
+          deferred.resolve({
+            posts,
+            query
+          });
         });
       }
       recursiveFetch(posts);

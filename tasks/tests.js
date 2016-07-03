@@ -2,65 +2,20 @@ import appRoot from 'app-root-path';
 import gulp from 'gulp';
 import named from 'vinyl-named';
 import webpack from 'webpack';
+import config from './config/webpack.config';
 import gulpWebpack from 'webpack-stream';
 import WebpackDevServer from 'webpack-dev-server';
 import plumber from 'gulp-plumber';
 import args from './lib/args';
+import fs from 'fs';
+import { escape } from 'lodash';
 
 if (args.test) {
-  const path = appRoot.resolve('test/index.js');
+  const path = appRoot.resolve('tests/test.js');
 
-  const config = {
-    entry: 'mocha!./test/index.js',
-    output: {
-      path: '/test',
-      publicPath: 'http://localhost:8000/test',
-      filename: 'test.build.js',
-      chunkFilename: '[name].[id].js'
-    },
-    devtool: args.sourcemaps ? 'eval' : null,
-    target: 'web',
-    watch: args.watch,
-    plugins: [
-      new webpack.DefinePlugin({
-        '__ENV__': JSON.stringify('test'),
-        '__VENDOR__': JSON.stringify(args.vendor)
-      })
-    ],
-    module: {
-      noParse: /node_modules\/json-schema\/lib\/validate\.js/,
-      loaders: [
-        { test: /\.less$/, loader: 'style-loader!css-loader!less-loader' },
-        { test: /\.html$/, loader: 'html' },
-        { test: /\.js$/, loader: 'babel?cacheDirectory', exclude: /node_modules/ },
-        { test: /\.json$/, loader: 'json' }
-      ]
-    },
-    modulesDirectories: ['node_modules'],
-    resolve: {
-      root: appRoot.path,
-      extensions: ['', '.webpack.js', '.web.js', '.js']
-    },
-    resolveLoader: {
-      root: appRoot.resolve('node_modules')
-    }
-  };
-
-  let bundleStart = null;
-  const compiler = webpack(config);
-
-  compiler.plugin('compile', () => {
-    console.log('Bundling...');
-    bundleStart = Date.now();
-  });
-
-  compiler.plugin('done', () => {
-    console.log(`Bundled in ${Date.now() - bundleStart} ms.`);
-  });
-
-  const bundler = new WebpackDevServer(compiler, {
-    entry: 'mocha!./test/index',
-    publicPath: appRoot.resolve('./test'),
+  const bundler = new WebpackDevServer(webpack(config), {
+    entry: 'mocha!./tests/test',
+    publicPath: './tests',
     hot: true,
     quiet: false,
     noInfo: true,
@@ -73,11 +28,11 @@ if (args.test) {
     console.log('listening on port 8000');
   });
 
-  gulp.task('tests', () => {
-    return gulp.src(path)
+  gulp.task('tests', ['livereload', 'scripts'], () => {
+    return gulp.src('tests/test/**/*.js')
       .pipe(plumber())
       .pipe(named())
-      .pipe(gulpWebpack(config))
-      .pipe(gulp.dest('test/dist'));
+      .pipe(gulp.dest('tests'))
+      .pipe(gulpif(args.watch, livereload()));
   });
 }

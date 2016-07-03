@@ -9,10 +9,10 @@ import Likes from '../stores/likeStore';
 import 'babel-polyfill';
 
 export default class Cache {
-  static async assembleCacheAsCsv(port) {
+  static async assembleCacheAsCsv(port) { // NOTE: this has problems, throws maximum ipc message at high number of posts
     try {
       const CacheWorker = require('./cacheWorkerService').default;
-      const posts = await db.posts.toCollection().toArray();
+      const posts = await db.posts.toCollection().limit(100).toArray();
       const file = await CacheWorker.convertJsonToCsv(posts);
       const result = await CacheWorker.assembleFileBlob(file);
       port({
@@ -90,6 +90,9 @@ export default class Cache {
         worker: false,
         comments: false,
         complete: (results, parse) => {
+          if (__ENV__ === 'test') {
+            return results.data;
+          }
           Cache._addPostsToDb(results.data, port);
         },
         error: e => {

@@ -8,7 +8,9 @@ gulp.task('livereload', (cb) => {
 
   // This task runs only if the
   // watch argument is present!
-  if (!args.watch) return cb();
+  if (!args.watch) {
+    return cb();
+  }
 
   // Start livereload server
   livereload.listen({

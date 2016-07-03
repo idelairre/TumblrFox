@@ -16,7 +16,7 @@ module.exports = (function tagSearchAutocompleteModel(Tumblr, Backbone, _, AutoC
       this.$$rawTags = [];
       this.$$dashboardTags = [];
       this.bindEvents();
-      if (!this.state.get('disabled')) {
+      if (!this.state.get('disabled') || !this.state.get('likes')) {
         this.initialFetch();
       }
     },
