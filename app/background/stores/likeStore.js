@@ -80,12 +80,12 @@ export default class Likes {
   static _testFilters(query, post) {
     let valid = true;
     if (query.blogname && query.blogname !== '') {
-      valid = post.blogname.toLowerCase().includes(query.blogname.toLowerCase());
+      valid = post.blog_name.toLowerCase().includes(query.blogname.toLowerCase());
     }
-    if (query.post_type !== 'any') {
+    if (query.post_type && query.post_type !== 'any') {
       valid = post.type.includes(query.post_type);
     }
-    if (query.post_role === 'ORIGINAL') {
+    if (query.post_role && query.post_role === 'ORIGINAL') {
       valid = !post.is_reblog;
     }
     if (query.filter_nsfw) {
@@ -142,8 +142,7 @@ export default class Likes {
     return query;
   }
 
-  static async searchLikesByTag(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
-    console.log(query);
+  static async fetch(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
     query = Likes._marshalQuery(query);
     const filters = Likes._testFilters.bind(this, query);
     try {

@@ -198,6 +198,4 @@ updateTokens();
 
 updateContentRating();
 
-window.db = db;
-
 export default db;

@@ -29,7 +29,7 @@ const chromeReciever = receiverHandler({
   fetchNsfwBlogs: Following.fetchNsfwBlogs,
   fetchTagsByUser: Tags.fetchTagsByUser,
   setFilter: Likes.setFilter,
-  searchLikesByTag: Likes.searchLikesByTag,
+  searchLikesByTag: Likes.fetch,
   searchLikesByTerm: Likes.searchLikesByTerm,
   syncLike: Likes.syncLike,
   updateLikes: Likes.updateLikes,

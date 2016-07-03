@@ -90,9 +90,6 @@ export default class Cache {
         worker: false,
         comments: false,
         complete: (results, parse) => {
-          if (__ENV__ === 'test') {
-            return results.data;
-          }
           Cache._addPostsToDb(results.data, port);
         },
         error: e => {
