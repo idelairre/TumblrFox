@@ -2,8 +2,7 @@ module.exports = (function eventsListener(Tumblr, Backbone, _, Listener) {
   const { assign, pick } = _;
 
   const EventsListener = Listener.extend({
-    initialize(options) {
-      assign(this, pick(options, ['options']));
+    initialize() {
       this.ignore = [
         'fox:updateTags',
         'LSLog:impression',
@@ -31,7 +30,7 @@ module.exports = (function eventsListener(Tumblr, Backbone, _, Listener) {
         'DOMEventor:flatscroll'
       ];
       this.listenToOnce(Tumblr.Fox, 'initialized', () => {
-        if (this.options.get('logging')) {
+        if (Tumblr.Fox.options.get('logging')) {
           this.start();
         }
       });

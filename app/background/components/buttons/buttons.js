@@ -2,7 +2,7 @@ import $ from 'jquery';
 import { snakeCase, toUpper } from 'lodash';
 import Backbone from 'backbone';
 import parseFile from './parseFile';
-import View from '../../view/view';
+import View from '../view/view';
 import buttonsTemplate from './buttons.html';
 
 const Buttons = View.extend({
@@ -19,6 +19,8 @@ const Buttons = View.extend({
   },
   bindEvents() {
     this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
+    this.listenTo(Backbone.Events, 'CACHE_LIKES', this.$('#resetCache').prop('disabled', true));
+    this.listenTo(Backbone.Events, 'DONE', this.$('#resetCache').prop('disabled', false));
     this.listenTo(Backbone.Events, 'CACHE_UPLOADED', ::this.createDownload);
     this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.createFileBlob);
     this.listenTo(this.props, 'change:cachedPostsCount', this.toggleButtonsDisabled);
@@ -78,20 +80,16 @@ const Buttons = View.extend({
     }
   },
   createDownload(response) {
-    this.$download.prop('href', response.payload.url);
-    this.$download.prop('download', 'tumblrData.json');
-    setTimeout(() => {
-      document.getElementById('cache').click();
-    }, 1);
+    chrome.downloads.download({
+      url: response.payload.url,
+      filename: 'tumblrfox-data.json'
+    });
   },
   createFileBlob(response) {
-    console.log('[CREATING FILE BLOB]');
-    Backbone.Events.trigger('CREATE_FILE_BLOB', this.$download, response);
-    this.$download.prop('href', response.payload.file);
-    this.$download.prop('download', `tumblrData.${response.payload.type}`);
-    setTimeout(() => {
-      document.getElementById('cache').click();
-    }, 1);
+    chrome.downloads.download({
+      url: response.payload.file,
+      filename: 'tumblrfox-data.csv'
+    });
   }
 });
 

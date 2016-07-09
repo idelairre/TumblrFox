@@ -14,15 +14,22 @@ const stripScripts = script => {
   return div.innerHTML;
 };
 
+export const htmlTags = ['a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'div', 'dl', 'dt', 'element', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'head', 'header', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'meta', 'meter', 'multicol', 'nav', 'noframes', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'param', 'pre', 'progress', 'q', 'rp', 'rt', 'rtc', 'ruby', 's', 'samp', 'script', 'section', 'select', 'shadow', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'];
+
 class LunrSearch {
   constructor() {
     this.lunr = Lunr();
   }
 
-  tokenizeHtml(html) {
+  tokenizeHtml(html) { // TODO: strip out html data
     html = stripScripts(html);
     const text = $(html).text();
-    return this.tokenize(text);
+    const tokens = this.tokenize(text).filter(token => {
+      if (htmlTags.includes(token)) {
+        return;
+      }
+      return token;
+    });
   }
 
   tokenize(text) {

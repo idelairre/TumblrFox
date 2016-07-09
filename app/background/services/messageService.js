@@ -18,11 +18,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 const sendMessage = payload => {
-  chrome.tabs.sendMessage(tumblr, payload , response => {
+  chrome.tabs.sendMessage(tumblr, payload, response => {
     if (response) {
       console.log(response);
     }
   });
 }
+
 
 export default sendMessage;

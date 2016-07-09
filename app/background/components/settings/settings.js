@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
-import View from '../../view/view';
+import View from '../view/view';
 import settingsTemplate from './settings.html';
 
 const Settings = View.extend({

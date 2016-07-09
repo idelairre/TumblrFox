@@ -88,5 +88,17 @@ describe('likeStore', () => {
         }
       }
     });
+    it ('should only return liked posts', async () => {
+      const response = await Likes.fetch({
+        post_role: 'ANY',
+        post_type: 'ANY',
+        next_offset: 0,
+        limit: 10,
+        sort: 'POPULARITY_DESC'
+      });
+      response.forEach(post => {
+        expect(post.liked).to.equal.true;
+      })
+    });
   });
 });

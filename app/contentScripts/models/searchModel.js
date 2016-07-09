@@ -30,9 +30,6 @@ module.exports = (function (Tumblr, Backbone, _, BlogSearch, ChromeMixin) {
     resetSearch() {
       this.set(pick(this.defaults, ['limit', 'next_offset']));
       this.trigger('search:reset');
-      if (Tumblr.Fox.options.get('enableTextSearch')) {
-        this.chromeTrigger('chrome:search:setFilter', this.toJSON());
-      }
       this.flushMatches();
     },
     reset() {

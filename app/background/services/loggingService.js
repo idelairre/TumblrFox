@@ -1,5 +1,21 @@
-import { camelCase } from 'lodash';
+import { camelCase, noop } from 'lodash';
 import constants from '../constants';
+
+const log = console.log.bind(console, '[TUMBLRFOX]');
+
+export const debug = (...args) => {
+  if (typeof constants.get('debug') === 'undefined') {
+    constants.once('ready', () => {
+      if (constants.get('debug')) {
+        log.call(log, ...args);
+      }
+    });
+  } else {
+    if (constants.get('debug')) {
+      log.call(log, ...args);
+    }
+  }
+}
 
 export const calculatePercent = (count, total) => {
   const percentComplete = ((count / total) * 100).toFixed(2);
@@ -7,19 +23,11 @@ export const calculatePercent = (count, total) => {
   return { percentComplete, itemsLeft, total };
 };
 
-export const log = (database, items, sendResponse, save) => {
+export const logValues = (database, sendResponse, callback) => {
   try {
     const cachedKey = camelCase(`cached-${database}-count`);
     const totalKey = camelCase(`total-${database}-count`);
-    const { percentComplete, itemsLeft, total } = calculatePercent(items[cachedKey], items[totalKey]);
-    if (typeof save === 'undefined' || save) {
-      if (typeof constants.get(`${cachedKey}`) !== 'undefined ' && typeof constants.get(`${totalKey}`) !== 'undefined') {
-        const storageSlug = {};
-        storageSlug[cachedKey] = items[cachedKey];
-        storageSlug[totalKey] = items[totalKey];
-        constants.set(storageSlug);
-      }
-    }
+    const { percentComplete, itemsLeft, total } = calculatePercent(constants.get(cachedKey), constants.get(totalKey));
 
     const payload = {
       constants,
@@ -30,20 +38,27 @@ export const log = (database, items, sendResponse, save) => {
     };
 
     if (itemsLeft === 0) {
-      sendResponse({
-        type: 'done',
-        payload,
-        message: 'Finished processing items'
-      });
+      if (sendResponse) {
+          sendResponse({
+          type: 'done',
+          payload,
+          message: 'Finished processing items'
+        });
+      }
     } else {
-      sendResponse({
-        type: 'progress',
-        payload
-      });
+      if (sendResponse) {
+        sendResponse({
+          type: 'progress',
+          payload
+        });
+      }
+    }
+    if (callback) {
+      callback();
     }
   } catch (e) {
     console.error(e);
-    logError(e, callback);
+    logError(e);
   }
 };
 

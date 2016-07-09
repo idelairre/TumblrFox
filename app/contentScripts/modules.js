@@ -1,3 +1,4 @@
+export ActionListener from './listeners/actionListener';
 export App from './app';
 export AutoPaginatorModel from './models/autopaginatorModel';
 export BlogModel from './models/blogModel';
@@ -22,7 +23,6 @@ export EventsListener from './listeners/eventsListener';
 export InfoComponent from './components/info/infoComponent';
 export InputComponent from './components/filterPopover/search/input/inputComponent';
 export Listener from './listeners/listener';
-export LikesListener from './listeners/likesListener';
 export LikesModel from './models/likesModel';
 export ObjectUtil from './utils/objectUtil';
 export PostFormatter from './utils/postFormatterUtil';

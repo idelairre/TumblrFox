@@ -1,4 +1,4 @@
-module.exports = (function postFormatter(Tumblr, Backbone, _) {
+module.exports = (function postFormatter(Tumblr, Backbone, _, BlogSource) {
   const { $ } = Backbone;
   const { defaultsDeep, extend, omit } = _;
   const { get } = Tumblr.Fox;
@@ -23,6 +23,17 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
   const PostFormatter = function () { };
 
   extend(PostFormatter.prototype, {
+    formatDashboardPosts(postData) {
+      let posts = $(postData.trim());
+      posts = Array.prototype.slice.call(posts.find('[data-json]:not(.image-ad, .video-ad)'));
+      posts = posts.map(post => {
+        postEl = $(post);
+        post = postEl.data('json');
+        post.html = postEl.parent().html();
+        return post;
+      });
+      return posts;
+    },
     formatType(postData) {
       if (postData.type === 'text') {
         return 'regular';
@@ -74,6 +85,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         }
         this.renderPost(post, true); // second argument signals to marshal the post
       });
+      Tumblr.Events.trigger('DOMEventor:updateRect');
     },
     parseTags(post) {
       const postHtml = $(post.$el);
@@ -106,6 +118,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         });
         post.remove();
       });
+      Tumblr.Events.trigger('DOMEventor:updateRect');
     },
 
     /**
@@ -186,28 +199,7 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
 
     marshalPostAttributes(postData) {
       postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
-      const blogData = Tumblr.Prima.Models.Tumblelog.collection.get({ name: postData.blog.name }) || {
-        anonymous_asks: null,
-        asks: null,
-        avatar_url: postData.blog.avatar[1].url,
-        can_receive_messages: null,
-        can_send_in_message: null,
-        can_subscribe: null,
-        cname: '',
-        customizable: false,
-        dashboard_url: `blog/${postData.tumblelog}`,
-        description_sanitized: stripScripts(postData.blog.description),
-        following: null,
-        is_group: null,
-        is_subscribed: null,
-        likes: postData.blog.share_likes,
-        name: postData.blog.name,
-        premium_partner: false,
-        share_following: false,
-        title: postData.blog.title,
-        url: postData.blog.url,
-        uuid: postData.blog.uuid
-      };
+      const blogData = Tumblelog.collection.where({ name: postData.tumblelog })[0].toJSON();
       postData = defaultsDeep({
         'accepts-answers': null,
         'can_reply': postData.can_reply,
@@ -230,51 +222,21 @@ module.exports = (function postFormatter(Tumblr, Backbone, _) {
         'root_id': postData.reblogged_root_id,
         'tags': postData.tags,
         'type': this.formatType(postData),
-        'tumblelog-data': blogData,
-        'tumblelog-parent-data': typeof postData.reblogged_from_tumblr_url === 'string' ? {
-          anonymous_asks: null,
-          avatar_url: null,
-          can_send_messages: postData.reblogged_from_can_message,
-          can_receive_messages: null,
-          cname: '',
-          dashboard_url: `/blog/${postData.reblogged_from_name}`,
-          following: postData.reblogged_from_following,
-          is_group: null,
-          is_private: null,
-          is_subscribed: null,
-          likes: null,
-          name: postData.reblogged_from_name,
-          premium_partner: false,
-          share_following: null,
-          title: postData.reblogged_from_title,
-          url: postData.reblogged_from_tumblr_url,
-          uuid: postData.reblogged_from_uuid
-        } : false,
-        'tumblelog-root-data': typeof postData.reblogged_from_tumblr_url === 'string' ? {
-          anonymous_asks: null,
-          avatar_url: null,
-          can_send_messages: postData.reblogged_root_can_message,
-          cname: '',
-          following: postData.reblogged_root_following,
-          is_group: null,
-          is_private: null,
-          is_subscribed: null,
-          likes: null,
-          name: postData.reblogged_root_name,
-          premium_partner: null,
-          share_following: null,
-          title: postData.reblogged_root_title,
-          url: postData.reblogged_root_url,
-          uuid: postData.reblogged_root_uuid
-        } : false
+        'tumblelog-data': blogData
       }, postData);
       if (postData.type === 'video') {
         postData['direct-video'] = 1;
-      } else {
-        postData['direct-video'] = '';
       }
       if (postData.type === 'photo' && postData.post_html.includes('.gif')) {
         postData['is-animated'] = 1;
+      }
+      if (typeof postData.reblogged_from_name !== 'undefined') {
+        const parentData = Tumblelog.collection.where({ name: postData.reblogged_from_name })[0];
+        postData['tumblelog-parent-data'] = typeof parentData !== 'undefined' ? parentData.toJSON() : false;
+      }
+      if (typeof postData.reblogged_root_name !== 'undefined') {
+        const rootData = Tumblelog.collection.where({ name: postData.reblogged_root_name })[0];
+        postData['tumblelog-root-data'] = typeof rootData !== 'undefined' ? rootData.toJSON() : false;
       }
       postData = omit(postData, ['blog', 'reblog', 'reblogged_from_can_message', 'reblogged_from_following', 'reblogged_from_followed', 'reblogged_from_id', 'reblogged_from_name', 'reblogged_from_title', 'reblogged_from_tumblr_url', 'reblogged_from_url', 'reblogged_from_uuid', 'reblogged_root_can_message', 'reblogged_root_following', 'reblogged_root_name', 'reblogged_root_title', 'reblogged_root_url', 'reblogged_root_uuid']);
       return postData;

@@ -1,18 +1,18 @@
 import $ from 'jquery';
 import { isNumber, mapKeys, snakeCase, toUpper } from 'lodash';
 import Backbone, { Model } from 'backbone';
-import View from '../../view/view';
-import Tipped from '../../../lib/tipped';
+import View from '../view/view';
+import Tipped from '../../lib/tipped';
 import cacheTemplate from './cache.html';
 import cacheTooltip from './tooltips/cacheTooltip.html';
 
 const Cache = View.extend({
   defaults: {
     props: {
-      cachedPostsCount: 0,
+      cachedLikesCount: 0,
       cachedFollowingCount: 0,
       cachedTagsCount: 0,
-      totalPostsCount: 0,
+      totalLikesCount: 0,
       totalFollowingCount: 0,
       totalTagsCount: 0
     }
@@ -21,7 +21,7 @@ const Cache = View.extend({
   className: 'cache options',
   tagName: 'section',
   initialize() {
-    const maxPages = this.props.get('totalPostsCount') / 50;
+    const maxPages = this.props.get('totalLikesCount') / 50;
     this.pageOpts = [];
     for (let i = 0; maxPages > i; i += 50) {
       this.pageOpts.unshift(i);
@@ -36,7 +36,7 @@ const Cache = View.extend({
   },
   bindEvents() {
     this.listenTo(this.model, 'change', () => {
-      this.props.set('fetchLikesUntil', this.model.attributes);
+      this.props.set('likeSourceLimits', this.model.toJSON());
     });
   },
   render() {
@@ -70,8 +70,8 @@ const Cache = View.extend({
   handleButton(e) {
     e.preventDefault();
     const key = this.$(e.currentTarget).prop('id');
-    const event = toUpper(snakeCase(key));
-    Backbone.Events.trigger(event, {
+    const eventName = toUpper(snakeCase(key));
+    Backbone.Events.trigger(eventName, {
       type: key
     });
   },

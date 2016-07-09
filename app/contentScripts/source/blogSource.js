@@ -1,21 +1,25 @@
 module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
-  const { extend, pick } = _;
+  const { extend, first, pick } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
 
   const BlogSource = Source.extend({
     mixins: [ChromeMixin],
     getInfo(blogname) {
       const deferred = $.Deferred();
-      const slug = {
-        tumblelog: blogname
-      };
+
+      if (blogname.includes('-deact')) {
+        return deferred.reject();
+      }
+
       $.ajax({
         type: 'GET',
-        url: 'https://www.tumblr.com/svc/data/tumblelog',
+        url: ' https://www.tumblr.com/svc/data/tumblelog',
         beforeSend: xhr => {
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
         },
-        data: slug,
+        data: {
+          tumblelog: blogname
+        },
         success: data => {
           deferred.resolve(data.response);
         },
@@ -25,11 +29,19 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
       });
       return deferred.promise();
     },
+    cacheFetch(query) {
+      delete query.blog;
+      const deferred = $.Deferred();
+      this.chromeTrigger('chrome:fetch:cachedBlogPosts', query, response => {
+        deferred.resolve(response);
+      });
+      return deferred.promise();
+    },
     fetch(query) {
-      if (query.term.length === 0 && query.post_type === 'ANY') {
+      if (query.post_type === 'ANY' && (!query.term || query.term.length === 0)) {
         return this.clientFetch(query).then(data => {
           const { posts, tumblelog } = data.response;
-          if (tumblelog) {
+          if (tumblelog && !Tumblelog.collection.findWhere({ name: tumblelog.name })) {
             Tumblelog.collection.add(new Tumblelog(tumblelog));
           }
           return posts;
@@ -38,8 +50,7 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
       const deferred = $.Deferred();
       const slug = pick(query, 'blogname', 'next_offset', 'limit', 'sort', 'post_type');
       this.chromeTrigger('chrome:fetch:blogPosts', slug, response => {
-        this.collateData(response).then(posts => {
-          posts = this._handleCollatedData(posts);
+        this.collateData(response).then(response => {
           deferred.resolve(posts);
         });
       });
@@ -55,8 +66,8 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         slug.post_id = query.postId;
       }
       const deferred = $.Deferred();
-      $.ajax({
-        url: 'https://www.tumblr.com/svc/indash_blog/posts',
+      Backbone.ajax({
+        url: 'svc/indash_blog/posts',
         beforeSend: xhr => {
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
         },
@@ -73,9 +84,9 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
     search(query) {
       const slug = pick(query, 'next_offset', 'limit', 'sort', 'post_type', 'post_role', 'filter_nsfw');
       const deferred = $.Deferred();
-      $.ajax({
+      Backbone.ajax({
         type: 'GET',
-        url: `https://www.tumblr.com/svc/search/blog_search/${query.blogname}/${query.term}`,
+        url: `svc/search/blog_search/${query.blogname}/${query.term}`,
         data: slug,
         beforeSend: xhr => {
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
@@ -100,21 +111,45 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         });
       });
       $.when.apply($, promises).done((...posts) => {
-        deferred.resolve([].concat(...posts));
+        deferred.resolve(this._handleCollatedData([].concat(...posts)));
       });
       return deferred.promise();
     },
     _handleCollatedData(data) {
+      const deferred = $.Deferred();
       const results = [];
       data.forEach(item => {
-        const { posts, tumblelog } = item.response; // TODO: THERE IS A PROBLEM HERE
-        if (tumblelog) {
-          Tumblelog.collection.add(new Tumblelog(tumblelog));
-        }
-        results.push(posts[0]);
+        const { posts, tumblelog } = item.response;
+        const post = first(posts);
+        this._fetchTumblelogs(posts[0]);
+        results.push(post);
       });
-      return results;
+      deferred.resolve(results);
+      return deferred.promise();
     },
+    _fetchTumblelogs(post) {
+      const deferred = $.Deferred();
+      const promises = [];
+      if (!Tumblelog.collection.findWhere({ name: post.tumblelog })) {
+        promises.push(this.getInfo(post.tumblelog).then(response => {
+          Tumblelog.collection.add(new Tumblelog(response));
+        }));
+      }
+      if (post.reblogged_from_name && post.reblogged_from_name !== post.tumblelog && !Tumblelog.collection.findWhere({ name: post.reblogged_from_name })) {
+        promises.push(this.getInfo(post.reblogged_from_name).then(response => {
+          Tumblelog.collection.add(new Tumblelog(response));
+        }));
+      }
+      if (post.reblogged_root_name && post.reblogged_root_name !== post.reblogged_from_name && post.reblogged_root_name !== post.tumblelog && !Tumblelog.collection.findWhere({ name: post.reblogged_root_name })) {
+        promises.push(this.getInfo(post.reblogged_root_name).then(response => {
+          Tumblelog.collection.add(new Tumblelog(response));
+        }));
+      }
+      $.when.apply($, promises).done(() => {
+        deferred.resolve();
+      });
+      return deferred.promise();
+    }
   });
 
   Tumblr.Fox.register('BlogSource', BlogSource);

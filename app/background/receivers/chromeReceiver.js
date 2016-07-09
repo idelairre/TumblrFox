@@ -1,5 +1,7 @@
 import constants from '../constants';
 import receiverHandler from '../services/receiverService';
+import BlogStore from '../stores/blogStore';
+import BlogSource from '../source/blogSource';
 import PostSource from '../source/postSource';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
@@ -7,6 +9,7 @@ import Following from '../stores/followingStore';
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
+  constants.set('previousVersion');
 });
 
 const setConstants = payload => {
@@ -16,25 +19,29 @@ const setConstants = payload => {
 };
 
 const sendConstants = () => {
-  return constants;
+  return constants.toJSON();
 };
 
 const chromeReciever = receiverHandler({
-  initializeConstants: setConstants,
+  cacheBlogPosts: BlogStore.cache,
+  fetchCachedBlogPosts: BlogStore.fetch,
   fetchConstants: sendConstants,
   fetchDashboardPosts: PostSource.fetchDashboardPosts,
-  fetchBlogPosts: PostSource.fetchBlogPosts,
+  fetchFollowing: Following.fetch,
+  fetchBlogPosts: BlogSource.fetchBlogPosts,
   fetchDashboardPostsByTag: PostSource.fetchDashboardPostsByTag,
   fetchLikedTags: Tags.fetchLikedTags,
   fetchNsfwBlogs: Following.fetchNsfwBlogs,
   fetchTagsByUser: Tags.fetchTagsByUser,
-  setFilter: Likes.setFilter,
+  initializeConstants: setConstants,
+  refreshFollowing: Following.refresh,
   searchLikesByTag: Likes.fetch,
   searchLikesByTerm: Likes.searchLikesByTerm,
+  setFilter: Likes.setFilter,
   syncLike: Likes.syncLike,
+  updateCache: BlogStore.update,
   updateLikes: Likes.updateLikes,
-  fetchFollowing: Following.fetch,
-  updateFollowing: Following.update
+  validateCache: BlogStore.validateCache
 });
 
 export default chromeReciever;

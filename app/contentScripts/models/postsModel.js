@@ -1,12 +1,8 @@
-module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, ControllerModel, DashboardModel, LikesModel, LoaderComponent, SearchModel, SearchResultsComponent) => {
+module.exports = (function postModel(Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, ControllerModel, DashboardModel, LikesModel, LoaderComponent, SearchModel, SearchResultsComponent) {
   const { assign, each, invoke, pick } = _;
   const { get, Utils } = Tumblr.Fox;
 
-  // NOTE: this strikes me as a "super model", maybe thin this out?
-  // further, this doesn't really resemble a model, perhaps there
-  // is a better way of organizing this thing??
-  // TODO: 1. redirect to dashboard if the route is other than the dashboard
-  //       2. thin this the fuck out
+  // NOTE: scrolling while searching tries to render results when there are none and disables the autopaginator
 
   const PostsModel = ControllerModel.extend({
     models: {
@@ -83,21 +79,24 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
         this.incrementOffset(posts.length);
         this.evalAndLogResults(posts);
         Tumblr.Fox.Events.trigger('fox:fetch:complete', posts); // this turns off the loader bar
-        this.toggleLoading(false);
         deferred.resolve();
       };
 
       switch (this.state.getState()) {
         case 'user':
           this.blogModel.fetch(slug).then(response => {
-            const { posts, query } = response;
-            this.searchModel.set(query);
-            fetchHelper(posts);
+            if (response.hasOwnProperty('posts')) {
+              const { posts, query } = response;
+              this.searchModel.set(query);
+              fetchHelper(posts);
+            } else {
+              fetchHelper(response);
+            }
           });
           break;
         case 'dashboard':
           if (slug.term.length > 0) {
-            this.renderSearchResults(slug).then(fetchHelper);
+            return this.renderSearchResults(slug).then(fetchHelper);
           }
           this.dashboardModel.fetch(slug).then(response => {
             const { posts, query } = response;
@@ -116,7 +115,6 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
       this._prepareRequest();
 
       const resultsHelper = results => {
-        this.set('searching', false);
         this.toggleLoading(false);
         this.incrementOffset(results.length);
         this.evalAndLogResults(results);
@@ -127,9 +125,6 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
       };
 
       this.resetSlug();
-      this.set('searching', true);
-      Tumblr.Fox.Events.trigger('fox:search:started');
-
       switch (this.state.getState()) {
         case 'likes':
           this.toggleLoading(true);
@@ -140,9 +135,11 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
           this.blogModel.search(query).then(resultsHelper);
           break;
         case 'dashboard':
+          this.set('searching', true);
           this.loader.show(); // want to keep the loader status decouped from posts model so results can be rendered
-          this.dashboardModel.search(query).then(() => {
+          this.dashboardModel.search(query).then(posts => {
             this.set('searching', false);
+            Tumblr.Fox.Events.trigger('fox:search:complete', posts);
             this.loader.hide();
             deferred.resolve();
           });
@@ -156,13 +153,6 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
         return deferred.reject();
       }
       this.searchModel.getSearchResults(slug).then(matches => {
-        if (matches.length < slug.limit && !this.get('searching')) {
-          Tumblr.Fox.Events.trigger('fox:search:renderedResults', {
-            loggingData: slug
-          });
-          this.autopaginator.stop();
-          this.searchModel.set('renderedResults', true);
-        }
         setTimeout(() => {
           deferred.resolve(matches);
         }, 500);
@@ -171,11 +161,13 @@ module.exports = ((Tumblr, Backbone, $, _, AutoPaginatorModel, BlogModel, Contro
     },
     evalAndLogResults(results) {
       if (results.length < this.searchModel.get('limit')) {
-        this.searchModel.set('renderedResults', true);
-        Tumblr.Fox.Events.trigger('fox:search:renderedResults', {
-          loggingData: this.searchModel.toJSON()
-        });
-        this.autopaginator.stop();
+        if (!this.get('searching')) {
+          this.searchModel.set('renderedResults', true);
+          Tumblr.Fox.Events.trigger('fox:search:renderedResults', {
+            loggingData: this.searchModel.toJSON()
+          });
+          this.autopaginator.stop();
+        }
       }
     },
     toggleLoading(val) {

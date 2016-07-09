@@ -1,7 +1,8 @@
 module.exports = (function (Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { extend, camelCase, forIn, last, omit, pick } = _;
+  const { extend, camelCase, forIn, keys, last, omit, pick, uniqueId } = _;
   const { currentUser } = Tumblr.Prima;
+  const { Tumblelog } = Tumblr.Prima.Models;
   const listItems = $('#posts').find('li');
   const attachNode = $(listItems[listItems.length - 1]);
   const formKey = $('#tumblr_form_key').attr('content');
@@ -30,7 +31,6 @@ module.exports = (function (Tumblr, Backbone, _) {
   }]);
 
   const TumblrFox = function () {
-
     this.require = window.require;
 
     this.constants = {
@@ -48,12 +48,14 @@ module.exports = (function (Tumblr, Backbone, _) {
       enableTextSearch: false
     });
 
-    this._state = { // NOTE: state is actually a model initialized with these values when the dependency is loaded
+    this.state = new Model({ // NOTE: state is actually a model initialized with these values when the dependency is loaded
       dashboard: true,
       disabled: false,
       user: false,
       likes: false
-    };
+    });
+
+    this.route = last(window.location.href.split('/'));
 
     this.Application = {};
     this.Class = {};
@@ -66,8 +68,14 @@ module.exports = (function (Tumblr, Backbone, _) {
     this.Mixins = {};
 
     this._initializers = {};
+    this._intervalTasks = {};
 
     extend(this.Events, Backbone.Events);
+
+    setInterval(() => {
+      this.trigger('heartbeat');
+      console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', '♥');
+    }, 200000);
 
     this.bindListeners();
   };
@@ -80,7 +88,10 @@ module.exports = (function (Tumblr, Backbone, _) {
     unbindListeners() {
       this.stopListening(this, 'initialize:componentFetcher');
     },
-    register(name, component) {
+    onHeartbeat(name, func) {
+      this._intervalTasks[name] = func.bind(this);
+    },
+    register(name, component) { // NOTE: we could register these after init and just put them in the component fetcher, that way we could grab components without complex init code
       if (name.includes('Class')) {
         name = name.replace(/Class/, '');
         this.Class[name] = component;
@@ -92,13 +103,16 @@ module.exports = (function (Tumblr, Backbone, _) {
       } else if (name.includes('Mixin')) {
         this.Mixins[name] = component;
       } else if (name.includes('Listener')) {
-        this.Listeners[name] = component;
+        this.Listeners[name] = new component();
       } else if (name.includes('Source')) {
         this.Source[name] = new component();
         this.Utils.ComponentFetcher.put(name, this.Source[name]);
         return;
       }
       this.Utils.ComponentFetcher.put(name, component);
+    },
+    emitDependency(name, dependency) {
+      this.trigger(`initialize:dependency:${camelCase(name)}`, dependency);
     },
     initializeComponent(name, component) {
       const event = `initialize:dependency:${camelCase(name)}`;
@@ -111,19 +125,32 @@ module.exports = (function (Tumblr, Backbone, _) {
         });
       }
     },
+    getComponents(components) {
+      this.once('initialize:componentFetcher', ComponentFetcher => {
+        ComponentFetcher.getComponents(components);
+        this.get = ComponentFetcher.get.bind(ComponentFetcher);
+        this.put = ComponentFetcher.put.bind(ComponentFetcher);
+        extend(Backbone.Model, ComponentFetcher.get('TumblrModel'));
+      });
+    },
     addInitializer(event, callback) {
-      this._initializers[event] = {
+      const eventId = uniqueId(event);
+      this._initializers[eventId] = {
         called: false,
         callback
       };
       this.once(event, component => {
         callback.call(Tumblr.Fox, component);
-        this._initializers[event].called = true;
+        this._initializers[eventId].called = true;
         if (this._checkInitializers()) {
           this.trigger('initialized');
           this.off();
+          this.on('heartbeat', () => {
+            keys(this._intervalTasks).map(func => {
+              this._intervalTasks[func]();
+            });
+          });
           delete this._initializers;
-          delete this._state;
           console.log('[TUMBLRFOX INITIALIZED]');
         }
       });
@@ -138,9 +165,6 @@ module.exports = (function (Tumblr, Backbone, _) {
       });
       return initialized;
     },
-    emitDependency(name, dependency) {
-      this.trigger(`initialize:dependency:${camelCase(name)}`, dependency);
-    },
     fetchConstants() {
       this.chromeListenTo('bridge:initialized', () => {
         this.chromeTrigger('chrome:fetch:constants', response => {
@@ -150,12 +174,40 @@ module.exports = (function (Tumblr, Backbone, _) {
     },
     updateConstants(payload) {
       this.chromeTrigger('chrome:initialize:constants', payload);
+    },
+    onRoute(route) {
+      console.log(route);
     }
   });
 
   Tumblr.Fox = new TumblrFox();
 
-  Tumblr.Fox.addInitializer('initialize:constants', function (constants) {
+  Tumblr.Fox.getComponents({
+    AutoComplete: '/svc/search/blog_search_typeahead',
+    animation: 'webkitAnimationEnd',
+    BlogSearch: 'this.onTermSelect',
+    BlogSearchAutocompleteHelper: 'this.model.hasMatches()',
+    BlogSearchPopover: 'popover--blog-search',
+    ConversationsCollection: '/svc/conversations/participant_suggestions',
+    ClickHandler: 'document.addEventListener("click",this._onClick,!0)}',
+    EventBus: '_addEventHandlerByString',
+    InboxCompose: '"inbox-compose"',
+    PrimaComponent: '.uniqueId("component")',
+    PopoverMixin:  '_crossesView',
+    PeeprBlogSearch: 'peepr-blog-search',
+    SearchResultView: 'inbox-recipients',
+    KeyCommandsMixin: '__keyFn',
+    Loader: 'this.createBarLoader()',
+    Mixin: 'this.mixins=',
+    SearchFilters: '[data-filter]',
+    SearchFiltersPopover: 'blog-search-filters-popover',
+    SearchInput: '$$(".blog-search-input")',
+    TagsPopover: 'click [data-term]',
+    TumblrModel: '.Model.extend({})',
+    TumblrView: 'this._beforeRender'
+  });
+
+  Tumblr.Fox.addInitializer('initialize:constants', function (constants) { // TODO: change these to their corresponding constants value
     this.options.set('logging', constants.debug);
     this.options.set('cachedTags', (constants.cachedTagsCount !== 0));
     this.options.set('cachedFollowing', (constants.cachedFollowersCount !== 0));
@@ -163,42 +215,14 @@ module.exports = (function (Tumblr, Backbone, _) {
     this.options.set('firstRun', constants.firstRun);
     this.options.set('version', constants.version);
     this.trigger('fox:constants:initialized', this.constants, this.options);
+  });
+
+  Tumblr.Fox.addInitializer('initialize:constants', function () {
     if (this.options.get('firstRun')) {
       this.trigger('initialize:firstRun');
     } else {
       this.off('initialize:firstRun');
     }
-  });
-
-  Tumblr.Fox.addInitializer('initialize:componentFetcher', function (ComponentFetcher) {
-    ComponentFetcher.getComponents({
-      AutoComplete: '/svc/search/blog_search_typeahead',
-      animation: 'webkitAnimationEnd',
-      BlogSearch: 'this.onTermSelect',
-      BlogSearchAutocompleteHelper: 'this.model.hasMatches()',
-      BlogSearchPopover: 'popover--blog-search',
-      ConversationsCollection: '/svc/conversations/participant_suggestions',
-      ClickHandler: 'document.addEventListener("click",this._onClick,!0)}',
-      EventBus: '_addEventHandlerByString',
-      InboxCompose: '"inbox-compose"',
-      PrimaComponent: '.uniqueId("component")',
-      PopoverMixin:  '_crossesView',
-      PeeprBlogSearch: 'peepr-blog-search',
-      SearchResultView: 'inbox-recipients',
-      KeyCommandsMixin: '__keyFn',
-      Loader: 'this.createBarLoader()',
-      Mixin: 'this.mixins=',
-      SearchFilters: '[data-filter]',
-      SearchFiltersPopover: 'blog-search-filters-popover',
-      SearchInput: '$$(".blog-search-input")',
-      TagsPopover: 'click [data-term]',
-      Toastr: "toastTime",
-      TumblrModel: '.Model.extend({})',
-      TumblrView: 'this._beforeRender'
-    });
-    this.get = ComponentFetcher.get.bind(ComponentFetcher);
-    this.put = ComponentFetcher.put.bind(ComponentFetcher);
-    extend(Backbone.Model, ComponentFetcher.get('TumblrModel'));
   });
 
   Tumblr.Fox.addInitializer('initialize:dependency:chromeMixin', function (ChromeMixin) {
@@ -210,39 +234,53 @@ module.exports = (function (Tumblr, Backbone, _) {
     });
   });
 
-  Tumblr.Fox.addInitializer('initialize:dependency:stateModel', function(State) {
+  Tumblr.Fox.addInitializer('initialize:dependency:stateModel', function(State) { // TODO: add proper code to manage routes
     const routes = ['dashboard', 'likes', currentUser().id];
     const route = last(window.location.href.split('/'));
     const awayFromPosts = !routes.includes(route);
 
-    this.state = new State(this._state);
+    extend(this.state, State.prototype);
 
-    if (window.location.href.includes('likes')) {
+    if (this.route.includes('likes')) {
       this.state.setState('likes');
-    } else if (window.location.href.includes('blog')) {
+    } else if (this.route.includes('blog')) {
       this.state.setState('user');
     } else if (awayFromPosts) {
       this.state.setState('disabled');
     }
   });
 
-  Tumblr.Fox.addInitializer('initialize:dependency:likesListener', function (LikesListener) {
-    this.Listeners['LikesListener'] = new LikesListener();
-  });
-
-  Tumblr.Fox.addInitializer('initialize:dependency:eventsListener', function (EventsListener) {
-    this.Listeners['EventsListener'] = new EventsListener({
-      options: this.options
-    });
-  });
-
-  Tumblr.Fox.addInitializer('initialize:dependency:postsListener', function (PostsListener) {
-    this.Listeners['PostsListener'] = new PostsListener();
-  });
-
   Tumblr.Fox.addInitializer('initialize:dependency:followerListComponent', function (FollowerList) {
-    if (window.location.href.includes('following')) {
+    if (this.route.includes('following')) {
       this.Application.following = new FollowerList();
     }
+  });
+
+  Tumblr.Fox.once('initialized', function () {
+    if (this.route.includes('following')) {
+      return;
+    }
+    this.chromeTrigger('chrome:fetch:following', following => {
+      following.forEach(follower => {
+        if (!Tumblelog.collection.findWhere({ name: follower.name })) {
+          this.Source.BlogSource.getInfo(follower.name).then(response => {
+            Tumblelog.collection.add(new Tumblelog(response));
+          });
+        }
+      });
+    });
+    this.chromeTrigger('chrome:validate:cache', valid => {
+      if (!valid) {
+        // this.chromeTrigger('chrome:cache:blogPosts');
+      }
+    });
+    this.chromeListenTo('chrome:response:error', e => {
+      const error = e.detail;
+      Tumblr.Dialog.alert(error);
+    })
+  });
+
+  Tumblr.Fox.onHeartbeat('refreshFollowing', function () { // TODO: add follower tumblogs to collection
+    this.chromeTrigger('chrome:refresh:following');
   });
 });

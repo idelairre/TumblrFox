@@ -1,17 +1,15 @@
 import $ from 'jquery';
 import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
-import View from '../../view/view';
-import Tipped from '../../../lib/tipped';
+import View from '../view/view';
+import Tipped from '../../lib/tipped';
 import experimentalTemplate from './experimental.html';
 import clientCachingTooltip from './tooltips/clientCachingTooltip.html';
-import fullTextSearchTooltip from './tooltips/fullTextSearchTooltip.html';
 import saveViaFirebaseTooltip from './tooltips/saveViaFirebaseTooltip.html';
 
 const Experimental = View.extend({
   defaults: {
     props: {
-      fullTextSearch: false,
       saveViaFirebase: false
     }
   },
@@ -31,16 +29,13 @@ const Experimental = View.extend({
   },
   afterRender() {
     setTimeout(() => {
-      Tipped.create('[data-tooltip-key="fullTextSearch"]', $(fullTextSearchTooltip).html(), {
-        skin: 'light', position: 'bottomleft', behavior: 'hide'
-      });
       Tipped.create('[data-tooltip-key="clientCaching"]', $(clientCachingTooltip).html(), {
         skin: 'light', position: 'topleft', behavior: 'hide'
       });
       Tipped.create('[data-tooltip-key="saveViaFirebase"]', $(saveViaFirebaseTooltip).html(), {
         skin: 'light', position: 'bottomleft', behavior: 'hide'
       });
-    });
+    }, 0);
   },
   toggleCheck(e) {
     const check = e.target.checked;

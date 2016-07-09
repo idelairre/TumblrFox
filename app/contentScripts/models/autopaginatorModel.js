@@ -68,7 +68,7 @@ module.exports = (function(Tumblr, Backbone, _) {
         return;
       }
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
-        if (this.posts.get('loading')) {
+        if (this.posts.get('loading') || this.posts.get('searching')) {
           return;
         }
         this.posts.fetch(this.model.toJSON()).then(() => {

@@ -9,6 +9,12 @@ import livereload from 'gulp-livereload';
 import args from './lib/args';
 import fs from 'fs';
 
+if (!args.test) {
+  delete config.entry.test;
+} else {
+  config.entry.vendor.concat(['chia', 'sinon', 'sinon-chai']);
+}
+
 gulp.task('scripts', () => {
   return gulp.src('app/scripts/**/*.js')
     .pipe(plumber())

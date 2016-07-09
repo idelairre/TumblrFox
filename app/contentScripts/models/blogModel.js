@@ -1,19 +1,22 @@
 module.exports = (function (Tumblr, Backbone, _, BlogSource) {
-  const { isArray, take } = _;
+  const { isArray, keys, pick, take } = _;
+  const { Utils } = Tumblr.Fox;
   const { $, Model, Collection } = Backbone;
   const { Tumblelog, Post } = Tumblr.Prima.Models;
 
   const BlogModel = Model.extend({
     defaults: {
       blogname: '',
+      cached: false,
+      following: false,
       next_offset: 0,
-      limit: 50
+      limit: 10,
+      next: true,
+      cached_posts: 0,
+      total_posts: 0
     },
     initialize() {
-      this.model = new Model(this.defaults);
-      this.posts = new Collection({
-        model: Post
-      });
+      this.set(this.defaults);
       this.bindEvents();
     },
     bindEvents() {
@@ -25,38 +28,18 @@ module.exports = (function (Tumblr, Backbone, _, BlogSource) {
     getInfo(blogname) {
       return BlogSource.getInfo(blogname);
     },
-    fetch(query) {
-      if (query.term.length === 0) {
-        return this.filteredFetch(query);
-      } else if (query.term.length > 0) {
+    fetch(query) { // need a way to get new posts
+      if (query.term.length > 0) {
         return this.search(query);
+      } else if (query.term.length === 0) {
+        return this.filteredFetch(query);
       }
-    },
-    fetchAll() {
-      const deferred = $.Deferred();
-      const recursiveFetch = () => {
-        const query = this.model.toJSON();
-        return this._fetch(query).then(response => {
-          if (response.length !== 0) {
-            this.posts.add(response);
-            this.model.set('next_offset', query.next_offset + query.limit);
-            return recursiveFetch();
-          } else {
-            deferred.resolve(this.posts);
-          }
-        });
-      }
-      recursiveFetch(posts);
-      return deferred.promise();
     },
     search(query) {
       return BlogSource.search(query).then(data => {
-        Tumblr.Fox.Events.trigger('fox:blogSearch:update', data.response.posts);
         return data.response.posts;
       });
     },
-    // TODO: delegate this to the posts collection, model this after the search model and render the first 10 from
-    // async fetch, keep fetching, then render the rest from the collection
     filteredFetch(query) {
       let posts = [];
       const deferred = $.Deferred();

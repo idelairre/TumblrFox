@@ -1,10 +1,11 @@
-module.exports = (function likesListener(Tumblr, Backbone, _, ChromeMixin, Listener) {
-  const LikesListener = Listener.extend({
+module.exports = (function actionListener(Tumblr, Backbone, _, ChromeMixin, Listener) {
+  const ActionListener = Listener.extend({ // TODO: make this component watch for added and deleted following
     mixins: [ChromeMixin],
     initialize() {
       this.enabled = false;
       this.listenTo(Tumblr.Events, 'post:like:set', this.sendLike.bind(this, 'like'));
       this.listenTo(Tumblr.Events, 'post:unlike:set', this.sendLike.bind(this, 'unlike'));
+
       if (Tumblr.Fox.state.get('likes')) {
         this.listenTo(Tumblr.Fox.Events, 'fox:postsView:createPost', ::this.syncLike);
         this.enabled = true;
@@ -28,6 +29,6 @@ module.exports = (function likesListener(Tumblr, Backbone, _, ChromeMixin, Liste
     }
   });
 
-  Tumblr.Fox.register('LikesListener', LikesListener);
+  Tumblr.Fox.register('ActionListener', ActionListener);
 
 });

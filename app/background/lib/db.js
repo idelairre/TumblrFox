@@ -1,42 +1,13 @@
 import async from 'async';
 import Dexie from 'dexie';
 import { first, union } from 'lodash';
+import { debug } from '../services/loggingService';
 import Lunr from '../services/lunrSearchService';
 import 'babel-polyfill';
 
 const db = new Dexie('TumblrFox');
 
 const Promise = Dexie.Promise;
-
-const updateContentRating = async () => {
-  let offset = 0;
-  let count = await db.following.toCollection().count();
-  async.doWhilst(async next => {
-    await db.transaction('rw', db.following, db.posts, async () => {
-      const following = await db.following.toCollection().filter(follower => {
-        return !follower.content_rating;
-      }).offset(offset).limit(100).toArray();
-      offset += following.length;
-      if (following.length > 0) {
-        return Dexie.Promise.all(following.map(async follower => {
-          const post = await db.posts.where('blog_name').equals(follower.name).first();
-          if (post && post.hasOwnProperty('tumblelog-content-rating')) {
-            follower.content_rating = post['tumblelog-content-rating'];
-          } else {
-            follower.content_rating = 'safe';
-          }
-          return db.following.put(follower);
-        }));
-      }
-      next(null, following.length);
-    }).catch(e => {
-      console.error(e.stack || e);
-      next(e);
-    });
-  }, next =>{
-    return next !== 0;
-  });
-}
 
 const updateTokens = async () => {
   let offset = 0;
@@ -49,11 +20,33 @@ const updateTokens = async () => {
       offset += posts.length;
       if (posts.length > 0) {
         const promises = posts.filter(post => {
-          if (!post.tokens) {
-            post.tokens = Lunr.tokenizeHtml(post.html);
-            post.tokens = union(post.tags, post.tokens, [post.blog_name]);
-            return db.posts.put(post);
-          }
+          post.tokens = Lunr.tokenizeHtml(post.html);
+          post.tokens = union(post.tags, post.tokens, [post.blog_name]);
+          return db.posts.put(post);
+        });
+        Promise.all(promises);
+      }
+      next(null, posts.length);
+    } catch (e) {
+      next(e);
+    }
+  }, next => {
+    return next !== 0;
+  });
+}
+
+const updateNotes = async () => {
+  let offset = 0;
+  async.doWhilst(async next => {
+    try {
+      const posts = await db.posts.toCollection().filter(post => {
+        return !post.note_count;
+      }).offset(offset).limit(100).toArray();
+      offset += posts.length;
+      if (posts.length > 0) {
+        const promises = posts.filter(post => {
+          post.note_count = post.notes.count;
+          return db.posts.put(post);
         });
         Promise.all(promises);
       }
@@ -184,18 +177,45 @@ db.version(19).stores({
   tags: 'tag, count'
 });
 
+db.version(20).stores({
+  posts: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type, liked',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
+});
+
+db.version(21).stores({
+  posts: 'id, blog_name, note_count, *tags, *tokens, type',
+  likes: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type, liked',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
+});
+
+db.version(22).stores({
+  posts: 'id, name, note_count, *tags, *tokens, type',
+  likes: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type, liked',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
+});
+
+db.version(23).stores({
+  posts: 'id, name, note_count, *tags, *tokens, type, is_reblog',
+  likes: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type, liked',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
+});
+
 db.on('error', e => {
   console.error(e.stack || e);
 });
 
 db.open().then(() => {
-  console.log(db);
+  debug(db);
 }).catch(error => {
   console.error(error);
 });
 
 updateTokens();
 
-updateContentRating();
+updateNotes();
 
 export default db;

@@ -5,7 +5,7 @@ import webpack from 'webpack';
 module.exports = {
   entry: {
     onload: ['./app/background/lib/chromeExOauth.js', './app/background/lib/chromeExOauthsimple.js', './app/background/lib/onload.js'],
-    options: './app/background/options/components/options.js',
+    options: './app/background/components/options.js',
     contentscript: './app/contentScripts/contentscript.js',
     background: './app/background/background.js',
     test: 'mocha!./tests/test.js',
@@ -54,11 +54,8 @@ module.exports = {
       test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
       loader: 'url-loader?limit=10000&minetype=application/font-woff'
     }, {
-        test: /\.(jpe?g|png|gif|svg)$/i,
-        loaders: [
-            'file?hash=sha512&digest=hex&name=[hash].[ext]',
-            'image-webpack?bypassOnDebug&optimizationLevel=7&interlaced=false'
-        ]
+      test: /\.(jpe?g|png|gif|svg)$/i,
+      loaders: 'url-loader?limit=10000&minetype=application/font-woff'
     }]
   },
   modulesDirectories: ['node_modules'],

@@ -2,6 +2,7 @@
 /* eslint no-undef: "error" */
 
 import chromeReceiver from './receivers/chromeReceiver';
+import db from './lib/db';
 import optionsReceiver from './receivers/optionsReceiver';
 import './lib/livereload';
 
@@ -15,7 +16,17 @@ const loadOptionsEventHandlers = () => {
   chrome.runtime.onConnect.addListener(optionsReceiver);
 };
 
+const listenForUpdate = () => {
+  chrome.runtime.onUpdateAvailable.addListener(() => {
+    chrome.runtime.reload();
+  });
+}
+
+
 if (inExtension) {
   loadChromeEventHandlers();
   loadOptionsEventHandlers();
+  listenForUpdate();
 }
+
+window.db = db;

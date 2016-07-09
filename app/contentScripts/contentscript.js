@@ -4,9 +4,7 @@
 
 import * as Modules from './modules';
 import * as Templates from './templates';
-import Module, { inject, injectTemplates } from './module';
-import { forIn } from 'lodash';
-import $ from 'jquery';
+import { inject, injectTemplates } from './module';
 import Bridge from './bridge';
 
 Modules.App.essential = true;
@@ -20,12 +18,10 @@ if (inExtension) {
   Bridge.initialize();
 }
 
-if (window.location.href.includes('https://www.tumblr.com')) {
-  console.log('@tumblr');
+console.log('@tumblr');
 
-  injectTemplates(Templates);
+injectTemplates(Templates);
 
-  inject(Modules).then(() => {
-    console.log('[MODULES INITIALIZED]');
-  });
-}
+inject(Modules).then(() => {
+  console.log('[MODULES INITIALIZED]');
+});

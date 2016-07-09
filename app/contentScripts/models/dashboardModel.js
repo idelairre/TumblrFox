@@ -15,7 +15,7 @@ module.exports = (function (Tumblr, Backbone, _, DashboardSource) {
     },
     initializeAttributes() {
       this.posts.map(Utils.PostFormatter.parseTags);
-      this.posts.map(post => {
+      this.posts.forEach(post => {
         post.model.set('html', $(post.$el).prop('outerHTML'));
       });
     },
@@ -27,7 +27,7 @@ module.exports = (function (Tumblr, Backbone, _, DashboardSource) {
         return this._applyFilter(query, response);
       });
     },
-    fetch(query) {
+    fetch(query) { // TODO: move this into dashboard souce, I don't want to see async shit in my models
       let posts = [];
       const deferred = $.Deferred();
       const filteredFetch = () => {

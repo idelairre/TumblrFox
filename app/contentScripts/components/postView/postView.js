@@ -48,7 +48,7 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
     tagName: 'li',
     className: 'post_container',
     template: template(TemplateCache.get('postViewTemplate')),
-    initialize(options) { // TODO: note count should be comma seperated
+    initialize(options) {
       if (isEmpty(options)) {
         console.info('Attempted to render an empty post, this is likely an error');
         return;
@@ -76,7 +76,6 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
           this.sync();
         }, 0);
       }
-      Tumblr.Events.trigger('DOMEventor:updateRect');
       Tumblr.postsView.collection.add(this.model);
       if (isFunction(this.parseTags)) { // NOTE: find out why this doesn't work
         this.parseTags();
@@ -90,7 +89,11 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
       this._initializeSelectors();
       this.setAttributes();
       Tumblr.Events.trigger('postsView:createPost', this);
+      this.bindEvents();
       return this;
+    },
+    bindEvents() {
+      this.listenTo(this.model, 'change', console.log.bind(console, '[POST]'));
     },
     setAttributes() {
       this.$post = this.$post || this.$el.find('.post');

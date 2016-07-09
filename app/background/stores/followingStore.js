@@ -2,7 +2,7 @@ import { forIn, kebabCase } from 'lodash';
 import async from 'async';
 import db from '../lib/db';
 import Source from '../source/followingSource';
-import { log, logError } from '../services/loggingService';
+import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 import 'babel-polyfill';
 
@@ -32,13 +32,9 @@ export default class Following {
     return response;
   }
 
-  static async update(postData) {
+  static async get(tumblelog) {
     try {
-      const follower = await db.following.get(postData.tumblelog);
-      if (follower && !follower.content_rating) {
-        follower.content_rating = postData['tumblelog-content-rating'];
-        db.following.put(follower);
-      }
+      await db.following.get(tumblelog);
     } catch (e) {
       console.error(e);
     }
@@ -49,31 +45,30 @@ export default class Following {
   }
 
   static refresh() {
-    const slug = { offset: 0, limit: 20 };
+    const slug = {
+      offset: 0,
+      limit: 20
+    };
     async.doWhilst(async next => {
       try {
-        const following = await Source.start(null, slug);
+        const following = await Source.start(slug);
+        slug.offset += slug.limit;
         if (typeof following === 'undefined') {
           console.error(Source.MAX_RETRIES_MESSAGE);
           next(Source.MAX_RETRIES_MESSAGE);
         } else {
           await Following.bulkPut(following);
-          slug.offset += slug.limit;
           next(null, following);
         }
       } catch (e) {
         next(e);
       }
-    }, async following => {
+    }, following => {
       return following.length !== 0;
     });
   }
 
   static cache(sendResponse) {
-    const items = {
-      cachedFollowingCount: constants.get('cachedFollowingCount'),
-      totalFollowingCount: constants.get('totalFollowingCount')
-    };
     async.doWhilst(async next => {
       try {
         const following = await Source.start(); // NOTE: this returns undefined when recursive error handling starts
@@ -88,11 +83,8 @@ export default class Following {
           next(null, following);
         } else {
           await Following.bulkPut(following);
-          items.cachedFollowingCount = constants.get('cachedFollowingCount');
-          log('following', items, progress => {
-            sendResponse(progress);
-            next(null, following);
-          });
+          logValues('following', sendResponse);
+          next(null, following);
         }
       } catch (e) {
        logError(e, next, sendResponse);
@@ -105,6 +97,10 @@ export default class Following {
   static async put(follower) { // TODO: this needs to be made into an actual put so it doesn't increment unnecessarily
     try {
       const count = await db.following.toCollection().count();
+      const tumblelogInfo = await Source.getInfo(follower.name);
+      if (tumblelogInfo.is_nsfw) {
+        follower.content_rating = 'nsfw';
+      }
       follower.order = count + 1;
       await db.following.put(follower);
       constants.set('cachedFollowingCount', count);

@@ -13,7 +13,7 @@ class Bridge {
     const fetchConstants = {
       type: 'fetchConstants'
     };
-    chrome.runtime.onMessage.addListener(this.bindRecievers);
+    chrome.runtime.onMessage.addListener(::this.bindRecievers);
     chrome.runtime.sendMessage(fetchConstants, ::this.bindOutgoing);
   }
 
@@ -52,11 +52,18 @@ class Bridge {
     window.dispatchEvent(req);
   }
 
+  bindErrorHandler(request) {
+    if (request.type === 'error') {
+      console.error(request);
+    }
+  }
+
   bindRecievers(request) {
+    console.log(request, this);
     if (request.payload) {
-      Bridge.trigger(`chrome:response:${request.type}`, request.payload);
+      this.trigger(`chrome:response:${request.type}`, request.payload);
     } else {
-      Bridge.trigger(`chrome:response:${request.type}`);
+      this.trigger(`chrome:response:${request.type}`);
     }
   }
 
@@ -69,7 +76,7 @@ class Bridge {
       const object = camelCase(replace(eventName, action, ''));
       eventName = `chrome:${action}:${object}`;
       this.listenTo(eventName, response => {
-        if (response) {
+        if (typeof response !== 'undefined') {
           let responseEvent = eventName.split(':');
           responseEvent[1] = 'response';
           responseEvent = responseEvent.join(':');

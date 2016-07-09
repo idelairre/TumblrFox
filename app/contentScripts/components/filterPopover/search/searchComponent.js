@@ -99,7 +99,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent
     bindEvents() {
       this.listenTo(this, 'change:showUserList', ::this.toggleUserList);
       this.listenTo(this.model, 'search:reset', ::this.onSearchReset);
-      this.listenTo(this.model, 'change:term change:post_type change:sort', this.log.bind(this, 'search-start', {}));
+      this.listenTo(this.model, 'change:term change:post_type change:sort change:post_role', this.log.bind(this, 'search-start', {}));
       this.listenTo(this.state, 'change:state', ::this.updateSearchSettings);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:start', ::this.onFetchRequested);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:reset', ::this.resetTerm);
@@ -143,6 +143,7 @@ module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent
       }
       this.model.set('next_offset', 0);
       this.toggleLoading(true);
+      Tumblr.Fox.Events.trigger('fox:search:started');
       this.posts.filterPosts().then(() => {
         if (this.model.get('term') && this.model.get('term').length > 0) {
           this.posts.search(this.model.toJSON()).then(() => {

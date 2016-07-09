@@ -1,5 +1,7 @@
 module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Source) {
   const { extend, findIndex, omit, pick } = _;
+  const { Utils } = Tumblr.Fox;
+  const { Tumblelog } = Tumblr.Prima.Models;
 
   const b64EncodeUnicode = str => {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
@@ -13,32 +15,16 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
     }).join(''));
   }
 
-  const formatPosts = postData => {
-    let posts = $(postData.trim());
-    posts = Array.prototype.slice.call(posts.find('[data-json]:not(.image-ad, .video-ad)'));
-    posts = posts.map(post => {
-      postEl = $(post);
-      post = postEl.data('json');
-      post.html = postEl.parent().html();
-      return post;
-    });
-    return posts;
-  }
-
   const DashboardSource = Source.extend({
+    mixins: [ChromeMixin],
     initialize() {
       this.streamCursor = $('#next_page_link').data('stream-cursor') || '';
       this.endPoint = '/svc/post/dashboard';
     },
-    collateData(postIds) {
-      const deferred = $.Deferred();
-      const promises = postIds.map(id => {
-        return this.fetchPost(id);
+    collateData(response) {
+      return BlogSource.collateData(response).then(posts => {
+        return BlogSource._handleCollatedData(posts);
       });
-      $.when.apply($, promises).done((...posts) => {
-        deferred.resolve([].concat(...posts));
-      });
-      return deferred.promise();
     },
     fetch(query) {
       const deferred = $.Deferred();
@@ -47,34 +33,37 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
         slug = omit(slug, 'post_type');
       }
       this.chromeTrigger('chrome:fetch:dashboardPosts', slug, response => {
-        BlogSource.collateData(response).then(response => {
-          const results = [];
-          response.forEach(item => {
-            results.push(item.response.posts[0]);
-          });
-          deferred.resolve(results);
+        this.collateData(response).then(posts => {
+          deferred.resolve(posts);
         });
       });
       return deferred.promise();
     },
-    search(query) {
+    search(query) { // NOTE: slit this up into one block of requests per 100 users
       const deferred = $.Deferred();
-      this.chromeTrigger('chrome:fetch:following', query, followers => {
-        followers = followers.slice(0, 200);
-        const promises = followers.map(follower => {
-          query.blogname = follower.name;
-          query.limit = 1;
-          return BlogSource.search(query).then(data => {
-            if (data.response.posts.length > 0) {
-              Tumblr.Fox.Events.trigger('fox:search:postFound', data.response.posts[0]);
-            }
+      const following = Tumblelog.collection.where({
+        following: true
+      });
+      const promises = following.map(follower => {
+        query.blogname = follower.get('name');
+        query.limit = 1;
+        return BlogSource.search(query);
+      });
+      $.when.apply($, promises).done((...posts) => {
+        const results = [].concat(...posts).filter(data => {
+          if (typeof data !== 'undefined' && data.response.posts.length !== 0) {
             return data;
-          });
+          }
         });
-        $.when.apply($, promises).done((...posts) => {
-          const results = [].concat(...posts);
-          deferred.resolve(results);
+        results.forEach(data => {
+          if (data.response.posts[0]) {
+            BlogSource._fetchTumblelogs(data.response.posts[0]).then(() => {
+              Tumblr.Fox.Events.trigger('fox:search:postFound', data.response.posts[0]);
+            });
+            return data.response.posts[0];
+          }
         });
+        deferred.resolve(results);
       });
       return deferred.promise();
     },
@@ -98,7 +87,7 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
         success: data => {
           window.next_page = data.meta.tumblr_old_next_page;
           this.streamCursor = data.response.DashboardPosts.nextCursor;
-          const posts = formatPosts(data.response.DashboardPosts.body);
+          const posts = Utils.PostFormatter.formatDashboardPosts(data.response.DashboardPosts.body);
           deferred.resolve(posts);
         },
         error: error => {
@@ -109,8 +98,6 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
       return deferred.promise();
     }
   });
-
-  ChromeMixin.applyTo(DashboardSource.prototype);
 
   Tumblr.Fox.register('DashboardSource', DashboardSource);
 

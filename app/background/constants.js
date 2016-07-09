@@ -3,7 +3,7 @@
 
 import { Deferred } from 'jquery';
 import { oauthRequest } from './lib/oauthRequest';
-import { pick } from 'lodash';
+import { defaultsDeep, pick } from 'lodash';
 import db from './lib/db';
 import EventEmitter from 'eventemitter3';
 import tokens from './tokens.json';
@@ -11,66 +11,92 @@ import 'babel-polyfill';
 
 const CONSUMER_KEY = tokens.consumerKey;
 const CONSUMER_SECRET = tokens.consumerSecret;
+const VERSION = chrome.runtime.getManifest().version;
 
 class Constants extends EventEmitter {
   defaults = {
-    cachedPostsCount: 0,
+    cachedLikesCount: 0,
     cachedFollowingCount: 0,
     cachedTagsCount: 0,
-    canFetchApiLikes: true,
     currentUser: {},
     debug: false,
     defaultKeys: true,
     eventManifest: [],
     firstRun: false,
-    fetchLikesUntil: {
-      date: new Date(2007, 1, 1),
-      page: 'max'
-    },
     formKey: '',
     fullTextSearch: true,
     maxPostsCount: 0, // NOTE: find a way to determine this
-    nextSlug: {
-      timestamp: null,
-      page: 1
-    },
     saveViaFirebase: true,
     setUser: false,
-    totalPostsCount: 0,
+    totalLikesCount: 0,
     totalFollowingCount: 0,
     totalTagsCount: 0,
     userName: '',
-    version: 0
+    previousVersion: 0,
+    version: 0,
+    likeSourceLimits: {
+      untilDate: new Date(2007, 1, 1),
+      untilPage: 'max'
+    },
+    likeSourceSlug: {
+      timestamp: null,
+      page: null,
+      url: 'https://www.tumblr.com/likes'
+    },
+    nextBlogSlug: {
+      page: 0,
+      url: null
+    }
+  };
+
+  syncDefaults = {
+    userName: '',
+    consumerKey: CONSUMER_KEY,
+    consumerSecret: CONSUMER_SECRET
   };
 
   constructor() {
     super();
     this.initialized = false;
     this._previous = {};
-    this.initialize();
+    if (__ENV__ !== 'test') {
+      this.initialize();
+    } else {
+      Object.assign(this, defaultsDeep(this, this.defaults));
+      Object.assign(this, defaultsDeep(this, this.syncDefaults));
+      this.initialized = true;
+      this.emit('ready');
+    }
   }
 
-  async initialize() {
+  initialize() {
     try {
-      await this._initializeStorageValues();
-      if (!this.get('userName') || !this.get('cachedPostsCount') || !this.get('totalPostsCount') || !this.get('totalFollowingCount')) {
+      this._initializeStorageValues(async () => {
         const response = await oauthRequest({
           url: 'https://api.tumblr.com/v2/user/info'
         });
-        const postsCount = await db.posts.toCollection().count();
-        this.set('userName', response.user.name);
-        this.set('cachedPostsCount', postsCount);
-        this.set('totalPostsCount', response.user.likes);
-        this.set('totalFollowingCount', response.user.following);
-      }
-      this.set('version', require('../manifest.json').version);
-      if (this.get('version') !== this.previous('version')) {
-        this.set('firstRun', true);
-      } else {
-        this.set('firstRun', false);
-      }
-      this.initialized = true;
-      this.emit('ready');
+        if (response) {
+          const likesCount = await db.likes.toCollection().count();
+          this.set('userName', response.user.name);
+          this.set('cachedLikesCount', likesCount);
+          this.set('totalLikesCount', response.user.likes);
+          this.set('totalFollowingCount', response.user.following);
+        }
+        if (VERSION) {
+          this.set('version', VERSION);
+        }
+        if (this.get('version') !== this.get('previousVersion')) {
+          this.set('firstRun', true);
+        } else {
+          this.set('firstRun', false);
+        }
+        if (this.initialized) {
+          this.emit('reset');
+        } else {
+          this.initialized = true;
+          this.emit('ready');
+        }
+      });
     } catch (e) {
       console.error(e);
     }
@@ -106,11 +132,8 @@ class Constants extends EventEmitter {
   }
 
   reset() {
-    this.set('cachedTagsCount', this.defaults.cachedTagsCount);
-    this.set('cachedPostsCount', this.defaults.cachedPostsCount);
-    this.set('cachedFollowingCount', this.defaults.cachedFollowingCount);
-    this.set('nextSlug', this.defaults.nextSlug);
-    this.emit('reset');
+    this.set(this.defaults);
+    this.initialize();
   }
 
   toJSON() {
@@ -149,20 +172,17 @@ class Constants extends EventEmitter {
     chrome.storage.local.set(key);
   }
 
-  _initializeStorageValues() {
-    const deferred = Deferred();
+  _initializeStorageValues(callback) {
     chrome.storage.local.get(this.defaults, items => {
-      this._assign(items);
+      Object.assign(this, defaultsDeep(this, items));
+      chrome.storage.sync.get(this.syncDefaults, items => {
+        Object.assign(this, defaultsDeep(this, items));
+        Object.assign(this._previous, pick(this, Object.keys(this.defaults)));
+        if (callback) {
+          callback();
+        }
+      });
     });
-    chrome.storage.sync.get({
-      userName: '',
-      consumerKey: CONSUMER_KEY,
-      consumerSecret: CONSUMER_SECRET
-    }, items => {
-      this._assign(items);
-      deferred.resolve();
-    });
-    return deferred.promise();
   }
 }
 

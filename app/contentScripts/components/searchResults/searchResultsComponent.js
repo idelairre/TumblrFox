@@ -22,6 +22,7 @@ module.exports = (function (Tumblr, Backbone, _) {
     },
     bindEvents() {
       this.listenTo(this.searchModel, 'change', ::this.renderTerm);
+      this.listenTo(Tumblr.Fox.Events, 'fox:search:complete', ::this.show);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:renderedResults', ::this.show);
       this.listenTo(Tumblr.Fox.Events, 'fox:search:start', ::this.hide);
     },

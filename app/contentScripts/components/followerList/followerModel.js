@@ -27,7 +27,9 @@ module.exports = (function followerModel(Tumblr, Backbone, _, ChromeMixin) {
           this.items.reset(followers);
         } else {
           followers.forEach(follower => {
-            this.items.add(new Tumblelog(follower));
+            if (!this.items.findWhere({ name: follower.name })) {
+              this.items.add(new Tumblelog(follower));
+            }
           });
         }
         this.set('offset', this.get('offset') + this.get('limit'));

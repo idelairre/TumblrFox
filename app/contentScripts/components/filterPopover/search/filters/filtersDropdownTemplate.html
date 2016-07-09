@@ -1,5 +1,5 @@
 <script id="filterTemplate" type="text/template">
-<% if (!state.get('dashboard')) { %>
+<% if (model.get('unsetTerm') && model.get('unsetTerm').length > 0) { %>
   <ul class="popover_inner_list search_filter_items">
     <li class="popover_menu_item sort_filter" data-filter="sort:POPULARITY_DESC">
       <span class="popover_menu_item_anchor">
