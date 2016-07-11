@@ -26,7 +26,8 @@ const TumblrComponents = [
   'SearchInput',
   'TagsPopover',
   'TumblrModel',
-  'TumblrView'
+  'TumblrView',
+  'SingletonModel'
 ];
 
 const attachScript = (modules, module, name) => {
@@ -96,6 +97,9 @@ const injectDependencies = (modules, module) => { // NOTE: maybe there is a way 
 export const inject = modules => {
   const deferred = $.Deferred();
   forIn(modules, (module, name) => {
+    if (module.prototype.loaded) {
+      return;
+    }
     module.prototype.loaded = false;
     let dependencies = getParamNames(module).filter(param => {
       if (param !== 'Tumblr' && param !== 'Backbone' && param !== '_' ) {
@@ -107,12 +111,12 @@ export const inject = modules => {
     }
   });
   forIn(modules, (module, name) => {
-    if (module.essential) {
+    if (module.essential && !module.prototype.loaded) {
       attachScript(modules, module, name);
     }
   });
   forIn(modules, (module, name) => {
-    if (module.prototype.loaded === false) {
+    if (!module.prototype.loaded) {
       if (module.prototype.hasOwnProperty('dependencies')) {
         injectDependencies(modules, module);
       }

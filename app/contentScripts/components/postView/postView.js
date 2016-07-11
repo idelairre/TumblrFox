@@ -2,7 +2,7 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
   if (!Tumblr.PostView) {
     return;
   }
-  const { isFunction, isEmpty, template } = _;
+  const { isEmpty, template } = _;
   const { Utils } = Tumblr.Fox;
   const { TemplateCache } = Utils;
   const { PostView } = Tumblr;
@@ -77,7 +77,7 @@ module.exports = (function postView(Tumblr, Backbone, $, _, BlogSource) {
         }, 0);
       }
       Tumblr.postsView.collection.add(this.model);
-      if (isFunction(this.parseTags)) { // NOTE: find out why this doesn't work
+      if (typeof this.parseTags === 'function') { // NOTE: find out why this doesn't work
         this.parseTags();
       }
     },

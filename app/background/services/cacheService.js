@@ -1,14 +1,146 @@
 import async from 'async';
-import { maxBy } from 'lodash';
+import { capitalize, invoke, maxBy, union } from 'lodash';
+import Dexie from 'dexie';
+import Lunr from '../services/lunrSearchService';
 import Papa from '../lib/papaParse';
 import constants from '../constants';
-import { log, logError, calculatePercent } from './loggingService';
+import { logValues, logError, calculatePercent } from './loggingService';
 import db from '../lib/db';
 import Firebase from './firebaseService';
 import Likes from '../stores/likeStore';
+import { Deferred } from 'jquery';
 import 'babel-polyfill';
 
+const Promise = Dexie.Promise;
+
 export default class Cache {
+  static async updateTokens() {
+    let offset = 0;
+    let count = await db.posts.toCollection().count();
+    async.doWhilst(async next => {
+      try {
+        const posts = await db.posts.toCollection().filter(post => {
+          return !post.tokens;
+        }).offset(offset).limit(100).toArray();
+        offset += posts.length;
+        if (posts.length > 0) {
+          const promises = posts.filter(post => {
+            post.tokens = Lunr.tokenizeHtml(post.html);
+            post.tokens = union(post.tags, post.tokens, [post.blog_name]);
+            return db.posts.put(post);
+          });
+          await Promise.all(promises);
+        }
+        next(null, posts.length);
+      } catch (e) {
+        next(e);
+      }
+    }, next => {
+      return next !== 0;
+    });
+  }
+
+  static async updateNotes() {
+    let offset = 0;
+    async.doWhilst(async next => {
+      try {
+        const posts = await db.posts.toCollection().filter(post => {
+          return !post.note_count;
+        }).offset(offset).limit(100).toArray();
+        offset += posts.length;
+        if (posts.length > 0) {
+          const promises = posts.filter(post => {
+            post.note_count = post.notes.count;
+            return db.posts.put(post);
+          });
+          await Promise.all(promises);
+        }
+        next(null, posts.length);
+      } catch (e) {
+        next(e);
+      }
+    }, next => {
+      return next !== 0;
+    });
+  }
+
+  static async updateFollowingFromLikes() {
+    let offset = 0;
+    let count = await db.following.toCollection().count();
+    async.doWhilst(async next => {
+      try {
+        const posts = await db.likes.toCollection().offset(offset).limit(100).toArray();
+        offset += posts.length;
+        const promises = posts.filter(async post => {
+          if (post['tumblelog-data'].following) {
+            const following = await db.following.get(post['tumblelog-data'].name);
+            if (!following) {
+              return db.following.put(post['tumblelog-data']);
+            }
+          }
+        });
+        count = await db.following.toCollection().count();
+        constants.set('cachedFollowingCount', count);
+        await Promise.all(promises);
+        next(null, posts.length);
+      } catch (e) {
+        next(e);
+      }
+    }, next => {
+      return next !== 0;
+    });
+  }
+
+  static async asyncOp(table, operation, sendResponse) {
+    const deferred = Deferred();
+    const primaryKey = db[table].schema.primKey.name;
+    let offset = 0;
+    let count = await db[table].toCollection().count();
+    if (count === 0) {
+      deferred.resolve();
+    }
+    async.doWhilst(async next => {
+      try {
+        const items = await db[table].toCollection().offset(offset).limit(100).toArray();
+        offset += items.length;
+        if (operation.includes('bulk')) {
+          await invoke(db[table], operation, items.map(item => { // NOTE: this does not work
+            return item[primaryKey];
+          }));
+        } else {
+          const promises = items.map(async item => {
+            if (operation === 'delete') {
+              await invoke(db[table], operation, item[primaryKey]);
+            } else {
+              await invoke(db[table], operation, item);
+            }
+            count = await db[table].toCollection().count();
+            constants.set(`cached${capitalize(table)}Count`, count);
+          });
+          await Promise.all(promises);
+        }
+        if (typeof sendResponse === 'function') {
+          logValues(table, sendResponse);
+        }
+        next(null, items.length);
+      } catch (e) {
+        next(e);
+        if (typeof sendResponse === 'function') {
+          logError(table, sendResponse);
+        }
+      }
+    }, next => {
+      return next !== 0;
+    }, (error, next) => {
+      if (error) {
+        deferred.reject(error);
+      } else {
+        deferred.resolve();
+      }
+    });
+    return deferred.promise();
+  }
+
   static async assembleCacheAsCsv(sendResponse) { // NOTE: this has problems, throws maximum ipc message at high number of posts
     try {
       const CacheWorker = require('./cacheWorkerService').default;
@@ -27,11 +159,33 @@ export default class Cache {
     }
   }
 
-  static async reset(sendResponse) {
+  static async resetPosts() {
+    await db.posts.toCollection().delete();
+  }
+
+  static async resetFollowing() {
+    await db.following.toCollection().delete();
+  }
+
+  static async resetLikes() {
+    await db.likes.toCollection().delete();
+  }
+
+  static async resetTags() {
+    await db.tags.toCollection().delete();
+  }
+
+  static async reset(opts, sendResponse) {
     try {
-      await db.delete();
+      if (opts === 'all') {
+        Cache.resetLikes();
+        Cache.resetFollowing();
+        Cache.resetPosts();
+        Cache.resetTags();
+      } else {
+        Cache[`reset${capitalize(opts)}`]();
+      }
       constants.reset();
-      await db.open();
       sendResponse({
         type: 'done',
         message: 'Cache reset',
@@ -110,10 +264,8 @@ export default class Cache {
       try {
         await Likes.put(posts[items.cachedPostsCount]);
         items.cachedPostsCount += 1;
-        log('posts', data => {
-          sendResponse(data);
-          next(null, items.cachedPostsCount);
-        }, false);
+        log('posts', sendResponse);
+        next(null, items.cachedPostsCount);
       } catch (e) {
         logError(e, next, sendResponse);
       }

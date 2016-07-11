@@ -1,30 +1,29 @@
-module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Source) {
-  const { extend, findIndex, omit, pick } = _;
+module.exports = (function dashboardSource(Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Source) {
+  const { extend, findIndex, omit, pick, sortBy } = _;
   const { Utils } = Tumblr.Fox;
   const { Tumblelog } = Tumblr.Prima.Models;
 
-  const b64EncodeUnicode = str => {
-    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-      return String.fromCharCode('0x' + p1);
-    }));
-  }
-
-  const b64DecodeUnicode = str => {
-    return decodeURIComponent(Array.prototype.map.call(atob(str), c => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-  }
 
   const DashboardSource = Source.extend({
     mixins: [ChromeMixin],
     initialize() {
       this.streamCursor = $('#next_page_link').data('stream-cursor') || '';
       this.endPoint = '/svc/post/dashboard';
+      this.following = Tumblelog.collection.sortBy('updated').filter(tumblelog => {
+        return tumblelog.get('following');
+      }).reverse();
+      this.bindEvents();
+    },
+    bindEvents() {
+      this.listenTo(Tumblr.Fox.Events, 'fox:update:following', ::this.updateFollowing);
+    },
+    updateFollowing() {
+      this.following = Tumblelog.collection.sortBy('updated').filter(tumblelog => {
+        return tumblelog.get('following');
+      }).reverse();
     },
     collateData(response) {
-      return BlogSource.collateData(response).then(posts => {
-        return BlogSource._handleCollatedData(posts);
-      });
+      return BlogSource.collateData(response);
     },
     fetch(query) {
       const deferred = $.Deferred();
@@ -39,33 +38,22 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
       });
       return deferred.promise();
     },
-    search(query) { // NOTE: slit this up into one block of requests per 100 users
-      const deferred = $.Deferred();
-      const following = Tumblelog.collection.where({
-        following: true
-      });
-      const promises = following.map(follower => {
-        query.blogname = follower.get('name');
+    search(query) {
+      const promises = this.following.map(follower => {
+        const deferred = $.Deferred();
+        query.blogname = (typeof follower.get === 'function' ? follower.get('name') : follower.name);
         query.limit = 1;
-        return BlogSource.search(query);
-      });
-      $.when.apply($, promises).done((...posts) => {
-        const results = [].concat(...posts).filter(data => {
-          if (typeof data !== 'undefined' && data.response.posts.length !== 0) {
-            return data;
-          }
-        });
-        results.forEach(data => {
+        BlogSource.search(query).then(data => {
           if (data.response.posts[0]) {
             BlogSource._fetchTumblelogs(data.response.posts[0]).then(() => {
               Tumblr.Fox.Events.trigger('fox:search:postFound', data.response.posts[0]);
             });
-            return data.response.posts[0];
           }
+          deferred.resolve();
         });
-        deferred.resolve(results);
+        return deferred.promise();
       });
-      return deferred.promise();
+      return $.when.apply($, promises);
     },
     clientFetch(streamCursor) {
       const deferred = $.Deferred();
@@ -74,7 +62,7 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
       if (!streamCursor) {
         streamCursor = this.streamCursor;
       } else {
-        streamCursor = b64EncodeUnicode(JSON.stringify(streamCursor));
+        streamCursor = Utils.B64.encodeUnicode(JSON.stringify(streamCursor));
       }
 
       Backbone.ajax({
@@ -98,6 +86,8 @@ module.exports = (function (Tumblr, Backbone, _, $, BlogSource, ChromeMixin, Sou
       return deferred.promise();
     }
   });
+
+  extend(DashboardSource.prototype, Backbone.Events);
 
   Tumblr.Fox.register('DashboardSource', DashboardSource);
 

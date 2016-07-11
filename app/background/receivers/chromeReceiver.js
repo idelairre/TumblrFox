@@ -1,5 +1,6 @@
 import constants from '../constants';
 import receiverHandler from '../services/receiverService';
+import sendMessage from '../services/messageService';
 import BlogStore from '../stores/blogStore';
 import BlogSource from '../source/blogSource';
 import PostSource from '../source/postSource';
@@ -22,6 +23,10 @@ const sendConstants = () => {
   return constants.toJSON();
 };
 
+constants.on('reset',() => {
+  sendMessage(constants.toJSON());
+});
+
 const chromeReciever = receiverHandler({
   cacheBlogPosts: BlogStore.cache,
   fetchCachedBlogPosts: BlogStore.fetch,
@@ -40,6 +45,7 @@ const chromeReciever = receiverHandler({
   setFilter: Likes.setFilter,
   syncLike: Likes.syncLike,
   updateCache: BlogStore.update,
+  updateFollowing: Following.update,
   updateLikes: Likes.updateLikes,
   validateCache: BlogStore.validateCache
 });

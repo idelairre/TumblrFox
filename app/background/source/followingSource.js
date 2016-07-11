@@ -1,5 +1,6 @@
 import { Deferred } from 'jquery';
 import BlogSource from './blogSource';
+import { omit, last, replace } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
 import Source from './source';
 import 'babel-polyfill';
@@ -15,6 +16,7 @@ class FollowingSource extends Source {
     total: 0,
     until: false
   }
+  
   constructor() {
     super();
   }
@@ -39,7 +41,12 @@ class FollowingSource extends Source {
     if (this.constants.get('totalFollowingCount') === 0) {
       this.constants.set('totalFollowingCount', response.total_blogs);
     }
-    return response.blogs;
+    return response.blogs.map(following => {
+      following.following = true;
+      following.avatar_url = replace(following.avatar[1].url, '64', '128');
+      following = omit(following, ['avatar', 'can_message', 'share_likes', 'share_following', 'theme']);
+      return following;
+    });
   }
 
   async fetch() {

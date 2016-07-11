@@ -24,10 +24,14 @@ export default class Likes {
     async.doWhilst(async next => {
       try {
         const posts = await Source.start();
-        await Likes.bulkPut(posts);
-        port(() => {
-          next(null, posts);
-        });
+        if (typeof posts === 'undefined') {
+          logError(Source.MAX_ITEMS_MESSAGE, next, sendResponse);
+        } else {
+          await Likes.bulkPut(posts);
+          port(() => {
+            next(null, posts);
+          });
+        }
       } catch (e) {
         logError(e, next, sendResponse);
       }
@@ -40,11 +44,14 @@ export default class Likes {
     return await db.likes.get(id);
   }
 
-  static async put(post) {
+  static async put(post) { // NOTE: change this into a transaction
     try {
       post.tags = Tags._updateTags(post);
       post.tokens = Lunr.tokenize(post.html);
       await db.likes.put(post);
+      if (post['tumblelog-data'] && post['tumblelog-data'].following) {
+        await db.following.put(post['tumblelog-data']);
+      }
       const count = await db.likes.toCollection().count();
       constants.set('cachedLikesCount', count);
       Likes._updateContentRating(post);

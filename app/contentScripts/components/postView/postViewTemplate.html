@@ -95,6 +95,9 @@
           <div class="post_controls_inner">
             <!-- <div class="post_control reblog-graph-control" data-subview="reblogGraph"></div> -->
           <div class="post_control post-control-icon share" data-tumblelog-uuid="<%- model.get('tumblelog-data').uuid %>" data-tumblelog-name="<%- model.get('tumblelog') %>" data-post-id="<%- model.get('id') %>" title="Share" data-subview="share"></div>
+          <% if (model.get('can_reply')) { %>
+            <div class="post_control post-control-icon reply"></div>
+          <% } %>
           <a class="post_control post-control-icon reblog" target="_blank" title="Reblog" href="/reblog/<%- model.get('id') %>/<%- model.get('reblog_key') %>?redirect_to=%2Fdashboard" data-subview="reblog"></a>
           <div class="post_control post-control-icon like" title="Like" data-subview="like"></div>
           </div>

@@ -4,17 +4,14 @@
 /* global Event:true */
 /* eslint no-undef: "error" */
 
-import { camelCase, capitalize, first, last, snakeCase, replace } from 'lodash';
+import { camelCase, capitalize, first, last, snakeCase, replace, omit } from 'lodash';
 
 const log = console.log.bind(console, '[BRIDGE]');
 
 class Bridge {
   initialize() {
-    const fetchConstants = {
-      type: 'fetchConstants'
-    };
     chrome.runtime.onMessage.addListener(::this.bindRecievers);
-    chrome.runtime.sendMessage(fetchConstants, ::this.bindOutgoing);
+    this.bindOutgoing();
   }
 
   debug() { // NOTE: there is a slight delay here, not sure why
@@ -23,32 +20,15 @@ class Bridge {
     }
   }
 
-  listenTo(eventName, callback) {
-    this.debug(`listening: "${eventName}"`);
-    const eventSlug = camelCase(eventName.split(':').splice(1).join(' '));
-    window.addEventListener(eventName, e => {
-      const req = {};
-      if (e.detail) {
-        req.payload = e.detail;
-      }
-      req.type = eventSlug;
-      chrome.runtime.sendMessage(req, response => {
-        return callback ? callback(response) : null;
-      });
-    });
-  }
-
   trigger(eventName, payload) {
-    let req = {};
     if (typeof payload === 'undefined') {
-      req = new Event(eventName);
-      this.debug(`trigger: "${eventName}"`);
-    } else {
-      req = new CustomEvent(eventName, {
-        detail: payload
-      });
-      this.debug(`trigger: "${eventName}"`, payload);
+      payload = {};
     }
+    payload._type = eventName;
+    const req = new CustomEvent('response', {
+      detail: payload
+    });
+    this.debug(`trigger: "${eventName}"`, payload);
     window.dispatchEvent(req);
   }
 
@@ -67,24 +47,24 @@ class Bridge {
     }
   }
 
-  bindOutgoing(constants) {
-    this.logging = constants.debug;
-    const handlers = constants.eventManifest;
-    handlers.map(eventName => {
-      const splitName = snakeCase(eventName).split('_');
-      const action = first(splitName);
-      const object = camelCase(replace(eventName, action, ''));
-      eventName = `chrome:${action}:${object}`;
-      this.listenTo(eventName, response => {
-        if (typeof response !== 'undefined') {
-          let responseEvent = eventName.split(':');
-          responseEvent[1] = 'response';
-          responseEvent = responseEvent.join(':');
-          this.trigger(responseEvent, response);
-        }
-      });
+  bindOutgoing() {
+    window.addEventListener('request', e => {
+      try {
+        const eventName = camelCase(e.detail._type.split(':').splice(1).join(' '));
+        const req = {
+          type: eventName,
+          payload: e.detail.data
+        };
+        chrome.runtime.sendMessage(req, response => {
+          if (response) {
+            const responseName = last(snakeCase(eventName).split('_'));
+            this.trigger(`response:${responseName}:${e.detail._id}`, response);
+          }
+        });
+      } catch (err) {
+        console.error(err, e);
+      }
     });
-    this.trigger('bridge:initialized');
     this.debug('initialized');
   }
 }

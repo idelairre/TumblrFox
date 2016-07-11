@@ -2,6 +2,8 @@ module.exports = (function (Tumblr, Backbone, _) {
   const { Model } = Backbone;
   const { assign, isFunction, isObject, noop } = _;
 
+  // Add "trigger method" from Marionette here so that wreqr commands can access models more easily
+
   const Controller = Model.extend({
     _setup(options) {
       options = options || {};

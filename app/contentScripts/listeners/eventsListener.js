@@ -38,10 +38,12 @@ module.exports = (function eventsListener(Tumblr, Backbone, _, Listener) {
     log(e) {
       if (!this.ignore.includes(e)) {
         if (e.includes('fox')) {
-          console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
-          return;
+          console.log('%c[TUMBLRFOX] %o', 'color:#81562C; font-size: 9pt', arguments);
+        } else if (e.includes('chrome')) {
+          console.log('%c[TUMBLRFOX EXTENSION] %o', 'color:#81562C; font-size: 9pt', arguments);
+        } else {
+          console.log('[TUMBLR]', arguments);
         }
-        console.log('[TUMBLR]', arguments);
       }
     },
     start() {

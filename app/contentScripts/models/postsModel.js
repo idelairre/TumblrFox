@@ -138,6 +138,7 @@ module.exports = (function postModel(Tumblr, Backbone, $, _, AutoPaginatorModel,
           this.set('searching', true);
           this.loader.show(); // want to keep the loader status decouped from posts model so results can be rendered
           this.dashboardModel.search(query).then(posts => {
+            // console.log('[THE SEARCH IS DEFINITELY OVER]');
             this.set('searching', false);
             Tumblr.Fox.Events.trigger('fox:search:complete', posts);
             this.loader.hide();

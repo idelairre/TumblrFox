@@ -15,6 +15,7 @@ const VERSION = chrome.runtime.getManifest().version;
 
 class Constants extends EventEmitter {
   defaults = {
+    cachedPostsCount: 0,
     cachedLikesCount: 0,
     cachedFollowingCount: 0,
     cachedTagsCount: 0,
@@ -24,11 +25,11 @@ class Constants extends EventEmitter {
     eventManifest: [],
     firstRun: false,
     formKey: '',
-    fullTextSearch: true,
     maxPostsCount: 0, // NOTE: find a way to determine this
     saveViaFirebase: true,
     setUser: false,
     totalLikesCount: 0,
+    totalPostsCount: 0,
     totalFollowingCount: 0,
     totalTagsCount: 0,
     userName: '',
@@ -77,9 +78,12 @@ class Constants extends EventEmitter {
         });
         if (response) {
           const likesCount = await db.likes.toCollection().count();
+          const postsCount = await db.posts.toCollection().count();
           this.set('userName', response.user.name);
           this.set('cachedLikesCount', likesCount);
+          this.set('cachedPostsCount', postsCount);
           this.set('totalLikesCount', response.user.likes);
+          this.set('totalPostsCount', response.user.blogs[0].posts);
           this.set('totalFollowingCount', response.user.following);
         }
         if (VERSION) {
@@ -132,7 +136,13 @@ class Constants extends EventEmitter {
   }
 
   reset() {
-    this.set(this.defaults);
+    this.set('cachedFollowingCount', 0);
+    this.set('cachedPostsCount', 0); // NOTE: revert this so that it doesn't set everything to zero
+    this.set('cachedLikesCount', 0);
+    this.set('cachedTagsCount', 0);
+    this.set('nextBlogSlug', this.defaults.nextBlogSlug);
+    this.set('likeSourceLimits', this.defaults.likeSourceLimits);
+    this.set('likeSourceSlug', this.defaults.likeSourceSlug);
     this.initialize();
   }
 

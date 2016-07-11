@@ -1,24 +1,27 @@
-module.exports = (function(Tumblr, Backbone, _) {
+module.exports = (function componentFetcher(Tumblr, Backbone, _) {
   const { camelCase, extend, forIn, isArray } = _;
 
   // perhaps there is a way to memoize fetched component numbers?
 
   const ComponentFetcher = function () {
     this.$$componentCache = {};
-    Tumblr.Fox.trigger('initialize:componentFetcher', this);
+    this.modules = window.webpackModules[2].m;
+    this.initialize.apply(this);
   };
 
   extend(ComponentFetcher.prototype, Backbone.Events, {
+    initialize() {
+      Tumblr.Fox.trigger('initialize:componentFetcher', this);
+    },
     getComponent(object, searchTerm) {
-      const modules = window.webpackModules[2].m;
       let putFlag = true;
       if (typeof searchTerm === 'undefined') {
         searchTerm = object;
         putFlag = false;
       }
       const results = [];
-      for (const key in modules) {
-        if (modules[key].toString().includes(searchTerm) && key !== '0') {
+      for (const key in this.modules) {
+        if (this.modules[key].toString().includes(searchTerm) && key !== '0') {
           results.push(key);
         }
       }

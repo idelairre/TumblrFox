@@ -6,7 +6,7 @@ module.exports = (function postsListener(Tumblr, Backbone, _, ChromeMixin, Liste
       this.bindEvents();
     },
     bindEvents() {
-      this.chromeListenTo('bridge:initialized', ::this.fetchNsfwBlogs);
+      this.listenToOnce(Tumblr.Fox.Events, 'chrome:bridge:initialized', ::this.fetchNsfwBlogs);
     },
     fetchNsfwBlogs() {
       this.chromeTrigger('chrome:fetch:nsfwBlogs', response => {

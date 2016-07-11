@@ -60,6 +60,7 @@ const Progress = View.extend({
     this.listenTo(Backbone.Events, 'DONE', ::this.$el.hide);
     this.listenTo(Backbone.Events, 'PROGRESS', ::this.animateProgress);
     this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.$el.show);
+    this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.$el.show);
     this.listenTo(Backbone.Events, 'RESTORING_CACHE', ::this.animateProgress);
     this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.$el.hide);
   },

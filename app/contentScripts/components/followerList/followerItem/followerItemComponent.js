@@ -9,14 +9,16 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
     className: 'follower clearfix',
     initialize(options) {
       this.model = options.model;
-      this.model.set('avatar', this.model.get('avatar_url') || this.model.toJSON().avatar[1].url);
+      this.model.set('avatar', this.model.get('avatar_url'));
       if (isNumber(this.model.get('updated'))) {
         this.model.set('updated', `Updated ${Utils.Time.prettyDate(Utils.Time.fromTumblrTime(this.model.get('updated')))}`);
       }
       this.model.set('formkey', constants.formkey);
     },
     render() {
-      this.$el.removeAttributes({ ignore: 'class' });
+      this.$el.removeAttributes({
+        ignore: 'class'
+      });
       if (Tumblr.Prima.Models.Tumblelog.collection.indexOf(this.model) % 2 === 0) {
         this.$el.addClass('alt');
       }
@@ -87,6 +89,9 @@ module.exports = (function followerItem(Tumblr, Backbone, _) {
         }
       });
       this.capturing = Tumblr.Capture ? new Tumblr.Capture.CrushClick() : null;
+    },
+    remove() {
+      View.prototype.remove.apply(this);
     }
   });
 

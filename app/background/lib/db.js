@@ -1,63 +1,8 @@
-import async from 'async';
 import Dexie from 'dexie';
-import { first, union } from 'lodash';
 import { debug } from '../services/loggingService';
-import Lunr from '../services/lunrSearchService';
 import 'babel-polyfill';
 
 const db = new Dexie('TumblrFox');
-
-const Promise = Dexie.Promise;
-
-const updateTokens = async () => {
-  let offset = 0;
-  let count = await db.posts.toCollection().count();
-  async.doWhilst(async next => {
-    try {
-      const posts = await db.posts.toCollection().filter(post => {
-        return !post.tokens;
-      }).offset(offset).limit(100).toArray();
-      offset += posts.length;
-      if (posts.length > 0) {
-        const promises = posts.filter(post => {
-          post.tokens = Lunr.tokenizeHtml(post.html);
-          post.tokens = union(post.tags, post.tokens, [post.blog_name]);
-          return db.posts.put(post);
-        });
-        Promise.all(promises);
-      }
-      next(null, posts.length);
-    } catch (e) {
-      next(e);
-    }
-  }, next => {
-    return next !== 0;
-  });
-}
-
-const updateNotes = async () => {
-  let offset = 0;
-  async.doWhilst(async next => {
-    try {
-      const posts = await db.posts.toCollection().filter(post => {
-        return !post.note_count;
-      }).offset(offset).limit(100).toArray();
-      offset += posts.length;
-      if (posts.length > 0) {
-        const promises = posts.filter(post => {
-          post.note_count = post.notes.count;
-          return db.posts.put(post);
-        });
-        Promise.all(promises);
-      }
-      next(null, posts.length);
-    } catch (e) {
-      next(e);
-    }
-  }, next => {
-    return next !== 0;
-  });
-}
 
 db.version(1).stores({
   posts: 'id, liked_timestamp, tags',
@@ -213,9 +158,5 @@ db.open().then(() => {
 }).catch(error => {
   console.error(error);
 });
-
-updateTokens();
-
-updateNotes();
 
 export default db;

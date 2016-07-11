@@ -20,6 +20,13 @@ const Cache = View.extend({
   template: $(cacheTemplate).html(),
   className: 'cache options',
   tagName: 'section',
+  events() {
+    return {
+      'click button': 'handleButton',
+      'change [type=select]': 'pageChange',
+      'change [type=date]': 'dateChange'
+    }
+  },
   initialize() {
     const maxPages = this.props.get('totalLikesCount') / 50;
     this.pageOpts = [];
@@ -61,11 +68,6 @@ const Cache = View.extend({
         skin: 'light', position: 'topleft', behavior: 'hide'
       });
     });
-  },
-  events: {
-    'click button': 'handleButton',
-    'change [type=select]': 'pageChange',
-    'change [type=date]': 'dateChange'
   },
   handleButton(e) {
     e.preventDefault();

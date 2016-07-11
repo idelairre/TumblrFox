@@ -8,6 +8,7 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
       const deferred = $.Deferred();
 
       if (blogname.includes('-deact')) {
+        console.warn(blogname, 'is deactivated');
         return deferred.reject();
       }
 
@@ -22,12 +23,18 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         },
         success: data => {
           deferred.resolve(data.response);
+          if (data.response.following) {
+            this.update(data.response);
+          }
         },
         error: error => {
           deferred.reject(error);
         }
       });
       return deferred.promise();
+    },
+    update(following) {
+      this.chromeTrigger('chrome:update:following', following);
     },
     cacheFetch(query) {
       delete query.blog;
@@ -121,15 +128,15 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
       data.forEach(item => {
         const { posts, tumblelog } = item.response;
         const post = first(posts);
-        this._fetchTumblelogs(posts[0]);
+        this._fetchTumblelogs(post);
         results.push(post);
       });
       deferred.resolve(results);
       return deferred.promise();
     },
     _fetchTumblelogs(post) {
-      const deferred = $.Deferred();
       const promises = [];
+      const deferred = $.Deferred();
       if (!Tumblelog.collection.findWhere({ name: post.tumblelog })) {
         promises.push(this.getInfo(post.tumblelog).then(response => {
           Tumblelog.collection.add(new Tumblelog(response));

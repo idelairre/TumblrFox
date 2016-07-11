@@ -199,9 +199,13 @@ module.exports = (function postFormatter(Tumblr, Backbone, _, BlogSource) {
 
     marshalPostAttributes(postData) {
       postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
-      const blogData = Tumblelog.collection.where({ name: postData.tumblelog })[0].toJSON();
+      const blogData = Tumblelog.collection.findWhere({ name: postData.tumblelog }) ? Tumblelog.collection.findWhere({ name: postData.tumblelog }).toJSON() : defaultsDeep({
+        avatar_url: postData.blog.avatar[1].url,
+        name: postData.tumblelog,
+        url: `http://${postData.tumblelog_uuid}`,
+        uuid: postData.tumblelog_uuid
+      });
       postData = defaultsDeep({
-        'accepts-answers': null,
         'can_reply': postData.can_reply,
         'id': postData.id,
         'is_mine': postData.blog.name === currentUser().name,
@@ -231,12 +235,18 @@ module.exports = (function postFormatter(Tumblr, Backbone, _, BlogSource) {
         postData['is-animated'] = 1;
       }
       if (typeof postData.reblogged_from_name !== 'undefined') {
-        const parentData = Tumblelog.collection.where({ name: postData.reblogged_from_name })[0];
-        postData['tumblelog-parent-data'] = typeof parentData !== 'undefined' ? parentData.toJSON() : false;
+        const parentData = Tumblelog.collection.findWhere({ name: postData.reblogged_from_name }) || defaultsDeep({
+          name: postData.reblogged_from_name,
+          following: postData.reblogged_from_following,
+        });
+        postData['tumblelog-parent-data'] = (typeof parentData !== 'undefined' ? typeof parentData.toJSON === 'function' ? parentData.toJSON() : parentData : false);
       }
       if (typeof postData.reblogged_root_name !== 'undefined') {
-        const rootData = Tumblelog.collection.where({ name: postData.reblogged_root_name })[0];
-        postData['tumblelog-root-data'] = typeof rootData !== 'undefined' ? rootData.toJSON() : false;
+        const rootData = Tumblelog.collection.findWhere({ name: postData.reblogged_root_name }) || defaultsDeep({
+          name: postData.reblogged_root_name,
+          following: postData.reblogged_root_following
+        });
+        postData['tumblelog-root-data'] = (typeof rootData !== 'undefined' ? typeof rootData.toJSON === 'function' ? rootData.toJSON() : rootData : false);
       }
       postData = omit(postData, ['blog', 'reblog', 'reblogged_from_can_message', 'reblogged_from_following', 'reblogged_from_followed', 'reblogged_from_id', 'reblogged_from_name', 'reblogged_from_title', 'reblogged_from_tumblr_url', 'reblogged_from_url', 'reblogged_from_uuid', 'reblogged_root_can_message', 'reblogged_root_following', 'reblogged_root_name', 'reblogged_root_title', 'reblogged_root_url', 'reblogged_root_uuid']);
       return postData;

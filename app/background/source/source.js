@@ -3,6 +3,8 @@ import { ajax, Deferred } from 'jquery';
 import { debug } from '../services/loggingService';
 import { noop } from 'lodash';
 
+console.log(constants);
+
 export default class Source {
   initialized = false;
   retryTimes = 3;

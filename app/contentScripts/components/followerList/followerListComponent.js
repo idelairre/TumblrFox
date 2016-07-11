@@ -1,7 +1,8 @@
-module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, FollowerItemComponent, FollowerSearchComponent, StateModel, TumblrView) {
+module.exports = (function followerList(Tumblr, Backbone, _, FollowingModel, FollowerItemComponent, FollowerSearchComponent, TumblrView) {
   const { $, View } = Backbone;
-  const { assign, debounce, each, pick, template } = _;
-  const { TemplateCache } = Tumblr.Fox.Utils;
+  const { assign, debounce, each, invoke, pick, template } = _;
+  const { Tumblelog } = Tumblr.Prima.Models;
+  const { TemplateCache, ComponentFetcher } = Tumblr.Fox.Utils;
 
   // NOTE: for the sort by update time it might be best to fetch the next page rather than load all cached followers
 
@@ -38,9 +39,10 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       }
     },
     initialize(options) {
+      const State = ComponentFetcher.get('StateModel');
       this.options = assign({}, pick(options, Object.keys(this.defaults)));
-      this.state = new StateModel(this.defaults.state);
-      this.model = new FollowerModel({
+      this.state = new State(this.defaults.state);
+      this.model = new FollowingModel({
         offset: this.defaults.offset,
         limit: this.defaults.limit,
         state: this.state
@@ -49,6 +51,7 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
         variation: 'leviathan',
         className: 'Knight-Rider-loader centered'
       });
+      this.followingViews = [];
       this.render();
     },
     render() {
@@ -58,13 +61,12 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       this.attachNode = $('.left_column');
       this.attachNode.addClass('ui_notes');
       $('#pagination').remove();
-      this.$followers = $('.follower');
-      this.$followers = this.$followers.slice(1, this.$followers.length);
       this.$form = this.$('form');
       this.$form.css('display', 'inline-block');
       this.$el.css('background', '#f8f8f8 11px 5px no-repeat');
       this.$el.css('padding', '5px 10px 5px 0');
       this.$input = this.$el.find('input.text_field');
+      this.initializeFollowings();
       this.bindEvents();
     },
     afterRenderSubviews() {
@@ -82,6 +84,21 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       this.listenTo(this.model.items, 'reset', ::this.populate);
       this.listenTo(this.model.items, 'add', this.createFollower);
       this.listenTo(this.state, 'change:state', ::this.refresh);
+    },
+    initializeFollowings() {
+      this.$followings = $('.follower');
+      this.$followings = this.$followings.slice(1, this.$followings.length);
+      this.$followings.each((i, followingEl) => {
+        const following = new FollowerItemComponent({
+          el: followingEl,
+          model: this.createFollowingFromEl(followingEl)
+        });
+        this.followingViews.push(following);
+      });
+    },
+    createFollowingFromEl(followingEl) {
+      const json = $(following).find('[data-tumblelog-popover]').data('tumblelog-popover');
+      return new Tumblelog(json);
     },
     setLoading(model, value) {
       this.loader.set('loading', value);
@@ -104,7 +121,12 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       this.clearElements().then(::this.model.fetch);
     },
     clearElements() {
-      return this.$followers.fadeOut(300).promise();
+      const deferred = $.Deferred();
+      this.$followings.fadeOut(300).promise().then(() => {
+        invoke(this.followingViews, 'remove');
+        deferred.resolve();
+      });
+      return deferred.promise();
     },
     onScroll(e) {
       if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
@@ -119,15 +141,16 @@ module.exports = (function followerList(Tumblr, Backbone, _, FollowerModel, Foll
       this.clearElements().then(() => {
         followers.map(::this.createFollower);
         this.model.set('offset', this.model.get('limit'));
-        this.$followers = $('.follower');
-        this.$followers = this.$followers.slice(1, this.$followers.length);
+        this.$followings = $('.follower');
+        this.$followings = this.$followings.slice(1, this.$followings.length);
       });
     },
     createFollower(model) {
-      const follower = new FollowerItemComponent({ model });
-      follower.render();
-      this.attachNode.append(follower.$el);
-      return follower.$el[0];
+      const following = new FollowerItemComponent({ model });
+      following.render();
+      this.attachNode.append(following.$el);
+      this.$followings.push(following.$el[0]);
+      this.followingViews.push(following);
     }
   });
 

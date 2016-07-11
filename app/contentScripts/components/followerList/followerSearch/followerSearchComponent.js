@@ -28,10 +28,8 @@ module.exports = (function followerSearch(Tumblr, Backbone, _, PopoverComponent,
     },
     render() {
       this.$el.html(this.template);
-      console.log(this);
     },
     togglePopover(e) {
-      console.log(e);
       e.preventDefault();
       if (!this.popover) {
         this.popover = new PopoverComponent({

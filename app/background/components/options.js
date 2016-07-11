@@ -7,7 +7,7 @@
 
 import $ from 'jquery';
 import Backbone, { Model, View } from 'backbone';
-import { camelCase, capitalize } from 'lodash';
+import { camelCase, capitalize, snakeCase } from 'lodash';
 import Authentication from './authentication/authentication';
 import Buttons from './buttons/buttons';
 import Cache from './cache/cache';
@@ -15,7 +15,6 @@ import Debug from './debug/debug';
 import Experimental from './experimental/experimental';
 import ProgressBar from './progressBar/progressBar';
 import Settings from './settings/settings';
-import bindListeners from './events';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
@@ -58,7 +57,10 @@ const Options = View.extend({
       name: 'options'
     });
     if (this.port) {
-      this.port.onMessage.addListener(bindListeners);
+      this.port.onMessage.addListener(response => {
+        const eventName = snakeCase(response.type).toUpperCase();
+        Backbone.Events.trigger(eventName, response);
+      });
       this.postMessage({
         type: 'fetchConstants'
       });

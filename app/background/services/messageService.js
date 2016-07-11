@@ -1,4 +1,4 @@
-let tumblr = {};
+let tumblr = null;
 
 const initializeTab = response => {
   const tab = response[0];
@@ -18,6 +18,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 const sendMessage = payload => {
+  if (!tumblr) {
+    return;
+  }
   chrome.tabs.sendMessage(tumblr, payload, response => {
     if (response) {
       console.log(response);

@@ -36,6 +36,7 @@
   "permissions": [
     "downloads",
     "tabs",
+    "idle",
     "storage",
     "unlimitedStorage",
     "http://api.tumblr.com/*",
