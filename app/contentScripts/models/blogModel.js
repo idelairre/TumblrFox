@@ -23,7 +23,8 @@ module.exports = (function (Tumblr, Backbone, _, BlogSource) {
       this.listenTo(Tumblr.Fox.Events, 'fox:changeUser', ::this.setUser);
     },
     setUser(blogname) {
-      this.model.set('blogname', blogname);
+      console.log(blogname);
+      this.set('blogname', blogname);
     },
     getInfo(blogname) {
       return BlogSource.getInfo(blogname);
