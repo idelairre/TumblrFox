@@ -8,7 +8,9 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
       const deferred = $.Deferred();
 
       if (blogname.includes('-deact')) {
-        console.warn(blogname, 'is deactivated');
+        if (Tumblr.Fox.options.get('logging')) {
+          console.warn(blogname, 'is deactivated');
+        }
         return deferred.reject();
       }
 
@@ -22,13 +24,30 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
           tumblelog: blogname
         },
         success: data => {
-          deferred.resolve(data.response);
-          if (data.response.following) {
-            this.update(data.response);
-          }
+          const tumblelog = data.response;
+          // this.getContentRating(blogname).then(user => {
+            // if (user.content_rating === 'nsfw') {
+            //   tumblelog.content_rating = user.content_rating;
+            // }
+            deferred.resolve(tumblelog);
+            if (tumblelog.following) {
+              this.update(tumblelog);
+            }
+          // });
         },
         error: error => {
           deferred.reject(error);
+        }
+      });
+      return deferred.promise();
+    },
+    getContentRating(tumblelog) {
+      const deferred = $.Deferred();
+      this.chromeTrigger('chrome:fetch:contentRating', tumblelog, response => {
+        if (response) {
+          deferred.resolve(response);
+        } else {
+          deferred.reject();
         }
       });
       return deferred.promise();
@@ -55,9 +74,9 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         });
       }
       const deferred = $.Deferred();
-      const slug = pick(query, 'blogname', 'next_offset', 'limit', 'sort', 'post_type');
+      const slug = pick(query, 'blogname', 'next_offset', 'limit', 'sort', 'post_type', 'filter_nsfw');
       this.chromeTrigger('chrome:fetch:blogPosts', slug, response => {
-        this.collateData(response).then(response => {
+        this.collateData(response).then(posts => {
           deferred.resolve(posts);
         });
       });

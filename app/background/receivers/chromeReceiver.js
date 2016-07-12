@@ -31,6 +31,7 @@ const chromeReciever = receiverHandler({
   cacheBlogPosts: BlogStore.cache,
   fetchCachedBlogPosts: BlogStore.fetch,
   fetchConstants: sendConstants,
+  fetchContentRating: BlogSource.getContentRating.bind(BlogSource),
   fetchDashboardPosts: PostSource.fetchDashboardPosts,
   fetchFollowing: Following.fetch,
   fetchBlogPosts: BlogSource.fetchBlogPosts,

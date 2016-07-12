@@ -9,7 +9,7 @@ import constants from '../constants';
  */
 
 const receiverHandler = handlers => {
-	console.log('[HANDLERS]: ', Object.keys(handlers));
+	// console.log('[HANDLERS]: ', Object.keys(handlers));
 	constants.set('eventManifest', Object.keys(handlers));
 	return (request, sender, sendResponse) => {
 		const lastError = chrome.runtime.lastError;

@@ -26,6 +26,7 @@ class Constants extends EventEmitter {
     firstRun: false,
     formKey: '',
     maxPostsCount: 0, // NOTE: find a way to determine this
+    test: false,
     saveViaFirebase: true,
     setUser: false,
     totalLikesCount: 0,

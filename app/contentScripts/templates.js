@@ -8,3 +8,4 @@ export PopoverTemplate from './components/popover/popoverTemplate.html';
 export SearchResultsTemplate from './components/searchResults/searchResultsTemplate.html';
 export SearchTemplate from './components/filterPopover/search/searchTemplate.html';
 export ToggleTemplate from './components/popover/toggle/toggle.html';
+export TestTemplate from './components/tests/testTemplate.html'

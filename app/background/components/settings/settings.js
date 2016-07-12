@@ -9,7 +9,8 @@ const Settings = View.extend({
     props: {
       debug: false,
       setUser: false,
-      defaultKeys: false
+      defaultKeys: false,
+      test: false
     }
   },
   template: $(settingsTemplate).html(),

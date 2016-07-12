@@ -1,5 +1,5 @@
 module.exports = (function templateCache(Tumblr, Backbone, $, _) {
-  const { extend } = _;
+  const { extend, trim } = _;
 
   const TemplateCache = function () {
     this.templates = {};
@@ -15,7 +15,7 @@ module.exports = (function templateCache(Tumblr, Backbone, $, _) {
       return cachedTemplate;
     },
     put(templateId, template) {
-      this.templates[templateId] = template;
+      this.templates[templateId] = trim(template);
     },
     initialize() {
       const templates = $('[type="text/template"]');

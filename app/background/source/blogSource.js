@@ -62,6 +62,26 @@ class BlogSource extends Source {
     return deferred.promise();
   }
 
+  async getContentRating(user) {
+    try {
+      const tumblelog = await this.getInfo(user);
+      const response = {
+        user
+      };
+      if (!tumblelog) {
+        response.content_rating = 'user has no rating';
+      }
+      if (tumblelog.is_nsfw) {
+        response.content_rating = 'nsfw'
+      } else {
+        response.content_rating = 'safe';
+      }
+      return response;
+    } catch (e) {
+      return e;
+    }
+  }
+
   async fetchBlogPosts(request) {
     const deferred = Deferred();
     const slug = {

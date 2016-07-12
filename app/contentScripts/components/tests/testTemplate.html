@@ -1,0 +1,43 @@
+<script id="testTemplate" type="text/template">
+  <div class="post post_full is_note is_original is_mine" data-id="0" data-root-id="0" data-is-reblog="false" data-view-exists="true">
+    <div class="post_avatar  show_user_menu">
+      <div class="post_avatar_wrapper">
+        <a class="post_avatar_link"
+          href="http://test.tumblr.com/"
+          target="_blank"
+          title="test"
+          id="post_avatar_0"
+          style="background-image: url(data:image/png;base64,<%- Tumblr.Fox.constants.icon %>)">
+        </a>
+      </div>
+    </div>
+    <div class="post_wrapper">
+      <div class="post_header">
+        <div class="post_info">
+          <div class="post_info_fence">
+            <a class="post_info_link" href="http://test.tumblr.com/" data-peepr='{"tumblelog": "test" }' data-tumblog-popover="<%- JSON.stringify(Tumblr.Prima.Models.Tumblelog.collection.first()) %>">Test</a>
+          </div>
+        </div>
+        <div class="post_action_wrapper">
+          <div class="post_action_item dismiss">
+            <div class="post_dismiss">
+              <span class="post_dismiss_tooltip">This post sickens me</span>
+              <a href="#" class="post_header_text_link dismiss_icon" data-post-action="remove">
+                <i class="icon_close"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="post_content clearfix">
+        <div class="post_content_inner clearfix">
+          <div class="post_body" id="testContainer">
+          </div>
+        </div>
+      </div>
+      <div class="post-source-footer">
+        <span class="post-source-name-prefix">Source:</span><a class="post-source-link post_info_link" target="_blank" href="https://test.tumblr.com/" title="sexyfitperfect" rel="noopener" data-peepr='{"tumblelog": "test" }'>TumblrFox</a></div>
+      <div class="post_footer clearfix"></div>
+    </div>
+  </div>
+</script>

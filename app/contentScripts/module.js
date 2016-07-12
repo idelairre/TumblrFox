@@ -97,17 +97,21 @@ const injectDependencies = (modules, module) => { // NOTE: maybe there is a way 
 export const inject = modules => {
   const deferred = $.Deferred();
   forIn(modules, (module, name) => {
-    if (module.prototype.loaded) {
-      return;
-    }
-    module.prototype.loaded = false;
-    let dependencies = getParamNames(module).filter(param => {
-      if (param !== 'Tumblr' && param !== 'Backbone' && param !== '_' ) {
-        return param;
+    try {
+      if (module.hasOwnProperty('prototype') && module.prototype.loaded) {
+        return;
       }
-    });
-    if (dependencies.length > 0) {
-      module.prototype.dependencies = dependencies;
+      module.prototype.loaded = false;
+      let dependencies = getParamNames(module).filter(param => {
+        if (param !== 'Tumblr' && param !== 'Backbone' && param !== '_' ) {
+          return param;
+        }
+      });
+      if (dependencies.length > 0) {
+        module.prototype.dependencies = dependencies;
+      }
+    } catch (e) {
+      console.error(e, `Module ${name} failed to load.`);
     }
   });
   forIn(modules, (module, name) => {

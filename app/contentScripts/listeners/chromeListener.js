@@ -1,6 +1,6 @@
 module.exports = (function chromeListener(Tumblr, Backbone, _, ChromeMixin, Listener) {
 
-  const { omit } = _;
+  const { clone, omit, pick } = _;
 
   const ChromeListener = Listener.extend({
     mixins: [ChromeMixin],
@@ -9,11 +9,10 @@ module.exports = (function chromeListener(Tumblr, Backbone, _, ChromeMixin, List
     },
     bindEvents() {
       window.addEventListener('response', e => {
-        if (e.detail) {
-          Tumblr.Fox.Events.trigger(`chrome:${e.detail._type}`, e.detail);
-        } else {
-          Tumblr.Fox.Events.trigger(`chrome:${e.detail._type}`);
-        }
+        const response = e.detail;
+        const type = response._type;
+        delete response._type;
+        Tumblr.Fox.Events.trigger(`chrome:${type}`, response);
       });
     }
   });

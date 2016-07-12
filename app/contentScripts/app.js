@@ -54,17 +54,6 @@ module.exports = (function app(Tumblr, Backbone, _) {
 
     this.route = last(window.location.href.split('/'));
 
-    const routes = ['dashboard', 'likes', currentUser().id];
-    const awayFromPosts = !routes.includes(this.route);
-
-    if (this.route.includes('likes')) {
-      this.state.setState('likes');
-    } else if (this.route.includes('blog')) {
-      this.state.setState('user');
-    } else if (awayFromPosts) {
-      this.state.setState('disabled');
-    }
-
     this.Application = {};
     this.Class = {};
     this.Events = {}
@@ -84,7 +73,7 @@ module.exports = (function app(Tumblr, Backbone, _) {
 
     setInterval(() => {
       this.trigger('heartbeat');
-      console.log('%c[TUMBLRFOX] %o', 'color:#81562C; font-size: 9pt', '♥');
+      console.log('%c[TUMBLRFOX] %o', 'color:#81562C; font-weight: bold', '♥');
     }, 200000);
 
     this.flags = {};
@@ -113,6 +102,17 @@ module.exports = (function app(Tumblr, Backbone, _) {
       likes: false
     });
 
+    const routes = ['dashboard', 'likes', currentUser().id];
+    const awayFromPosts = !routes.includes(this.route);
+
+    if (this.route.includes('likes')) {
+      this.state.setState('likes');
+    } else if (this.route.includes('blog')) {
+      this.state.setState('user');
+    } else if (awayFromPosts) {
+      this.state.setState('disabled');
+    }
+
     this.bindListeners();
   };
 
@@ -120,6 +120,10 @@ module.exports = (function app(Tumblr, Backbone, _) {
     bindListeners() {
       this.listenTo(this, 'initialize:components:add', ::this.emitDependency);
       this.listenTo(this, 'initialize:components:done', ::this.unbindListeners);
+      this.listenTo(this.Events, 'chrome:response:error', e => {
+        const error = e.detail;
+        Tumblr.Dialog.alert(error);
+      });
     },
     unbindListeners() {
       this.stopListening(this, 'initialize:componentFetcher');
@@ -288,6 +292,7 @@ module.exports = (function app(Tumblr, Backbone, _) {
     this.options.set('enableTextSearch', constants.fullTextSearch);
     this.options.set('firstRun', constants.firstRun);
     this.options.set('version', constants.version);
+    this.options.set('test', constants.test);
     this.trigger('fox:constants:initialized', this.constants, this.options);
   });
 
@@ -323,9 +328,15 @@ module.exports = (function app(Tumblr, Backbone, _) {
     }
   });
 
+
   Tumblr.Fox.onInitialized(function () {
     if (this.route.includes('following')) {
       return;
+    }
+
+    if (this.route.includes('dashboard') && this.options.get('test')) {
+      const TestComponent = Tumblr.Fox.get('TestComponent');
+      this.Application.test = new TestComponent();
     }
 
     this.chromeTrigger('chrome:validate:cache', valid => {
@@ -339,11 +350,6 @@ module.exports = (function app(Tumblr, Backbone, _) {
     }
 
     this.Application.following.fetchAll();
-
-    this.listenTo(Tumblr.Fox.Events, 'chrome:response:error', e => {
-      const error = e.detail;
-      Tumblr.Dialog.alert(error);
-    });
   });
 
   Tumblr.Fox.onHeartbeat('refreshFollowing', function () {
