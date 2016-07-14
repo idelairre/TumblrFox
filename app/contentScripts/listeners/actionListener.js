@@ -6,6 +6,7 @@ module.exports = (function actionListener(Tumblr, Backbone, _, ChromeMixin, Blog
       this.listenTo(Tumblr.Events, 'post:like:set', this.sendLike.bind(this, 'like'));
       this.listenTo(Tumblr.Events, 'post:unlike:set', this.sendLike.bind(this, 'unlike'));
       this.listenTo(Tumblr.Events, 'post:reblog:set', BlogSource.updateBlogCache);
+      this.listenTo(Tumblr.Events, 'post:form:success', BlogSource.updateBlogCache);
 
       if (Tumblr.Fox.state.get('likes')) {
         this.listenTo(Tumblr.Fox.Events, 'fox:postsView:createPost', ::this.syncLike);
