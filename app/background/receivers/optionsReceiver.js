@@ -1,5 +1,6 @@
 import constants from '../constants';
 import portHandler from '../services/portService';
+import Blog from '../stores/blogStore';
 import Cache from '../services/cacheService';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
@@ -38,6 +39,7 @@ const log = request => {
 
 const optionsReceiver = portHandler({
   log: log,
+  cachePosts: Blog.cache,
   cacheLikes: Likes.cache,
   cacheFollowing: Following.cache,
   downloadCache: downloadCache,

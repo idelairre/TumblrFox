@@ -1,4 +1,4 @@
-import { capitalize, drop, forIn, isEmpty, mapKeys, pick } from 'lodash';
+import { capitalize, drop, forIn, isEmpty, isArray, mapKeys, pick, omit } from 'lodash';
 import $ from 'jquery';
 
 const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,\)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,\)]*))/mg;
@@ -27,7 +27,7 @@ const TumblrComponents = [
   'TagsPopover',
   'TumblrModel',
   'TumblrView',
-  'SingletonModel'
+  'Poller'
 ];
 
 const attachScript = (modules, module, name) => {
@@ -79,7 +79,7 @@ const validateModules = modules => {
       console.error('[MODULE NOT LOADED]: ', name);
     }
   });
-  console.log('[MODULES LOADED SUCCESSFULLY?]', valid);
+  // console.log('[MODULES LOADED SUCCESSFULLY?]', valid);
 }
 
 const injectDependencies = (modules, module) => { // NOTE: maybe there is a way to memoize the load order?
@@ -94,7 +94,10 @@ const injectDependencies = (modules, module) => { // NOTE: maybe there is a way 
   });
 }
 
-export const inject = modules => {
+export const inject = (modules, opts) => {
+  if (opts && isArray(opts.omit)) {
+    modules = omit(modules, opts.omit);
+  }
   const deferred = $.Deferred();
   forIn(modules, (module, name) => {
     try {
@@ -112,11 +115,6 @@ export const inject = modules => {
       }
     } catch (e) {
       console.error(e, `Module ${name} failed to load.`);
-    }
-  });
-  forIn(modules, (module, name) => {
-    if (module.essential && !module.prototype.loaded) {
-      attachScript(modules, module, name);
     }
   });
   forIn(modules, (module, name) => {

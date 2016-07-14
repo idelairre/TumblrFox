@@ -1,7 +1,7 @@
 {
   "name": "tumblr-fox",
   "private": true,
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "",
   "homepage": "https://chrome.google.com/webstore/detail/tumblrfox/feeecimccgpgmajhebcelhofijkdngkf",
   "repository": "https://github.com/idelairre/TumblrFox",
@@ -38,6 +38,7 @@
     "dsv-loader": "^1.0.3",
     "eslint": "^2.4.0",
     "eslint-loader": "^1.3.0",
+    "eventemitter3": "^1.2.0",
     "file-loader": "^0.8.5",
     "gulp": "^3.9.1",
     "gulp-bump": "^2.0.1",

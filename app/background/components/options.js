@@ -81,6 +81,7 @@ const Options = View.extend({
     this.listenTo(Backbone.Events, 'REPLY_CONSTANTS', ::this.restoreOptions);
     this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
     this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.postMessage);
+    this.listenTo(Backbone.Events, 'CACHE_POSTS', ::this.postMessage);
     this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.postMessage);
     this.listenTo(Backbone.Events, 'DOWNLOAD_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.postMessage);

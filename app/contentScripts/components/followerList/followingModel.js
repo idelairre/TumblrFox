@@ -1,5 +1,5 @@
 module.exports = (function followingModel(Tumblr, Backbone, _, FollowingSource) {
-  const { $, Model }= Backbone;
+  const { $, Model } = Backbone;
   const { assign, isArray, isEmpty, pick, keys } = _;
   const { Tumblelog } = Tumblr.Prima.Models;
 

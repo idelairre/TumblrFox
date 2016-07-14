@@ -27,6 +27,7 @@ const receiverHandler = handlers => {
 				if (func instanceof Promise) {
 					func.then(response => {
 						if (typeof response !== 'undefined') {
+							console.log(response);
 							sendResponse(response);
 						}
 					});

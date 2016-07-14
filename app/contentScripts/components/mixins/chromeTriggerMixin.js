@@ -29,6 +29,15 @@ module.exports = (function chromeMixin(Tumblr, Backbone, $, _, Mixin) {
 
       Tumblr.Fox.Events.once(responseName, callback);
       window.dispatchEvent(req);
+    },
+    chromeListenToOnce(eventName, callback) {
+      const onEvent = e => {
+        if (e.detail) {
+          callback(e.detail);
+          window.removeeventlistener(eventName, onEvent);
+        }
+      }
+      window.addEventListener(eventName, onEvent);
     }
   });
 

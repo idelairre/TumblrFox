@@ -238,13 +238,15 @@ module.exports = (function postFormatter(Tumblr, Backbone, _, BlogSource) {
         const parentData = Tumblelog.collection.findWhere({ name: postData.reblogged_from_name }) || defaultsDeep({
           name: postData.reblogged_from_name,
           following: postData.reblogged_from_following,
+          url: `http://${postData.reblogged_from_name}.tumblr.com`
         });
         postData['tumblelog-parent-data'] = (typeof parentData !== 'undefined' ? typeof parentData.toJSON === 'function' ? parentData.toJSON() : parentData : false);
       }
       if (typeof postData.reblogged_root_name !== 'undefined') {
         const rootData = Tumblelog.collection.findWhere({ name: postData.reblogged_root_name }) || defaultsDeep({
           name: postData.reblogged_root_name,
-          following: postData.reblogged_root_following
+          following: postData.reblogged_root_following,
+          url:  `http://${postData.reblogged_root_name}.tumblr.com`
         });
         postData['tumblelog-root-data'] = (typeof rootData !== 'undefined' ? typeof rootData.toJSON === 'function' ? rootData.toJSON() : rootData : false);
       }

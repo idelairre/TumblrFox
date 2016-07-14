@@ -38,7 +38,7 @@ module.exports = (function settings(Tumblr, Backbone, _, PopoverComponent, Tumbl
         this.popoverOptions.listItems[1].name = 'Search likes by user';
         this.popoverOptions.listItems[2].hidden = true;
       } else if (state === 'user' && window.location.href === `https://www.tumblr.com/blog/${currentUser().id}`) {
-        // not sure yet
+        // don't show the settings icon
         this.popoverOptions.listItems[2].hidden = true;
       } else if (state !== 'likes' && window.location.href === 'https://www.tumblr.com/dashboard') {
         this.popoverOptions.listItems[0].hidden = true;

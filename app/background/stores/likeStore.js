@@ -3,7 +3,7 @@
 
 import $, { ajax, Deferred } from 'jquery';
 import async from 'async';
-import { differenceBy, findIndex, first, isString } from 'lodash';
+import { differenceBy, findIndex, first, isUndefined, isString, isFunction, noop } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import filters from '../utils/filters';
@@ -17,15 +17,27 @@ import 'babel-polyfill';
 
 const LIMIT = 20000;
 
+const noopCallback = callback => {
+  callback();
+}
+
+let caching = false;
+
 export default class Likes {
   static cache(sendResponse) {
-    const port = logValues.bind(this, 'likes', sendResponse);
+    if (caching) {
+      return;
+    }
+    caching = true;
+    const port = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
+    const portError = isFunction(sendResponse) ? logError : noop;
 
     async.doWhilst(async next => {
       try {
         const posts = await Source.start();
         if (typeof posts === 'undefined') {
           logError(Source.MAX_ITEMS_MESSAGE, next, sendResponse);
+          caching = false;
         } else {
           await Likes.bulkPut(posts);
           port(() => {
@@ -33,7 +45,8 @@ export default class Likes {
           });
         }
       } catch (e) {
-        logError(e, next, sendResponse);
+        portError(e, next, sendResponse);
+        caching = false;
       }
     }, posts => {
       return posts.length !== 0;

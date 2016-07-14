@@ -3,8 +3,6 @@ import { ajax, Deferred } from 'jquery';
 import { debug } from '../services/loggingService';
 import { noop } from 'lodash';
 
-console.log(constants);
-
 export default class Source {
   initialized = false;
   retryTimes = 3;
@@ -15,11 +13,11 @@ export default class Source {
   constructor() {
     this.constants = constants;
     this.constants.once('ready', () => {
-      this._initialize.apply(this);
+      this._initialize.call(this);
       this.initialized = true;
     });
     this.constants.on('reset', () => {
-      this._initialize.apply(this);
+      this._initialize.call(this);
     });
   }
 
@@ -35,6 +33,9 @@ export default class Source {
   start(options) {
     if (options) {
       Object.assign(this.options, options);
+      if (options.retryTimes) {
+        this.retryTimes = options.retryTimes;
+      }
     }
     if (this.initialized) {
       return this.run();

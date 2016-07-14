@@ -3,13 +3,16 @@ import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
 import View from '../view/view';
 import Tipped from '../../lib/tipped';
+import autoCacheLikesTooltip from './tooltips/autoCacheLikesTooltip.html';
+import autoCacheUserPostsTooltip from './tooltips/autoCacheUserPostsTooltip.html';
 import experimentalTemplate from './experimental.html';
-import clientCachingTooltip from './tooltips/clientCachingTooltip.html';
 import saveViaFirebaseTooltip from './tooltips/saveViaFirebaseTooltip.html';
 
 const Experimental = View.extend({
   defaults: {
     props: {
+      autoCacheLikes: false,
+      autoCacheUserPosts: false,
       saveViaFirebase: false
     }
   },
@@ -29,8 +32,11 @@ const Experimental = View.extend({
   },
   afterRender() {
     setTimeout(() => {
-      Tipped.create('[data-tooltip-key="clientCaching"]', $(clientCachingTooltip).html(), {
-        skin: 'light', position: 'topleft', behavior: 'hide'
+      Tipped.create('[data-tooltip-key="autoCacheLikes"]', $(autoCacheLikesTooltip).html(), {
+        skin: 'light', position: 'bottomleft', behavior: 'hide'
+      });
+      Tipped.create('[data-tooltip-key="autoCacheUserPosts"]', $(autoCacheUserPostsTooltip).html(), {
+        skin: 'light', position: 'bottomleft', behavior: 'hide'
       });
       Tipped.create('[data-tooltip-key="saveViaFirebase"]', $(saveViaFirebaseTooltip).html(), {
         skin: 'light', position: 'bottomleft', behavior: 'hide'

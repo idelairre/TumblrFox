@@ -17,7 +17,6 @@ const oauth = ChromeExOAuth.initBackgroundPage({
   consumer_secret: CONSUMER_SECRET
 });
 
-// TODO: better error logging
 const onAuthorized = (slug, callback) => {
   const request = {
     method: 'GET',
@@ -32,7 +31,6 @@ const onAuthorized = (slug, callback) => {
       const response = JSON.parse(data).response;
       callback(null, response);
     } else {
-      // throw new Error('Response was empty');
       callback(xhr);
     }
   }, request);

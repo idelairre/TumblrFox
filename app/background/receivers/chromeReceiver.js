@@ -10,7 +10,7 @@ import Following from '../stores/followingStore';
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
-  constants.set('previousVersion');
+  constants.set('previousVersion',  details.previousVersion);
 });
 
 const setConstants = payload => {
@@ -29,12 +29,12 @@ constants.on('reset',() => {
 
 const chromeReciever = receiverHandler({
   cacheBlogPosts: BlogStore.cache,
+  fetchBlogPosts: BlogSource.fetchBlogPosts,
   fetchCachedBlogPosts: BlogStore.fetch,
   fetchConstants: sendConstants,
   fetchContentRating: BlogSource.getContentRating.bind(BlogSource),
   fetchDashboardPosts: PostSource.fetchDashboardPosts,
   fetchFollowing: Following.fetch,
-  fetchBlogPosts: BlogSource.fetchBlogPosts,
   fetchDashboardPostsByTag: PostSource.fetchDashboardPostsByTag,
   fetchLikedTags: Tags.fetchLikedTags,
   fetchNsfwBlogs: Following.fetchNsfwBlogs,
@@ -45,7 +45,7 @@ const chromeReciever = receiverHandler({
   searchLikesByTerm: Likes.searchLikesByTerm,
   setFilter: Likes.setFilter,
   syncLike: Likes.syncLike,
-  updateCache: BlogStore.update,
+  updateBlogCache: BlogStore.update,
   updateFollowing: Following.update,
   updateLikes: Likes.updateLikes,
   validateCache: BlogStore.validateCache

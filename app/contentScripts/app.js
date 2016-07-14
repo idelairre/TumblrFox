@@ -1,6 +1,6 @@
 module.exports = (function app(Tumblr, Backbone, _) {
   const { $, Model } = Backbone;
-  const { assign, extend, camelCase, clone, forIn, keys, last, mapKeys, omit, pick, result, uniqueId } = _;
+  const { assign, extend, camelCase, clone, forIn, invert, keys, last, mapKeys, omit, pick, result, uniqueId } = _;
   const { currentUser } = Tumblr.Prima;
   const { Tumblelog } = Tumblr.Prima.Models;
   const listItems = $('#posts').find('li');
@@ -14,6 +14,58 @@ module.exports = (function app(Tumblr, Backbone, _) {
     window.webpackModules = Array.prototype.slice.call(arguments);
     window.require = require;
   }]);
+
+  Backbone.history.stop(); // NOTE: stop history so that TumblrFox router can take over
+
+  const Router = Backbone.Router.extend({
+    constructor(options) {
+      this.options = options || {};
+      assign(this, this.options);
+      Backbone.Router.apply(this, arguments);
+      const appRoutes = this.options.appRoutes;
+      const controller = this._getController();
+      this.processAppRoutes(controller, appRoutes);
+      this.on('route', this._processOnRoute, this);
+    },
+    appRoute(route, methodName) {
+      const controller = this._getController();
+      this.addAppRoute(controller, route, methodName);
+    },
+    _processOnRoute(routeName, routeArgs) {
+      if (typeof this.onRoute === 'function') {
+        const routePath = invert(this.options.appRoutes)[routeName];
+        this.onRoute(routeName, routePath, routeArgs);
+      }
+    },
+    processAppRoutes(controller, appRoutes) {
+      if (!appRoutes) {
+        return;
+      }
+      const routeNames = keys(appRoutes).reverse();
+      routeNames.map(route => {
+        this.addAppRoute(controller, route, appRoutes[route]);
+      });
+    },
+    _getController() {
+      return this.options.controller;
+    },
+    addAppRoute(controller, route, methodName) {
+      const method = controller[methodName];
+      if (!method) {
+        throw new Error(`Method "${methodName}" was not found on the controller`);
+      }
+      this.route(route, methodName, method.bind(controller));
+    }
+  });
+
+  const RouteController = function(options) {
+    this.options = options || {};
+    if (typeof this.initialize === 'function') {
+      this.initialize.apply(this.options);
+    }
+  }
+
+  RouteController.extend = Backbone.Model.extend;
 
   const State = Model.extend({
     initialize(options) {
@@ -39,30 +91,33 @@ module.exports = (function app(Tumblr, Backbone, _) {
         console.error(`Error: state model is already in state "${state}"`);
         return;
       }
-      mapKeys(attributes, (value, key) => {
-        attributes[key] = false;
+      for (const key in attributes) {
         if (key === state) {
           attributes[key] = true;
+        } else {
+          attributes[key] = false;
         }
-      });
+      };
       this.set(attributes);
     }
   });
 
+
   const TumblrFox = function () {
     this.require = window.require;
 
-    this.route = last(window.location.href.split('/'));
+    this.route = window.location.href.split('/');
 
     this.Application = {};
     this.Class = {};
     this.Events = {}
-    this.Utils = {};
-    this.Source = {};
-    this.Models = {};
-    this.Listeners = {};
     this.Components = {};
+    this.Listeners = {};
     this.Mixins = {};
+    this.Models = {};
+    this.Router = Router;
+    this.Source = {};
+    this.Utils = {};
 
     this._initializers = {};
     this._intervalTasks = {};
@@ -70,13 +125,6 @@ module.exports = (function app(Tumblr, Backbone, _) {
     this.Models['StateModel'] = State;
 
     extend(this.Events, Backbone.Events);
-
-    setInterval(() => {
-      this.trigger('heartbeat');
-      console.log('%c[TUMBLRFOX] %o', 'color:#81562C; font-weight: bold', '♥');
-    }, 200000);
-
-    this.flags = {};
 
     this.constants = {
       attachNode,
@@ -88,6 +136,9 @@ module.exports = (function app(Tumblr, Backbone, _) {
     this.options = new Model({
       firstRun: false,
       initialized: false,
+      idle: false,
+      polling: false,
+      pollingInterval: 200000,
       rendered: false,
       test: false,
       cachedTags: false,
@@ -95,28 +146,40 @@ module.exports = (function app(Tumblr, Backbone, _) {
       enableTextSearch: false
     });
 
-    this.state = new State({ // NOTE: state is actually a model initialized with these values when the dependency is loaded
+    this.state = new State({
       dashboard: true,
       disabled: false,
       user: false,
       likes: false
     });
 
-    const routes = ['dashboard', 'likes', currentUser().id];
-    const awayFromPosts = !routes.includes(this.route);
-
-    if (this.route.includes('likes')) {
-      this.state.setState('likes');
-    } else if (this.route.includes('blog')) {
-      this.state.setState('user');
-    } else if (awayFromPosts) {
-      this.state.setState('disabled');
-    }
-
+    this.startHeartBeat = this.startHeartBeat.bind(this, this.options.get('pollingInterval'));
+    this.startHeartBeat();
     this.bindListeners();
   };
 
   extend(TumblrFox.prototype, Backbone.Events, {
+    startHeartBeat(interval) {
+      if (this.options.get('polling')) {
+        return;
+      }
+      this.Events.trigger('fox:heartbeat:started');
+      this.options.set('polling', true);
+      this.heartbeat = setInterval(() => {
+        this.trigger('heartbeat');
+        console.log('%c[TUMBLRFOX] ♥', 'color:#81562C');
+      }, interval);
+    },
+    onHeartbeat(name, func) {
+      this._intervalTasks[name] = func.bind(this);
+    },
+    stopHeartbeat() {
+      if (this.options.get('polling')) {
+        clearInterval(this.heartbeat);
+        this.Events.trigger('fox:heartbeat:stopped');
+        this.options.set('polling', false);
+      }
+    },
     bindListeners() {
       this.listenTo(this, 'initialize:components:add', ::this.emitDependency);
       this.listenTo(this, 'initialize:components:done', ::this.unbindListeners);
@@ -127,9 +190,6 @@ module.exports = (function app(Tumblr, Backbone, _) {
     },
     unbindListeners() {
       this.stopListening(this, 'initialize:componentFetcher');
-    },
-    onHeartbeat(name, func) {
-      this._intervalTasks[name] = func.bind(this);
     },
     register(name, component) { // NOTE: we could register these after init and just put them in the component fetcher, that way we could grab components without complex init code
       if (name.includes('Class')) {
@@ -187,7 +247,7 @@ module.exports = (function app(Tumblr, Backbone, _) {
           this.trigger('initialized');
           this.off();
           this.on('heartbeat', () => {
-            keys(this._intervalTasks).map(func => {
+            Object.keys(this._intervalTasks).map(func => {
               this._intervalTasks[func]();
             });
           });
@@ -214,31 +274,8 @@ module.exports = (function app(Tumblr, Backbone, _) {
     updateConstants(payload) {
       this.chromeTrigger('chrome:initialize:constants', payload);
     },
-    bindCommands(commands) {
-      try {
-        this.reqres = new Backbone.Wreqr.Commands();
-        this.reqres.setHandlers(commands);
-      } catch (e) {
-        setInterval(() => {
-          this.bindCommands(commands);
-        }, 10000);
-      }
-    },
-    execute(command, ...args) {
-      try {
-        this.reqres.execute(command, ...args);
-      } catch (e) {
-        console.warn('[TUMBLRFOX] attempted to execute command on uninitialized component');
-        Tumblr.Fox.Application.filter.popover.view.render();
-      } finally {
-        setTimeout(() => {
-          this.reqres.execute(command, ...args);
-        }, 1000);
-      }
-    },
     onInitialized(callback) {
-      this.once('initialized',() => {
-        this.bindCommands();
+      this.once('initialized', () => {
         callback.call(this);
       });
     }
@@ -246,15 +283,53 @@ module.exports = (function app(Tumblr, Backbone, _) {
 
   Tumblr.Fox = new TumblrFox();
 
-  Tumblr.Fox.bindCommands({
-    autopaginator(func) {
-      Tumblr.Fox.Application.filter.popover.view.searchFilter.posts.autopaginator[func]();
+  Tumblr.Fox.RouteController = RouteController.extend({
+    onDashboard() {
+      if (Tumblr.Fox.options.get('test')) {
+        const TestComponent = Tumblr.Fox.get('TestComponent');
+        Tumblr.Fox.Application.test = new TestComponent();
+      }
+      const FollowingModel = Tumblr.Fox.get('FollowingModel');
+      Tumblr.Fox.Application.following = new FollowingModel({
+        offset: 0,
+        limit: 100
+      });
+      Tumblr.Fox.Application.following.fetchAll();
     },
-    filterPopover(func, args) {
-      Tumblr.Fox.Application.filter.popover.view[func]();
+    onFollowing() {
+      const FollowerList = Tumblr.Fox.get('FollowerListComponent');
+      Tumblr.Fox.Application.following = new FollowerList();
+      Tumblr.Fox.chromeTrigger('chrome:refresh:following');
     },
-    searchResults(func) {
-      Tumblr.Fox.Application.filter.popover.view.searchFilter.posts.searchResults[func]();
+    onBlog() {
+      if (Tumblr.Fox.route.includes('settings')) { // a regex matcher for the route would be nice
+        Tumblr.Fox.state.setState('disabled');
+      } else {
+        Tumblr.Fox.state.setState('user');
+        if (!Tumblr.Fox.options.get('cachedUserPosts')) {
+          Tumblr.Fox.chromeTrigger('chrome:cache:blogPosts');
+        }
+      }
+    },
+    onLikes() {
+      Tumblr.Fox.state.setState('likes');
+    },
+    defaultRoute() {
+      Tumblr.Fox.state.setState('disabled');
+    }
+  });
+
+  Tumblr.Fox.router = new Tumblr.Fox.Router({
+    controller: new Tumblr.Fox.RouteController(),
+    appRoutes: {
+      'blog/:blogname': 'onBlog',
+      'dashboard': 'onDashboard',
+      'following': 'onFollowing',
+      'likes': 'onLikes',
+      '*path':  'defaultRoute'
+    },
+    onRoute(name, path, args) {
+      // console.log(arguments);
     }
   });
 
@@ -269,6 +344,7 @@ module.exports = (function app(Tumblr, Backbone, _) {
     EventBus: '_addEventHandlerByString',
     InboxCompose: '"inbox-compose"',
     PrimaComponent: '.uniqueId("component")',
+    Poller: 'BasePoller',
     PopoverMixin:  '_crossesView',
     PeeprBlogSearch: 'peepr-blog-search',
     SearchResultView: 'inbox-recipients',
@@ -280,14 +356,14 @@ module.exports = (function app(Tumblr, Backbone, _) {
     SearchInput: '$$(".blog-search-input")',
     TagsPopover: 'click [data-term]',
     TumblrModel: '.Model.extend({})',
-    TumblrView: 'this._beforeRender',
-    SingletonModel: 'SingletonModel',
+    TumblrView: 'this._beforeRender'
   });
 
   Tumblr.Fox.addInitializer('initialize:constants', function (constants) { // TODO: change these to their corresponding constants value
     this.constants.following = constants.cachedFollowingCount;
     this.options.set('logging', constants.debug);
     this.options.set('cachedTags', (constants.cachedTagsCount !== 0));
+    this.options.set('cachedUserPosts', (constants.cachedPostsCount >= constants.totalPostsCount));
     this.options.set('cachedFollowing', (constants.cachedFollowingCount !== 0));
     this.options.set('enableTextSearch', constants.fullTextSearch);
     this.options.set('firstRun', constants.firstRun);
@@ -307,55 +383,49 @@ module.exports = (function app(Tumblr, Backbone, _) {
   Tumblr.Fox.addInitializer('initialize:dependency:chromeMixin', function (ChromeMixin) {
     ChromeMixin.applyTo(Tumblr.Fox);
     this.fetchConstants();
-    this.updateConstants({
-      currentUser: currentUser().toJSON(),
-      formKey: this.constants.formKey
-    });
-  });
-
-  Tumblr.Fox.addInitializer('initialize:dependency:followerListComponent', function (FollowerList) {
-    if (this.route.includes('following')) {
-      this.Application.following = new FollowerList();
-    }
-  });
-
-  Tumblr.Fox.addInitializer('initialize:dependency:followingModel', function (FollowingModel) {
-    if (!this.route.includes('following')) {
-      this.Application.following = new FollowingModel({
-        offset: 0,
-        limit: 100
+    if (currentUser()) {
+      this.updateConstants({
+        currentUser: currentUser().toJSON(),
+        formKey: this.constants.formKey
       });
     }
   });
 
+  Tumblr.Fox.addInitializer('initialize:dependency:thoth', function(Thoth) {
+    const events = {
+      checkIntervalSecs: 10,
+      events: {
+        document: 'mousemove'
+      },
+      warningSecs: 1,
+      timeoutSecs: 10
+    };
+    this.idleMonitor = new Thoth(events);
+    this.idleMonitor.start();
 
-  Tumblr.Fox.onInitialized(function () {
-    if (this.route.includes('following')) {
-      return;
-    }
-
-    if (this.route.includes('dashboard') && this.options.get('test')) {
-      const TestComponent = Tumblr.Fox.get('TestComponent');
-      this.Application.test = new TestComponent();
-    }
-
-    this.chromeTrigger('chrome:validate:cache', valid => {
-      if (!valid) {
-        this.chromeTrigger('chrome:cache:blogPosts');
+    this.idleMonitor.on('action', () => {
+      if (this.options.get('idle')) {
+        this.options.set('idle', false);
+        this.startHeartBeat();
       }
     });
+
+    this.idleMonitor.on('timeout', () => {
+      this.options.set('idle', true);
+      this.stopHeartbeat();
+    });
+  });
+
+  Tumblr.Fox.onInitialized(function () {
+    Backbone.history.start();
 
     if (!this.options.get('cachedFollowing')) {
       this.chromeTrigger('chrome:refresh:following', ::this.Application.following.fetchAll);
     }
-
-    this.Application.following.fetchAll();
   });
 
   Tumblr.Fox.onHeartbeat('refreshFollowing', function () {
     this.chromeTrigger('chrome:refresh:following');
   });
 
-  // NOTE: add onStart initializer, pull components from a dependencies object
-  // initialize components
 });

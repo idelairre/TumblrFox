@@ -6,7 +6,7 @@ module.exports = (function (Tumblr, Backbone, _, BlogSource) {
 
   const BlogModel = Model.extend({
     defaults: {
-      blogname: '',
+      blogname: Tumblr.Prima.currentUser().id,
       cached: false,
       following: false,
       next_offset: 0,
@@ -31,7 +31,10 @@ module.exports = (function (Tumblr, Backbone, _, BlogSource) {
     getContentRating(blogname) {
       return BlogSource.getContentRating(blogname);
     },
-    fetch(query) { // need a way to get new posts
+    fetch(query) { // need a way to get newly created user posts after caching
+      if (this.get('blogname') === Tumblr.Prima.currentUser().id) {
+        return BlogSource.cacheFetch(query);
+      }
       if (query.term.length > 0) {
         return this.search(query);
       } else if (query.term.length === 0) {

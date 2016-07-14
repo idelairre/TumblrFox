@@ -4,6 +4,7 @@
 import chromeReceiver from './receivers/chromeReceiver';
 import Cache from './services/cacheService';
 import db from './lib/db';
+import idleService from './services/idleService';
 import optionsReceiver from './receivers/optionsReceiver';
 import './lib/livereload';
 
@@ -23,23 +24,22 @@ const listenForUpdate = () => {
   });
 }
 
+const listenForIdleState = () => {
+  chrome.idle.setDetectionInterval(15);
+  chrome.idle.onStateChanged.addListener(idleService);
+}
 
 if (inExtension) {
   loadChromeEventHandlers();
   loadOptionsEventHandlers();
   listenForUpdate();
+  listenForIdleState();
 }
 
 db.on('ready', () => {
   Cache.updateTokens();
   Cache.updateNotes();
   Cache.updateFollowingFromLikes();
-});
-
-chrome.idle.setDetectionInterval(15);
-
-chrome.idle.onStateChanged.addListener(idleState => {
-  console.log(idleState);
 });
 
 window.db = db;

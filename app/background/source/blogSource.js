@@ -78,6 +78,7 @@ class BlogSource extends Source {
       }
       return response;
     } catch (e) {
+      console.error(e);
       return e;
     }
   }

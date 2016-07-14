@@ -19,7 +19,6 @@ module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent
     className: 'filter-search',
     template: TemplateCache.get('searchFilterTemplate'),
     mixins: [LoaderMixin],
-    dependencies: ['PostsModel'],
     subviews: {
       filters: {
         constructor: get('FiltersComponent'),
@@ -174,6 +173,10 @@ module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent
           subview.$el.css(disabled);
         });
         this.input.$el.find('input').css(disabled).addClass('disabled');
+      } else if (state === 'user' && Backbone.history.fragment !== 'likes') {
+        this.$settings.css({
+          visibility: 'hidden'
+        });
       }
     },
     setUserList(e) {
@@ -196,9 +199,11 @@ module.exports = (function searchComponent(Tumblr, Backbone, _, FiltersComponent
         }
       } else {
         this.$userList.hide();
-        this.$settings.css({
-          visibility: 'visible'
-        });
+        if (!this.state.get('user')) {
+          this.$settings.css({
+            visibility: 'visible'
+          });
+        }
         this.$filters.find('i').show();
       }
     },

@@ -103,6 +103,22 @@ input {
 			}
 		}
 	}
+	.posts-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		.posts-info {
+			order: 1;
+		}
+		.posts-options {
+			order: 2;
+			max-height: 25px;
+			.posts-button {
+				order: 1;
+				max-height: 25px;
+			}
+		}
+	}
 }
 .debug--options {
 	width: 474px;

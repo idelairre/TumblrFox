@@ -1,4 +1,4 @@
-import { forIn, kebabCase, omit } from 'lodash';
+import { forIn, isFunction, kebabCase, omit, noop } from 'lodash';
 import async from 'async';
 import db from '../lib/db';
 import filters from '../utils/filters';
@@ -11,26 +11,27 @@ import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 import 'babel-polyfill';
 
+const noopCallback = callback => {
+  callback();
+}
+
+let caching = false; // NOTE: this is temporary, might have to actually instansiate the class
+
 export default class Blog {
   static async fetch(query) {
     const blogname = query.blogname;
     const _filters = filters.bind(this, omit(marshalQuery(query), 'blogname'));
-    let matches = [];
     if (query.post_type || query.post_role === 'ORIGINAL') {
-      matches = await db.posts.where('name').equals(blogname).filter(_filters).toArray();
+      let matches = await db.posts.where('type').equals(query.post_type).filter(_filters).reverse().toArray();
       if (query.sort === 'POPULARITY_DESC') {
         matches = sortByPopularity(matches);
       }
-      matches = matches.slice(query.next_offset, query.next_offset + query.limit);
-    } else if (!query.post_type && query.sort === 'POPULARITY_DESC') {
-      matches = await db.posts.orderBy('note_count').and(post => {
-        return post.name === query.blogname;
-      }).reverse().toArray();
-      matches = matches.slice(query.next_offset, query.next_offset + query.limit);
-    } else {
-      matches = await db.posts.where('name').equals(blogname).offset(query.next_offset).limit(query.limit).toArray();
+      return matches.slice(query.next_offset, query.next_offset + query.limit);
     }
-    return matches;
+    if (!query.post_type && query.sort === 'POPULARITY_DESC') {
+      return await db.posts.orderBy('note_count').reverse().offset(query.next_offset).limit(query.limit).toArray();
+    }
+    return await db.posts.toCollection().reverse().offset(query.next_offset).limit(query.limit).toArray();
   }
 
   static async get(id) {
@@ -49,6 +50,8 @@ export default class Blog {
         post.note_count = post.notes.count;
       }
       await db.posts.put(post);
+      const count = await db.posts.where('blog_name').equals(constants.get('userName')).count();
+      constants.set('cachedPostsCount', count);
     } catch (e) {
       console.error(e);
     }
@@ -63,25 +66,44 @@ export default class Blog {
     }
   }
 
-  static async cache() {
-    const userInfo = await Source.getInfo(constants.get('userName'));
-    const totalPosts = userInfo.posts;
+  static async cache(sendResponse) {
+    if (caching) {
+      return;
+    }
+    caching = true;
+    const port = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
+    const portError = isFunction(sendResponse) ? logError : noop;
+
     async.doWhilst(async next => {
       try {
         const posts = await Source.start();
-        const count = await db.posts.where('name').anyOfIgnoreCase(constants.get('userName')).count();
-        await Blog.bulkPut(posts);
-        next(null, posts);
+        if (typeof posts === 'undefined' || posts && posts.length === 0) {
+          portError(Source.MAX_ITEMS_MESSAGE, next, sendResponse);
+          caching = false;
+        } else {
+          await Blog.bulkPut(posts);
+          port(() => {
+            next(null, posts);
+          });
+        }
       } catch (e) {
-        next(e);
+        portError(e, next, sendResponse);
+        caching = false;
       }
     }, posts => {
-      return posts.length !== 0 || posts.length === totalPosts;
+      return posts.length !== 0;
+    }, error => {
+      caching = false;
+      // maybe send something to the front-end when its done?
     });
   }
 
   static async update() {
+    if (caching) {
+      return;
+    }
     let done = false;
+    caching = true;
     async.doWhilst(async next => {
       try {
         const posts = await Source.start({
@@ -99,16 +121,19 @@ export default class Blog {
         next(null, done);
       } catch (e) {
         next(e);
+        caching = false;
       }
     }, done => {
       return !done;
+    }, error => {
+      caching = false;
     });
   }
 
   static async validateCache() {
     const userInfo = await Source.getInfo(constants.get('userName'));
     const totalPosts = userInfo.posts;
-    const count = await db.posts.where('name').equals(constants.get('userName')).count();
+    const count = await db.posts.where('blog_name').equals(constants.get('userName')).count();
     if (count && count === totalPosts) {
       return true;
     }

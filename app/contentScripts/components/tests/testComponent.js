@@ -173,7 +173,7 @@ module.exports = (function tests(Tumblr, Backbone, $, _, jasmine) {
           });
         });
 
-        it('should filter posts by both content rating and role', done => {
+        it('should filter posts by both content rating and role', done => { // NOTE: not possible at the moment, this just tests to make sure it doesn't break
           const query = {
             blogname: 'lochnessmonster',
             term: '',

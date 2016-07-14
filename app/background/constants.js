@@ -15,6 +15,8 @@ const VERSION = chrome.runtime.getManifest().version;
 
 class Constants extends EventEmitter {
   defaults = {
+    autoCacheUserPosts: false,
+    autoCacheLikes: false,
     cachedPostsCount: 0,
     cachedLikesCount: 0,
     cachedFollowingCount: 0,
@@ -61,47 +63,43 @@ class Constants extends EventEmitter {
     super();
     this.initialized = false;
     this._previous = {};
-    if (__ENV__ !== 'test') {
-      this.initialize();
-    } else {
-      Object.assign(this, defaultsDeep(this, this.defaults));
-      Object.assign(this, defaultsDeep(this, this.syncDefaults));
-      this.initialized = true;
-      this.emit('ready');
-    }
+    this.initialize();
   }
 
   initialize() {
+    this._initializeStorageValues(() => {
+      if (VERSION) {
+        this.set('version', VERSION);
+      }
+      if (this.get('version') !== this.get('previousVersion')) {
+        this.set('firstRun', true);
+      } else {
+        this.set('firstRun', false);
+      }
+      if (this.initialized) {
+        this.emit('reset');
+        return;
+      }
+      this.initialized = true;
+      this.emit('ready');
+    });
+  }
+
+  async getUser() {
     try {
-      this._initializeStorageValues(async () => {
-        const response = await oauthRequest({
-          url: 'https://api.tumblr.com/v2/user/info'
-        });
-        if (response) {
-          const likesCount = await db.likes.toCollection().count();
-          const postsCount = await db.posts.toCollection().count();
-          this.set('userName', response.user.name);
-          this.set('cachedLikesCount', likesCount);
-          this.set('cachedPostsCount', postsCount);
-          this.set('totalLikesCount', response.user.likes);
-          this.set('totalPostsCount', response.user.blogs[0].posts);
-          this.set('totalFollowingCount', response.user.following);
-        }
-        if (VERSION) {
-          this.set('version', VERSION);
-        }
-        if (this.get('version') !== this.get('previousVersion')) {
-          this.set('firstRun', true);
-        } else {
-          this.set('firstRun', false);
-        }
-        if (this.initialized) {
-          this.emit('reset');
-        } else {
-          this.initialized = true;
-          this.emit('ready');
-        }
+      const response = await oauthRequest({
+        url: 'https://api.tumblr.com/v2/user/info'
       });
+      if (response) {
+        const likesCount = await db.likes.toCollection().count();
+        const postsCount = await db.posts.toCollection().count();
+        this.set('userName', response.user.name);
+        this.set('cachedLikesCount', likesCount);
+        this.set('cachedPostsCount', postsCount);
+        this.set('totalLikesCount', response.user.likes);
+        this.set('totalPostsCount', response.user.blogs[0].posts);
+        this.set('totalFollowingCount', response.user.following);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -198,5 +196,9 @@ class Constants extends EventEmitter {
 }
 
 const constants = new Constants();
+
+constants.getUser();
+
+window.constants = constants;
 
 export default constants;

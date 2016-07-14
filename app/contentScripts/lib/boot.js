@@ -1,16 +1,23 @@
-module.exports = (function(jasmineRequire) {
+module.exports = (function jasmineBoot(jasmineRequire) {
+  const extend = (destination, source) => {
+    for (const property in source) {
+      destination[property] = source[property];
+    }
+    return destination;
+  }
+
   window.jasmine = jasmineRequire.core(jasmineRequire);
 
   jasmineRequire.html(jasmine);
 
-  var env = jasmine.getEnv();
+  const env = jasmine.getEnv();
 
-  var jasmineInterface = jasmineRequire.interface(jasmine, env);
+  const jasmineInterface = jasmineRequire.interface(jasmine, env);
 
   extend(window, jasmineInterface);
 
-  var consoleReporter = new jasmineRequire.ConsoleReporter()({
-    print: function () {
+  const consoleReporter = new jasmineRequire.ConsoleReporter()({
+    print() {
       console.log.apply(console, arguments);
     },
     showColors: true
@@ -24,17 +31,11 @@ module.exports = (function(jasmineRequire) {
   window.clearTimeout = window.clearTimeout;
   window.clearInterval = window.clearInterval;
 
-  var currentWindowOnload = window.onload;
+  const currentWindowOnload = window.onload;
 
-  window.onload = function() {
+  window.onload = () => {
     if (currentWindowOnload) {
       currentWindowOnload();
     }
   };
-
-  function extend(destination, source) {
-    for (var property in source) destination[property] = source[property];
-    return destination;
-  }
-
 });

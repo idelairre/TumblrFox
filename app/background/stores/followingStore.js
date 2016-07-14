@@ -9,7 +9,7 @@ import 'babel-polyfill';
 export default class Following {
   static async fetch(query) {
     if (query && query.order === 'alphabetically') { // NOTE: these cases are for when the user is fetching from the following view
-      return db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
+      return db.following.toCollection().offset(query.offset).limit(query.limit).toArray();
     } else if (query && query.order === 'orderFollowed') {
       return db.following.orderBy('order').offset(query.offset).limit(query.limit).toArray();
     } else if (query && query.order === 'recentlyUpdated') {
@@ -48,13 +48,14 @@ export default class Following {
   }
 
   static refresh() {
-    const slug = {
+    const options = {
       offset: 0,
-      limit: 20
+      limit: 20,
+      retryTimes: 0
     };
     async.doWhilst(async next => {
       try {
-        const following = await Source.start(slug);
+        const following = await Source.start(options);
         slug.offset += slug.limit;
         if (typeof following === 'undefined') {
           console.error(Source.MAX_RETRIES_MESSAGE);

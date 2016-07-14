@@ -1,4 +1,4 @@
-import $, { each} from 'jquery';
+import $, { each } from 'jquery';
 
 const processTags = post => {
   const tagElems = $(post).find('div.post_tags');

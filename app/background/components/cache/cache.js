@@ -11,10 +11,12 @@ const Cache = View.extend({
     props: {
       cachedLikesCount: 0,
       cachedFollowingCount: 0,
+      cachedPostsCount: 0,
       cachedTagsCount: 0,
       totalLikesCount: 0,
       totalFollowingCount: 0,
-      totalTagsCount: 0
+      totalTagsCount: 0,
+      totalPostsCount: 0
     }
   },
   template: $(cacheTemplate).html(),

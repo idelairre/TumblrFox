@@ -6,6 +6,7 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
   const ComponentFetcher = function () {
     this.$$componentCache = {};
     this.modules = window.webpackModules[2].m;
+    this.componentIds = {};
     this.initialize.apply(this);
   };
 
@@ -27,6 +28,7 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
       }
       if (results.length === 1 && putFlag) {
         this.put(object, Tumblr.Fox.require(results[0]));
+        this.componentIds[object] = results[0];
       }
       if (results.length === 0) {
         console.error('[FETCHING COMPONENT FAILED]', object);
@@ -41,6 +43,13 @@ module.exports = (function componentFetcher(Tumblr, Backbone, _) {
         this.getComponent(key, value);
       });
       Tumblr.Fox.trigger('initialize:components:done');
+    },
+    getId(name) {
+      if (this.componentIds[name]) {
+        return this.componentIds[name];
+      } else {
+        throw new Error(`Component "${name}" not found`);
+      }
     },
     get(componentName) {
       if (typeof this.$$componentCache[componentName] === 'undefined') {

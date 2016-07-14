@@ -161,31 +161,42 @@ export default class Cache {
 
   static async resetPosts() {
     await db.posts.toCollection().delete();
+    constants.set('cachedPostsCount', 0);
+    constants.set('nextBlogSlug', constants.defaults.nextBlogSlug);
+    constants.initialize();
   }
 
   static async resetFollowing() {
     await db.following.toCollection().delete();
+    constants.set('cachedFollowingCount', 0);
+    constants.initialize();
   }
 
   static async resetLikes() {
     await db.likes.toCollection().delete();
+    constants.set('cachedLikesCount', 0);
+    constants.set('likeSourceSlug', constants.defaults.likeSourceSlug);
+    constants.initialize();
   }
 
   static async resetTags() {
     await db.tags.toCollection().delete();
+    constants.set('cachedTagsCount', 0);
+    constants.initialize();
   }
 
-  static async reset(opts, sendResponse) {
+  static async reset(table, sendResponse) {
     try {
-      if (opts === 'all') {
+      if (table === 'all') {
         Cache.resetLikes();
         Cache.resetFollowing();
         Cache.resetPosts();
         Cache.resetTags();
+        constants.reset();
       } else {
-        Cache[`reset${capitalize(opts)}`]();
+        const method = `reset${capitalize(table)}`;
+        await Cache[method]();
       }
-      constants.reset();
       sendResponse({
         type: 'done',
         message: 'Cache reset',

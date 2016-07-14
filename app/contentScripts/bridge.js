@@ -10,6 +10,12 @@ const log = console.log.bind(console, '[BRIDGE]');
 
 class Bridge {
   initialize() {
+    this.constants = {};
+    chrome.runtime.sendMessage({
+      type: 'fetchConstants'
+    }, response => {
+      Object.assign(this.constants, response);
+    });
     chrome.runtime.onMessage.addListener(::this.bindRecievers);
     this.bindOutgoing();
   }
@@ -39,7 +45,7 @@ class Bridge {
   }
 
   bindRecievers(request) {
-    console.log(request, this);
+    this.debug(request, this);
     if (request.payload) {
       this.trigger(`chrome:response:${request.type}`, request.payload);
     } else {
@@ -66,6 +72,7 @@ class Bridge {
       }
     });
     this.debug('initialized');
+    this.trigger('chrome:bridge:initialized');
   }
 }
 

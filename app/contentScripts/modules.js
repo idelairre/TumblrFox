@@ -48,6 +48,7 @@ export SettingsComponent from './components/filterPopover/search/settings/settin
 export Source from './source/source';
 export TestComponent from './components/tests/testComponent';
 export TagSearchAutocompleteModel from './components/filterPopover/search/input/tagSearchAutocompleteModel';
+export ThothComponent from './components/thoth/thothComponent';
 export TemplateCache from './utils/templateFetcherUtil';
 export Time from './utils/timeUtil';
 export ToggleComponent from './components/popover/toggle/toggle';

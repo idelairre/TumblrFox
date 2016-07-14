@@ -16,7 +16,7 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
 
       $.ajax({
         type: 'GET',
-        url: ' https://www.tumblr.com/svc/data/tumblelog',
+        url: 'https://www.tumblr.com/svc/data/tumblelog',
         beforeSend: xhr => {
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
         },
@@ -25,15 +25,10 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         },
         success: data => {
           const tumblelog = data.response;
-          // this.getContentRating(blogname).then(user => {
-            // if (user.content_rating === 'nsfw') {
-            //   tumblelog.content_rating = user.content_rating;
-            // }
-            deferred.resolve(tumblelog);
-            if (tumblelog.following) {
-              this.update(tumblelog);
-            }
-          // });
+          deferred.resolve(tumblelog);
+          if (tumblelog.following) {
+            this.update(tumblelog);
+          }
         },
         error: error => {
           deferred.reject(error);
@@ -54,6 +49,9 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
     },
     update(following) {
       this.chromeTrigger('chrome:update:following', following);
+    },
+    updateBlogCache() {
+      this.chromeTrigger('chrome:update:blogCache');
     },
     cacheFetch(query) {
       delete query.blog;
@@ -92,8 +90,8 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
         slug.post_id = query.postId;
       }
       const deferred = $.Deferred();
-      Backbone.ajax({
-        url: 'svc/indash_blog/posts',
+      $.ajax({
+        url: 'https://www.tumblr.com/svc/indash_blog/posts',
         beforeSend: xhr => {
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
         },
@@ -110,9 +108,9 @@ module.exports = (function (Tumblr, Backbone, $, _, ChromeMixin, Source) {
     search(query) {
       const slug = pick(query, 'next_offset', 'limit', 'sort', 'post_type', 'post_role', 'filter_nsfw');
       const deferred = $.Deferred();
-      Backbone.ajax({
+      $.ajax({
         type: 'GET',
-        url: `svc/search/blog_search/${query.blogname}/${query.term}`,
+        url: `https://www.tumblr.com/svc/search/blog_search/${query.blogname}/${query.term}`,
         data: slug,
         beforeSend: xhr => {
           xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);

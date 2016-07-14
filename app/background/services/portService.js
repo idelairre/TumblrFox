@@ -1,5 +1,8 @@
+let port;
+
 const portHandler = handlers => {
-	return port => {
+	return $port => {
+		port = $port;
 		port.onMessage.addListener(request => {
 			const { type } = request;
 			if (handlers.hasOwnProperty(type)) {
@@ -10,6 +13,9 @@ const portHandler = handlers => {
 				}
 			}
 			return true;
+		});
+		port.onDisconnect.addListener(() => {
+			port = null;
 		});
 	};
 };
