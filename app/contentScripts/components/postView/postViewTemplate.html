@@ -1,5 +1,4 @@
-<script id="postViewTemplate" type="text/template">
-  <li class="post_container" data-pageable="post_<%- this.model.get('id') %>">
+<li class="post_container" data-pageable="post_<%- this.model.get('id') %>">
   <% var popoverData = ['avatar_url', 'dashboard_url', 'url', 'name', 'cname', 'description', 'description_sanitized', 'title', 'likes', 'share_following', 'is_private', 'is_group', 'customizable', 'following', 'premium_partner', 'can_receive_messages', 'can_send_messages', 'uuid', 'asks', 'anonymous_asks', 'is_subscribed', 'can_subscribe', 'global_theme_params'] %>
   <div id="post_<%- model.id %>" class="post post_full with_permalink pt has_source reblog_ui_refresh is_<%- model.get('type') %> <%- model.get('is_mine') ? 'is_mine' : 'not_mine' %> <%- model.get('is-direct-video') ? model.get('is-direct-video') : null %>"
     data-id="<%- model.id %>"
@@ -13,7 +12,7 @@
     data-tumblelog="<%- model.get('tumblelog') %>"
     data-tumblog-key="<%- model.get('tumblelog-data').key %>"
     data-can_reply="<%- model.get('can_reply') ? 1 : 0 %>"
-    data-json="<%- JSON.stringify(_.omit(model.attributes, 'post_html', 'tags')) %>"
+    data-json="<%- JSON.stringify(_.omit(model.toJSON(), 'html', 'post_html', 'tags')) %>"
     data-view-exists="true"
     data-tumblrfox-post="true">
     <div class="post_avatar  show_user_menu">
@@ -107,4 +106,3 @@
     </div>
   </div>
 </li>
-</script>

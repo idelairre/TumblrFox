@@ -3,10 +3,10 @@
 
 import $, { ajax, Deferred } from 'jquery';
 import async from 'async';
-import { differenceBy, findIndex, first, isUndefined, isString, isFunction, noop } from 'lodash';
+import { differenceBy, findIndex, first, isUndefined, isEqual, isString, isFunction, noop, omit, union } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
-import filters from '../utils/filters';
+import filters, { filterNsfw, filterReblogs } from '../utils/filters';
 import marshalQuery from '../utils/marshalQuery';
 import sortByPopularity from '../utils/sort';
 import { logValues, logError } from '../services/loggingService';
@@ -20,6 +20,10 @@ const LIMIT = 20000;
 const noopCallback = callback => {
   callback();
 }
+
+let $postsCache = [];
+
+let lastQuery = {};
 
 let caching = false;
 
@@ -59,8 +63,9 @@ export default class Likes {
 
   static async put(post) { // NOTE: change this into a transaction
     try {
-      post.tags = Tags._updateTags(post);
-      post.tokens = Lunr.tokenize(post.html);
+      post.tags = await Tags._updateTags(post);
+      post.tokens = union(Lunr.tokenizeHtml(post.html), post.tags);
+
       await db.likes.put(post);
       if (post['tumblelog-data'] && post['tumblelog-data'].following) {
         await db.following.put(post['tumblelog-data']);
@@ -82,21 +87,31 @@ export default class Likes {
     }
   }
 
+  static cacheFetch(query) {
+    return $postsCache.slice(query.next_offset, query.next_offset + query.limit);
+  }
+
   static async searchLikesByTerm(query) {
     try {
       query = marshalQuery(query);
+      if (isEqual(lastQuery, omit(query, ['next_offset']))) {
+        return Likes.cacheFetch(query);
+      }
       const term = query.term;
       const _filters = filters.bind(this, query);
       query.term = Lunr.tokenize(query.term)[0];
       if (typeof query.term === 'undefined') {
         query.term = term;
       }
+      Object.assign(lastQuery, omit(query, ['next_offset']));
       if (query.sort !== 'CREATED_DESC') {
-        let response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).filter(_filters).toArray();
+        let response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).or('tags').anyOfIgnoreCase(query.term).filter(_filters).reverse().toArray();
         response = sortByPopularity(response);
+        $postsCache = response;
         return response.slice(query.next_offset, query.next_offset + query.limit);
       }
-      const response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).filter(filters).toArray(); // NOTE: using dexie's native offset method here slows this down drastically since it has to iterate through the whole collection
+      let response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).or('tags').anyOfIgnoreCase(query.term).filter(_filters).reverse().toArray();
+      $postsCache = response;
       return response.slice(query.next_offset, query.next_offset + query.limit);
     } catch (e) {
       console.error(e);
@@ -105,16 +120,23 @@ export default class Likes {
 
   static async fetch(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
     query = marshalQuery(query);
+    if (isEqual(lastQuery, omit(query, ['next_offset']))) {
+      return Likes.cacheFetch(query);
+    }
     const _filters = filters.bind(this, query);
     try {
       let matches = [];
+      Object.assign(lastQuery, omit(query, ['next_offset']));
       if (query.sort !== 'CREATED_DESC') {
         matches = await db.likes.orderBy('note_count').filter(_filters).reverse().toArray();
-      } else if (query.post_type !== 'any') {
-        matches = await db.likes.where('type').anyOfIgnoreCase(query.post_type).filter(_filters).toArray();
+      } else if (query.post_type) {
+        matches = await db.likes.where('type').anyOfIgnoreCase(query.post_type).filter(_filters).reverse().toArray();
+      } else if (query.before) {
+        matches = await db.likes.where('liked_timestamp').belowOrEqual(query.before).filter(_filters).reverse().toArray(); // TODO: find a way to speed this up
       } else {
-        matches = await db.likes.toCollection().filter(_filters).toArray();
+        matches = await db.likes.toCollection().filter(_filters).reverse().toArray();
       }
+      $postsCache = matches;
       return matches.slice(query.next_offset, query.next_offset + query.limit);
     } catch (e) {
       console.error(e);

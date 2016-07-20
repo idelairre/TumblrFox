@@ -1,3 +1,4 @@
+import { isEmpty } from 'lodash';
 import { Deferred } from 'jquery';
 import tokens from '../tokens.json';
 import { ChromeExOAuth } from './chromeExOauth';
@@ -26,8 +27,8 @@ const onAuthorized = (slug, callback) => {
     parameters: slug
   };
 
-  oauth.sendSignedRequest(slug.url, (data, xhr) => {
-    if (data !== '') {
+  oauth.sendSignedRequest(slug.url, function (data, xhr) {
+    if (!isEmpty(data)) {
       const response = JSON.parse(data).response;
       callback(null, response);
     } else {

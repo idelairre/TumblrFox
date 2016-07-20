@@ -24,12 +24,16 @@ class LunrSearch {
   tokenizeHtml(html) { // TODO: strip out html data
     html = stripScripts(html);
     const text = $(html).text();
-    const tokens = this.tokenize(text).filter(token => {
-      if (htmlTags.includes(token)) {
+    let tokens = this.tokenize(text).filter(token => {
+      if (htmlTags.includes(token) || token.includes('#')) { // its probably a tag, this will be included anyways
         return;
       }
       return token;
+    })
+    tokens = tokens.filter((item, pos) => {
+      return tokens.indexOf(item) == pos;
     });
+    return tokens;
   }
 
   tokenize(text) {

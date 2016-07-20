@@ -19,6 +19,12 @@ export default class Source {
     this.constants.on('reset', () => {
       this._initialize.call(this);
     });
+    if (typeof this.condition === 'undefined') {
+      throw new Error(`no condition set for ${this.options.items}`)
+    }
+    if (typeof this.step === 'undefined') {
+      throw new Error(`no step set for ${this.options.items}`)
+    }
   }
 
   _initialize() {
@@ -46,7 +52,7 @@ export default class Source {
     }
   }
 
-  async fetch() {
+  async fetch() { // TODO: make this accept options so that its usable outside of the start() method
     const deferred = Deferred();
     ajax({
       type: 'GET',
@@ -87,7 +93,7 @@ export default class Source {
       if (!this.condition()) { // NOTE: condition represents what must be true for run to crawl
         return deferred.resolve([]);
       }
-      const posts = await this.crawl({
+      const items = await this.crawl({
         iterator: this.options.iterator,
         item: this.options.item,
         callback: this.process
@@ -96,7 +102,7 @@ export default class Source {
       if (typeof this.step === 'function') {
         this.step();
       }
-      deferred.resolve(posts);
+      deferred.resolve(items);
     } catch (error) {
       if (this.retriedTimes <= (this.retryTimes - 1)) {
         this.handleError(error);

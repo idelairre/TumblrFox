@@ -7,6 +7,7 @@ module.exports = {
     onload: ['./app/background/lib/chromeExOauth.js', './app/background/lib/chromeExOauthsimple.js', './app/background/lib/onload.js'],
     options: './app/background/components/options.js',
     contentscript: './app/contentScripts/contentscript.js',
+    'fox-bootstrap': './app/contentScripts/bootstrap.js',
     background: './app/background/background.js',
     test: 'mocha!./tests/test.js',
     vendor: ['jquery', 'lodash', 'backbone']
@@ -15,14 +16,15 @@ module.exports = {
   watch: args.watch,
   output: {
     path: '/',
-    filename: '[name].js'
+    filename: '[name].js',
+    jsonpFunction: 'foxJsonp'
   },
   plugins: [
     new webpack.DefinePlugin({
       '__ENV__': args.test ? JSON.stringify('test') : JSON.stringify(args.production ? 'production' : 'development'),
       '__VENDOR__': JSON.stringify(args.vendor)
     }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js', Infinity)
+    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js', Infinity),
   ].concat(args.production ? [new webpack.optimize.UglifyJsPlugin({ mangle: false }), new webpack.optimize.DedupePlugin()] : []),
   module: {
     noParse: /node_modules\/json-schema\/lib\/validate\.js/,
@@ -52,10 +54,10 @@ module.exports = {
       loader: 'file'
     }, {
       test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-      loader: 'url-loader?limit=10000&minetype=application/font-woff'
+      loader: 'url-loader?limit=10000&mimetype=application/font-woff'
     }, {
-      test: /\.(jpe?g|png|gif|svg)$/i,
-      loaders: 'url-loader?limit=10000&minetype=application/font-woff'
+      test: /\.(jpe?g|gif|svg)$/i,
+      loaders: 'url-loader?limit=10000&mimetype=application/font-woff'
     }]
   },
   modulesDirectories: ['node_modules'],

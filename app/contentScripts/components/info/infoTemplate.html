@@ -1,8 +1,7 @@
-<script id="infoTemplate" type="text/template">
-  <div class="text">
-    <h1>TumblrFox <%- Tumblr.Fox.options.get('version') %> installed.<h1>
-    Release notes: <a href="https://github.com/idelairre/TumblrFox/releases/tag/v<%- Tumblr.Fox.options.get('version') %>" target="_blank">link</a><br>
-    Help: <a href="https://github.com/idelairre/TumblrFox/wiki" target="_blank">link</a><br>
-    Issues: <a href="https://github.com/idelairre/TumblrFox/issues" target="_blank">link</a><br>
-  </div>
-</script>
+<div class="text">
+  <h1>TumblrFox <%- Tumblr.Fox.options.get('version') %> installed.<h1>
+  Environment: <%= Tumblr.Fox.constants.env %><br>
+  Release notes: <a href="https://github.com/idelairre/TumblrFox/releases/tag/v<%- Tumblr.Fox.options.get('version') %>" target="_blank">link</a><br>
+  Help: <a href="https://github.com/idelairre/TumblrFox/wiki" target="_blank">link</a><br>
+  Issues: <a href="https://github.com/idelairre/TumblrFox/issues" target="_blank">link</a><br>
+</div>

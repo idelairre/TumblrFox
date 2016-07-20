@@ -1,33 +1,35 @@
 import async from 'async';
 import { capitalize, invoke, maxBy, union } from 'lodash';
 import Dexie from 'dexie';
-import Lunr from '../services/lunrSearchService';
 import Papa from '../lib/papaParse';
 import constants from '../constants';
 import { logValues, logError, calculatePercent } from './loggingService';
 import db from '../lib/db';
 import Firebase from './firebaseService';
 import Likes from '../stores/likeStore';
+import Lunr from '../services/lunrSearchService';
+import Tags from '../stores/tagStore';
 import { Deferred } from 'jquery';
 import 'babel-polyfill';
 
 const Promise = Dexie.Promise;
 
 export default class Cache {
-  static async updateTokens() {
+  static async updateTokens(table) {
+    if (table !== 'posts' && table !== 'likes') {
+      throw new Error(`${table} is not a valid table. Can only update tables containing posts`);
+    }
     let offset = 0;
-    let count = await db.posts.toCollection().count();
+    let count = await db[table].toCollection().count();
     async.doWhilst(async next => {
       try {
-        const posts = await db.posts.toCollection().filter(post => {
-          return !post.tokens;
-        }).offset(offset).limit(100).toArray();
+        const posts = await db[table].toCollection().offset(offset).limit(100).toArray();
         offset += posts.length;
         if (posts.length > 0) {
-          const promises = posts.filter(post => {
+          const promises = posts.map(async post => {
             post.tokens = Lunr.tokenizeHtml(post.html);
             post.tokens = union(post.tags, post.tokens, [post.blog_name]);
-            return db.posts.put(post);
+            return await db[table].put(post);
           });
           await Promise.all(promises);
         }
@@ -37,6 +39,11 @@ export default class Cache {
       }
     }, next => {
       return next !== 0;
+    }, error => {
+      if (error) {
+        console.error(error);
+      }
+      console.log('done updating tokens');
     });
   }
 
@@ -49,9 +56,9 @@ export default class Cache {
         }).offset(offset).limit(100).toArray();
         offset += posts.length;
         if (posts.length > 0) {
-          const promises = posts.filter(post => {
+          const promises = posts.map(async post => {
             post.note_count = post.notes.count;
-            return db.posts.put(post);
+            return await db.posts.put(post);
           });
           await Promise.all(promises);
         }
@@ -91,6 +98,51 @@ export default class Cache {
     });
   }
 
+  static async rehashTags(sendResponse) {
+    await Cache.resetTags();
+    let offset = 0;
+    let count = await db.likes.toCollection().count();
+    async.doWhilst(async next => {
+      try {
+        const posts = await db.likes.toCollection().offset(offset).limit(100).toArray();
+        offset += posts.length;
+        if (posts.length > 0) {
+          const promises = posts.map(async post => {
+            return await Tags._updateTags(post); // flags to not add tags
+          });
+          await Promise.all(promises);
+        }
+        if (typeof sendResponse === 'function') {
+          const { percentComplete, itemsLeft, total } = calculatePercent(offset, count);
+          const payload = {
+            constants,
+            percentComplete,
+            itemsLeft,
+            total
+          };
+          sendResponse({
+            type: 'progress',
+            payload
+          });
+        }
+        next(null, posts.length);
+      } catch (e) {
+        if (typeof sendResponse === 'function') {
+          logError(e, next, sendResponse);
+        } else {
+          next(e);
+        }
+      }
+    }, next => {
+      return next !== 0;
+    }, error => {
+      if (error) {
+        console.error(error);
+      }
+      console.log('done rehashing tags');
+    });
+  }
+
   static async asyncOp(table, operation, sendResponse) {
     const deferred = Deferred();
     const primaryKey = db[table].schema.primKey.name;
@@ -126,7 +178,7 @@ export default class Cache {
       } catch (e) {
         next(e);
         if (typeof sendResponse === 'function') {
-          logError(table, sendResponse);
+          logError(e, next, sendResponse);
         }
       }
     }, next => {

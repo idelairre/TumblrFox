@@ -11,6 +11,8 @@ import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 import 'babel-polyfill';
 
+// TODO: make sure Source can fetch all the user's blog posts
+
 const noopCallback = callback => {
   callback();
 }
@@ -19,19 +21,39 @@ let caching = false; // NOTE: this is temporary, might have to actually instansi
 
 export default class Blog {
   static async fetch(query) {
-    const blogname = query.blogname;
-    const _filters = filters.bind(this, omit(marshalQuery(query), 'blogname'));
-    if (query.post_type || query.post_role === 'ORIGINAL') {
-      let matches = await db.posts.where('type').equals(query.post_type).filter(_filters).reverse().toArray();
-      if (query.sort === 'POPULARITY_DESC') {
-        matches = sortByPopularity(matches);
+    try {
+      const blogname = query.blogname;
+      const _filters = filters.bind(this, omit(marshalQuery(query), 'blogname'));
+      if (query.post_type && query.post_role === 'ORIGINAL') {
+        let matches = await db.posts.where('type').equals(query.post_type).filter(post => {
+          return !post.is_reblog;
+        }).reverse().toArray();
+        if (query.sort === 'POPULARITY_DESC') {
+          matches = sortByPopularity(matches);
+        }
+        return matches.slice(query.next_offset, query.next_offset + query.limit);
       }
-      return matches.slice(query.next_offset, query.next_offset + query.limit);
+      if (query.post_type && query.post_role !== 'ORIGINAL') {
+        let matches = await db.posts.where('type').equals(query.post_type).reverse().toArray();
+        if (query.sort === 'POPULARITY_DESC') {
+          matches = sortByPopularity(matches);
+        }
+        return matches.slice(query.next_offset, query.next_offset + query.limit);
+      }
+      if (query.post_role === 'ORIGINAL' && query.sort !== 'POPULARITY_DESC') {
+        let matches = await db.posts.toCollection().filter(post => {
+          return !post.is_reblog;
+        }).reverse().toArray();
+        return matches.slice(query.next_offset, query.next_offset + query.limit);
+      }
+      if (query.post_role !== 'ORIGINAL' && query.sort === 'POPULARITY_DESC') {
+        return await db.posts.orderBy('note_count').reverse().offset(query.next_offset).limit(query.limit).toArray();
+      }
+      return await db.posts.orderBy('order').reverse().offset(query.next_offset).limit(query.limit).toArray();
+    } catch (e) {
+      console.error(e);
+      return e;
     }
-    if (!query.post_type && query.sort === 'POPULARITY_DESC') {
-      return await db.posts.orderBy('note_count').reverse().offset(query.next_offset).limit(query.limit).toArray();
-    }
-    return await db.posts.toCollection().reverse().offset(query.next_offset).limit(query.limit).toArray();
   }
 
   static async get(id) {
@@ -44,13 +66,14 @@ export default class Blog {
 
   static async put(post) {
     try {
-      post.tags = Tags._updateTags(post);
+      let count = await db.posts.toCollection().count();
+      post.order = count + 1;
       post.tokens = Lunr.tokenize(post.html);
       if (!post.hasOwnProperty('note_count') && post.hasOwnProperty('notes')) {
         post.note_count = post.notes.count;
       }
       await db.posts.put(post);
-      const count = await db.posts.where('blog_name').equals(constants.get('userName')).count();
+      count = await db.posts.toCollection().count();
       constants.set('cachedPostsCount', count);
     } catch (e) {
       console.error(e);
@@ -60,7 +83,7 @@ export default class Blog {
   static async bulkPut(posts) {
     try {
       const promises = posts.map(Blog.put);
-      Promise.all(promises);
+      return Promise.all(promises);
     } catch (e) {
       console.error(e);
     }

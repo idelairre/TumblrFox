@@ -7,6 +7,7 @@ import PostSource from '../source/postSource';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
+import { omit } from 'lodash';
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
@@ -15,7 +16,7 @@ chrome.runtime.onInstalled.addListener(details => {
 
 const setConstants = payload => {
   if (typeof payload !== 'undefined') {
-    constants.set(payload);
+    constants.set(omit(payload, ['channels', 'sparkline']));
   }
 };
 

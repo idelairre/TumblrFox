@@ -1,4 +1,3 @@
-<script id="filterTemplate" type="text/template">
 <% if (Tumblr.Fox.state.get('likes') || (Tumblr.Fox.state.get('user') && _.isEqual(Tumblr.Prima.currentUser().id, model.get('blogname')) && Tumblr.Fox.options.get('cachedUserPosts')) || Tumblr.Fox.state.get('user') && !_.isEqual(Tumblr.Prima.currentUser().id, model.get('blogname')) && model.get('unsetTerm').length > 0) { %>
   <ul class="popover_inner_list search_filter_items">
     <li class="popover_menu_item sort_filter" data-filter="sort:POPULARITY_DESC">
@@ -52,4 +51,3 @@
     </li>
   </ul>
 <% } %>
-</script>

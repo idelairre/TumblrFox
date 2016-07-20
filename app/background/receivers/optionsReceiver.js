@@ -44,6 +44,7 @@ const optionsReceiver = portHandler({
   cacheFollowing: Following.cache,
   downloadCache: downloadCache,
   fetchConstants: sendConstants,
+  rehashTags: Cache.rehashTags,
   resetCache: Cache.reset,
   restoreCache: restoreCache,
   updateSettings: updateConstants

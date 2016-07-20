@@ -1,23 +1,23 @@
 import { oauthRequest } from '../lib/oauthRequest';
 import { ajax, Deferred } from 'jquery';
-import { omit } from 'lodash';
+import { isArray, omit } from 'lodash';
 import BlogSource from './blogSource';
 import db from '../lib/db';
 import sendMessage from '../services/messageService';
 import 'babel-polyfill';
 
 export default class PostSource {
-  static async applyNsfwFilter(query, posts) {
-    if (query.filter_nsfw) {
-      return posts = posts.filter(async post => {
-        const following = await db.following.get(post.blog_name);
-        if (following && following.hasOwnProperty('content_rating')) {
-          return;
-        }
-        return post
-      });
+  static async applyNsfwFilter(posts) {
+    if (typeof posts === 'undefined' || !isArray(posts)) {
+      throw new Error('posts are undefined or not an array');
     }
-    return posts;
+    return posts.filter(async post => {
+      const following = await db.following.get(post.blog_name);
+      if (following && following.hasOwnProperty('content_rating')) {
+        return;
+      }
+      return post
+    });
   }
 
   static async fetchDashboardPosts(request) {
@@ -30,9 +30,12 @@ export default class PostSource {
       slug.type = request.post_type.toLowerCase();
     }
     try {
-      const response = await oauthRequest(slug)
-      const posts = await PostSource.applyNsfwFilter(request, response.posts);
-      return posts;
+      const response = await oauthRequest(slug);
+      console.log('[FETCH]', response);
+      if (request.filter_nsfw && response.hasOwnProperty('posts')) {
+        return await PostSource.applyNsfwFilter(response.posts);
+      }
+      return response.posts;
     } catch (e) {
       console.error(e);
     }

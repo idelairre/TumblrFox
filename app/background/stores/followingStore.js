@@ -16,8 +16,7 @@ export default class Following {
       return db.following.orderBy('updated').offset(query.offset).limit(query.limit).reverse().toArray();
     }
     if (query && query.offset && query.limit) {
-      const response = await db.following.toCollection().offset(query.offset).limit(query.limit).reverse().toArray();
-      return response;
+      return await db.following.toCollection().offset(query.offset).limit(query.limit).reverse().toArray();
     }
     return await db.following.toCollection().toArray();
   }
@@ -56,7 +55,7 @@ export default class Following {
     async.doWhilst(async next => {
       try {
         const following = await Source.start(options);
-        slug.offset += slug.limit;
+        options.offset += options.limit;
         if (typeof following === 'undefined') {
           console.error(Source.MAX_RETRIES_MESSAGE);
           next(Source.MAX_RETRIES_MESSAGE);
@@ -97,6 +96,8 @@ export default class Following {
       }
     }, following => {
       return following.length !== 0;
+    }, error => {
+      console.error(error);
     });
   }
 

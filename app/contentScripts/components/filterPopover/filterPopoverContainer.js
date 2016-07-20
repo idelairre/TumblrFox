@@ -1,32 +1,31 @@
-module.exports = (function filterPopoverContainer(Tumblr, Backbone, _, FilterPopoverComponent, PrimaComponent) {
-  const { $ } = Backbone;
-  const { assign } = _;
-  const { ComponentFetcher } = Tumblr.Fox.Utils;
+import { $ } from 'backbone';
+import { ComponentFetcher } from '../../utils';
+import FilterPopoverComponent from './filterPopoverComponent';
 
-  const FilterPopoverContainer = PrimaComponent.extend({
-    name: 'FilterPopover',
-    initialize(e) {
-      this.options = assign({}, e);
-    },
-    view(e) {
-      assign(e, {
-        pinnedTarget: $('#filter'),
-        isFixedPosition: true,
-        autoTeardown: false, // NOTE: do not touch these
-        teardownOnEscape: false
-      });
-      return new FilterPopoverComponent(e);
-    },
-    show() {
-      this.view.show();
-    },
-    render() {
-      this.view.render();
-      this.trigger('append');
-      return this;
-    }
-  });
+const PrimaComponent = ComponentFetcher.get('PrimaComponent');
 
-  Tumblr.Fox.register('FilterPopoverContainer', FilterPopoverContainer);
-
+const FilterPopoverContainer = PrimaComponent.extend({
+  name: 'FilterPopover',
+  initialize(e) {
+    this.options = Object.assign({}, e);
+  },
+  view(e) {
+    Object.assign(e, {
+      pinnedTarget: $('#filter'),
+      isFixedPosition: true,
+      autoTeardown: false, // NOTE: do not touch these
+      teardownOnEscape: false
+    });
+    return new FilterPopoverComponent(e);
+  },
+  show() {
+    this.view.show();
+  },
+  render() {
+    this.view.render();
+    this.trigger('append');
+    return this;
+  }
 });
+
+module.exports = FilterPopoverContainer;

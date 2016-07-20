@@ -47,11 +47,16 @@ class LikeSource extends Source {
   }
 
   parse(response) {
-    let next = $(response).find('#pagination').find('a#next_page_link').attr('href').split('/');
-    next = next[next.length - 1];
-    this.options.page += 1;
-    this.options.timestamp = next;
-    return parsePosts(response, this.options.timestamp);
+    try {
+      let next = $(response).find('#pagination').find('a#next_page_link').attr('href').split('/');
+      next = next[next.length - 1];
+      this.options.page += 1;
+      this.options.timestamp = next;
+      return parsePosts(response, this.options.timestamp);
+    } catch (e) {
+      console.error(e);
+      this.constants.set('maxLikesCount', this.constants.get('cachedLikesCount'));
+    }
   }
 
   async fetchMostRecent() {
@@ -78,7 +83,7 @@ class LikeSource extends Source {
         console.log(`Retried times: ${this.retriedTimes + 1}, retrying from page: ${this.options.page}, timestamp: ${formatDate(this.options.nextLikeSlug.timestamp)}...`);
       }
       const posts = await this.fetch(retry);
-      console.log(`✔ Crawled posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}`);
+      console.log(`✔ Crawled ${posts.length} posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}`);
       deferred.resolve(posts);
     } catch (e) {
       deferred.reject(e);

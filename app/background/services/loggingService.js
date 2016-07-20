@@ -39,7 +39,7 @@ export const logValues = (database, sendResponse, callback) => {
 
     if (itemsLeft === 0) {
       if (sendResponse) {
-          sendResponse({
+        sendResponse({
           type: 'done',
           payload,
           message: 'Finished processing items'

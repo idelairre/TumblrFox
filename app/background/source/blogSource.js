@@ -49,6 +49,9 @@ class BlogSource extends Source {
 
   async getInfo(user) {
     const deferred = Deferred();
+    if (typeof user !== 'string') {
+      deferred.reject(`${typeof user === 'object' ? JSON.stringify(user) : user} is not a valid blogname`);
+    }
     ajax({
       type: 'GET',
       url: `https://api.tumblr.com/v2/blog/${user}.tumblr.com/info?api_key=${this.constants.get('consumerKey')}`,
@@ -63,24 +66,23 @@ class BlogSource extends Source {
   }
 
   async getContentRating(user) {
+    const deferred = Deferred();
     try {
       const tumblelog = await this.getInfo(user);
       const response = {
         user
       };
-      if (!tumblelog) {
-        response.content_rating = 'user has no rating';
-      }
       if (tumblelog.is_nsfw) {
         response.content_rating = 'nsfw'
       } else {
         response.content_rating = 'safe';
       }
-      return response;
+      deferred.resolve(response);
     } catch (e) {
       console.error(e);
-      return e;
+      deferred.reject(e);
     }
+    return deferred.promise();
   }
 
   async fetchBlogPosts(request) {
@@ -92,6 +94,10 @@ class BlogSource extends Source {
     };
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
+    }
+
+    if (typeof slug.blogname !== 'string') {
+      deferred.reject(slug.blogname, 'is not a valid blogname');
     }
 
     let url = `https://api.tumblr.com/v2/blog/${slug.blogname}/posts`;
@@ -111,7 +117,6 @@ class BlogSource extends Source {
       },
       error: error => {
         deferred.reject(error);
-        console.error(error, slug.blogname);
       }
     });
     return deferred.promise();

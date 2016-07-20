@@ -14,7 +14,7 @@ const receiverHandler = handlers => {
 	return (request, sender, sendResponse) => {
 		const lastError = chrome.runtime.lastError;
 		if (lastError) {
-			sendMessage({
+			sendResponse({
 				type: 'error',
 				payload: lastError.message
 			});
@@ -26,10 +26,16 @@ const receiverHandler = handlers => {
 				const func = handlers[request.type](request.payload);
 				if (func instanceof Promise) {
 					func.then(response => {
+						console.log(response);
 						if (typeof response !== 'undefined') {
-							console.log(response);
 							sendResponse(response);
 						}
+					}, error => {
+						console.log(error);
+						sendResponse({
+							type: 'error',
+							payload: error
+						});
 					});
 				} else {
 					if (typeof func !== 'undefined') {
@@ -43,6 +49,11 @@ const receiverHandler = handlers => {
 						if (typeof response !== 'undefined') {
 							sendResponse(response);
 						}
+					}, error => {
+						sendResponse({
+							type: 'error',
+							payload: error
+						});
 					});
 				} else {
 					if (typeof func !== 'undefined') {

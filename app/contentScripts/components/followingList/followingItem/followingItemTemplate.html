@@ -1,0 +1,24 @@
+<a href="http://<%= attributes.name %>.tumblr.com/" class="avatar" style="background-image:url('<%= attributes.avatar %>')" data-tumblelog-popover="<%- JSON.stringify(attributes) %>">
+  <img class="avatar_img" alt="" src="<%= attributes.avatar_url %>" width="40" height="40">
+</a>
+<div class="info">
+  <div class="name">
+    <a href="http://<%= attributes.name %>.tumblr.com/"><%= attributes.name %></a>
+  </div>
+  <div class="description">
+    <span class="last_updated" style="color:#606060;"><%= attributes.updated %></span>
+  </div>
+</div>
+<div class="poptica_header popover_standalone">
+  <a data-name="<%= attributes.name %>" class="info_popover_button nav_icon user_dropdown_lockup">
+    <span class="snowman-container">
+      <i data-subscription-indicator="" class="subscribe-activity"></i>
+      <i class="snowman-icon"></i>
+    </span>
+  </a>
+</div>
+<div class="controls">
+  <span id="loading_<%= attributes.name %>" class="loading_animation" style="display: none;"></span>
+  <button class="chrome clear big unfollow_button" id="unfollow_button_<%= attributes.name %>" data-name="<%= attributes.name %>" data-formkey="<%= attributes.formkey %>">Unfollow</button>
+  <button class="chrome blue big follow_button" id="follow_button_<%= attributes.name %>" style="display: none;" data-name="<%= attributes.name %>" data-formkey="<%= attributes.formkey %>">Follow</button>
+</div>

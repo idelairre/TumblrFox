@@ -119,6 +119,22 @@ input {
 			}
 		}
 	}
+	.tags-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		.tags-info {
+			order: 1;
+		}
+		.tags-options {
+			order: 2;
+			max-height: 25px;
+			.tags-button {
+				order: 1;
+				max-height: 25px;
+			}
+		}
+	}
 }
 .debug--options {
 	width: 474px;

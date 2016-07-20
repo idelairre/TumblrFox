@@ -1,3 +1,5 @@
+import { isNumber } from 'lodash';
+
 const marshalQuery = query => {
   const type = query.post_type.toLowerCase();
   if (type === 'any') {

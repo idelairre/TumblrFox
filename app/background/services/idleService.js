@@ -6,6 +6,8 @@ const idleService = async state => {
   if (state === 'idle' && constants.initialized && constants.autoCacheUserPosts) {
     const hasCachedUserPosts = await BlogStore.validateCache();
     if (!hasCachedUserPosts) {
+      BlogStore.cache();
+    } else {
       BlogStore.update();
     }
   }

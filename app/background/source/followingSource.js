@@ -8,7 +8,7 @@ import 'babel-polyfill';
 class FollowingSource extends Source {
   options = {
     iterator: 'offset',
-    item: 'following',
+    item: 'followings',
     url: `https://api.tumblr.com/v2/user/following`,
     limit: 20,
     offset: 0,
@@ -16,7 +16,7 @@ class FollowingSource extends Source {
     total: 0,
     until: false
   }
-  
+
   constructor() {
     super();
   }
@@ -41,22 +41,29 @@ class FollowingSource extends Source {
     if (this.constants.get('totalFollowingCount') === 0) {
       this.constants.set('totalFollowingCount', response.total_blogs);
     }
-    return response.blogs.map(following => {
+    response.blogs = response.blogs.map(following => {
       following.following = true;
       following.avatar_url = replace(following.avatar[1].url, '64', '128');
       following = omit(following, ['avatar', 'can_message', 'share_likes', 'share_following', 'theme']);
       return following;
     });
+    return response.blogs;
   }
 
   async fetch() {
+    const deferred = Deferred();
     const slug = {
       url: this.options.url,
       limit: this.options.limit,
       offset: this.options.offset
     };
-    const response = await oauthRequest(slug);
-    return this.parse(response);
+    try {
+      const response = await oauthRequest(slug);
+      deferred.resolve(this.parse(response));
+    } catch (e) {
+      deferred.reject(e);
+    }
+    return deferred.promise();
   }
 
   getInfo(tumblelog) {

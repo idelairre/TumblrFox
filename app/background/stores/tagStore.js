@@ -10,8 +10,7 @@ export default class Tags {
   }
 
   static async fetchLikedTags() {
-    const tags = await db.tags.orderBy('count').reverse().limit(250).toArray();
-    return tags;
+    return await db.tags.orderBy('count').reverse().limit(250).toArray();
   }
 
   static async fetchTagsByUser(blogname) {
@@ -28,14 +27,17 @@ export default class Tags {
     return tags;
   }
 
-  static _updateTags(post) {
+  static async rehashTags() {
+  }
+
+  static async _updateTags(post) {
     if (typeof post.tags === 'string') {
       post.tags = JSON.parse(post.tags) || [];
     } else if (typeof post.tags === 'undefined') {
       post.tags = [];
     }
     if (post.tags.length > 0) {
-      Tags.add(post.tags);
+      await Tags.add(post.tags);
     }
     return post.tags;
   }

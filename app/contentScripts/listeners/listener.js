@@ -1,9 +1,8 @@
-module.exports = (function listener(Tumblr, Backbone, _, Source) {
-  const { extend, isFunction, result } = _;
+import { extend, isFunction, result } from 'lodash';
+import Source from '../source/source';
 
-  const Listener = Source.extend({});
+const Listener = Source.extend({});
 
-  extend(Listener.prototype, Backbone.Events);
+extend(Listener.prototype, Backbone.Events);
 
-  Tumblr.Fox.register('ListenerClass', Listener);
-});
+module.exports = Listener;

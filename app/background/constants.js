@@ -12,6 +12,7 @@ import 'babel-polyfill';
 const CONSUMER_KEY = tokens.consumerKey;
 const CONSUMER_SECRET = tokens.consumerSecret;
 const VERSION = chrome.runtime.getManifest().version;
+const EXT_ID = chrome.runtime.id;
 
 class Constants extends EventEmitter {
   defaults = {
@@ -24,10 +25,12 @@ class Constants extends EventEmitter {
     currentUser: {},
     debug: false,
     defaultKeys: true,
+    env: __ENV__,
     eventManifest: [],
+    extensionId: EXT_ID,
     firstRun: false,
     formKey: '',
-    maxPostsCount: 0, // NOTE: find a way to determine this
+    maxLikesCount: 0,
     test: false,
     saveViaFirebase: true,
     setUser: false,

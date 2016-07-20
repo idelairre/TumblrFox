@@ -4,20 +4,26 @@
 /* global Event:true */
 /* eslint no-undef: "error" */
 
-import { camelCase, capitalize, first, last, snakeCase, replace, omit } from 'lodash';
+import { camelCase, capitalize, escape, first, last, snakeCase, replace, omit } from 'lodash';
+import B64 from './utils/b64Util';
+import { Deferred } from 'jquery';
 
 const log = console.log.bind(console, '[BRIDGE]');
 
-class Bridge {
+class Bridge  {
   initialize() {
+    const deferred = Deferred();
     this.constants = {};
     chrome.runtime.sendMessage({
       type: 'fetchConstants'
     }, response => {
       Object.assign(this.constants, response);
+      this.injectConstants();
+      chrome.runtime.onMessage.addListener(::this.bindRecievers);
+      this.bindOutgoing();
+      deferred.resolve();
     });
-    chrome.runtime.onMessage.addListener(::this.bindRecievers);
-    this.bindOutgoing();
+    return deferred.promise();
   }
 
   debug() { // NOTE: there is a slight delay here, not sure why
@@ -36,6 +42,17 @@ class Bridge {
     });
     this.debug(`trigger: "${eventName}"`, payload);
     window.dispatchEvent(req);
+  }
+
+  injectConstants() {
+    const module = document.createElement('script');
+    module.type = 'text/javascript';
+    module.title = 'tumblr-fox-constants';
+    module.textContent = `window.tumblrFoxConstants = "${B64.encodeUnicode(JSON.stringify(this.constants))}"`;
+    document.body.appendChild(module);
+    module.onload = function() {
+      this.remove();
+    };
   }
 
   bindErrorHandler(request) {
