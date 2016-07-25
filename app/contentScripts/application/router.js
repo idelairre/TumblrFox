@@ -44,4 +44,15 @@ const Router = Backbone.Router.extend({
   }
 });
 
-module.exports = Router;
+const RouteController = function(options) {
+  if (typeof this.initialize === 'function') {
+    this.initialize.call(this, options);
+  }
+}
+
+RouteController.extend = Backbone.Model.extend;
+
+module.exports = {
+  Router,
+  RouteController
+}

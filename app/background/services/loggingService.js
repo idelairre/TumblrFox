@@ -1,4 +1,4 @@
-import { camelCase, noop } from 'lodash';
+import { camelCase, noop, isFunction } from 'lodash';
 import constants from '../constants';
 
 const log = console.log.bind(console, '[TUMBLRFOX]');
@@ -63,6 +63,7 @@ export const logValues = (database, sendResponse, callback) => {
 };
 
 export const logError = (error, next, sendResponse) => {
+  console.log(arguments);
   console.error(error);
   if (error.message) {
     error = error.message;
@@ -71,7 +72,7 @@ export const logError = (error, next, sendResponse) => {
     error = error.responseText;
   }
   let isAsync = true;
-  if (!sendResponse) {
+  if (!isFunction(sendResponse) && isFunction(next)) {
     sendResponse = next;
     isAsync = false;
   }

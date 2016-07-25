@@ -45,12 +45,12 @@ class Constants extends EventEmitter {
       untilDate: new Date(2007, 1, 1),
       untilPage: 'max'
     },
-    likeSourceSlug: {
+    nextlikeSourceSlug: {
       timestamp: null,
       page: null,
       url: 'https://www.tumblr.com/likes'
     },
-    nextBlogSlug: {
+    nextBlogSourceSlug: {
       page: 0,
       url: null
     }

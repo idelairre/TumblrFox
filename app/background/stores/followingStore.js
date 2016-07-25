@@ -1,10 +1,13 @@
-import { forIn, kebabCase } from 'lodash';
+import { forIn, isFunction, kebabCase } from 'lodash';
 import async from 'async';
 import db from '../lib/db';
+import { noopCallback } from '../utils/helpers';
 import Source from '../source/followingSource';
 import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 import 'babel-polyfill';
+
+let caching = false;
 
 export default class Following {
   static async fetch(query) {
@@ -50,55 +53,49 @@ export default class Following {
     const options = {
       offset: 0,
       limit: 20,
-      retryTimes: 0
+      retryTimes: 0,
+      sync: true
     };
-    async.doWhilst(async next => {
-      try {
-        const following = await Source.start(options);
-        options.offset += options.limit;
-        if (typeof following === 'undefined') {
-          console.error(Source.MAX_RETRIES_MESSAGE);
-          next(Source.MAX_RETRIES_MESSAGE);
-        } else {
-          await Following.bulkPut(following);
-          next(null, following);
-        }
-      } catch (e) {
-        next(e);
-      }
-    }, following => {
-      return following.length !== 0;
+    Source.addListener('items', async following => {
+      await Following.bulkPut(following);
+      const count = await db.following.toCollection().count();
+      constants.set('cachedFollowingCount', count);
     });
+    Source.addListener('error', err => {
+      console.error(err);
+    });
+    Source.addListener('done', () => {
+      Source.removeListeners();
+    });
+    Source.start(options);
   }
 
   static cache(sendResponse) {
-    async.doWhilst(async next => {
-      const port = logValues.bind(this, 'following', sendResponse);
-      try {
-        const following = await Source.start(); // NOTE: this returns undefined when recursive error handling starts
-        if (typeof following === 'undefined') {
-          logError(Source.MAX_RETRIES_MESSAGE, next, sendResponse);
-        } else if (following.length === 0) {
-          sendResponse({
-            type: 'done',
-            payload: constants,
-            message: Source.MAX_ITEMS_MESSAGE
-          });
-          next(null, following);
-        } else {
-          await Following.bulkPut(following);
-          port(() => {
-            next(null, following);
-          });
-        }
-      } catch (e) {
-       logError(e, next, sendResponse);
-      }
-    }, following => {
-      return following.length !== 0;
-    }, error => {
-      console.error(error);
+    if (caching) {
+      return;
+    }
+    caching = true;
+    const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'following', sendResponse) : noopCallback;
+    const sendError = isFunction(sendResponse) ? logError : noop;
+    Source.addListener('items', async following => {
+      await Following.bulkPut(following);
+      Source.next();
+      sendProgress();
     });
+    Source.addListener('error', err => {
+      sendError(err, sendResponse);
+    });
+    Source.addListener('done', msg => {
+      if (isFunction(sendResponse)) {
+        sendResponse({
+          type: 'done',
+          payload: constants,
+          message: msg
+        });
+      }
+      Source.removeListeners();
+    });
+    Source.start();
   }
 
   static async put(following, isTumblelog) {

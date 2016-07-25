@@ -68,7 +68,6 @@ const PostsModel = ControllerModel.extend({
     this.searchModel.set('next_offset', offset);
   },
   bindEvents() {
-    this.listenTo(this.searchModel, 'change:post_type', ::this.filterPosts);
     this.listenTo(this.searchModel, 'change:filter_nsfw change:post_role', ::this.applyFilter);
     this.listenTo(Events, 'fox:fetch:complete', this.toggleLoading.bind(this, false));
     this.listenTo(Tumblr.AutoPaginator, 'after', ::this.filterDashboard);
@@ -115,7 +114,7 @@ const PostsModel = ControllerModel.extend({
         });
         break;
       case 'likes':
-        this.likesModel.search(slug).then(fetchHelper); // NOTE: this is not returning the right amount of posts
+        this.likesModel.search(slug).then(fetchHelper);
         break;
     }
     return deferred.promise();

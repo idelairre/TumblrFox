@@ -33,6 +33,23 @@ const LikeSource = Source.extend({
       // }, 250);
     });
     return deferred.promise();
+  },
+  clientFetch(page) {
+    const deferred = $.Deferred();
+    $.ajax({
+      method: 'GET',
+      dataType: 'html',
+      url: `https://www.tumblr.com/likes/page/${page}`,
+      success: response => {
+        console.log(response);
+        const posts = Array.prototype.slice.call($(response).find('.post'));
+        deferred.resolve(posts);
+      },
+      error: error => {
+        deferred.reject(error);
+      }
+    });
+    return deferred.promise();
   }
 });
 

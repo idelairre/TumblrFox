@@ -1,31 +1,25 @@
 import $ from 'jquery';
 import { Model } from 'backbone';
 import { extend, camelCase, clone, forIn, invert, isEmpty, last, mapKeys, omit, pick, result, uniqueId } from 'lodash';
+import * as Components from './components/components';
+import * as Models from './models/models';
 import ActionListener from './listeners/actionListener';
 import AppState from './application/state';
-import BlogModel from './components/posts/blogModel';
 import BlogSource from './source/blogSource';
 import ChromeListener from './listeners/chromeListener';
 import ChromeMixin from './components/mixins/chromeMixin';
-import Components from './components/components';
 import ComponentFetcher from './utils/componentFetcherUtil';
 import constants from './application/constants';
-import DashboardModel from './components/posts/dashboardModel';
 import DashboardSource from './source/dashboardSource';
 import ExtendedPopoverMixin from './components/mixins/extendedPopoverMixin';
 import EventsListener from './listeners/eventsListener';
 import Events from './application/events';
-import FollowingListComponent from './components/followingList/followingListComponent';
-import FollowingItemComponent from './components/followingList/followingItem/followingItemComponent';
-import FollowingModel from './components/followingList/followingModel';
-import FollowingSearchComponent from './components/followingList/followingSearch/followingSearchComponent';
 import FollowingSource from './source/followingSource';
-import LikesModel from './components/posts/likesModel';
 import LikeSource from './source/likeSource';
 import LoaderMixin from './components/mixins/loaderMixin';
-import StateModel from './models/stateModel';
 import Thoth from './utils/idleMonitorUtil';
 import Utils from './utils';
+import 'backbone.radio';
 
 const App = function () {
   this.constants = constants;
@@ -46,11 +40,9 @@ const App = function () {
 
   this.state = AppState;
 
-  const stateChannel = Backbone.Radio.channel('state');
+  const optionsChannel = Backbone.Radio.channel('options');
 
-  stateChannel.reply('getState', () => {
-    return this.state.getState();
-  });
+  optionsChannel.reply('fox:getOptions', this.options.toJSON());
 
   this._initializers = {};
   this._intervalTasks = {};
@@ -59,6 +51,7 @@ const App = function () {
 extend(App.prototype, ChromeMixin.properties, {
   loadComponents() {
     this.Application = {};
+    this.Components = Components;
     this.Events = Events;
     this.Listeners = {
       ActionListener,
@@ -70,13 +63,7 @@ extend(App.prototype, ChromeMixin.properties, {
       ExtendedPopoverMixin,
       LoaderMixin
     };
-    this.Models = {
-      BlogModel,
-      DashboardModel,
-      FollowingModel,
-      LikesModel,
-      StateModel
-    };
+    this.Models = Models;
     this.Source = {
       BlogSource,
       DashboardSource,
@@ -126,10 +113,6 @@ extend(App.prototype, ChromeMixin.properties, {
     }
   },
   bindListeners() {
-    this.listenTo(this.Events, 'chrome:response:error', e => {
-      const error = e.detail;
-      Tumblr.Dialog.alert(error);
-    });
     if (this.options.get('logging')) {
       this.Listeners.EventsListener.start();
     }

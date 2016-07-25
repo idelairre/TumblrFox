@@ -36,12 +36,4 @@ if (inExtension) {
   listenForIdleState();
 }
 
-// db.on('ready', () => {
-  // console.log('ready');
-  // Cache.updateTokens('likes');
-  // Cache.rehashTags();
-  // Cache.updateNotes();
-  // Cache.updateFollowingFromLikes();
-// });
-
 window.db = db;

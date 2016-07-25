@@ -51,6 +51,7 @@ const FollowingList = TumblrView.extend({
       limit: this.defaults.limit,
       state: this.state
     });
+    // this.model.fetchAll();
     this.loader = new Tumblr.Prima.KnightRiderLoader({
       variation: 'leviathan',
       className: 'Knight-Rider-loader centered'

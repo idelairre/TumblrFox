@@ -19,8 +19,8 @@ class BlogSource extends Source {
   }
 
   initializeConstants() {
-    if (this.constants.get('nextBlogSlug')) {
-      Object.assign(this.options, this.constants.get('nextBlogSlug'));
+    if (this.constants.get('nextBlogSourceSlug')) {
+      Object.assign(this.options, this.constants.get('nextBlogSourceSlug'));
     }
     if (!this.options.url) {
       this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}`;
@@ -37,7 +37,7 @@ class BlogSource extends Source {
   step() {
     this.options.page += 1;
     this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}/${this.options.page}`;
-    this.constants.set('nextBlogSlug', {
+    this.constants.set('nextBlogSourceSlug', {
       page: this.options.page,
       url: this.options.url
     });

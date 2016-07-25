@@ -24,11 +24,13 @@ const stripScripts = s => {
 }
 
 const PostFormatter = function () {
-  this.avatarManager = ComponentFetcher.get('AvatarManager')();
-  this.initializedAvatars = false;
-  Events.on('fox:filteredPosts', () => {
+  if (!window.location.href.includes('search')) {
+    this.avatarManager = ComponentFetcher.get('AvatarManager')();
     this.initializedAvatars = false;
-  });
+    Events.on('fox:filteredPosts', () => {
+      this.initializedAvatars = false;
+    });
+  }
 };
 
 extend(PostFormatter.prototype, {
