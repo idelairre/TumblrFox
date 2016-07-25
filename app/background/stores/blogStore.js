@@ -4,6 +4,7 @@ import db from '../lib/db';
 import filters from '../utils/filters';
 import sortByPopularity from '../utils/sort';
 import marshalQuery from '../utils/marshalQuery';
+import { noopCallback } from '../utils/helpers';
 import Source from '../source/blogSource';
 import Tags from './tagStore';
 import Lunr from '../services/lunrSearchService';
@@ -12,10 +13,6 @@ import constants from '../constants';
 import 'babel-polyfill';
 
 // TODO: make sure Source can fetch all the user's blog posts
-
-const noopCallback = callback => {
-  callback();
-}
 
 let caching = false; // NOTE: this is temporary, might have to actually instansiate the class
 
@@ -94,31 +91,27 @@ export default class Blog {
       return;
     }
     caching = true;
-    const port = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
-    const portError = isFunction(sendResponse) ? logError : noop;
-
-    async.doWhilst(async next => {
-      try {
-        const posts = await Source.start();
-        if (typeof posts === 'undefined' || posts && posts.length === 0) {
-          portError(Source.MAX_ITEMS_MESSAGE, next, sendResponse);
-          caching = false;
-        } else {
-          await Blog.bulkPut(posts);
-          port(() => {
-            next(null, posts);
-          });
-        }
-      } catch (e) {
-        portError(e, next, sendResponse);
-        caching = false;
-      }
-    }, posts => {
-      return posts.length !== 0;
-    }, error => {
-      caching = false;
-      // maybe send something to the front-end when its done?
+    const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
+    const sendError = isFunction(sendResponse) ? logError : noop;
+    Source.addListener('items', async posts => {
+      await Blog.bulkPut(posts);
+      Source.next();
+      sendProgress();
     });
+    Source.addListener('error', err => {
+      sendError(err, sendResponse);
+    });
+    Source.addListener('done', msg => {
+      if (isFunction(sendResponse)) {
+        sendResponse({
+          type: 'done',
+          payload: constants,
+          message: msg
+        });
+      }
+      Source.removeListeners();
+    });
+    Source.start();
   }
 
   static async update() {
@@ -126,13 +119,9 @@ export default class Blog {
       return;
     }
     let done = false;
-    caching = true;
-    async.doWhilst(async next => {
+    Source.addListener('items', posts => {
       try {
-        const posts = await Source.start({
-          page: 0
-        });
-        const promises = posts.filter(testPost => {
+        const promises = posts.map(testPost => {
           const post = Blog.get(testPost.id);
           if (!post) {
             return Blog.put(testPost);
@@ -141,16 +130,17 @@ export default class Blog {
           }
         });
         Promise.all(promises);
-        next(null, done);
       } catch (e) {
-        next(e);
-        caching = false;
+        console.error(e);
       }
-    }, done => {
-      return !done;
-    }, error => {
-      caching = false;
     });
+    Source.addListener('error', err => {
+      console.error(err);
+    });
+    Source.addListener('done', msg => {
+      Source.removeListeners();
+    });
+    Source.start();
   }
 
   static async validateCache() {

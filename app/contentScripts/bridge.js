@@ -55,12 +55,6 @@ class Bridge  {
     };
   }
 
-  bindErrorHandler(request) {
-    if (request.type === 'error') {
-      console.error(request);
-    }
-  }
-
   bindRecievers(request) {
     this.debug(request, this);
     if (request.payload) {
@@ -79,9 +73,15 @@ class Bridge  {
           payload: e.detail.data
         };
         chrome.runtime.sendMessage(req, response => {
-          if (response) {
-            const responseName = last(snakeCase(eventName).split('_'));
-            this.trigger(`response:${responseName}:${e.detail._id}`, response);
+          const responseName = last(snakeCase(eventName).split('_'));
+          const payload = {
+            payload: response,
+            type: responseName
+          };
+          if (response && response.type === 'error') {
+            this.trigger(`response:error`, payload);
+          } else if (response) {
+            this.trigger(`response:${responseName}:${e.detail._id}`, payload);
           }
         });
       } catch (err) {

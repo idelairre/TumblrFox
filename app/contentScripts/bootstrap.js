@@ -2,7 +2,7 @@ import FilterPopoverIcon from './components/filterPopover/filterPopoverIcon';
 import FollowingModel from './components/followingList/followingModel';
 import App from './app';
 import Events from './application/events';
-import Router from './application/router';
+import { Router } from './application/router';
 import RouteController from './application/routerController';
 import { ComponentFetcher } from './utils';
 
@@ -22,7 +22,7 @@ function bootstrap() {
 	if (window.Tumblr) {
 		initialize();
 	} else {
-		loaderObserver.observe(document, {
+		loaderObserver.observe(window, {
 			childList: true,
 			subtree: true
 		});
@@ -61,9 +61,10 @@ function bootstrap() {
 			this.chromeTrigger('chrome:refresh:following');
 		});
 
-		Tumblr.Fox.once('initialized', () => {
+		Tumblr.Fox.once('initialized', function () {
 			console.timeEnd('initialize');
 			Backbone.history.start();
+			this.chromeTrigger('chrome:refresh:following');
 		});
 
 		Tumblr.Fox.start();

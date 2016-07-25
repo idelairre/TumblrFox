@@ -7,6 +7,7 @@ import { differenceBy, findIndex, first, isUndefined, isEqual, isString, isFunct
 import constants from '../constants';
 import db from '../lib/db';
 import filters, { filterNsfw, filterReblogs } from '../utils/filters';
+import { noopCallback } from '../utils/helpers';
 import marshalQuery from '../utils/marshalQuery';
 import sortByPopularity from '../utils/sort';
 import { logValues, logError } from '../services/loggingService';
@@ -16,10 +17,6 @@ import Source from '../source/likeSource';
 import 'babel-polyfill';
 
 const LIMIT = 20000;
-
-const noopCallback = callback => {
-  callback();
-}
 
 let $postsCache = [];
 
@@ -32,29 +29,28 @@ export default class Likes {
     if (caching) {
       return;
     }
-    caching = true;
-    const port = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
-    const portError = isFunction(sendResponse) ? logError : noop;
-
-    async.doWhilst(async next => {
-      try {
-        const posts = await Source.start();
-        if (typeof posts === 'undefined') {
-          logError(Source.MAX_ITEMS_MESSAGE, next, sendResponse);
-          caching = false;
-        } else {
-          await Likes.bulkPut(posts);
-          port(() => {
-            next(null, posts);
-          });
-        }
-      } catch (e) {
-        portError(e, next, sendResponse);
-        caching = false;
-      }
-    }, posts => {
-      return posts.length !== 0;
+    caching = true
+    const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
+    const sendError = isFunction(sendResponse) ? logError : noop;
+    Source.addListener('items', async posts => {
+      await Likes.bulkPut(posts);
+      Source.next();
+      sendProgress();
     });
+    Source.addListener('error', err => {
+      sendError(err, sendResponse);
+    });
+    Source.addListener('done', msg => {
+      if (isFunction(sendResponse)) {
+        sendResponse({
+          type: 'done',
+          payload: constants,
+          message: msg
+        });
+      }
+      Source.removeListeners();
+    });
+    Source.start();
   }
 
   static async get(id) {

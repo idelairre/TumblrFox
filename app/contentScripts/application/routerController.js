@@ -3,17 +3,8 @@ import FilterPopoverIcon from '../components/filterPopover/filterPopoverIcon';
 import FollowingListComponent from '../components/followingList/followingListComponent';
 import InfoComponent from '../components/info/infoComponent';
 import FollowingModel from '../components/followingList/followingModel';
+import { RouteController } from './router';
 import { ComponentFetcher } from '../utils';
-
-const Backbone = ComponentFetcher.get('Backbone');
-
-const RouteController = function(options) {
-  if (typeof this.initialize === 'function') {
-    this.initialize.call(this, options);
-  }
-}
-
-RouteController.extend = Backbone.Model.extend;
 
 const Tumblr = window.Tumblr;
 

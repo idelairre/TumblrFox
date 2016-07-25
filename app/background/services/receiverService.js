@@ -26,15 +26,17 @@ const receiverHandler = handlers => {
 				const func = handlers[request.type](request.payload);
 				if (func instanceof Promise) {
 					func.then(response => {
-						console.log(response);
 						if (typeof response !== 'undefined') {
 							sendResponse(response);
 						}
-					}, error => {
-						console.log(error);
+					}).catch(err => {
+						console.log(err);
 						sendResponse({
 							type: 'error',
-							payload: error
+							payload: {
+								error: err.toString(),
+								stack: err.stack
+							}
 						});
 					});
 				} else {
@@ -49,10 +51,14 @@ const receiverHandler = handlers => {
 						if (typeof response !== 'undefined') {
 							sendResponse(response);
 						}
-					}, error => {
+					}).catch(err => {
+						console.error(err);
 						sendResponse({
 							type: 'error',
-							payload: error
+							payload: {
+								error: err.toString(),
+								stack: err.stack
+							}
 						});
 					});
 				} else {

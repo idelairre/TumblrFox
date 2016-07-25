@@ -25,9 +25,9 @@ const FollowingItem = View.extend({
     this.model = options.model;
     this.model.set('avatar', this.model.get('avatar_url'));
     if (isNumber(this.model.get('updated'))) {
-      this.model.set('updated', `Updated ${Time.prettyDate(Time.fromTumblrTime(this.model.get('updated')))}`);
+      this.model.set('updated', `Updated ${Time.prettyDate(this.model.get('updated'))}`);
     }
-    this.model.set('formkey', Tumblr.Fox.constants.formkey);
+    this.model.set('formKey', Tumblr.Fox.constants.formKey);
   },
   render() {
     this.$el.removeAttributes({

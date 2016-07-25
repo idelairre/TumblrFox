@@ -1,16 +1,21 @@
-import constants from '../constants';
 import { ajax, Deferred } from 'jquery';
-import { debug } from '../services/loggingService';
 import { noop } from 'lodash';
+import constants from '../constants';
+import { debug } from '../services/loggingService';
+import EventEmitter from 'eventemitter3';
 
-export default class Source {
+export default class Source extends EventEmitter { // TODO: refactor this into an event emitter than can be interrupted
   initialized = false;
+  stopFlag = false;
+  sync = false;
   retryTimes = 3;
   retriedTimes = 0;
+  STOP_CONDITION_MESSAGE = 'Stop condition reached';
   MAX_RETRIES_MESSAGE = 'Max retries reached, either there is a connection error or you have reached the maximum items you can fetch.';
   MAX_ITEMS_MESSAGE = 'Maximum fetchable items reached.';
 
   constructor() {
+    super();
     this.constants = constants;
     this.constants.once('ready', () => {
       this._initialize.call(this);
@@ -25,6 +30,11 @@ export default class Source {
     if (typeof this.step === 'undefined') {
       throw new Error(`no step set for ${this.options.items}`)
     }
+    this.on('stop', () => {
+      console.log('stopped');
+    });
+    this.on('continue', ::this.run);
+    this.name = this.constructor.name;
   }
 
   _initialize() {
@@ -41,6 +51,9 @@ export default class Source {
       Object.assign(this.options, options);
       if (options.retryTimes) {
         this.retryTimes = options.retryTimes;
+      }
+      if (options.sync) {
+        this.sync = options.sync;  // sets flag to run without calling "next()"
       }
     }
     if (this.initialized) {
@@ -72,6 +85,10 @@ export default class Source {
     return deferred.promise();
   }
 
+  next() {
+    return this.run();
+  }
+
   async crawl(opts, retry) {
     const deferred = Deferred();
     try {
@@ -88,10 +105,9 @@ export default class Source {
   }
 
   async run(retry) {
-    const deferred = Deferred();
     try {
       if (!this.condition()) { // NOTE: condition represents what must be true for run to crawl
-        return deferred.resolve([]);
+        return this.stop(this.STOP_CONDITION_MESSAGE);
       }
       const items = await this.crawl({
         iterator: this.options.iterator,
@@ -102,16 +118,26 @@ export default class Source {
       if (typeof this.step === 'function') {
         this.step();
       }
-      deferred.resolve(items);
+      this.emit('items', items);
+      if (items.length === 0) {
+        return this.stop(this.MAX_ITEMS_MESSAGE);
+      }
     } catch (error) {
       if (this.retriedTimes <= (this.retryTimes - 1)) {
-        this.handleError(error);
+        return this.handleError(error);
       } else {
         console.info(this.MAX_RETRIES_MESSAGE);
-        deferred.reject(error);
+        this.emit('error', error);
+        return this.stop(this.MAX_RETRIES_MESSAGE);
       }
     }
-    return deferred.promise();
+    if (this.sync) {
+      return this.run(retry);
+    }
+  }
+
+  stop(message) {
+    this.emit('done', message);
   }
 
   handleError(error) {
@@ -133,5 +159,11 @@ export default class Source {
 
   reset() {
     return this.initialize();
+  }
+
+  removeListeners() {
+    for (const key in this._events) {
+      this.removeListener(key, this._events[key].fn, this);
+    }
   }
 }

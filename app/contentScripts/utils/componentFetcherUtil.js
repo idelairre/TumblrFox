@@ -1,8 +1,11 @@
-import { camelCase, extend, forIn, isArray } from 'lodash';
+import { camelCase, extend, forIn, isArray, isObject } from 'lodash';
+import 'backbone.radio';
 
 // perhaps there is a way to memoize fetched component numbers?
 
-const ComponentFetcher = function () {
+const optionsChannel = Backbone.Radio.channel('options');
+
+const ComponentFetcher = function (modules) {
   this.initializeWebpackJsonp();
 
   this.$$componentCache = {};
@@ -10,6 +13,9 @@ const ComponentFetcher = function () {
   this.require = window.$require;
   this.componentIds = {};
   this.initialize.apply(this);
+  if (isObject(modules)) {
+    this.getComponents(modules);
+  }
 };
 
 extend(ComponentFetcher.prototype, Backbone.Events, {
@@ -42,9 +48,9 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
     if (results.length === 0) {
       console.error('[FETCHING COMPONENT FAILED]', object);
     }
-    // if (Tumblr.Fox.options.get('logging')) {
-      // console.log('[FETCHING COMPONENT]', object, results);
-    // }
+    if (optionsChannel.request('fox:getOptions')) {
+      console.log('[FETCHING COMPONENT]', object, results);
+    }
     return results;
   },
   getComponents(manifest) {
@@ -97,13 +103,11 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   }
 });
 
-const componentFetcher =  new ComponentFetcher();
-
-componentFetcher.getComponents({
+const componentFetcher =  new ComponentFetcher({
   $: 'fn.init',
   Backbone: '1.2.3',
-  AvatarManager: '$postContainer',
   AutoComplete: '/svc/search/blog_search_typeahead',
+  AvatarManager: '$postContainer',
   animation: 'webkitAnimationEnd',
   BlogSearch: 'this.onTermSelect',
   BlogSearchAutocompleteHelper: 'this.model.hasMatches()',

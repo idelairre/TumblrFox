@@ -16,7 +16,7 @@ const Buttons = View.extend({
   tagName: 'section',
   events: {
     'click button': 'toggleButton',
-    'change [type=select]': 'resetCache'
+    'change #resetCache': 'resetCache'
   },
   bindEvents() {
     this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
@@ -41,6 +41,7 @@ const Buttons = View.extend({
       type: 'resetCache',
       payload: val
     });
+    e.currentTarget.selectedIndex = -1;
   },
   renderProps() {
     this.toggleButtonsState();

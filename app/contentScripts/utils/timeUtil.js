@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 const Time = {
   toTumblrTime(date) {
     return Date.parse(date) / 1000;
@@ -9,6 +11,9 @@ const Time = {
     return Time.toTumblrTime(Time.fromTumblrTime(date).subtractDays(1));
   },
   prettyDate(date) {
+    return moment(Time.fromTumblrTime(date)).fromNow();
+  },
+  oldPrettyDate(date) {
     const diff = (((new Date()).getTime() - date.getTime()) / 1000);
     const dayDiff = Math.floor(diff / 86400);
 

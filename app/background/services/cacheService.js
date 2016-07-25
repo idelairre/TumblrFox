@@ -1,5 +1,5 @@
 import async from 'async';
-import { capitalize, invoke, maxBy, union } from 'lodash';
+import { capitalize, isFunction, invoke, maxBy, union } from 'lodash';
 import Dexie from 'dexie';
 import Papa from '../lib/papaParse';
 import constants from '../constants';
@@ -15,135 +15,51 @@ import 'babel-polyfill';
 const Promise = Dexie.Promise;
 
 export default class Cache {
-  static async updateTokens(table) {
+  static updateTokens(table) {
     if (table !== 'posts' && table !== 'likes') {
       throw new Error(`${table} is not a valid table. Can only update tables containing posts`);
     }
-    let offset = 0;
-    let count = await db[table].toCollection().count();
-    async.doWhilst(async next => {
-      try {
-        const posts = await db[table].toCollection().offset(offset).limit(100).toArray();
-        offset += posts.length;
-        if (posts.length > 0) {
-          const promises = posts.map(async post => {
-            post.tokens = Lunr.tokenizeHtml(post.html);
-            post.tokens = union(post.tags, post.tokens, [post.blog_name]);
-            return await db[table].put(post);
-          });
-          await Promise.all(promises);
-        }
-        next(null, posts.length);
-      } catch (e) {
-        next(e);
-      }
-    }, next => {
-      return next !== 0;
-    }, error => {
-      if (error) {
-        console.error(error);
-      }
-      console.log('done updating tokens');
+    Cache.asyncOp(table, 'put', async post => {
+      post.tokens = Lunr.tokenizeHtml(post.html);
+      post.tokens = union(post.tags, post.tokens, [post.blog_name]);
+      return await db[table].put(post);
+    }).then(() => {
+      console.log('[ASYNCOP] update following from likes complete');
+    }).catch(err => {
+      console.error(err);
     });
   }
 
-  static async updateNotes() {
-    let offset = 0;
-    async.doWhilst(async next => {
-      try {
-        const posts = await db.posts.toCollection().filter(post => {
-          return !post.note_count;
-        }).offset(offset).limit(100).toArray();
-        offset += posts.length;
-        if (posts.length > 0) {
-          const promises = posts.map(async post => {
-            post.note_count = post.notes.count;
-            return await db.posts.put(post);
-          });
-          await Promise.all(promises);
+  static updateFollowingFromLikes() {
+    Cache.asyncOp('likes', 'put', async post => {
+      if (post['tumblelog-data'].following) {
+        const following = await db.following.get(post['tumblelog-data'].name);
+        if (!following) {
+          return db.following.put(post['tumblelog-data']);
         }
-        next(null, posts.length);
-      } catch (e) {
-        next(e);
       }
-    }, next => {
-      return next !== 0;
-    });
-  }
-
-  static async updateFollowingFromLikes() {
-    let offset = 0;
-    let count = await db.following.toCollection().count();
-    async.doWhilst(async next => {
-      try {
-        const posts = await db.likes.toCollection().offset(offset).limit(100).toArray();
-        offset += posts.length;
-        const promises = posts.filter(async post => {
-          if (post['tumblelog-data'].following) {
-            const following = await db.following.get(post['tumblelog-data'].name);
-            if (!following) {
-              return db.following.put(post['tumblelog-data']);
-            }
-          }
-        });
-        count = await db.following.toCollection().count();
-        constants.set('cachedFollowingCount', count);
-        await Promise.all(promises);
-        next(null, posts.length);
-      } catch (e) {
-        next(e);
-      }
-    }, next => {
-      return next !== 0;
+    }).then(() => {
+      console.log('[ASYNCOP] update following from likes complete');
+    }).catch(err => {
+      console.error(err);
     });
   }
 
   static async rehashTags(sendResponse) {
     await Cache.resetTags();
-    let offset = 0;
-    let count = await db.likes.toCollection().count();
-    async.doWhilst(async next => {
-      try {
-        const posts = await db.likes.toCollection().offset(offset).limit(100).toArray();
-        offset += posts.length;
-        if (posts.length > 0) {
-          const promises = posts.map(async post => {
-            return await Tags._updateTags(post); // flags to not add tags
-          });
-          await Promise.all(promises);
-        }
-        if (typeof sendResponse === 'function') {
-          const { percentComplete, itemsLeft, total } = calculatePercent(offset, count);
-          const payload = {
-            constants,
-            percentComplete,
-            itemsLeft,
-            total
-          };
-          sendResponse({
-            type: 'progress',
-            payload
-          });
-        }
-        next(null, posts.length);
-      } catch (e) {
-        if (typeof sendResponse === 'function') {
-          logError(e, next, sendResponse);
-        } else {
-          next(e);
-        }
-      }
-    }, next => {
-      return next !== 0;
-    }, error => {
-      if (error) {
-        console.error(error);
-      }
-      console.log('done rehashing tags');
+    Cache.asyncOp('likes', 'put', async post => {
+      await Tags._updateTags(post);
+    }, async () => {
+      const count = await db.tags.toCollection().count();
+      constants.set('cachedTagsCount', count);
+    }, sendResponse).then(() => {
+      console.log('[ASYNCOP] rehash tags complete');
+    }).catch(err => {
+      console.error(err);
     });
   }
 
-  static async asyncOp(table, operation, sendResponse) {
+  static async asyncOp(table, operation, func, cb, sendResponse) {
     const deferred = Deferred();
     const primaryKey = db[table].schema.primKey.name;
     let offset = 0;
@@ -155,35 +71,64 @@ export default class Cache {
       try {
         const items = await db[table].toCollection().offset(offset).limit(100).toArray();
         offset += items.length;
-        if (operation.includes('bulk')) {
-          await invoke(db[table], operation, items.map(item => { // NOTE: this does not work
+        if (operation.match(/bulkDelete/)) {
+          const _items = items.map(item => {
             return item[primaryKey];
-          }));
+          });
+          await db[table][operation](_items);
+        } else if (operation.match(/bulk/)) {
+          if (func) {
+            items.map(func);
+          }
+          await db[table][operation](items);
         } else {
           const promises = items.map(async item => {
-            if (operation === 'delete') {
-              await invoke(db[table], operation, item[primaryKey]);
+            if (operation.match(/delete/)) {
+              await db[table][operation](item[primaryKey]);
             } else {
-              await invoke(db[table], operation, item);
+              if (func) {
+                items.map(func);
+              }
+              await db[table][operation](item);
             }
-            count = await db[table].toCollection().count();
-            constants.set(`cached${capitalize(table)}Count`, count);
           });
           await Promise.all(promises);
         }
-        if (typeof sendResponse === 'function') {
-          logValues(table, sendResponse);
+        count = await db[table].toCollection().count();
+        console.log(`cached${capitalize(table)}Count`);
+        constants.set(`cached${capitalize(table)}Count`, count);
+        if (cb) {
+          if (cb instanceof Promise) {
+            await cb();
+          } else {
+            cb();
+          }
+        }
+        const { percentComplete, itemsLeft, total } = calculatePercent(offset, count);
+        console.log('[ASYNCOP]', `%${percentComplete}`);
+        if (sendResponse) {
+          const payload = {
+            constants,
+            percentComplete,
+            itemsLeft,
+            total
+          };
+          sendResponse({
+            type: 'progress',
+            payload
+          });
         }
         next(null, items.length);
       } catch (e) {
-        next(e);
-        if (typeof sendResponse === 'function') {
+        if (sendResponse) {
           logError(e, next, sendResponse);
+        } else {
+          next(e);
         }
       }
     }, next => {
       return next !== 0;
-    }, (error, next) => {
+    }, error => {
       if (error) {
         deferred.reject(error);
       } else {
@@ -239,11 +184,14 @@ export default class Cache {
 
   static async reset(table, sendResponse) {
     try {
+      sendResponse({
+        type: 'deleting'
+      });
       if (table === 'all') {
-        Cache.resetLikes();
-        Cache.resetFollowing();
-        Cache.resetPosts();
-        Cache.resetTags();
+        await Cache.resetLikes();
+        await Cache.resetFollowing();
+        await Cache.resetPosts();
+        await Cache.resetTags();
         constants.reset();
       } else {
         const method = `reset${capitalize(table)}`;
@@ -251,7 +199,7 @@ export default class Cache {
       }
       sendResponse({
         type: 'done',
-        message: 'Cache reset',
+        message: table === 'all' ? 'Cache reset' : `${capitalize(table)} cache reset`,
         payload: {
           constants
         }

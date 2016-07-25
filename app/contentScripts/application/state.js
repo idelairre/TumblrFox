@@ -1,5 +1,4 @@
 import State from '../models/stateModel';
-import 'backbone.radio';
 
 const state = new State({
   dashboard: false,
