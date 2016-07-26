@@ -1,3 +1,5 @@
 export const noopCallback = callback => {
-  callback();
+  if (callback) {
+    callback();
+  }
 }

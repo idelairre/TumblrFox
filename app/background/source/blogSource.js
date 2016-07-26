@@ -1,7 +1,5 @@
-import { oauthRequest } from '../lib/oauthRequest';
 import { ajax, Deferred } from 'jquery';
 import parsePosts from '../utils/parsePosts';
-import LikeSource from './likeSource';
 import tokens from '../tokens.json';
 import Source from './source';
 
@@ -12,10 +10,6 @@ class BlogSource extends Source {
     item: 'blog posts',
     url: null,
     until: false
-  }
-
-  constructor() {
-    super();
   }
 
   initializeConstants() {
@@ -73,14 +67,16 @@ class BlogSource extends Source {
         user
       };
       if (tumblelog.is_nsfw) {
-        response.content_rating = 'nsfw'
+        response.content_rating = 'nsfw';
       } else {
         response.content_rating = 'safe';
       }
       deferred.resolve(response);
-    } catch (e) {
-      console.error(e);
-      deferred.reject(e);
+    } catch (err) {
+      deferred.resolve({
+        user,
+        content_rating: 'not found'
+      });
     }
     return deferred.promise();
   }
@@ -90,7 +86,7 @@ class BlogSource extends Source {
     const slug = {
       blogname: request.blogname,
       offset: request.next_offset || 0,
-      limit: 10 || request.limit,
+      limit: 10 || request.limit
     };
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();

@@ -3,6 +3,8 @@ import { pick } from 'lodash';
 import { ComponentFetcher } from '../../utils';
 import FilterPopoverContainer from './filterPopoverContainer';
 
+// TODO: replace base64 encoded image string with a require
+
 const filterIconTemplate = `
   <script id="filterIconTemplate" type="text/template">
     <button tabindex="8" class="tab_anchor" style="margin-top: 0px" aria-haspopup="true" title="Filtered Posts">

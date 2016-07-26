@@ -1,7 +1,7 @@
 import { Deferred } from 'jquery';
-import BlogSource from './blogSource';
-import { omit, last, replace } from 'lodash';
+import { omit, replace } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
+import BlogSource from './blogSource';
 import Source from './source';
 import 'babel-polyfill';
 
@@ -15,10 +15,6 @@ class FollowingSource extends Source {
     cached: 0,
     total: 0,
     until: false
-  }
-
-  constructor() {
-    super();
   }
 
   initializeConstants() {
@@ -60,8 +56,8 @@ class FollowingSource extends Source {
     try {
       const response = await oauthRequest(slug);
       deferred.resolve(this.parse(response));
-    } catch (e) {
-      deferred.reject(e);
+    } catch (err) {
+      deferred.reject(err);
     }
     return deferred.promise();
   }

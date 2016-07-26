@@ -3,16 +3,16 @@ import { template, toArray, invoke, noop } from 'lodash';
 import { View } from 'backbone';
 import constants from '../../application/constants';
 import testTemplate from './testTemplate.html';
-import 'script!./jasmine/jasmine';
-import 'script!./jasmine/jasmine-html';
-import 'script!./jasmine/boot';
-import './jasmine/jasmine.css';
+import 'script!../../../shared/jasmine';
+import 'script!../../../shared/jasmine-html';
+import 'script!./boot';
+import '../../../shared/jasmine.css';
 
 const requireAll = req => {
   req.keys().forEach(req);
 }
 
-requireAll(require.context('./models/', true, /\.js$/));
+requireAll(require.context('../../tests/models/', true, /\.js$/));
 
 const Test = View.extend({
   template: template(testTemplate),
@@ -29,6 +29,7 @@ const Test = View.extend({
     this.$el.attr('data-pageable', 'post_0');
     $('.post_container').first().after(this.$el);
     this.initialized = true;
+    Tumblr.Events.off();
     Tumblr.Fox.Events.trigger('initialized:tests');
     this.removePosts().then(() => {
       return this;

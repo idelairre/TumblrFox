@@ -1,5 +1,4 @@
-import { forIn, isFunction, kebabCase } from 'lodash';
-import async from 'async';
+import { isFunction, noop } from 'lodash';
 import db from '../lib/db';
 import { noopCallback } from '../utils/helpers';
 import Source from '../source/followingSource';
@@ -11,22 +10,23 @@ let caching = false;
 
 export default class Following {
   static async fetch(query) {
-    if (query && query.order === 'alphabetically') { // NOTE: these cases are for when the user is fetching from the following view
+    if (typeof query === 'undefined') {
+      return db.following.toCollection().toArray();
+    }
+    if (!query.order && ({}.hasOwnProperty.call(query, 'offset') && {}.hasOwnProperty.call(query, 'limit'))) { // this looks like overkill but its needed since evaluating query.offset && query.limit returns a number
       return db.following.toCollection().offset(query.offset).limit(query.limit).toArray();
-    } else if (query && query.order === 'orderFollowed') {
+    } else if (query.order === 'alphabetically') { // NOTE: these cases are for when the user is fetching from the following view
+      return db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
+    } else if (query.order === 'orderFollowed') {
       return db.following.orderBy('order').offset(query.offset).limit(query.limit).toArray();
-    } else if (query && query.order === 'recentlyUpdated') {
+    } else if (query.order === 'recentlyUpdated') {
       return db.following.orderBy('updated').offset(query.offset).limit(query.limit).reverse().toArray();
     }
-    if (query && query.offset && query.limit) {
-      return await db.following.toCollection().offset(query.offset).limit(query.limit).reverse().toArray();
-    }
-    return await db.following.toCollection().toArray();
   }
 
   static async fetchNsfwBlogs() {
     const following = await db.following.filter(follower => {
-      if (follower.hasOwnProperty('content_rating') && follower.content_rating === 'adult' || follower.content_rating === 'nsfw') {
+      if ({}.hasOwnProperty.call(follower, 'content_rating') && (follower.content_rating === 'adult' || follower.content_rating === 'nsfw')) {
         return follower;
       }
     }).toArray();
@@ -40,8 +40,8 @@ export default class Following {
   static async get(tumblelog) {
     try {
       await db.following.get(tumblelog);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -107,8 +107,8 @@ export default class Following {
       }
       await db.following.put(following);
       constants.set('cachedFollowingCount', count);
-    } catch (e) {
-      console.error(e, following);
+    } catch (err) {
+      console.error(err, following);
     }
   }
 
@@ -117,25 +117,23 @@ export default class Following {
       const promises = followings.map(async following => {
         return await Following.put(following);
       });
-      Promise.all(promises);
-    } catch (e) {
-      console.error(e);
+      return Promise.all(promises);
+    } catch (err) {
+      console.error(err);
     }
   }
 
   static async _setContentRating(following) {
     try {
-      if (!following.hasOwnProperty('is_nsfw')) {
+      if (!{}.hasOwnProperty.call(following, 'is_nsfw')) {
         const tumblelogInfo = await Source.getInfo(following.name);
         if (tumblelogInfo.is_nsfw) {
           following.content_rating = 'nsfw';
         }
       }
-      return following;
-    } catch (e) {
-      console.error(e);
-    } finally {
-      return following;
+    } catch (err) {
+      console.error(err);
     }
+    return following;
   }
 }

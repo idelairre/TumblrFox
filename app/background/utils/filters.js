@@ -15,7 +15,7 @@ const filters = (query, post) => {
     }
   }
   if (query.filter_nsfw) {
-    if (post.hasOwnProperty('tumblelog-content-rating') && post['tumblelog-content-rating'] === 'nsfw' || post['tumblelog-content-rating'] === 'adult') {
+    if (post['tumblelog-content-rating'] === 'nsfw' || post['tumblelog-content-rating'] === 'adult') {
       return false;
     }
   }

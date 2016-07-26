@@ -1,22 +1,19 @@
+import { Deferred } from 'jquery';
+import { isArray } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
-import { ajax, Deferred } from 'jquery';
-import { isArray, omit } from 'lodash';
-import BlogSource from './blogSource';
 import db from '../lib/db';
 import sendMessage from '../services/messageService';
+import BlogSource from './blogSource';
 import 'babel-polyfill';
 
 export default class PostSource {
   static async applyNsfwFilter(posts) {
-    if (typeof posts === 'undefined' || !isArray(posts)) {
-      throw new Error('posts are undefined or not an array');
-    }
     return posts.filter(async post => {
       const following = await db.following.get(post.blog_name);
-      if (following && following.hasOwnProperty('content_rating')) {
+      if ({}.hasOwnProperty.call(following, 'content_rating') && following.content_rating === ('nsfw' || 'adult')) {
         return;
       }
-      return post
+      return post;
     });
   }
 
@@ -31,13 +28,12 @@ export default class PostSource {
     }
     try {
       const response = await oauthRequest(slug);
-      console.log('[FETCH]', response);
-      if (request.filter_nsfw && response.hasOwnProperty('posts')) {
+      if (request.filter_nsfw && {}.hasOwnProperty.call(response, 'posts')) {
         return await PostSource.applyNsfwFilter(response.posts);
       }
       return response.posts;
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -46,7 +42,7 @@ export default class PostSource {
     try {
       const response = [];
       const following = await db.following.orderBy('updated').reverse().toArray();
-      const promises = following.map(async follower => {
+      following.forEach(async follower => {
         const slug = {
           blogname: follower.uuid,
           tag: query.term,
@@ -64,11 +60,9 @@ export default class PostSource {
           });
         }
       });
-      Promise.all(promises);
       deferred.resolve(response);
-    } catch (e) {
-      console.error(e);
-      deferred.reject(e);
+    } catch (err) {
+      deferred.reject(err);
     }
     return deferred.promise();
   }

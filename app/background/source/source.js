@@ -1,8 +1,7 @@
 import { ajax, Deferred } from 'jquery';
-import { noop } from 'lodash';
+import EventEmitter from 'eventemitter3';
 import constants from '../constants';
 import { debug } from '../services/loggingService';
-import EventEmitter from 'eventemitter3';
 
 export default class Source extends EventEmitter { // TODO: refactor this into an event emitter than can be interrupted
   initialized = false;
@@ -10,7 +9,8 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
   sync = false;
   retryTimes = 3;
   retriedTimes = 0;
-  STOP_CONDITION_MESSAGE = 'Stop condition reached';
+  TIMEOUT_MESSAGE = 'Connection timed out.';
+  STOP_CONDITION_MESSAGE = 'Stop condition reached.';
   MAX_RETRIES_MESSAGE = 'Max retries reached, either there is a connection error or you have reached the maximum items you can fetch.';
   MAX_ITEMS_MESSAGE = 'Maximum fetchable items reached.';
 
@@ -18,17 +18,17 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
     super();
     this.constants = constants;
     this.constants.once('ready', () => {
-      this._initialize.call(this);
+      this._initialize();
       this.initialized = true;
     });
     this.constants.on('reset', () => {
-      this._initialize.call(this);
+      this._initialize();
     });
     if (typeof this.condition === 'undefined') {
-      throw new Error(`no condition set for ${this.options.items}`)
+      throw new Error(`no condition set for ${this.options.items}`);
     }
     if (typeof this.step === 'undefined') {
-      throw new Error(`no step set for ${this.options.items}`)
+      throw new Error(`no step set for ${this.options.items}`);
     }
     this.on('stop', () => {
       console.log('stopped');
@@ -58,11 +58,10 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
     }
     if (this.initialized) {
       return this.run();
-    } else {
-      this.constants.once('ready', () => {
-        return this.run();
-      });
     }
+    this.constants.once('ready', () => {
+      return this.run();
+    });
   }
 
   async fetch() { // TODO: make this accept options so that its usable outside of the start() method
@@ -70,6 +69,7 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
     ajax({
       type: 'GET',
       url: this.options.url,
+      timeout: 30000,
       success: data => {
         if (typeof this.parse === 'function') {
           const processedData = this.parse(data);
@@ -79,7 +79,11 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
         }
       },
       error: e => {
-        deferred.reject(e);
+        if (e.statusText === 'timeout') {
+          deferred.reject(this.TIMEOUT_MESSAGE);
+        } else {
+          deferred.reject(e);
+        }
       }
     });
     return deferred.promise();
@@ -98,8 +102,8 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
       const items = await this.fetch();
       debug(`✔ Crawled ${items.length} ${this.options.item} from ${opts.iterator}: ${this.options[opts.iterator]}`);
       deferred.resolve(items);
-    } catch (e) {
-      deferred.reject(e);
+    } catch (err) {
+      deferred.reject(err);
     }
     return deferred.promise();
   }
@@ -122,14 +126,12 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
       if (items.length === 0) {
         return this.stop(this.MAX_ITEMS_MESSAGE);
       }
-    } catch (error) {
+    } catch (err) {
       if (this.retriedTimes <= (this.retryTimes - 1)) {
-        return this.handleError(error);
-      } else {
-        console.info(this.MAX_RETRIES_MESSAGE);
-        this.emit('error', error);
-        return this.stop(this.MAX_RETRIES_MESSAGE);
+        return this.handleError(err);
       }
+      this.emit('error', err);
+      return this.stop(this.MAX_RETRIES_MESSAGE);
     }
     if (this.sync) {
       return this.run(retry);
@@ -163,7 +165,9 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
 
   removeListeners() {
     for (const key in this._events) {
-      this.removeListener(key, this._events[key].fn, this);
+      if ({}.hasOwnProperty.call(this._events, key)) {
+        this.removeListener(key, this._events[key].fn, this);
+      }
     }
   }
 }

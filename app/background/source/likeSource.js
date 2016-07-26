@@ -23,8 +23,8 @@ class LikeSource extends Source {
     if (this.constants.get('likeSourceLimits')) {
       Object.assign(this.options, this.constants.get('likeSourceLimits'));
     }
-    if (this.constants.get('likeSourceSlug')) {
-      Object.assign(this.options, this.constants.get('likeSourceSlug'));
+    if (this.constants.get('nextLikeSourceSlug')) {
+      Object.assign(this.options, this.constants.get('nextLikeSourceSlug'));
     }
   }
 
@@ -39,7 +39,7 @@ class LikeSource extends Source {
     if (this.options.timestamp) {
       this.options.url += `/${this.options.timestamp}`;
     }
-    this.constants.set('likeSourceSlug', {
+    this.constants.set('nextLikeSourceSlug', {
       timestamp: this.options.timestamp,
       page: this.options.page,
       url: this.options.url
@@ -69,7 +69,6 @@ class LikeSource extends Source {
         deferred.resolve(posts);
       },
       error: error => {
-        console.error('[ERROR]', error);
         deferred.reject(error);
       }
     });

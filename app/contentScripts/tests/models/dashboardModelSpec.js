@@ -1,8 +1,8 @@
 import $ from 'jquery';
-import AppState from '../../../application/state';
-import BlogModel from '../../posts/blogModel';
-import DashboardModel from '../../posts/dashboardModel';
-import DashboardSource from '../../../source/dashboardSource';
+import { without } from 'lodash';
+import AppState from '../../application/state';
+import { BlogModel, DashboardModel } from '../../models/models';
+import DashboardSource from '../../source/dashboardSource';
 
 const dashboardModel = new DashboardModel({
   state: AppState
@@ -52,7 +52,7 @@ describe('DashboardModel', () => {
       dashboardModel.fetch(query).then(response => {
         expect(response).toBeDefined();
         // expect(response.length).toEqual(query.limit);
-        const promises = response.posts.filter(post => {
+        const promises = without(response.posts.map(post => {
           if (typeof post.reblogged_from_name === 'undefined' || !post.reblogged_from_name) {
             return;
           }
@@ -61,7 +61,7 @@ describe('DashboardModel', () => {
             deferred.resolve(response);
           });
           return deferred.promise();
-        });
+        }), undefined);
         $.when.apply($, promises).done((...response) => {
           const responses = [].concat(...response);
           responses.forEach(user => {

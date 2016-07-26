@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { isBoolean, mapKeys } from 'lodash';
+import { isBoolean, mapKeys, template } from 'lodash';
 import Backbone from 'backbone';
 import View from '../view/view';
 import settingsTemplate from './settings.html';
@@ -13,11 +13,11 @@ const Settings = View.extend({
       test: false
     }
   },
-  template: $(settingsTemplate).html(),
+  template: template(settingsTemplate),
   className: 'settings options',
   tagName: 'section',
   render() {
-    this.$el.html(this.template);
+    this.$el.html(this.template({ env: __ENV__ }));
     this.bindEvents();
     return this;
   },

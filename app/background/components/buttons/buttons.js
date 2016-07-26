@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { snakeCase, toUpper } from 'lodash';
+import { snakeCase, template, toUpper } from 'lodash';
 import Backbone from 'backbone';
 import parseFile from './parseFile';
 import View from '../view/view';
@@ -11,7 +11,7 @@ const Buttons = View.extend({
       saveViaFirebase: false
     }
   },
-  template: $(buttonsTemplate).html(),
+  template: template(buttonsTemplate),
   className: 'buttons',
   tagName: 'section',
   events: {
@@ -31,7 +31,7 @@ const Buttons = View.extend({
   render() {
     this.parseFile = parseFile;
     this.$download = $('#cache');
-    this.$el.html(this.template);
+    this.$el.html(this.template({ env: __ENV__ }));
     this.bindEvents();
     return this;
   },

@@ -1,18 +1,9 @@
 import $ from 'jquery';
-import LikesModel from '../../posts/likesModel';
-import DashboardSource from '../../../source/likeSource';
+import { LikesModel } from '../../models/models';
+import DashboardSource from '../../source/likeSource';
+import { isSorted } from '../../../shared/jasmine-helpers';
 
 const likesModel = new LikesModel();
-
-const isSorted = array => {
-  const len = array.length - 1;
-  for (let i = 0; i < len; ++i) {
-    if (array[i] > array[i + 1]) {
-      return false;
-    }
-  }
-  return true;
-}
 
 describe('LikesModel', () => {
   describe('fetch()', () => {
@@ -143,7 +134,6 @@ describe('LikesModel', () => {
       likesModel.search(query).then(response => {
         expect(response).toBeDefined();
         response.forEach(post => {
-          console.log('post timestamp: ', new Date(post.liked_timestamp * 1000), 'before: ', new Date(query.before * 1000));
           expect(parseInt(query.before) > parseInt(post.liked_timestamp * 1000));
         });
         done();

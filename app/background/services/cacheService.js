@@ -141,7 +141,7 @@ export default class Cache {
   static async assembleCacheAsCsv(sendResponse) { // NOTE: this has problems, throws maximum ipc message at high number of posts
     try {
       const CacheWorker = require('./cacheWorkerService').default;
-      const posts = await db.likes.toCollection().limit(100).toArray();
+      const posts = await db.likes.toCollection().toArray();
       const file = await CacheWorker.convertJsonToCsv(posts);
       const result = await CacheWorker.assembleFileBlob(file);
       sendResponse({

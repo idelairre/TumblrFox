@@ -1,26 +1,22 @@
 /* global Promise:true */
 /* eslint no-undef: "error" */
 
-import $, { ajax, Deferred } from 'jquery';
-import async from 'async';
-import { differenceBy, findIndex, first, isUndefined, isEqual, isString, isFunction, noop, omit, union } from 'lodash';
+import { first, isEqual, isFunction, noop, omit, union } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
-import filters, { filterNsfw, filterReblogs } from '../utils/filters';
+import filters from '../utils/filters';
 import { noopCallback } from '../utils/helpers';
 import marshalQuery from '../utils/marshalQuery';
 import sortByPopularity from '../utils/sort';
 import { logValues, logError } from '../services/loggingService';
-import Tags from './tagStore';
 import Lunr from '../services/lunrSearchService';
 import Source from '../source/likeSource';
+import Tags from './tagStore';
 import 'babel-polyfill';
-
-const LIMIT = 20000;
 
 let $postsCache = [];
 
-let lastQuery = {};
+const lastQuery = {};
 
 let caching = false;
 
@@ -29,7 +25,7 @@ export default class Likes {
     if (caching) {
       return;
     }
-    caching = true
+    caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
     Source.addListener('items', async posts => {
@@ -69,8 +65,8 @@ export default class Likes {
       const count = await db.likes.toCollection().count();
       constants.set('cachedLikesCount', count);
       Likes._updateContentRating(post);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -78,8 +74,8 @@ export default class Likes {
     try {
       const promises = posts.map(Likes.put);
       return Promise.all(promises);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -106,11 +102,11 @@ export default class Likes {
         $postsCache = response;
         return response.slice(query.next_offset, query.next_offset + query.limit);
       }
-      let response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).or('tags').anyOfIgnoreCase(query.term).filter(_filters).reverse().toArray();
+      const response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).or('tags').anyOfIgnoreCase(query.term).filter(_filters).reverse().toArray();
       $postsCache = response;
       return response.slice(query.next_offset, query.next_offset + query.limit);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -134,8 +130,8 @@ export default class Likes {
       }
       $postsCache = matches;
       return matches.slice(query.next_offset, query.next_offset + query.limit);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -168,7 +164,7 @@ export default class Likes {
 
   static async _updateContentRating(post) {
     try {
-      if (post.hasOwnProperty('tumblelog-content-rating') && post['tumblelog-data'].following) {
+      if (post['tumblelog-content-rating'] && post['tumblelog-data'].following) {
         const name = post['tumblelog-data'].name;
         const following = await db.following.get(name);
         if (following) {
@@ -176,8 +172,8 @@ export default class Likes {
           db.following.put(following);
         }
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   }
 }

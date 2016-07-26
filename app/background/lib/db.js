@@ -11,12 +11,11 @@ db.version(26).stores({
   tags: 'tag, count'
 });
 
-
 db.on('error', e => {
   console.error(e.stack || e);
 });
 
-console.time('initialize')
+console.time('initialize');
 
 db.open().then(() => {
   debug(db);
@@ -24,5 +23,19 @@ db.open().then(() => {
 }).catch(error => {
   console.error(error);
 });
+
+window.downloadTableJson = function (table, limit) {
+  const download = response => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(response)], {
+      type: `application/json,charset=utf-8`
+    }));
+    chrome.downloads.download({ url, filename: `tumblrfox-${table}-data.json` });
+  }
+  if (limit) {
+    db[table].toCollection().limit(limit).toArray().then(download);
+  } else {
+    db[table].toCollection().toArray().then(download);
+  }
+}
 
 export default db;

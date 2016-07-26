@@ -1,4 +1,4 @@
-import { isFunction, toArray } from 'lodash';
+import { isFunction, isObject, toArray } from 'lodash';
 import sendMessage from './messageService';
 import constants from '../constants';
 
@@ -9,14 +9,16 @@ import constants from '../constants';
  */
 
 const receiverHandler = handlers => {
-	// console.log('[HANDLERS]: ', Object.keys(handlers));
 	constants.set('eventManifest', Object.keys(handlers));
 	return (request, sender, sendResponse) => {
-		const lastError = chrome.runtime.lastError;
+		const lastError = chrome.runtime.lastError; // NOTE: not sure if this works
 		if (lastError) {
 			sendResponse({
 				type: 'error',
-				payload: lastError.message
+				payload: {
+					error: lastError.message,
+					stack: lastError
+				}
 			});
 			console.error(lastError.message);
 		}
@@ -30,14 +32,24 @@ const receiverHandler = handlers => {
 							sendResponse(response);
 						}
 					}).catch(err => {
-						console.log(err);
-						sendResponse({
-							type: 'error',
-							payload: {
-								error: err.toString(),
-								stack: err.stack
-							}
-						});
+						console.error(err);
+						if (isObject(err) && {}.hasOwnProperty.call(err, 'statusText')) {
+							sendResponse({
+								type: 'error',
+								payload: {
+									error: err.statusText,
+									stack: err
+								}
+							});
+						} else {
+							sendResponse({
+								type: 'error',
+								payload: {
+									error: err.toString(),
+									stack: err.stack
+								}
+							});
+						}
 					});
 				} else {
 					if (typeof func !== 'undefined') {

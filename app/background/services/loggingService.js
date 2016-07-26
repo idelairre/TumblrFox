@@ -63,7 +63,6 @@ export const logValues = (database, sendResponse, callback) => {
 };
 
 export const logError = (error, next, sendResponse) => {
-  console.log(arguments);
   console.error(error);
   if (error.message) {
     error = error.message;

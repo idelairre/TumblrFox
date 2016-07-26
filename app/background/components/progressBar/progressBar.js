@@ -53,19 +53,19 @@ const Progress = View.extend({
     });
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'ASSEMBLE_FILE', ::this.$el.show);
-    this.listenTo(Backbone.Events, 'DOWNLOAD_CACHE', ::this.$el.show);
-    this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.$el.show);
-    this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.$el.show);
-    this.listenTo(Backbone.Events, 'CACHE_POSTS', ::this.$el.show);
+    this.listenTo(Backbone.Events, 'ASSEMBLE_FILE', ::this.show);
+    this.listenTo(Backbone.Events, 'DOWNLOAD_CACHE', ::this.show);
+    this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.show);
+    this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.show);
+    this.listenTo(Backbone.Events, 'CACHE_POSTS', ::this.show);
     this.listenTo(Backbone.Events, 'DELETING', ::this.fakeAnimateProgress);
     this.listenTo(Backbone.Events, 'DONE', ::this.hide);
     this.listenTo(Backbone.Events, 'PROGRESS', ::this.animateProgress);
-    this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.$el.show);
-    this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.$el.show);
-    this.listenTo(Backbone.Events, 'REHASH_TAGS', ::this.$el.show);
+    this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.show);
+    this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.show);
+    this.listenTo(Backbone.Events, 'REHASH_TAGS', ::this.show);
     this.listenTo(Backbone.Events, 'RESTORING_CACHE', ::this.animateProgress);
-    this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.$el.hide);
+    this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.hide);
   },
   animateProgress(response) {
     if (typeof response.payload !== 'undefined') {
@@ -94,6 +94,10 @@ const Progress = View.extend({
   },
   resetBar() {
     this.$bar.set(0);
+  },
+  show() {
+    this.$el.show();
+    this.resetBar();
   },
   hide() {
     this.$el.hide();

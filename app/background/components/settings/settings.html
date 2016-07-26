@@ -1,27 +1,27 @@
-<script id="authenticationTemplate" type="text/javascript">
-  <h1>Options</h1>
-  <div class="input-option">
-    <label>
-      Enable logging:
-    </label>
-    <input type="checkbox" id="debug" checked="false">
-  </div>
-  <div class="input-option">
-    <label>
-      Set user:
-    </label>
-    <input type="checkbox" id="setUser" checked="false">
-  </div>
-  <div class="input-option">
-    <label>
-      Run tests:
-    </label>
-    <input type="checkbox" id="test" checked="false">
-  </div>
-  <div class="input-option">
-    <label>
-      Use default api keys:
-    </label>
-    <input type="checkbox" id="defaultKeys" checked="true">
-  </div>
-</script>
+<h1>Options</h1>
+<div class="input-option">
+  <label>
+    Enable logging:
+  </label>
+  <input type="checkbox" id="debug" checked="false">
+</div>
+<div class="input-option">
+  <label>
+    Set user:
+  </label>
+  <input type="checkbox" id="setUser" checked="false">
+</div>
+<% if (env === 'development') { %>
+<div class="input-option">
+  <label>
+    Run client-side tests:
+  </label>
+  <input type="checkbox" id="test" checked="false">
+</div>
+<% } %>
+<div class="input-option">
+  <label>
+    Use default api keys:
+  </label>
+  <input type="checkbox" id="defaultKeys" checked="true">
+</div>

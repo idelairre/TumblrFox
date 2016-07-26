@@ -2,7 +2,6 @@
 /* eslint no-undef: "error" */
 
 import chromeReceiver from './receivers/chromeReceiver';
-import Cache from './services/cacheService';
 import db from './lib/db';
 import idleService from './services/idleService';
 import optionsReceiver from './receivers/optionsReceiver';
@@ -22,12 +21,12 @@ const listenForUpdate = () => {
   chrome.runtime.onUpdateAvailable.addListener(() => {
     chrome.runtime.reload();
   });
-}
+};
 
 const listenForIdleState = () => {
   chrome.idle.setDetectionInterval(15);
   chrome.idle.onStateChanged.addListener(idleService);
-}
+};
 
 if (inExtension) {
   loadChromeEventHandlers();

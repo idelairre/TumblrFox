@@ -23,7 +23,7 @@ const Controller = RouteController.extend({
     });
   },
   initializeTests() {
-    const TestComponent = require('../components/tests/testComponent');
+    const TestComponent = require('../components/testsView/testComponent');
     const testComponent = new TestComponent();
     App.Application.testComponent = testComponent;
     testComponent.render();

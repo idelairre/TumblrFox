@@ -10,7 +10,7 @@ import { Deferred } from 'jquery';
 
 const log = console.log.bind(console, '[BRIDGE]');
 
-class Bridge  {
+class Bridge {
   initialize() {
     const deferred = Deferred();
     this.constants = {};
@@ -28,7 +28,7 @@ class Bridge  {
 
   debug() { // NOTE: there is a slight delay here, not sure why
     if (this.logging) {
-      log.apply(log, Array.prototype.slice.call(arguments));
+      log.apply(log, Array.from(arguments));
     }
   }
 

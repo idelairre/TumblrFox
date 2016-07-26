@@ -18,7 +18,7 @@ const { Tumblelog } = Tumblr.Prima.Models;
 *     updated => clear elements => onScroll => populate followers from model
 */
 
-const FollowingList = TumblrView.extend({
+const FollowingList = TumblrView.extend({ // TODO: change this to a collection view
   defaults: {
     formkey: formKey,
     offset: 25,

@@ -1,7 +1,8 @@
 import $ from 'jquery';
-import BlogModel from '../../posts/blogModel';
-import BlogSource from '../../../source/blogSource';
-import Events from '../../../application/events';
+import { without } from 'lodash';
+import { BlogModel } from '../../models/models';
+import BlogSource from '../../source/blogSource';
+import Events from '../../application/events';
 
 const blogModel = new BlogModel();
 const Tumblr = window.Tumblr;
@@ -36,7 +37,7 @@ describe('BlogModel', () => {
       };
       blogModel.fetch(query).then(response => {
         response.posts.forEach(post => {
-          expect(post.type).toEqual(query.post_type.toLowerCase());
+          expect(post.type).toMatch(/quote/);
         });
         done();
       });
@@ -52,9 +53,9 @@ describe('BlogModel', () => {
         post_role: 'ORIGINAL'
       };
       blogModel.fetch(query).then(response => {
-        expect(response).not.toBeUndefined(response);
+        expect(response).toBeDefined(response);
         expect(response.posts.length).toEqual(query.limit);
-        response.posts.map(post => {
+        response.posts.forEach(post => {
           expect(post.reblogged_from_tumblr_url).toBe(null);
         });
         done();
@@ -73,7 +74,7 @@ describe('BlogModel', () => {
       blogModel.fetch(query).then(response => {
         expect(response).toBeDefined();
         // expect(response.length).toEqual(query.limit);
-        const promises = response.posts.filter(post => {
+        const promises = without(response.posts.map(post => {
           if (typeof post.reblogged_from_name === 'undefined' || !post.reblogged_from_name) {
             return;
           }
@@ -82,7 +83,7 @@ describe('BlogModel', () => {
             deferred.resolve(response);
           });
           return deferred.promise();
-        });
+        }), undefined);
         $.when.apply($, promises).done((...response) => {
           const responses = [].concat(...response);
           responses.forEach(user => {
@@ -139,8 +140,8 @@ describe('BlogModel', () => {
         filter_nsfw: true
       };
       blogModel.search(query).then(response => {
-        const promises = response.filter(post => {
-          if (post.reblogged_from_name) {
+        const promises = without(response.map(post => {
+          if (!post.reblogged_from_name) {
             return;
           }
           const deferred = $.Deferred();
@@ -148,7 +149,7 @@ describe('BlogModel', () => {
             deferred.resolve(response);
           });
           return deferred.promise();
-        });
+        }), undefined);
         $.when.apply($, promises).done((...response) => {
           const responses = [].concat(...response);
           responses.forEach(user => {
@@ -212,7 +213,7 @@ describe('BlogModel', () => {
 
       blogModel.fetch(query).then(response => {
         response.forEach(post => {
-          expect(post.type).toEqual(query.post_type.toLowerCase());
+          expect(post.type).toMatch(query.post_type.toLowerCase());
         });
         done();
       });
@@ -272,17 +273,20 @@ describe('BlogModel', () => {
       Tumblr.Fox.options.set('cachedUserPosts', true);
 
       blogModel.fetch(query).then(response => {
-        const promises = response.filter(post => {
+        const promises = without(response.map(post => {
           if (typeof post['tumblelog-parent-data'] === 'undefined') {
             return;
           }
           const deferred = $.Deferred();
           const name = post['tumblelog-parent-data'].name;
+          if (!name) {
+            return;
+          }
           blogModel.getContentRating(name).then(response => {
             deferred.resolve(response);
           });
           return deferred.promise();
-        });
+        }), undefined);
         $.when.apply($, promises).done((...response) => {
           const responses = [].concat(...response);
           responses.forEach(user => {

@@ -9,7 +9,7 @@ module.exports = {
     contentscript: './app/contentScripts/contentscript.js',
     'fox-bootstrap': './app/contentScripts/bootstrap.js',
     background: './app/background/background.js',
-    test: 'mocha!./tests/test.js',
+    tests: './app/background/tests/tests.js',
     vendor: ['jquery', 'lodash', 'backbone']
   },
   devtool: args.sourcemaps ? 'source-map' : null,
