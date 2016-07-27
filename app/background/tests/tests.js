@@ -6,3 +6,4 @@ import '../lib/livereload';
 
 import followingStoreSpec from './stores/followingStoreSpec';
 import likeStoreSpec from './stores/likeStoreSpec';
+import sourceSpec from './source/sourceSpec';

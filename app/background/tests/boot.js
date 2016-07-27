@@ -101,6 +101,8 @@
     return specFilter.matches(spec.getFullName());
   };
 
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
   /**
    * Setting up timing functions to be able to be overridden. Certain browsers (Safari, IE 8, phantomjs) require this hack.
    */

@@ -9,12 +9,12 @@ const Tumblr = window.Tumblr;
 
 describe('BlogModel', () => {
   it('should exist', () => {
-    expect(blogModel).not.toBeUndefined();
+    expect(blogModel).toBeDefined();
   });
 
   it('should get user\'s content ratings', done => {
     blogModel.getContentRating('banshee-hands').then(response => {
-      expect(response).not.toBeUndefined();
+      expect(response).toBeDefined();
       expect(response.content_rating).toEqual('nsfw');
       done();
     });

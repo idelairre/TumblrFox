@@ -159,7 +159,7 @@ export default class Cache {
   static async resetPosts() {
     await db.posts.toCollection().delete();
     constants.set('cachedPostsCount', 0);
-    constants.set('nextBlogSlug', constants.defaults.nextBlogSlug);
+    constants.set('nextBlogSourceSlug', constants.defaults.nextBlogSourceSlug);
     constants.initialize();
   }
 
@@ -172,7 +172,7 @@ export default class Cache {
   static async resetLikes() {
     await db.likes.toCollection().delete();
     constants.set('cachedLikesCount', 0);
-    constants.set('likeSourceSlug', constants.defaults.likeSourceSlug);
+    constants.set('nextLikeSourceSlug', constants.defaults.nextLikeSourceSlug);
     constants.initialize();
   }
 

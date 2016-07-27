@@ -53,7 +53,7 @@ const optionsReceiver = portHandler({
   rehashTags: Cache.rehashTags,
   resetCache: Cache.reset,
   restoreCache: restoreCache,
-  runTests: runTests,
+  extensionTests: runTests,
   updateSettings: updateConstants
 });
 

@@ -62,8 +62,8 @@ const Buttons = View.extend({
     if (key === 'restoreCache') {
       this.restoreCache();
     } else { // all other events are sent to settings component and posted to the background script
-      const e = toUpper(snakeCase(key));
-      Backbone.Events.trigger(e, {
+      const eventName = toUpper(snakeCase(key));
+      Backbone.Events.trigger(eventName, {
        type: key
      });
     }

@@ -16,7 +16,15 @@
   <label>
     Run client-side tests:
   </label>
-  <input type="checkbox" id="test" checked="false">
+  <input type="checkbox" id="clientTests" checked="false">
+</div>
+<% } %>
+<% if (env === 'development') { %>
+<div class="input-option">
+  <label>
+    Run extension tests:
+  </label>
+  <input type="checkbox" id="extensionTests" checked="false">
 </div>
 <% } %>
 <div class="input-option">

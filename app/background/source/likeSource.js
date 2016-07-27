@@ -51,8 +51,11 @@ class LikeSource extends Source {
       let next = $(response).find('#pagination').find('a#next_page_link').attr('href').split('/');
       next = next[next.length - 1];
       this.options.page += 1;
-      this.options.timestamp = next;
-      return parsePosts(response, this.options.timestamp);
+      if ({}.hasOwnProperty.call(this.options, 'timestamp')) {
+        this.options.timestamp = next;
+        return parsePosts(response, this.options.timestamp);
+      }
+      return parsePosts(response);
     } catch (e) {
       console.error(e);
       this.constants.set('maxLikesCount', this.constants.get('cachedLikesCount'));

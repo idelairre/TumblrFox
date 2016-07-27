@@ -33,7 +33,7 @@ const parsePosts = (data, timestamp) => {
     const postsJson = [];
     const posts = $(data).find('[data-json]').not('[data-is-radar]');
     each(posts, (i, post) => {
-      post = processPost(post, timestamp || false);
+      post = processPost(post, timestamp ? timestamp : false);
       if (post.id) {
         postsJson.push(post);
       }

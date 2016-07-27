@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { isBoolean, mapKeys, template } from 'lodash';
+import { isBoolean, mapKeys, snakeCase, template, toUpper } from 'lodash';
 import Backbone from 'backbone';
 import View from '../view/view';
 import settingsTemplate from './settings.html';
@@ -10,7 +10,9 @@ const Settings = View.extend({
       debug: false,
       setUser: false,
       defaultKeys: false,
-      test: false
+      test: false,
+      clientTests: false,
+      extensionTests: false
     }
   },
   template: template(settingsTemplate),
@@ -30,7 +32,15 @@ const Settings = View.extend({
   toggleCheck(e) {
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
-    this.props.set(key, check);
+    console.log(key);
+    if (key === 'extensionTests') {
+      const eventName = toUpper(snakeCase(key));
+      Backbone.Events.trigger(eventName, {
+        type: key
+      });
+    } else {
+      this.props.set(key, check);
+    }
   },
   renderProps(props) {
     mapKeys(props, (value, key) => {

@@ -87,7 +87,7 @@ const Options = View.extend({
     this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'REHASH_TAGS', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'RUN_TESTS', ::this.postMessage);
+    this.listenTo(Backbone.Events, 'EXTENSION_TESTS', ::this.postMessage);
     this.listenTo(Backbone.Events, 'SAVE_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'ERROR', ::this.showError);
     this.listenTo(Backbone.Events, 'DONE', ::this.showDone);

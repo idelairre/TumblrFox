@@ -30,7 +30,7 @@ class Constants extends EventEmitter {
     firstRun: false,
     formKey: '',
     maxLikesCount: 0,
-    test: false,
+    clientTests: false,
     saveViaFirebase: true,
     setUser: false,
     totalLikesCount: 0,
@@ -141,9 +141,9 @@ class Constants extends EventEmitter {
     this.set('cachedPostsCount', 0); // NOTE: revert this so that it doesn't set everything to zero
     this.set('cachedLikesCount', 0);
     this.set('cachedTagsCount', 0);
-    this.set('nextBlogSlug', this.defaults.nextBlogSlug);
+    this.set('nextBlogSourceSlug', this.defaults.nextBlogSourceSlug);
     this.set('likeSourceLimits', this.defaults.likeSourceLimits);
-    this.set('likeSourceSlug', this.defaults.likeSourceSlug);
+    this.set('nextLikeSourceSlug', this.defaults.nextLikeSourceSlug);
     this.initialize();
   }
 

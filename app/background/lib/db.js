@@ -5,7 +5,7 @@ import 'babel-polyfill';
 const db = new Dexie('TumblrFox');
 
 db.version(26).stores({
-  posts: 'id, blog_name, note_count, *tags, *tokens, type, order',
+  posts: 'id, blog_name, note_count, *tags, *tokens, type, order', // TODO: fix order incrementer so new blog posts appear at the beginning
   likes: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type, liked',
   following: 'name, updated, order, content_rating',
   tags: 'tag, count'

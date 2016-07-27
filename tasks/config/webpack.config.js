@@ -10,7 +10,7 @@ module.exports = {
     'fox-bootstrap': './app/contentScripts/bootstrap.js',
     background: './app/background/background.js',
     tests: './app/background/tests/tests.js',
-    vendor: ['jquery', 'lodash', 'backbone']
+    vendor: ['jquery', 'lodash', 'backbone', 'babel-polyfill']
   },
   devtool: args.sourcemaps ? 'source-map' : null,
   watch: args.watch,
