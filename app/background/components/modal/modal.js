@@ -7,8 +7,8 @@ import './modal.less';
 const Modal = View.extend({
   className: 'modal',
   template: template($(modalTemplate).html()),
-  initialize(e) {
-    this.options = Object.assign({}, e);
+  initialize(options = {}) {
+    this.options = options;
     this.$parent = this.options.parent;
   },
   events: {

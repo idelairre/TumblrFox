@@ -1,5 +1,6 @@
-import { findKey, isEmpty } from 'lodash';
+import { findKey, isEmpty, last } from 'lodash';
 import $, { ajax, each, Deferred } from 'jquery';
+import { debug } from '../services/loggingService';
 import parsePosts from '../utils/parsePosts';
 import formatDate from '../utils/formatDate';
 import Source from './source';
@@ -14,10 +15,6 @@ class LikeSource extends Source {
     untilTimestamp: new Date(2007, 1, 1),
     untilPage: 'max'
   };
-
-  constructor() {
-    super();
-  }
 
   initializeConstants() {
     if (this.constants.get('likeSourceLimits')) {
@@ -46,16 +43,21 @@ class LikeSource extends Source {
     });
   }
 
-  parse(response) {
+  parse(response = '') {
     try {
-      let next = $(response).find('#pagination').find('a#next_page_link').attr('href').split('/');
-      next = next[next.length - 1];
-      this.options.page += 1;
-      if ({}.hasOwnProperty.call(this.options, 'timestamp')) {
-        this.options.timestamp = next;
-        return parsePosts(response, this.options.timestamp);
+      let link = $(response).find('#pagination').find('a#next_page_link');
+      if (link) {
+        let next = link.attr('href').split('/'); // TODO: make this fail more gracefully
+        next = last(next);
+        this.options.page += 1;
+        if ({}.hasOwnProperty.call(this.options, 'timestamp')) {
+          this.options.timestamp = next;
+          return parsePosts(response, this.options.timestamp);
+        }
+        return parsePosts(response);
+      } else {
+        return [];
       }
-      return parsePosts(response);
     } catch (e) {
       console.error(e);
       this.constants.set('maxLikesCount', this.constants.get('cachedLikesCount'));
@@ -82,10 +84,10 @@ class LikeSource extends Source {
     const deferred = Deferred();
     try {
       if (retry && this.retriedTimes && this.retriedTimes <= this.retryTimes) {
-        console.log(`Retried times: ${this.retriedTimes + 1}, retrying from page: ${this.options.page}, timestamp: ${formatDate(this.options.nextLikeSlug.timestamp)}...`);
+        debug(`Retried times: ${this.retriedTimes + 1}, retrying from page: ${this.options.page}, timestamp: ${formatDate(this.options.nextLikeSlug.timestamp)}...`);
       }
       const posts = await this.fetch(retry);
-      console.log(`✔ Crawled ${posts.length} posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}`);
+      debug(`✔ Crawled ${posts.length} posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}`);
       deferred.resolve(posts);
     } catch (e) {
       deferred.reject(e);

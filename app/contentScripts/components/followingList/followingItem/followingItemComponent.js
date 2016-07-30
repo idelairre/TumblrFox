@@ -18,12 +18,14 @@ $.fn.removeAttributes = function(args) {
   });
 };
 
+// https://api.tumblr.com/v2/blog/${user}/avatar/128
+
 const FollowingItem = View.extend({
   template: template(followingItemTemplate),
   className: 'follower clearfix',
   initialize(options) {
     this.model = options.model;
-    this.model.set('avatar', this.model.get('avatar_url'));
+    this.model.set('avatar_url', `https://api.tumblr.com/v2/blog/${this.model.get('name')}/avatar/128`);
     if (isNumber(this.model.get('updated'))) {
       this.model.set('updated', `Updated ${Time.prettyDate(this.model.get('updated'))}`);
     }

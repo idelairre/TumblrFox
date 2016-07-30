@@ -36,7 +36,7 @@ const PostFormatter = function () {
 extend(PostFormatter.prototype, {
   formatDashboardPosts(postData) {
     let posts = $(postData.trim());
-    posts = Array.prototype.slice.call(posts.find('[data-json]:not(.image-ad, .video-ad)'));
+    posts = Array.from(posts.find('[data-json]:not(.image-ad, .video-ad)'));
     posts = posts.map(post => {
       const postEl = $(post);
       post = postEl.data('json');

@@ -53,7 +53,7 @@ describe('DashboardModel', () => {
         expect(response).toBeDefined();
         // expect(response.length).toEqual(query.limit);
         const promises = without(response.posts.map(post => {
-          if (typeof post.reblogged_from_name === 'undefined' || !post.reblogged_from_name) {
+          if (!post.reblogged_from_name || !post.reblogged_from_name) {
             return;
           }
           const deferred = $.Deferred();

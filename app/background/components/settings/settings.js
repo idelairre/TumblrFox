@@ -32,7 +32,6 @@ const Settings = View.extend({
   toggleCheck(e) {
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
-    console.log(key);
     if (key === 'extensionTests') {
       const eventName = toUpper(snakeCase(key));
       Backbone.Events.trigger(eventName, {

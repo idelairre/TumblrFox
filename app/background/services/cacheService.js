@@ -275,7 +275,7 @@ export default class Cache {
       try {
         await Likes.put(posts[items.cachedPostsCount]);
         items.cachedPostsCount += 1;
-        log('posts', sendResponse);
+        logValues('posts', sendResponse);
         next(null, items.cachedPostsCount);
       } catch (e) {
         logError(e, next, sendResponse);

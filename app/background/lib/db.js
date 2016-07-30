@@ -24,15 +24,15 @@ db.open().then(() => {
   console.error(error);
 });
 
-window.downloadTableJson = function (table, limit) {
+window.downloadTableJson = function (table, query) {
   const download = response => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(response)], {
       type: `application/json,charset=utf-8`
     }));
     chrome.downloads.download({ url, filename: `tumblrfox-${table}-data.json` });
   }
-  if (limit) {
-    db[table].toCollection().limit(limit).toArray().then(download);
+  if (query) {
+    db[table].where(query.index).anyOfIgnoreCase(query.term).limit(query.limit).toArray().then(download);
   } else {
     db[table].toCollection().toArray().then(download);
   }

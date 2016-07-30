@@ -6,7 +6,7 @@ const Likes = ModuleInjector({
   '../lib/db': mockDb,
 }).default;
 
-describe('likeStore', () => {
+describe('LikeStore', () => {
   describe('get()', () => {
     it ('should fetch posts by id', async done => {
       const id = 92701077434;

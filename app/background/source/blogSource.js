@@ -1,5 +1,6 @@
 import { ajax, Deferred } from 'jquery';
 import parsePosts from '../utils/parsePosts';
+import { isObject } from 'lodash';
 import tokens from '../tokens.json';
 import Source from './source';
 
@@ -44,13 +45,31 @@ class BlogSource extends Source {
   async getInfo(user) {
     const deferred = Deferred();
     if (typeof user !== 'string') {
-      deferred.reject(`${typeof user === 'object' ? JSON.stringify(user) : user} is not a valid blogname`);
+      deferred.reject(`${isObject(user) ? JSON.stringify(user) : user} is not a valid blogname`);
     }
     ajax({
       type: 'GET',
-      url: `https://api.tumblr.com/v2/blog/${user}.tumblr.com/info?api_key=${this.constants.get('consumerKey')}`,
+      url: `https://api.tumblr.com/v2/blog/${user}.tumblr.com/info?api_key=${tokens.consumerKey}`,
       success: data => {
         deferred.resolve(data.response.blog);
+      },
+      error: e => {
+        deferred.reject(e);
+      }
+    });
+    return deferred.promise();
+  }
+
+  async getAvatar(user) {
+    const deferred = Deferred();
+    if (typeof user !== 'string') {
+      deferred.reject(`${isObject(user) ? JSON.stringify(user) : user} is not a valid blogname`);
+    }
+    ajax({
+      type: 'GET',
+      url: `https://api.tumblr.com/v2/blog/${user}/avatar`,
+      success: (data) => {
+        deferred.resolve(data);
       },
       error: e => {
         deferred.reject(e);

@@ -1,7 +1,7 @@
 /* global Promise:true */
 /* eslint no-undef: "error" */
 
-import { first, isEqual, isFunction, noop, omit, union } from 'lodash';
+import { first, isEqual, isFunction, noop, omit, sortBy, union } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import filters from '../utils/filters';
@@ -44,7 +44,6 @@ export default class Likes {
           message: msg
         });
       }
-      Source.removeListeners();
     });
     Source.start();
   }
@@ -59,9 +58,9 @@ export default class Likes {
       post.tokens = union(Lunr.tokenizeHtml(post.html), post.tags);
 
       await db.likes.put(post);
-      if (post['tumblelog-data'] && post['tumblelog-data'].following) {
-        await db.following.put(post['tumblelog-data']);
-      }
+      // if (post['tumblelog-data'] && post['tumblelog-data'].following) { // TODO: make the following table return properly formatted Tumblelog data
+      //   await db.following.put(post['tumblelog-data']);
+      // }
       const count = await db.likes.toCollection().count();
       constants.set('cachedLikesCount', count);
       Likes._updateContentRating(post);
@@ -91,23 +90,43 @@ export default class Likes {
       }
       const term = query.term;
       const _filters = filters.bind(this, query);
-      query.term = Lunr.tokenize(query.term)[0];
+      query.term = Lunr.tokenize(query.term);
       if (typeof query.term === 'undefined') {
         query.term = term;
       }
       Object.assign(lastQuery, omit(query, ['next_offset']));
+      let response = await db.likes.where('tokens').anyOfIgnoreCase(...query.term).or('tags').anyOfIgnoreCase(...query.term).filter(_filters).reverse().toArray();
       if (query.sort !== 'CREATED_DESC') {
-        let response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).or('tags').anyOfIgnoreCase(query.term).filter(_filters).reverse().toArray();
         response = sortByPopularity(response);
-        $postsCache = response;
-        return response.slice(query.next_offset, query.next_offset + query.limit);
+      } else {
+        response = Likes.sortResults(query.term, response);
       }
-      const response = await db.likes.where('tokens').anyOfIgnoreCase(query.term).or('tags').anyOfIgnoreCase(query.term).filter(_filters).reverse().toArray();
       $postsCache = response;
+
       return response.slice(query.next_offset, query.next_offset + query.limit);
     } catch (err) {
       console.error(err);
     }
+  }
+
+  static sortResults(terms, results) {
+    let sorted = [];
+    results.forEach(post => {
+      const result = {
+        match: 0,
+        item: post
+      };
+      for (let i = 0; terms.length > i; i += 1) {
+        if (post.tokens.includes(terms[i])) {
+          result.match += (1 - (i * 0.3));
+        }
+      }
+      sorted.push(result);
+    });
+    sorted = sortBy(sorted, ['match']).reverse();
+    return sorted.map(result => {
+      return result.item;
+    });
   }
 
   static async fetch(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch

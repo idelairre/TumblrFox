@@ -103,7 +103,7 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   }
 });
 
-const componentFetcher =  new ComponentFetcher({
+const manifest = {
   $: 'fn.init',
   Backbone: '1.2.3',
   AutoComplete: '/svc/search/blog_search_typeahead',
@@ -130,6 +130,12 @@ const componentFetcher =  new ComponentFetcher({
   TagsPopover: 'click [data-term]',
   TumblrModel: '.Model.extend({})',
   TumblrView: 'this._beforeRender'
-});
+};
+
+if (window.location.pathname.match(/search/)) {
+  delete manifest.AvatarManager;
+}
+
+const componentFetcher = new ComponentFetcher(manifest);
 
 module.exports = componentFetcher;

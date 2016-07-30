@@ -5,7 +5,7 @@
 + Filter and search your dashboard posts, liked posts and tumblog posts by type, reblog status, popularity, tag or date
 + Filter and search through tumblelogs you're following
 + Download and cache your liked posts
-+ Tumblr client-side data (primarily Backbone models and collections) are used where possible to benefit from improved performance and richer data over the public api.
++ Full text search your cached posts
 
 ## tl;dr
 
@@ -23,31 +23,24 @@ A Chrome extension that adds a new navigation tab and dropdown that allows you t
 
 ## The idea
 
-+ Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (indash blogs) or complicated UI (in dash post filter filter options are hidden until a search term is entered... why?) or are arbitrarily disabled (there is a perfectly functional NSFW filter that I can't otherwise figure out how to enable) into a functional component.
++ Create new components by aggregating Tumblr features that are often over looked or have a silly implementation (such as indash blogs) or complicated UI (filter options for indash blog posts are hidden until a search term is entered... why?) or are arbitrarily disabled (Tumblr has a decently functioning NSFW filter for indash blog posts, why is it disabled by default?) into a functional component.
 + Create tools, mixins, etc. to make developing Backbone components using Tumblr code easier
 
 ## Problems
 
 + Since TumblrFox makes heavy use of local storage, clearing your browser cache can wipeout TumblrFox's database!
 + Tumblr api is inconsistent when it comes to fetching follower and dashboard data (i.e., data where you have to specify offsets: https://groups.google.com/forum/#!topic/tumblr-api/aFiFJ9DB-us).
-+ Full text search is slow since it runs client-side. With 30,000+ records Fuse.js starts to get crashy.
 
 ## The future
 
-+ Use Firebase to store data server side and speed up initial caching (in development)
-+ Select from multiple users
 + Filter seen posts
 + Look ahead on dashboard posts/cache sessions
-+ Better dashboard tag search
 
 ## To do
 
 + Find a way to speed up caching process
-+ Thin out post model
-+ Improve file structure organization
-+ Remove event listeners where possible
-+ Remove all vestiges of Tumblr code style/weird minified code
-+ Leverage Tumblr libraries/mixins more to clean up code
++ Test everything
++ Create distributions for Firefox/Safari/etc...
 
 ## Relevant development posts
 

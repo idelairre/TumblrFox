@@ -4,8 +4,8 @@ import { ComponentFetcher } from '../utils';
 const Backbone = ComponentFetcher.get('Backbone');
 
 const Router = Backbone.Router.extend({
-  constructor(options) {
-    this.options = options || {};
+  constructor(options = {}) {
+    this.options = options;
     Object.assign(this, this.options);
     Backbone.Router.apply(this, arguments);
     const appRoutes = this.options.appRoutes;

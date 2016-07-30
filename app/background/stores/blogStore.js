@@ -42,12 +42,13 @@ export default class Blog {
   static async put(post) {
     try {
       let count = await db.posts.toCollection().count();
-      post.order = count + 1;
       post.tokens = Lunr.tokenizeHtml(post.html);
       // TODO: add a clause here to get the parent-tumblelog content rating
       if (!{}.hasOwnProperty.call(post, 'note_count') && {}.hasOwnProperty.call(post, 'notes')) {
         post.note_count = post.notes.count;
       }
+      const user = await Source.getContentRating(post['tumblelog-parent-data'].name);
+      post['tumblelog-content-rating'] = user.content_rating;
       await db.posts.put(post);
       count = await db.posts.toCollection().count();
       constants.set('cachedPostsCount', count);

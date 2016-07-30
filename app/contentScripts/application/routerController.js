@@ -9,10 +9,8 @@ import { ComponentFetcher } from '../utils';
 const Tumblr = window.Tumblr;
 
 const Controller = RouteController.extend({
-  initialize(options) {
-    if (typeof options !== 'undefined') {
-      Object.assign(this, options);
-    }
+  initialize(options = {}) {
+    Object.assign(this, options);
   },
   initializeFollowing() {
     App.Application.followingListComponent = new FollowingListComponent();

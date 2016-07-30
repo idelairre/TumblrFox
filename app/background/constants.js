@@ -1,7 +1,7 @@
 /* global chrome:true, window:true, __ENV__ */
 /* eslint no-undef: "error" */
 
-import { defaultsDeep, pick } from 'lodash';
+import { clone, defaultsDeep, pick } from 'lodash';
 import EventEmitter from 'eventemitter3';
 import db from './lib/db';
 import { oauthRequest } from './lib/oauthRequest';
@@ -22,6 +22,7 @@ class Constants extends EventEmitter {
     cachedFollowingCount: 0,
     cachedTagsCount: 0,
     currentUser: {},
+    dashboardCache: [],
     debug: false,
     defaultKeys: true,
     env: __ENV__,
@@ -127,6 +128,7 @@ class Constants extends EventEmitter {
         chrome.storage.local.set(storageSlug);
       }
     }
+    this.emit('change', this.toJSON);
   }
 
   previous(key) {
@@ -150,7 +152,7 @@ class Constants extends EventEmitter {
   toJSON() {
     const keys = Object.keys(this.defaults);
     const vals = pick(this, keys);
-    return vals;
+    return clone(vals);
   }
 
   _assign(items) {

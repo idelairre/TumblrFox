@@ -39,12 +39,7 @@ const runTests = () => {
   });
 }
 
-const log = request => {
-  console.log(request);
-}
-
 const optionsReceiver = portHandler({
-  log: log,
   cachePosts: Blog.cache,
   cacheLikes: Likes.cache,
   cacheFollowing: Following.cache,

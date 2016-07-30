@@ -1,8 +1,5 @@
 import Dexie from 'dexie';
 import { debug } from '../../services/loggingService';
-import followingFixture from './following-fixture.json';
-import likesFixture from './likes-fixture.json';
-import postsFixture from './posts-fixture.json';
 import 'babel-polyfill';
 
 const db = new Dexie('TumblrFoxTest');
@@ -13,10 +10,6 @@ db.version(26).stores({
   following: 'name, updated, order, content_rating',
   tags: 'tag, count'
 });
-
-db.following.bulkPut(followingFixture);
-db.likes.bulkPut(likesFixture);
-db.posts.bulkPut(postsFixture);
 
 db.on('error', e => {
   console.error(e.stack || e);

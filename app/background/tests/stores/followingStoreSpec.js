@@ -1,6 +1,7 @@
 import mockDb from '../fixtures/db';
 import ModuleInjector from 'inject!../../stores/followingStore';
-import { isEqual, sortBy } from 'lodash';
+import { isSorted } from '../../../shared/jasmine-helpers';
+import { isEqual, sortBy, without } from 'lodash';
 
 const Following = ModuleInjector({
   '../lib/db': mockDb,
@@ -12,6 +13,19 @@ describe('FollowingStore', () => {
       const response = await Following.fetch();
       const count = await mockDb.following.count();
       expect(response.length).toEqual(count);
+      done();
+    });
+
+    it ('should sort followers by last update time', async done => {
+      const response = await Following.fetch({
+        order: 'recentlyUpdated',
+        limit: 10,
+        offset: 0
+      });
+      const updatedArray = without(response.map(user => {
+        return user.updated;
+      }).reverse(), undefined);
+      expect(isSorted(updatedArray)).toBe(true);
       done();
     });
   });

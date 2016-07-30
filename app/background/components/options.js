@@ -1,8 +1,5 @@
-/* global Blob:true */
 /* global chrome:true */
 /* global document:true */
-/* global FileReader:true */
-/* global URL:true */
 /* eslint no-undef: "error" */
 
 import $ from 'jquery';
@@ -18,6 +15,8 @@ import Settings from './settings/settings';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
+
+// TODO: see if you can't just import constants and make it act like a backbone model
 
 const Options = View.extend({
   defaults: {
@@ -67,7 +66,7 @@ const Options = View.extend({
     }
   },
   renderSubviews() {
-    this._subviews = Array.prototype.slice.call(this.$('[data-subview]'));
+    this._subviews = Array.from(this.$('[data-subview]'));
     this._subviews.map(el => {
       const subviewName = $(el).data('subview');
       const view = new this.subviews[subviewName].constructor(this.props.attributes);

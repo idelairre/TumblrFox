@@ -18,6 +18,7 @@ const BlogSource = Source.extend({
     }
 
     if (blogname.match(/-deact/g)) {
+      // TODO: send this to backend and delete user if following
       this.rejected.push(blogname);
       deferred.reject(`${blogname} is deactivated`);
     }

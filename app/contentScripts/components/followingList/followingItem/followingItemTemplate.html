@@ -1,9 +1,9 @@
-<a href="http://<%= attributes.name %>.tumblr.com/" class="avatar" style="background-image:url('<%= attributes.avatar %>')" data-tumblelog-popover="<%- JSON.stringify(attributes) %>">
+<a href="http://<%= attributes.name %>.tumblr.com/" class="avatar" style="background-image:url('<%= attributes.avatar_url %>')" data-tumblelog-popover="<%- JSON.stringify(attributes) %>">
   <img class="avatar_img" alt="" src="<%= attributes.avatar_url %>" width="40" height="40">
 </a>
 <div class="info">
   <div class="name">
-    <a href="http://<%= attributes.name %>.tumblr.com/"><%= attributes.name %></a>
+    <a class="name-link" href="http://<%= attributes.name %>.tumblr.com/" data-peepr='{ "tumblelog": "<%- attributes.name %>" }'><%= attributes.name %></a>
   </div>
   <div class="description">
     <span class="last_updated" style="color:#606060;"><%= attributes.updated %></span>

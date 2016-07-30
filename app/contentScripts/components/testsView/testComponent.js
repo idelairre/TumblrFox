@@ -13,6 +13,7 @@ const requireAll = req => {
 }
 
 requireAll(require.context('../../tests/models/', true, /\.js$/));
+requireAll(require.context('../../tests/source/', true, /\.js$/));
 
 const Test = View.extend({
   template: template(testTemplate),

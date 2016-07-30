@@ -1,7 +1,7 @@
-import { extend, isArray, isFunction, result } from 'lodash';
+import { isArray, isFunction, result } from 'lodash';
 
 const Source = function (options) {
-  this.options = extend({}, result(this, 'options'), options);
+  this.options = Object.assign({}, result(this, 'options'), options);
   if (isArray(this.mixins)) {
     this.mixins.forEach(mixin => {
       mixin.applyTo(this);

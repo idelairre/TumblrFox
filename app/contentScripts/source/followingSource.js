@@ -11,7 +11,7 @@ const FollowingSource = Source.extend({
     const when = $.Deferred();
     const promises = following.map(follower => {
       const deferred = $.Deferred();
-      if (!follower.hasOwnProperty('avatar_url')) {
+      if (!follower.hasOwnProperty('avatar_url')) { // NOTE: this is weird
         BlogSource.getInfo(follower.name).then(tumblelog => {
           tumblelog.updated = follower.updated;
           if (tumblelog.following) {
@@ -45,7 +45,7 @@ const FollowingSource = Source.extend({
       type: 'GET',
       url: `https://www.tumblr.com/following/${query.offset}`,
       success: data => {
-        const following = Array.prototype.slice.call($(data).find('.follower'));
+        const following = Array.from($(data).find('.follower'));
         const response = [];
         following.forEach(follower => {
           follower = $(follower);

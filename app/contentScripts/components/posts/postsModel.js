@@ -195,8 +195,8 @@ const PostsModel = ControllerModel.extend({
   filterDashboard() {
     this.postViews.$el.find('.standalone-ad-container').remove();
     if (this.searchModel.get('filter_nsfw')) {
-      const posts = this.postViews.$el.find('[data-tumblelog-content-rating]');
-      $.each(posts, (i, post) => {
+      const posts = Array.from(this.postViews.$el.find('[data-tumblelog-content-rating]'));
+      posts.forEach(posts, post => {
         post = $(post);
         const rating = post.data('tumblelog-content-rating');
         if (rating === 'nsfw' || rating === 'adult') {

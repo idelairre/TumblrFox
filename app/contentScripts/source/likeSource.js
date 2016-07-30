@@ -27,11 +27,7 @@ const LikeSource = Source.extend({
     if (query.blogname === Tumblr.Prima.currentUser().id) {
       query = omit(query, 'blogname');
     }
-    this.fetch(query).then(posts => {
-      // setTimeout(() => {
-        deferred.resolve(posts);
-      // }, 250);
-    });
+    this.fetch(query).then(deferred.resolve);
     return deferred.promise();
   },
   clientFetch(page) {
@@ -41,8 +37,7 @@ const LikeSource = Source.extend({
       dataType: 'html',
       url: `https://www.tumblr.com/likes/page/${page}`,
       success: response => {
-        console.log(response);
-        const posts = Array.prototype.slice.call($(response).find('.post'));
+        const posts = Array.from($(response).find('.post'));
         deferred.resolve(posts);
       },
       error: error => {

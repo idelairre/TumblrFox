@@ -1,23 +1,55 @@
 import { Deferred } from 'jquery';
-import { isArray } from 'lodash';
+import { isArray, isEmpty } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
+import { filterAsync } from '../utils/helpers';
+import BlogSource from './blogSource';
+import constants from '../constants';
 import db from '../lib/db';
 import sendMessage from '../services/messageService';
-import BlogSource from './blogSource';
 import 'babel-polyfill';
 
 export default class PostSource {
-  static async applyNsfwFilter(posts) {
-    return posts.filter(async post => {
-      const following = await db.following.get(post.blog_name);
-      if ({}.hasOwnProperty.call(following, 'content_rating') && following.content_rating === ('nsfw' || 'adult')) {
-        return;
+  static async filteredFetch(query) {
+    let emptyCount = 0;
+    const deferred = Deferred();
+    const recursiveFetch = async (query, posts = [])  => {
+      try {
+        const response = await PostSource.fetch(query)
+        posts = posts.concat(response).slice(0, query.limit);
+        if (isEmpty(posts)) {
+          emptyCount += 1;
+        }
+        if (emptyCount === 4) {
+          return deferred.reject('Returned an empty response more than 3 times');
+        } else if (posts.length < query.limit) {
+          query.next_offset += 10;
+          return recursiveFetch(query, posts);
+        } else {
+          return deferred.resolve(posts);
+        }
+      } catch (err) {
+        deferred.reject(err);
       }
-      return post;
-    });
+    }
+    return await recursiveFetch(query);
   }
 
-  static async fetchDashboardPosts(request) {
+  static applyNsfwFilter(posts) {
+    const filter = post => { // NOTE: filter is synchronous
+      return BlogSource.getInfo(post.blog_name).then(following => {
+        if (following.is_nsfw) {
+          return;
+        }
+        return post;
+      });
+    }
+   return filterAsync(posts, filter).then(response => {
+     return response;
+   });
+  }
+
+  static async fetch(request) {
+    const deferred = Deferred();
     const slug = {
       offset: request.next_offset || 0,
       limit: request.limit,
@@ -28,13 +60,15 @@ export default class PostSource {
     }
     try {
       const response = await oauthRequest(slug);
-      if (request.filter_nsfw && {}.hasOwnProperty.call(response, 'posts')) {
-        return await PostSource.applyNsfwFilter(response.posts);
+      if (request.filter_nsfw) {
+        deferred.resolve(PostSource.applyNsfwFilter(response.posts));
+      } else {
+        deferred.resolve(response.posts);
       }
-      return response.posts;
     } catch (err) {
-      console.error(err);
+      deferred.reject(err);
     }
+    return deferred.promise();
   }
 
   static async fetchDashboardPostsByTag(query) {

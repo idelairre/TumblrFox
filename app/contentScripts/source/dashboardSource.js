@@ -1,5 +1,5 @@
 import { $ } from 'backbone';
-import { extend, findIndex, omit, pick, sortBy } from 'lodash';
+import { extend, findIndex, isFunction, omit, pick, sortBy } from 'lodash';
 import BlogSource from './blogSource';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Events from '../application/events';
@@ -38,6 +38,8 @@ const DashboardSource = Source.extend({
         this.collateData(response).then(posts => {
           deferred.resolve(posts);
         });
+      } else {
+        deferred.reject();
       }
     });
     return deferred.promise();
@@ -48,7 +50,7 @@ const DashboardSource = Source.extend({
     }
     const deferred = $.Deferred();
     const promises = this.following.map(follower => {
-      query.blogname = typeof follower.get === 'function' ? follower.get('name') : follower.name;
+      query.blogname = isFunction(follower.get) ? follower.get('name') : follower.name;
       query.limit = 1;
       return BlogSource.search(query).then(data => {
         if (data.response.posts.length > 0) {

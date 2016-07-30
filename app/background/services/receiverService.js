@@ -4,13 +4,36 @@ import constants from '../constants';
 
 /**
  * takes a list of handlers as object and play role of middleware when events occured.
+ * NOTE: only use static classes for this or terrible things happen
  *
- * @return function middleware to process request.
+ * @return function middleware to process requests.
  */
+
+const errorHandler = (sendResponse, err) => {
+	console.error(err);
+	if (isObject(err) && {}.hasOwnProperty.call(err, 'statusText')) {
+		sendResponse({
+			type: 'error',
+			payload: {
+				error: err.statusText,
+				stack: err
+			}
+		});
+	} else {
+		sendResponse({
+			type: 'error',
+			payload: {
+				error: err.toString(),
+				stack: err.stack
+			}
+		});
+	}
+}
 
 const receiverHandler = handlers => {
 	constants.set('eventManifest', Object.keys(handlers));
 	return (request, sender, sendResponse) => {
+		const handleError = errorHandler.bind(this, sendResponse);
 		const lastError = chrome.runtime.lastError; // NOTE: not sure if this works
 		if (lastError) {
 			sendResponse({
@@ -31,26 +54,7 @@ const receiverHandler = handlers => {
 						if (typeof response !== 'undefined') {
 							sendResponse(response);
 						}
-					}).catch(err => {
-						console.error(err);
-						if (isObject(err) && {}.hasOwnProperty.call(err, 'statusText')) {
-							sendResponse({
-								type: 'error',
-								payload: {
-									error: err.statusText,
-									stack: err
-								}
-							});
-						} else {
-							sendResponse({
-								type: 'error',
-								payload: {
-									error: err.toString(),
-									stack: err.stack
-								}
-							});
-						}
-					});
+					}).catch(handleError);
 				} else {
 					if (typeof func !== 'undefined') {
 						sendResponse(func);
@@ -63,16 +67,7 @@ const receiverHandler = handlers => {
 						if (typeof response !== 'undefined') {
 							sendResponse(response);
 						}
-					}).catch(err => {
-						console.error(err);
-						sendResponse({
-							type: 'error',
-							payload: {
-								error: err.toString(),
-								stack: err.stack
-							}
-						});
-					});
+					}).catch(handleError);
 				} else {
 					if (typeof func !== 'undefined') {
 						sendResponse(func);

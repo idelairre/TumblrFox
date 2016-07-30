@@ -1,10 +1,10 @@
 import { isEqual, noop, pick } from 'lodash';
 import sinon from 'sinon';
+import { generatePosts } from '../fixtures/post';
 import mockDb from '../fixtures/db';
 import ModuleInjector from 'inject!../../constants';
 import Source from '../../source/source';
 import parse from '../../utils/parsePosts';
-import likesFixture from '../fixtures/likes-fixture.json';
 import 'script!jasmine-sinon';
 import 'babel-polyfill';
 
@@ -103,7 +103,7 @@ describe('Source', () => {
 
     it ('should call crawl()', async done => {
       const source = new Source(args);
-      spyOn(source, 'crawl').and.returnValue(likesFixture);
+      spyOn(source, 'crawl').and.returnValue([]); // TODO: reimplement with generator
       await source.run();
       expect(source.crawl).toHaveBeenCalled();
       done();
@@ -154,7 +154,7 @@ describe('Source', () => {
       args.condition = condition;
       args.sync = true;
       const source = new Source(args);
-      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(likesFixture));
+      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(generatePosts(10)));
       source.addListener('done', () => {
         expect(crawl).toHaveBeenCalledThrice();
         done();
@@ -175,7 +175,7 @@ describe('Source', () => {
       args.step = step;
       delete args.sync;
       const source = new Source(args);
-      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(likesFixture));
+      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(generatePosts(10)));
       source.addListener('next', () => {
         count += 1;
         expect(crawl).not.toHaveBeenCalledTwice();
@@ -201,7 +201,7 @@ describe('Source', () => {
       args.step = step;
       delete args.sync;
       const source = new Source(args);
-      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(likesFixture));
+      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(generatePosts(10)));
       source.addListener('done', () => {
         expect(source.crawl).not.toHaveBeenCalledTwice();
         done();

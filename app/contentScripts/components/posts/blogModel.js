@@ -2,6 +2,7 @@ import { isArray, keys, pick, take } from 'lodash';
 import { $, Model, Collection } from 'backbone';
 import BlogSource from '../../source/blogSource';
 import Events from '../../application/events';
+import Filters from '../../utils/filtersUtil';
 import Utils from '../../utils';
 
 const { Tumblelog, Post } = Tumblr.Prima.Models;
@@ -53,7 +54,7 @@ const BlogModel = Model.extend({
     const deferred = $.Deferred();
     const filteredFetch = () => {
       return this._fetch(query).then(response => {
-        return this._applyFilters(query, response); // NOTE: remember that this takes two arguments
+        return Filters.applyFilters(query, response, true); // NOTE: remember that this takes two arguments
       });
     }
     const recursiveFetch = posts => {
@@ -77,58 +78,6 @@ const BlogModel = Model.extend({
       return posts;
     });
   },
-  _applyFilters(query, posts) {
-    const deferred = $.Deferred();
-    const promises = [];
-    if (query.filter_nsfw && query.post_role === 'ORIGINAL') {
-      deferred.resolve(this._filterByRole(posts)); // NOTE: currently there is no way to apply both these filters
-    } else if (query.filter_nsfw && query.post_role !== 'ORIGINAL') {
-      this._filterNsfw(posts).then(filteredPosts => {
-        deferred.resolve(filteredPosts);
-      })
-    } else if (!query.filter_nsfw && query.post_role === 'ORIGINAL') {
-      deferred.resolve(this._filterByRole(posts));
-    } else {
-      deferred.resolve(posts);
-    }
-    return deferred.promise();
-  },
-  _filterByRole(posts) {
-    return posts.filter(post => {
-      if (post.hasOwnProperty('is_reblog') && post['is_reblog'] || post.hasOwnProperty('reblogged_from_name')) {
-        return;
-      }
-      return post;
-    });
-  },
-  _filterNsfw(posts) {
-    const when = $.Deferred();
-    const promises = posts.map(post => {
-      const deferred = $.Deferred();
-      const name = post.reblogged_from_name || post.reblogged_root_name
-      if (typeof name === 'undefined') {
-        deferred.resolve(post);
-      } else {
-        this.getContentRating(name).then(response => {
-          if (response.content_rating === 'nsfw') {
-            deferred.resolve();
-          } else {
-            deferred.resolve(post);
-          }
-        });
-      }
-      return deferred.promise();
-    });
-    $.when.apply($, promises).done((...response) => {
-      const filteredPosts = [].concat(...response).filter(post => {
-        if (typeof post !== 'undefined') {
-          return post;
-        }
-      });
-      when.resolve(filteredPosts);
-    });
-    return when.promise();
-  }
 });
 
 module.exports = BlogModel;

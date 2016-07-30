@@ -22,10 +22,10 @@
           target="_blank"
           title="<%- model.get('tumblelog-data').title %>"
           id="post_avatar_<%- model.id %>"
-          style="background-image:url('<%- model.get('tumblelog-data').avatar_url %>')"
+          style="background-image:url('https://api.tumblr.com/v2/blog/<%- this.model.get('tumblelog') %>/avatar/128')"
           data-user-avatar-url="<%- model.get('tumblelog-data').avatar_url %>"
           data-use-sub-avatar
-          data-avatar-url="<%- model.get('tumblelog-data').avatar_url %>"
+          data-avatar-url="https://api.tumblr.com/v2/blog/<%- this.model.get('tumblelog') %>/avatar/128"
           data-blog-url="<%- model.get('tumblelog-data').url %>"
           data-tumblelog-name="<%- model.get('tumblelog') %>"
           data-use-channel-avatar="1"

@@ -79,7 +79,7 @@ extend(App.prototype, ChromeMixin.properties, {
     this.loadComponents();
     this.initializeConstants();
     this.bindListeners();
-    if (!this.constants.test) {
+    if (!this.constants.clientTests) {
       this.startHeartBeat();
       this.initializeThoth();
       this.initializeIntervalTasks();
@@ -175,7 +175,7 @@ extend(App.prototype, ChromeMixin.properties, {
     this.options.set('cachedFollowing', (this.constants.cachedFollowingCount !== 0));
     this.options.set('firstRun', this.constants.firstRun);
     this.options.set('version', this.constants.version);
-    this.options.set('test', this.constants.test);
+    this.options.set('test', this.constants.clientTests);
     if (this.options.get('firstRun')) {
       this.trigger('initialize:firstRun');
     } else {
