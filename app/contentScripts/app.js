@@ -176,11 +176,6 @@ extend(App.prototype, ChromeMixin.properties, {
     this.options.set('firstRun', this.constants.firstRun);
     this.options.set('version', this.constants.version);
     this.options.set('test', this.constants.clientTests);
-    if (this.options.get('firstRun')) {
-      this.trigger('initialize:firstRun');
-    } else {
-      this.off('initialize:firstRun');
-    }
     this.trigger('initialized:constants');
   },
   updateConstants(payload) {

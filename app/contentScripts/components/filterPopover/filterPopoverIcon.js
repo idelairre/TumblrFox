@@ -43,7 +43,7 @@ const FilterIcon = View.extend({
     this.bindEvents();
   },
   bindEvents() {
-    this.listenTo(Tumblr.Fox, 'initialize:firstRun', () => {
+    if (this.options.get('firstRun')) {
       this.$tabNotice.prop('class', 'tab_notice tab-notice--outlined new_post_notice_container  tab-notice--active');
       this.$tabNotice.find('.tab_notice_value').text(this.options.get('version'));
       setTimeout(() => {
@@ -53,7 +53,7 @@ const FilterIcon = View.extend({
           });
         });
       }, 1500);
-    });
+    }
   },
   togglePopover() {
     if (!this.options.get('rendered')) {

@@ -6,7 +6,7 @@ const contentRating = () => {
 }
 
 const flavor = tumblelog => {
-  let modifier = sample(['anarchy', 'slut', 'blood', 'communist', 'mermaid', 'fox', 'scorpio', 'queer', 'antifa', '69', 'trans', 'supa', 'slayin', 'words', 'poly']);
+  let modifier = sample(['anarchy', 'succubus', 'soft', 'grunge', 'slut', 'blood', 'communist', 'mermaid', 'fox', 'scorpio', 'queer', 'antifa', '69', 'trans', 'supa', 'slayin', 'words', 'poly']);
   if (Faker.random.boolean()) {
     return tumblelog + `${sample('-', '_', '', '-and-') + modifier}`;
   } else {

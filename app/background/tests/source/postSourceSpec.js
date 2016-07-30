@@ -3,7 +3,6 @@ import { generateUser } from '../fixtures/tumblelog';
 import { generatePosts } from '../fixtures/post';
 import ModuleInjector from 'inject!../../source/postSource';
 import { isSorted } from '../../../shared/jasmine-helpers';
-import 'babel-polyfill';
 
 const postsFixture = generatePosts(100);
 const usersFixture = postsFixture.map(post => { return generateUser(post.blog_name) });

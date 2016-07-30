@@ -1,10 +1,11 @@
 import mockDb from '../fixtures/db';
 import ModuleInjector from 'inject!../../stores/likeStore';
-import 'babel-polyfill';
 
 const Likes = ModuleInjector({
   '../lib/db': mockDb,
 }).default;
+
+// TODO: refactor tests to use mocks rather than index db
 
 describe('LikeStore', () => {
   describe('get()', () => {

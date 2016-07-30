@@ -1,6 +1,5 @@
 import ModuleInjector from 'inject!../../source/blogSource';
 import generateTumblelog from '../fixtures/tumblelog';
-import 'babel-polyfill';
 
 const oauthRequest = name => {
   const user = generateTumblelog(name);

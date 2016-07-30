@@ -1,5 +1,7 @@
 import { bind, defaults, each, extend, filter, invoke, isFunction, noop, omit, toArray } from 'lodash';
 
+// TODO: make this sensible
+
 function before(t, e) {
   each(e, function(e, i) {
     const s = t[i];

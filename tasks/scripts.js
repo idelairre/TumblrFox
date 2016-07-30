@@ -9,10 +9,8 @@ import livereload from 'gulp-livereload';
 import args from './lib/args';
 import fs from 'fs';
 
-if (!args.test) {
-  delete config.entry.test;
-} else {
-  config.entry.vendor.concat(['chia', 'sinon', 'sinon-chai']);
+if (!args.production) {
+  config.entry.tests = './app/background/tests/tests.js';
 }
 
 gulp.task('scripts', () => {
@@ -20,6 +18,6 @@ gulp.task('scripts', () => {
     .pipe(plumber())
     .pipe(named())
     .pipe(gulpWebpack(config))
-    .pipe(args.test ? gulp.dest('tests/dist') : gulp.dest(`dist/${args.vendor}/scripts`))
+    .pipe(gulp.dest(`dist/${args.vendor}/scripts`))
     .pipe(gulpif(args.watch, livereload()));
 });

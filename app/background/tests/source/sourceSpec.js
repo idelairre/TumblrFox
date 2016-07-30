@@ -6,7 +6,6 @@ import ModuleInjector from 'inject!../../constants';
 import Source from '../../source/source';
 import parse from '../../utils/parsePosts';
 import 'script!jasmine-sinon';
-import 'babel-polyfill';
 
 const constants = ModuleInjector({
   '../lib/db': mockDb,

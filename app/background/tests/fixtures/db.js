@@ -15,11 +15,8 @@ db.on('error', e => {
   console.error(e.stack || e);
 });
 
-console.time('initialize')
-
 db.open().then(() => {
   debug(db);
-  console.timeEnd('initialize');
   debug('test db initialized');
 }).catch(error => {
   console.error(error);
