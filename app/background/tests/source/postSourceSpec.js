@@ -7,6 +7,8 @@ import { isSorted } from '../../../shared/jasmine-helpers';
 const postsFixture = generatePosts(100);
 const usersFixture = postsFixture.map(post => { return generateUser(post.blog_name) });
 
+console.log(usersFixture);
+
 const oauthRequest = query => {
   const posts = query.type ? every(postsFixture, {
     type: query.type

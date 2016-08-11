@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
 import { debug } from '../../services/loggingService';
+import following from './following.json';
 import 'babel-polyfill';
 
 const db = new Dexie('TumblrFoxTest');

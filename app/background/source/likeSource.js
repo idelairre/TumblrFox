@@ -50,7 +50,7 @@ class LikeSource extends Source {
         let next = link.attr('href').split('/'); // TODO: make this fail more gracefully
         next = last(next);
         this.options.page += 1;
-        if ({}.hasOwnProperty.call(this.options, 'timestamp')) {
+        if ({}.hasOwnProperty.call(this.options, 'timestamp')) { // this doesn't work for blog posts
           this.options.timestamp = next;
           return parsePosts(response, this.options.timestamp);
         }

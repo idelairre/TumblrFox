@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import { escape } from 'lodash';
 import { debug } from '../services/loggingService';
 import 'babel-polyfill';
 
@@ -24,15 +25,23 @@ db.open().then(() => {
   console.error(error);
 });
 
+function decodeUtf8(s) {
+  return decodeURIComponent(escape(s));
+}
+
 window.downloadTableJson = function (table, query) {
   const download = response => {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(response)], {
+    const json = JSON.stringify(response);
+    const blob = new Blob([query.escape ? escape(json) : json]);
+    const url = URL.createObjectURL(blob, {
       type: `application/json,charset=utf-8`
-    }));
-    chrome.downloads.download({ url, filename: `tumblrfox-${table}-data.json` });
+    });
+    chrome.downloads.download({ url, filename: `${query.filename}.json` || `tumblrfox-${table}-data.json` });
   }
-  if (query) {
+  if (query.term && query.limit) {
     db[table].where(query.index).anyOfIgnoreCase(query.term).limit(query.limit).toArray().then(download);
+  } else if (query.limit) {
+    db[table].toCollection().limit(query.limit).toArray().then(download);
   } else {
     db[table].toCollection().toArray().then(download);
   }

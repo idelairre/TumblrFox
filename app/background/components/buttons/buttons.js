@@ -18,21 +18,24 @@ const Buttons = View.extend({
     'click button': 'toggleButton',
     'change #resetCache': 'resetCache'
   },
+  initialize() {
+    this.parseFile = parseFile;
+    this.bindEvents();
+  },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
+    this.listenTo(Backbone.Events, 'INITIALIZED', ::this.renderProps);
     this.listenTo(Backbone.Events, 'CACHE_LIKES', this.$('#resetCache').prop('disabled', true));
     this.listenTo(Backbone.Events, 'DONE', this.$('#resetCache').prop('disabled', false));
     this.listenTo(Backbone.Events, 'CACHE_UPLOADED', ::this.createDownload);
     this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.createFileBlob);
-    this.listenTo(this.props, 'change:cachedPostsCount', this.toggleButtonsDisabled);
-    this.listenTo(this.props, 'change:canFetchApiLikes', this.setCacheLikesButton);
-    this.listenTo(this.props, 'change:clientCaching', this.setCacheLikesButton);
+    this.listenTo(this.props, 'change:canFetchApiLikes', ::this.setCacheLikesButton);
+    this.listenTo(this.props, 'change:clientCaching', ::this.setCacheLikesButton);
   },
   render() {
-    this.parseFile = parseFile;
-    this.$download = $('#cache');
-    this.$el.html(this.template({ env: __ENV__ }));
-    this.bindEvents();
+    this.$el.html(this.template({
+      env: __ENV__,
+      props: this.props.attributes
+    }));
     return this;
   },
   resetCache(e) {
@@ -44,14 +47,7 @@ const Buttons = View.extend({
     e.currentTarget.selectedIndex = -1;
   },
   renderProps() {
-    this.toggleButtonsState();
-  },
-  toggleButtonsState() {
-    if (this.props.get('saveViaFirebase')) {
-      this.$('#downloadCache').text('Sync cache');
-    } else {
-      this.$('#downloadCache').text('Save cache');
-    }
+    // this.render();
     this.setCacheLikesButton();
   },
   setCacheLikesButton() {

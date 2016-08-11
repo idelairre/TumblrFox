@@ -190,7 +190,7 @@ export default class Source extends EventEmitter { // TODO: refactor this into a
     setTimeout(() => {
       this.retriedTimes += 1;
       return this.run(true);
-    }, 3000);
+    }, 6000);
   }
 
   reset() {

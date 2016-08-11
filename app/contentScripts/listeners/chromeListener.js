@@ -16,11 +16,6 @@ const ChromeListener = Listener.extend({
       const payload = response.payload;
       Events.trigger(`chrome:${type}`, payload);
     });
-    // constants.eventManifest.forEach(eventName => {
-    //   Events.on(`fox:${eventName}`, () => {
-    //     this.chromeTrigger(this.normalize(eventName));
-    //   });
-    // });
   },
   normalize(eventName) {
     return `chrome:${snakeCase(eventName).replace(/_/g, ':')}`;
@@ -28,3 +23,9 @@ const ChromeListener = Listener.extend({
 });
 
 module.exports = new ChromeListener();
+
+// constants.eventManifest.forEach(eventName => {
+//   Events.on(`fox:${eventName}`, () => {
+//     this.chromeTrigger(this.normalize(eventName));
+//   });
+// });

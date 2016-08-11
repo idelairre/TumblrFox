@@ -7,6 +7,7 @@ import FollowingSearchComponent from './followingSearch/followingSearchComponent
 import FollowingItemComponent from './followingItem/followingItemComponent';
 import State from '../../models/stateModel';
 import followingListTemplate from './followingListTemplate.html';
+import './followingList.less';
 
 const TumblrView = ComponentFetcher.get('TumblrView');
 const { Tumblelog } = Tumblr.Prima.Models;
@@ -51,7 +52,6 @@ const FollowingList = TumblrView.extend({ // TODO: change this to a collection v
       limit: this.defaults.limit,
       state: this.state
     });
-    // this.model.fetchAll();
     this.loader = new Tumblr.Prima.KnightRiderLoader({
       variation: 'leviathan',
       className: 'Knight-Rider-loader centered'
@@ -67,8 +67,8 @@ const FollowingList = TumblrView.extend({ // TODO: change this to a collection v
     this.attachNode.addClass('ui_notes');
     $('#pagination').remove();
     this.$form = this.$('form');
-    this.$form.css('display', 'inline-block');
-    this.$el.css('background', '#f8f8f8 11px 5px no-repeat');
+    // this.$form.css('display', 'inline-block');
+    this.$el.css('background', '#f8f8f8 0px 0px no-repeat');
     this.$el.css('padding', '5px 10px 5px 0');
     this.$input = this.$el.find('input.text_field');
     this.initializeFollowings();

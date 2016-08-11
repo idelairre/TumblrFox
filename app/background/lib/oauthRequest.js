@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import { isEmpty, omit } from 'lodash';
 import { Deferred } from 'jquery';
 import tokens from '../tokens.json';
 import { ChromeExOAuth } from './chromeExOauth';
@@ -20,11 +20,11 @@ const oauth = ChromeExOAuth.initBackgroundPage({
 
 const onAuthorized = (slug, callback) => {
   const request = {
-    method: 'GET',
+    method: slug.method || 'GET',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-    parameters: slug
+    parameters: omit(slug, ['method', 'url'])
   };
 
   oauth.sendSignedRequest(slug.url, function (data, xhr) {

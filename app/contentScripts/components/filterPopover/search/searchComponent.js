@@ -206,11 +206,10 @@ const SearchComponent = PeeprBlogSearch.extend({
         visibility: 'hidden'
       });
       this.$filters.find('i').hide();
-      // if (this.state.get('dashboard')) {
-      //   this.state.setState('user');
-      // }
+      this.input.$el.find('input').prop('placeholder', 'Search user');
     } else {
       this.$userList.hide();
+      this.input.$el.find('input').prop('placeholder', 'Search dashboard');
       if (!this.state.get('user') || (this.state.get('user') && (Backbone.history.fragment === 'dashboard' || Backbone.history.fragment === 'likes'))) {
         this.$settings.css({
           visibility: 'visible'

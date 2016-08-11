@@ -13,12 +13,11 @@ const log = console.log.bind(console, '[BRIDGE]');
 class Bridge {
   initialize() {
     const deferred = Deferred();
-    this.constants = {};
     chrome.runtime.sendMessage({
       type: 'fetchConstants'
     }, response => {
-      Object.assign(this.constants, response);
-      this.injectConstants();
+      this.logging = response.debug;
+      this.injectConstants(response);
       chrome.runtime.onMessage.addListener(::this.bindRecievers);
       this.bindOutgoing();
       deferred.resolve();
@@ -44,11 +43,14 @@ class Bridge {
     window.dispatchEvent(req);
   }
 
-  injectConstants() {
+  injectConstants(constants) {
+    if (!constants) {
+      return;
+    }
     const module = document.createElement('script');
     module.type = 'text/javascript';
     module.title = 'tumblr-fox-constants';
-    module.textContent = `window.tumblrFoxConstants = "${B64.encodeUnicode(JSON.stringify(this.constants))}"`;
+    module.textContent = `window.tumblrFoxConstants = "${B64.encodeUnicode(JSON.stringify(constants))}"`;
     document.body.appendChild(module);
     module.onload = function() {
       this.remove();

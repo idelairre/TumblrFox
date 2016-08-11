@@ -14,7 +14,7 @@ export default class PostSource {
     const deferred = Deferred();
     const recursiveFetch = async (query, posts = [])  => {
       try {
-        const response = await PostSource.fetch(query)
+        const response = await PostSource.fetch(query);
         posts = posts.concat(response).slice(0, query.limit);
         if (isEmpty(posts)) {
           emptyCount += 1;

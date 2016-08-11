@@ -23,7 +23,7 @@ const View = Backbone.View.extend({
     const _props = assignProps(this.defaults.props, props);
     this.props = new Model(_props);
     this.attributes = {};
-    Backbone.View.prototype.constructor.call(this, props);
+    Backbone.View.call(this, props);
     this._setup();
   },
   _setup() {

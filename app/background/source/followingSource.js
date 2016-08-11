@@ -3,6 +3,7 @@ import { omit, replace } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
 import BlogSource from './blogSource';
 import Source from './source';
+import sanitizeHtml from 'sanitize-html';
 import 'babel-polyfill';
 
 class FollowingSource extends Source {
@@ -37,13 +38,14 @@ class FollowingSource extends Source {
     if (this.constants.get('totalFollowingCount') === 0) {
       this.constants.set('totalFollowingCount', response.total_blogs);
     }
-    response.blogs = response.blogs.map(following => {
+    return response.blogs = response.blogs.map(following => {
       following.following = true;
       following.avatar_url = replace(following.avatar[1].url, '64', '128');
-      following = omit(following, ['avatar', 'can_message', 'share_likes', 'share_following', 'theme']);
-      return following;
+      following.description = sanitizeHtml(following.description, {
+        allowedTags: []
+      });
+      return omit(following, ['avatar', 'can_message', 'share_likes', 'share_following', 'theme']); // NOTE: descriptions are not sanitized which can result in fucky json
     });
-    return response.blogs;
   }
 
   async fetch() {

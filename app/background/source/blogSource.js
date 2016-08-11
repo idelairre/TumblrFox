@@ -39,7 +39,7 @@ class BlogSource extends Source {
   }
 
   parse(data) {
-    return parsePosts(data);
+    return parsePosts.call(this, data);
   }
 
   async getInfo(user) {

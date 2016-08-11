@@ -12,12 +12,18 @@ const ActionListener = Listener.extend({ // TODO: make this component watch for 
     this.listenTo(Tumblr.Events, 'post:unlike:set', this.sendLike.bind(this, 'unlike'));
     this.listenTo(Tumblr.Events, 'post:reblog:set', BlogSource.updateBlogCache);
     this.listenTo(Tumblr.Events, 'post:form:success', BlogSource.updateBlogCache);
+    this.listenTo(Tumblr.Events, 'indashblog:inject:ad', ::this.removeIndashAd);
     this.listenToOnce(AppState, 'change:state', () => {
       if (AppState.get('likes')) {
         this.listenTo(Events, 'fox:postsView:createPost', ::this.syncLike);
         this.enabled = true;
       }
     });
+  },
+  removeIndashAd(data) {
+    setTimeout(() => {
+      $('.peepr-ad-container').remove();
+    }, 0);
   },
   sendLike(type, postId) {
     const slug = {

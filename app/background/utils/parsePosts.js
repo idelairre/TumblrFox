@@ -14,7 +14,7 @@ const processTags = post => {
   }
 }
 
-const processPost = (postHtml, timestamp) => {
+const processPost = (postHtml, timestamp = false) => {
   const post = $(postHtml).data('json');
   post.id = parseInt(post.id, 10);
   post['is-tumblrfox-post'] = true;
@@ -28,12 +28,12 @@ const processPost = (postHtml, timestamp) => {
   return post;
 }
 
-const parsePosts = (data, timestamp) => {
+const parsePosts = (data, timestamp = false) => {
   try {
     const postsJson = [];
     const posts = Array.from($(data).find('[data-json]').not('[data-is-radar]'));
     posts.forEach(post => {
-      post = processPost(post, timestamp ? timestamp : false);
+      post = processPost(post, timestamp);
       if (post.id) {
         postsJson.push(post);
       }

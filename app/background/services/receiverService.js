@@ -1,4 +1,5 @@
 import { isFunction, isObject, toArray } from 'lodash';
+import { debug } from './loggingService';
 import sendMessage from './messageService';
 import constants from '../constants';
 
@@ -46,9 +47,9 @@ const receiverHandler = handlers => {
 			console.error(lastError.message);
 		}
 		console.log('[REQUEST]: ', request.type);
-		if (handlers.hasOwnProperty(request.type)) {
-			if (request.payload) {
-				const func = handlers[request.type](request.payload);
+		if ({}.hasOwnProperty.call(handlers, request.type)) {
+			const func = handlers[request.type](request.payload);
+			if (typeof func !== 'undefined') {
 				if (func instanceof Promise) {
 					func.then(response => {
 						if (typeof response !== 'undefined') {
@@ -56,22 +57,7 @@ const receiverHandler = handlers => {
 						}
 					}).catch(handleError);
 				} else {
-					if (typeof func !== 'undefined') {
-						sendResponse(func);
-					}
-				}
-			} else {
-				const func = handlers[request.type]();
-				if (func instanceof Promise) {
-					func.then(response => {
-						if (typeof response !== 'undefined') {
-							sendResponse(response);
-						}
-					}).catch(handleError);
-				} else {
-					if (typeof func !== 'undefined') {
-						sendResponse(func);
-					}
+					sendResponse(func);
 				}
 			}
 		}

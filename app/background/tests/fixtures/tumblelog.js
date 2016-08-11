@@ -1,16 +1,24 @@
 import Faker from 'faker';
 import { first, sample } from 'lodash';
 
+import user from './user-fixture.json'
+console.log(user);
+
 const contentRating = () => {
   return sample(['adult', 'nsfw']);
 }
 
 const flavor = tumblelog => {
-  let modifier = sample(['anarchy', 'succubus', 'soft', 'grunge', 'slut', 'blood', 'communist', 'mermaid', 'fox', 'scorpio', 'queer', 'antifa', '69', 'trans', 'supa', 'slayin', 'words', 'poly']);
+  const seperators = ['-', '_', '', '-and-'];
+  let modifier = sample(['girl', 'asexual', 'buddy', 'hoe', 'biddy', 'demonic', 'anarchy', 'left', 'succubus', 'soft', 'rude', 'grunge', 'slut', 'blood', 'minus', 'communist', 'loser', 'mermaid', 'fox', 'scorpio', 'queer', 'antifa', '69', 'trans', 'supa', 'slayin', 'words', 'poly']);
   if (Faker.random.boolean()) {
-    return tumblelog + `${sample('-', '_', '', '-and-') + modifier}`;
+    if (Faker.random.boolean()) {
+      return tumblelog + `${sample(seperators) + modifier}`;
+    } else {
+      return modifier + sample(seperators) + tumblelog;
+    }
   } else {
-    return modifier + tumblelog;
+    return tumblelog;
   }
 }
 
