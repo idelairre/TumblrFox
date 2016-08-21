@@ -1,12 +1,11 @@
 import Backbone, { Model } from 'backbone';
-import { isFunction, noop } from 'lodash';
 
 const assignProps = (target, source) => {
   if (!target) {
     return;
   }
   for (const key in source) {
-    if (target.hasOwnProperty(key)) {
+    if ({}.hasOwnProperty.call(target, key)) {
       target[key] = source[key];
     }
   }
@@ -24,21 +23,20 @@ const View = Backbone.View.extend({
     this.props = new Model(_props);
     this.attributes = {};
     Backbone.View.call(this, props);
-    this._setup();
+    this._setup.call(this);
   },
   _setup() {
     this.rendered = false;
     let render = this.render;
-    this.render = () => {
+    this.render = function() {
       this._beforeRender.apply(this, arguments);
       this.beforeRender.apply(this, arguments);
-      render = render.apply(this, arguments);
-      this.afterRender.apply(this, arguments);
-      this._afterRender.apply(this, arguments);
-      this.renderProps.apply(this);
-      return render;
+      render.apply(this, arguments);
+      setTimeout(() => {
+        this.afterRender.apply(this, arguments);
+        this._afterRender.apply(this, arguments);
+      }, 0);
     };
-    this.renderProps = this.renderProps.bind(this, this.props.attributes);
     this._bindListeners();
   },
   _bindListeners() {
@@ -49,20 +47,20 @@ const View = Backbone.View.extend({
       }
     });
   },
-  initialize: noop,
-  afterRender: noop,
+  initialize: Function.prototype,
+  afterRender: Function.prototype,
   _afterRender() {
     this.rendered = true;
     this.trigger('rendered', this);
   },
-  beforeRender: noop,
-  _beforeRender: noop,
+  beforeRender: Function.prototype,
+  _beforeRender: Function.prototype,
+  render: Function.prototype,
   setProps(newProps) {
     assignProps(this.props.attributes, newProps);
     this.props.set(this.props.attributes);
-    this.renderProps();
+    this.render();
   },
-  renderProps: noop
 });
 
 export default View;

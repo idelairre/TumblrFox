@@ -1,5 +1,5 @@
-import $ from 'jquery';
 import Backbone from 'backbone';
+import template from 'lodash.template';
 import View from '../view/view';
 import debugTemplate from './debug.html';
 
@@ -9,7 +9,7 @@ const Debug = View.extend({
       debug: false
     }
   },
-  template: $(debugTemplate).html(),
+  template: template(debugTemplate),
   className: 'debug--options',
   tagName: 'section',
   render() {
@@ -17,7 +17,6 @@ const Debug = View.extend({
     this.$el.html(this.template);
     this.$collapseButton = this.$el.find('#collapseButton');
     this.$debug = this.$el.find('#debugConsole');
-    return this;
   },
   events: {
     'click #collapseButton': 'collapse'
@@ -36,13 +35,6 @@ const Debug = View.extend({
   log() {
     console.log('%c[TUMBLRFOX] %o', 'color:orange; font-size: 9pt', arguments);
     this.$debug.text(`[LOG]: ${JSON.stringify(arguments)}`);
-  },
-  renderProps(props) {
-    if (props.debug) {
-      this.$el.show();
-    } else {
-      this.$el.hide();
-    }
   }
 });
 

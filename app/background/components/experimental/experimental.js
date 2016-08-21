@@ -1,8 +1,8 @@
 import $ from 'jquery';
-import { isBoolean, mapKeys } from 'lodash';
 import Backbone from 'backbone';
-import View from '../view/view';
+import template from 'lodash.template';
 import Tipped from '../../lib/tipped';
+import View from '../view/view';
 import autoCacheLikesTooltip from './tooltips/autoCacheLikesTooltip.html';
 import autoCacheUserPostsTooltip from './tooltips/autoCacheUserPostsTooltip.html';
 import experimentalTemplate from './experimental.html';
@@ -16,13 +16,12 @@ const Experimental = View.extend({
       saveViaFirebase: false
     }
   },
-  template: $(experimentalTemplate).html(),
+  template: template(experimentalTemplate),
   className: 'experimental options',
   tagName: 'section',
   render() {
-    this.$el.html(this.template);
+    this.$el.html(this.template(this.props.attributes));
     this.bindEvents();
-    return this;
   },
   events: {
     'click [type=checkbox]': 'toggleCheck'
@@ -47,13 +46,6 @@ const Experimental = View.extend({
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
     this.props.set(key, check);
-  },
-  renderProps(props) {
-    mapKeys(props, (value, key) => {
-      if (isBoolean(value) && this.$el.find(`input#${key}`).attr('type') === 'checkbox') {
-        this.$el.find(`input#${key}`).attr('checked', value);
-      }
-    });
   }
 });
 

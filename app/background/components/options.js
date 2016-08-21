@@ -4,7 +4,9 @@
 
 import $ from 'jquery';
 import Backbone, { Model, View } from 'backbone';
-import { camelCase, capitalize, snakeCase } from 'lodash';
+import capitalize from '../utils/capitalize';
+import camelCase from '../utils/camelCase';
+import constants from '../constants';
 import Authentication from './authentication/authentication';
 import Buttons from './buttons/buttons';
 import Cache from './cache/cache';
@@ -12,6 +14,7 @@ import Debug from './debug/debug';
 import Experimental from './experimental/experimental';
 import ProgressBar from './progressBar/progressBar';
 import Settings from './settings/settings';
+import snakeCase from '../utils/snakeCase';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
@@ -47,7 +50,13 @@ const Options = View.extend({
   },
   initialize() {
     this.initialized = false;
-    this.props = new Model();
+    if (constants.initialized) { // is this rational? if it doesn't set correctly here and on the constants reply, it sets on ready.
+      this.props = new Model(constants.toJSON());
+    } else {
+      constants.once('ready', () => {
+        this.props = new Model(constants.toJSON());
+      });
+    }
     this.bindEvents();
     this.initializePort();
   },

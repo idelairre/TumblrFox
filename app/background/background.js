@@ -1,6 +1,5 @@
 /* global chrome:true */
 /* eslint no-undef: "error" */
-
 import chromeReceiver from './receivers/chromeReceiver';
 import db from './lib/db';
 import idleService from './services/idleService';

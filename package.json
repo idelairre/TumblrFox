@@ -1,7 +1,7 @@
 {
   "name": "tumblr-fox",
   "private": true,
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "",
   "homepage": "https://chrome.google.com/webstore/detail/tumblrfox/feeecimccgpgmajhebcelhofijkdngkf",
   "repository": "https://github.com/idelairre/TumblrFox",
@@ -75,6 +75,7 @@
     "less": "^2.7.0",
     "less-loader": "^2.2.3",
     "lodash": "^4.11.2",
+    "lodash.template": "^4.4.0",
     "lunr": "^0.7.1",
     "md5": "^2.1.0",
     "moment": "^2.14.1",

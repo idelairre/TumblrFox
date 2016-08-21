@@ -39,7 +39,7 @@ const defaults = {
   totalTagsCount: 0,
   userName: '',
   previousVersion: 0,
-  version: 0,
+  version: VERSION,
   likeSourceLimits: {
     untilDate: new Date(2007, 1, 1),
     untilPage: 'max'

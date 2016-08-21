@@ -1,21 +1,25 @@
-<script id="authenticationTemplate" type="text/javascript">
+<% if (!defaultKeys || setUser) { %>
   <h1 class="authenticatication">Authentication</h1>
-  <div class="input-option user">
-    <label>
-      User name:<br>
-      <input type="text" id="userName">
-    </label>
-  </div>
-  <div class="input-option consumer-key">
-    <label>
-      Consumer key:<br>
-      <input type="text" id="consumerKey">
-    </label>
-  </div>
-  <div class="input-option consumer-secret">
-    <label>
-      Consumer secret:<br>
-      <input type="text" id="consumerSecret">
-    </label>
-  </div>
-</script>
+  <% if (setUser) { %>
+    <div class="input-option user">
+      <label>
+        User name:<br>
+        <input type="text" id="userName">
+      </label>
+    </div>
+  <% } %>
+  <% if (!defaultKeys) { %>
+    <div class="input-option consumer-key">
+      <label>
+        Consumer key:<br>
+        <input type="text" id="consumerKey">
+      </label>
+    </div>
+    <div class="input-option consumer-secret">
+      <label>
+        Consumer secret:<br>
+        <input type="text" id="consumerSecret">
+      </label>
+    </div>
+    <% } %>
+<% } %>

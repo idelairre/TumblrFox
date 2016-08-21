@@ -1,4 +1,3 @@
-import { capitalize, drop, forIn, isEmpty, isArray, mapKeys, pick, omit } from 'lodash';
 import $ from 'jquery';
 
 export const Inject = filePaths => {

@@ -1,37 +1,35 @@
-<script id="cacheTemplate" type="text/javascript">
-  <h1 class="cache-header" data-tooltip-key="caching">Cache*</h1>
-  <form novalidate>
-    <div class="likes-container container">
-      <div class="likes-info">
-        <p class="likes">Likes: <span id="cachedLikesCount" class="cache-count"></span> out of <span id="totalLikesCount" class="total-count"></span></p>
-      </div>
-      <div class="likes-options">
-        <p class="page-num-label label">until page: </p><select id="page" class="page-num" type="select" value="max"></select><p class="date-label label">date: </p><input class="date" type="date"><button id="cacheLikes" class="likes-button">Cache likes</button>
-      </div>
+<h1 class="cache-header" data-tooltip-key="caching">Cache*</h1>
+<form novalidate>
+  <div class="likes-container container">
+    <div class="likes-info">
+      <p class="likes">Likes: <%= cachedLikesCount %> out of <%= totalLikesCount %></span></p>
     </div>
-    <div class="following-container container">
-      <div class="following-info">
-        <p class="following">Following: <span id="cachedFollowingCount" class="cache-count"></span> out of <span id="totalFollowingCount" class="total-count"></span></p>
-      </div>
-      <div class="following-options">
-        <button id="cacheFollowing" class="following-button">Cache following</button>
-      </div>
+    <div class="likes-options">
+      <p class="page-num-label label">until page: </p><select id="page" class="page-num" type="select" value="max"></select><p class="date-label label">date: </p><input class="date" type="date"><button id="cacheLikes" class="likes-button">Cache likes</button>
     </div>
-    <div class="posts-container container">
-      <div class="posts-info">
-        <p class="posts">User posts: <span id="cachedPostsCount" class="cache-count"></span> out of <span id="totalPostsCount" class="total-count"></span></p>
-      </div>
-      <div class="posts-options">
-        <button id="cachePosts" class="posts-button">Cache posts</button>
-      </div>
+  </div>
+  <div class="following-container container">
+    <div class="following-info">
+      <p class="following">Following: <%= cachedFollowingCount %> out of <%= totalFollowingCount %></p>
     </div>
-    <div class="tags-container container">
-      <div class="tags-info">
-        <p class="tags">Tags: <span id="cachedTagsCount"></span></p>
-      </div>
-      <div class="tags-options">
-        <button id="rehashTags" class="tags-button">Rehash tags</button>
-      </div>
+    <div class="following-options">
+      <button id="cacheFollowing" class="following-button">Cache following</button>
     </div>
-  </form>
-</script>
+  </div>
+  <div class="posts-container container">
+    <div class="posts-info">
+      <p class="posts">User posts: <%= cachedPostsCount %> out of <%= totalPostsCount %></p>
+    </div>
+    <div class="posts-options">
+      <button id="cachePosts" class="posts-button">Cache posts</button>
+    </div>
+  </div>
+  <div class="tags-container container">
+    <div class="tags-info">
+      <p class="tags">Tags: <%= cachedTagsCount %></p>
+    </div>
+    <div class="tags-options">
+      <button id="rehashTags" class="tags-button">Rehash tags</button>
+    </div>
+  </div>
+</form>

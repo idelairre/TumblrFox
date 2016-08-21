@@ -3,33 +3,33 @@
   <label>
     Enable logging:
   </label>
-  <input type="checkbox" id="debug" checked="false">
+  <input type="checkbox" id="debug" <% if(props.debug) { %> <%= checked="checked" %> <% } %>>
 </div>
 <div class="input-option">
   <label>
     Set user:
   </label>
-  <input type="checkbox" id="setUser" checked="false">
+  <input type="checkbox" id="setUser" <% if(props.setUser) { %> <%= checked="checked" %> <% } %>>
 </div>
-<% if (env === 'development') { %>
+<% if (props.env === 'development') { %>
 <div class="input-option">
   <label>
     Run client-side tests:
   </label>
-  <input type="checkbox" id="clientTests" checked="false">
+  <input type="checkbox" id="clientTests" <% if(props.clientTests) { %> <%= checked="checked" %> <% } %>>
 </div>
 <% } %>
-<% if (env === 'development') { %>
+<% if (props.env === 'development') { %>
 <div class="input-option">
   <label>
     Run extension tests:
   </label>
-  <input type="checkbox" id="extensionTests" checked="false">
+  <input type="checkbox" id="extensionTests" <% if(props.extensionTests) { %> <%= checked="checked" %> <% } %>>
 </div>
 <% } %>
 <div class="input-option">
   <label>
     Use default api keys:
   </label>
-  <input type="checkbox" id="defaultKeys" checked="true">
+  <input type="checkbox" id="defaultKeys" <% if(props.defaultKeys) { %> <%= checked="checked" %> <% } %>>
 </div>

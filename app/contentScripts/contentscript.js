@@ -4,7 +4,6 @@
 
 import { Inject } from './moduleLoader';
 import Bridge from './bridge';
-import { mapKeys } from 'lodash';
 
 if (window.top === window && 'chrome' in window) {
   console.log('@tumblr');

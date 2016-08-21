@@ -1,8 +1,9 @@
 import $ from 'jquery';
-import { isNumber, mapKeys, snakeCase, toUpper } from 'lodash';
 import Backbone, { Model } from 'backbone';
-import View from '../view/view';
+import template from 'lodash.template';
+import snakeCase from '../../utils/snakeCase';
 import Tipped from '../../lib/tipped';
+import View from '../view/view';
 import cacheTemplate from './cache.html';
 import cacheTooltip from './tooltips/cacheTooltip.html';
 
@@ -19,7 +20,7 @@ const Cache = View.extend({
       totalPostsCount: 0
     }
   },
-  template: $(cacheTemplate).html(),
+  template: template(cacheTemplate),
   className: 'cache options',
   tagName: 'section',
   events() {
@@ -44,18 +45,15 @@ const Cache = View.extend({
     });
   },
   bindEvents() {
-    this.listenTo(this.model, 'change', () => {
-      this.props.set('likeSourceLimits', this.model.toJSON());
-    });
+    this.listenTo(this.model, 'change', ::this.props.set('likeSourceLimits', this.model.toJSON()));
   },
   render() {
-    this.$el.html(this.template);
+    this.$el.html(this.template(this.props.attributes));
     this.$date = this.$('[type=date]');
     this.$page = this.$('.page-num');
     this.$date.val(this.toDateInputValue(this.model.get('date')));
     this.renderPageOpts();
     this.bindEvents();
-    return this;
   },
   renderPageOpts() {
     const pageOpts = this.pageOpts.map(opt => {
@@ -74,7 +72,7 @@ const Cache = View.extend({
   handleButton(e) {
     e.preventDefault();
     const key = this.$(e.currentTarget).prop('id');
-    const eventName = toUpper(snakeCase(key));
+    const eventName = snakeCase(key).toUpperCase();
     Backbone.Events.trigger(eventName, {
       type: key
     });
@@ -97,9 +95,9 @@ const Cache = View.extend({
     this.model.set('date', date);
   },
   renderProps(props) {
-    mapKeys(props, (value, key) => {
-      if (isNumber(value)) {
-        this.$el.find(`span#${key}`).text(value);
+    Object.keys(props).forEach(key => {
+      if (typeof value === 'number') {
+        this.$el.find(`span#${key}`).text(props[key]);
       }
     });
   }

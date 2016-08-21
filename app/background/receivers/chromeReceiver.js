@@ -1,21 +1,13 @@
 import constants from '../constants';
-import db from '../lib/db';
 import receiverHandler from '../services/receiverService';
 import sendMessage from '../services/messageService';
 import BlogStore from '../stores/blogStore';
 import BlogSource from '../source/blogSource';
+import { oauthRequest } from '../lib/oauthRequest';
 import PostSource from '../source/postSource';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
-import { omit } from 'lodash';
-
-chrome.runtime.onStartup.addListener(loadUser);
-
-chrome.runtime.onInstalled.addListener(details => {
-  console.log('previousVersion', details.previousVersion);
-  constants.set('previousVersion',  details.previousVersion);
-});
 
 const loadUser = async () => {
   try {
@@ -35,9 +27,17 @@ const loadUser = async () => {
   }
 }
 
+chrome.runtime.onStartup.addListener(loadUser());
+
+chrome.runtime.onInstalled.addListener(details => {
+  console.log('previousVersion', details.previousVersion);
+  constants.set('previousVersion',  details.previousVersion);
+  constants.set('version', chrome.runtime.getManifest().version);
+});
+
 const setConstants = payload => {
   if (typeof payload !== 'undefined') {
-    constants.set(omit(payload, ['channels', 'sparkline']));
+    constants.set(payload);
   }
 };
 

@@ -5,11 +5,11 @@ import webpack from 'webpack';
 module.exports = {
   entry: {
     onload: ['./app/background/lib/chromeExOauth.js', './app/background/lib/chromeExOauthsimple.js', './app/background/lib/onload.js'],
-    options: './app/background/components/options.js',
+    options: ['./app/background/lib/backbone.js', './app/background/components/options.js'],
     contentscript: './app/contentScripts/contentscript.js',
     'fox-bootstrap': './app/contentScripts/bootstrap.js',
-    background: './app/background/background.js',
-    vendor: ['jquery', 'lodash', 'backbone', 'babel-polyfill']
+    background: ['./app/background/lib/lodash.js', './app/background/background.js'],
+    vendor: ['jquery', 'babel-polyfill'],
   },
   devtool: args.sourcemaps ? 'source-map' : null,
   watch: args.watch,
@@ -17,6 +17,10 @@ module.exports = {
     path: '/',
     filename: '[name].js',
     jsonpFunction: 'foxJsonp'
+  },
+  externals: {
+    "backbone": "Backbone",
+    "lodash": "window._"
   },
   plugins: [
     new webpack.DefinePlugin({

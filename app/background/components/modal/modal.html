@@ -1,12 +1,10 @@
-<script id="modalTemplate" type="text/javascript">
-  <div class="modal-bar">
-    <div class="modal-close-button"></div>
-  </div>
-  <% if (header) { %>
-  <div class="modal-header">
-    <h3><%= header %></h3>
-  </div>
-  <% } %>
-  <div id="content"><%= message %></div>
-  <div class="modal-button"><button class="modal-close-button-lg">OK</button></close>
-</script>
+<div class="modal-bar">
+  <div class="modal-close-button"></div>
+</div>
+<% if (header) { %>
+<div class="modal-header">
+  <h3><%= header %></h3>
+</div>
+<% } %>
+<div id="content"><%= message %></div>
+<div class="modal-button"><button class="modal-close-button-lg">OK</button></close>

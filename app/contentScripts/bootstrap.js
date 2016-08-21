@@ -6,8 +6,6 @@ import { Router } from './application/router';
 import RouteController from './application/routerController';
 import { ComponentFetcher } from './utils';
 
-_.noConflict();
-Backbone.noConflict();
 Backbone.history.stop();
 window.$ = window.jQuery;
 

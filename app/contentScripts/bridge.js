@@ -4,8 +4,9 @@
 /* global Event:true */
 /* eslint no-undef: "error" */
 
-import { camelCase, capitalize, escape, first, last, snakeCase, replace, omit } from 'lodash';
 import B64 from './utils/b64Util';
+import camelCase from '../background/utils/camelCase';
+import snakeCase from '../background/utils/snakeCase';
 import { Deferred } from 'jquery';
 
 const log = console.log.bind(console, '[BRIDGE]');
@@ -75,7 +76,8 @@ class Bridge {
           payload: e.detail.data
         };
         chrome.runtime.sendMessage(req, response => {
-          const responseName = last(snakeCase(eventName).split('_'));
+          const responseArr = snakeCase(eventName).split('_');
+          const responseName = responseArr[responseArr.length - 1];
           const payload = {
             payload: response,
             type: responseName

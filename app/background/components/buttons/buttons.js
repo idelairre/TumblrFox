@@ -1,7 +1,8 @@
 import $ from 'jquery';
-import { snakeCase, template, toUpper } from 'lodash';
 import Backbone from 'backbone';
 import parseFile from './parseFile';
+import snakeCase from '../../utils/snakeCase';
+import template from 'lodash.template';
 import View from '../view/view';
 import buttonsTemplate from './buttons.html';
 
@@ -23,7 +24,6 @@ const Buttons = View.extend({
     this.bindEvents();
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'INITIALIZED', ::this.renderProps);
     this.listenTo(Backbone.Events, 'CACHE_LIKES', this.$('#resetCache').prop('disabled', true));
     this.listenTo(Backbone.Events, 'DONE', this.$('#resetCache').prop('disabled', false));
     this.listenTo(Backbone.Events, 'CACHE_UPLOADED', ::this.createDownload);
@@ -36,7 +36,7 @@ const Buttons = View.extend({
       env: __ENV__,
       props: this.props.attributes
     }));
-    return this;
+    this.setCacheLikesButton();
   },
   resetCache(e) {
     const val = $(e.currentTarget).val();
@@ -46,10 +46,6 @@ const Buttons = View.extend({
     });
     e.currentTarget.selectedIndex = -1;
   },
-  renderProps() {
-    // this.render();
-    this.setCacheLikesButton();
-  },
   setCacheLikesButton() {
     this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));
   },
@@ -58,7 +54,7 @@ const Buttons = View.extend({
     if (key === 'restoreCache') {
       this.restoreCache();
     } else { // all other events are sent to settings component and posted to the background script
-      const eventName = toUpper(snakeCase(key));
+      const eventName = snakeCase(key).toUpperCase();
       Backbone.Events.trigger(eventName, {
        type: key
      });

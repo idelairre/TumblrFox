@@ -1,12 +1,11 @@
-import $ from 'jquery';
-import { template } from 'lodash';
+import template from 'lodash.template';
 import { View } from 'backbone';
 import modalTemplate from './modal.html';
 import './modal.less';
 
 const Modal = View.extend({
   className: 'modal',
-  template: template($(modalTemplate).html()),
+  template: template(modalTemplate),
   initialize(options = {}) {
     this.options = options;
     this.$parent = this.options.parent;
