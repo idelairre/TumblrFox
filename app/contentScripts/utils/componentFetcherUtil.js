@@ -1,4 +1,4 @@
-import { camelCase, extend, forIn, isArray, isObject } from 'lodash';
+import { camelCase, extend, forIn, isObject } from 'lodash';
 import 'backbone.radio';
 
 // perhaps there is a way to memoize fetched component numbers?
@@ -24,7 +24,7 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   },
   initializeWebpackJsonp() {
     window.webpackJsonp([0], [function (module, exports, tumblrRequire) {
-      const args = Array.prototype.slice.call(arguments);
+      const args = Array.from(arguments);
       window.webpackModules = args[2].m;
       window.$require = tumblrRequire;
     }]);
@@ -84,8 +84,8 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
     return this.$$componentCache[componentName];
   },
   getAll(componentArray) {
-    if (!isArray(componentArray)) {
-      componentArray = Array.prototype.slice.call(arguments);
+    if (!Array.isArray(componentArray)) {
+      componentArray = Array.from(arguments);
     }
     const response = {};
     componentArray.map(component => {
@@ -105,7 +105,6 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
 
 const manifest = {
   $: 'fn.init',
-  Backbone: '1.2.3',
   AutoComplete: '/svc/search/blog_search_typeahead',
   AvatarManager: '$postContainer',
   animation: 'webkitAnimationEnd',
@@ -124,6 +123,7 @@ const manifest = {
   KeyCommandsMixin: '__keyFn',
   Loader: 'this.createBarLoader()',
   Mixin: 'this.mixins=',
+  moment: 'MM/DD/YYYY',
   SearchFilters: '[data-filter]',
   SearchFiltersPopover: 'blog-search-filters-popover',
   SearchInput: '$$(".blog-search-input")',

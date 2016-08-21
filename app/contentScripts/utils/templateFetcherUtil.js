@@ -1,5 +1,5 @@
+import $ from 'jquery';
 import { extend, trim } from 'lodash';
-import { $ } from 'backbone';
 
 const TemplateCache = function () {
   this.templates = {};

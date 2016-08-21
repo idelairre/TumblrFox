@@ -1,4 +1,4 @@
-import { extend, isFunction, result } from 'lodash';
+import { extend } from 'lodash';
 import Source from '../source/source';
 
 const Listener = Source.extend({});

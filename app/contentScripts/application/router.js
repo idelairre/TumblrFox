@@ -1,7 +1,6 @@
+import Backbone from 'backbone';
 import { invert } from 'lodash';
 import { ComponentFetcher } from '../utils';
-
-const Backbone = ComponentFetcher.get('Backbone');
 
 const Router = Backbone.Router.extend({
   constructor(options = {}) {

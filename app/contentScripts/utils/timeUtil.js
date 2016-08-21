@@ -1,4 +1,6 @@
-import moment from 'moment';
+import ComponentFetcher from './componentFetcherUtil';
+
+const moment = ComponentFetcher.get('moment');
 
 const Time = {
   toTumblrTime(date) {
