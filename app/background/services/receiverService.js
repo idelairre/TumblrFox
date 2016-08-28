@@ -1,4 +1,3 @@
-import { isFunction, isObject, toArray } from 'lodash';
 import { debug } from './loggingService';
 import sendMessage from './messageService';
 import constants from '../constants';
@@ -12,7 +11,7 @@ import constants from '../constants';
 
 const errorHandler = (sendResponse, err) => {
 	console.error(err);
-	if (isObject(err) && {}.hasOwnProperty.call(err, 'statusText')) {
+	if (typeof err === 'object' && {}.hasOwnProperty.call(err, 'statusText')) {
 		sendResponse({
 			type: 'error',
 			payload: {

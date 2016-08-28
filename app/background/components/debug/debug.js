@@ -2,6 +2,7 @@ import Backbone from 'backbone';
 import template from 'lodash.template';
 import View from '../view/view';
 import debugTemplate from './debug.html';
+import './debug.less';
 
 const Debug = View.extend({
   defaults: {
@@ -14,7 +15,7 @@ const Debug = View.extend({
   tagName: 'section',
   render() {
     this.listenTo(Backbone.Events, 'all', ::this.log);
-    this.$el.html(this.template);
+    this.$el.html(this.template(this.props.attributes));
     this.$collapseButton = this.$el.find('#collapseButton');
     this.$debug = this.$el.find('#debugConsole');
   },

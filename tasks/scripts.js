@@ -10,7 +10,7 @@ import args from './lib/args';
 import fs from 'fs';
 
 if (!args.production) {
-  config.entry.tests = './app/background/tests/tests.js';
+  config.entry.tests = ['./app/background/lib/lodash.js', './app/background/tests/tests.js'];
 }
 
 gulp.task('scripts', () => {

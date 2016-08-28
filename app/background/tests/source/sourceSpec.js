@@ -1,6 +1,6 @@
 import { isEqual, noop, pick } from 'lodash';
+import { Generator } from 'tumblr-faker';
 import sinon from 'sinon';
-import { generatePosts } from '../fixtures/post';
 import mockDb from '../fixtures/db';
 import ModuleInjector from 'inject!../../constants';
 import Source from '../../source/source';
@@ -153,7 +153,7 @@ describe('Source', () => {
       args.condition = condition;
       args.sync = true;
       const source = new Source(args);
-      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(generatePosts(10)));
+      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(Generator.posts.generateMany(10)));
       source.addListener('done', () => {
         expect(crawl).toHaveBeenCalledThrice();
         done();
@@ -174,7 +174,7 @@ describe('Source', () => {
       args.step = step;
       delete args.sync;
       const source = new Source(args);
-      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(generatePosts(10)));
+      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(Generator.posts.generateMany(10)));
       source.addListener('next', () => {
         count += 1;
         expect(crawl).not.toHaveBeenCalledTwice();
@@ -200,7 +200,7 @@ describe('Source', () => {
       args.step = step;
       delete args.sync;
       const source = new Source(args);
-      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(generatePosts(10)));
+      const crawl = sinon.stub(source, 'crawl').returns(Promise.resolve(Generator.posts.generateMany(10)));
       source.addListener('done', () => {
         expect(source.crawl).not.toHaveBeenCalledTwice();
         done();

@@ -1,20 +1,21 @@
 import { concat, every, find, isEqual } from 'lodash';
-import { generateUser } from '../fixtures/tumblelog';
-import { generatePosts } from '../fixtures/post';
+import { Generator } from 'tumblr-faker';
 import ModuleInjector from 'inject!../../source/postSource';
 import { isSorted } from '../../../shared/jasmine-helpers';
 
-const postsFixture = generatePosts(100);
-const usersFixture = postsFixture.map(post => { return generateUser(post.blog_name) });
-
-console.log(usersFixture);
+const user = new Generator.user({
+  posts: 100
+});
 
 const oauthRequest = query => {
-  const posts = query.type ? every(postsFixture, {
-    type: query.type
-  }).slice(query.offset, query.offset + query.limit) : postsFixture.slice(query.offset, query.offset + query.limit);
+  const { response } = user.getDashboard(query);
+  const { posts } = response;
   return Promise.resolve({ posts });
 };
+
+const usersFixture = user.posts.map(post => Generator.following(post.blog_name));
+
+console.log(usersFixture);
 
 const MockBlogSource = function () {
   this.users = usersFixture;
@@ -37,7 +38,7 @@ const PostSource = ModuleInjector({
 describe('PostSource', () => {
   describe('applyNsfwFilter()', () => {
     it ('should filter nsfw posts', async done => {
-      const filtered = await PostSource.applyNsfwFilter(postsFixture.slice(0, 10));
+      const filtered = await PostSource.applyNsfwFilter(user.posts.slice(0, 10));
       expect(filtered).toBeDefined();
       const response = await Promise.all(filtered.map(async post => {
         const user = await BlogSource.getInfo(post.blog_name);

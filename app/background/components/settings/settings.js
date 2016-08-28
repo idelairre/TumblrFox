@@ -18,7 +18,7 @@ const Settings = View.extend({
     }
   },
   template: template(settingsTemplate),
-  className: 'settings options',
+  className: 'settings',
   tagName: 'section',
   initialize() {
     this.bindEvents();
@@ -33,7 +33,6 @@ const Settings = View.extend({
     this.listenTo(Backbone.Events, 'CACHE_LIKES', this.postMessage);
   },
   toggleCheck(e) {
-    console.log(e.target);
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
     if (key === 'extensionTests') {

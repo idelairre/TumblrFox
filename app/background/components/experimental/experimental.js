@@ -17,7 +17,7 @@ const Experimental = View.extend({
     }
   },
   template: template(experimentalTemplate),
-  className: 'experimental options',
+  className: 'experimental',
   tagName: 'section',
   render() {
     this.$el.html(this.template(this.props.attributes));
@@ -30,17 +30,15 @@ const Experimental = View.extend({
     this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
   },
   afterRender() {
-    setTimeout(() => {
-      Tipped.create('[data-tooltip-key="autoCacheLikes"]', $(autoCacheLikesTooltip).html(), {
-        skin: 'light', position: 'bottomleft', behavior: 'hide'
-      });
-      Tipped.create('[data-tooltip-key="autoCacheUserPosts"]', $(autoCacheUserPostsTooltip).html(), {
-        skin: 'light', position: 'bottomleft', behavior: 'hide'
-      });
-      Tipped.create('[data-tooltip-key="saveViaFirebase"]', $(saveViaFirebaseTooltip).html(), {
-        skin: 'light', position: 'bottomleft', behavior: 'hide'
-      });
-    }, 0);
+    Tipped.create('[data-tooltip-key="autoCacheLikes"]', $(autoCacheLikesTooltip).html(), {
+      skin: 'light', position: 'bottomleft', behavior: 'hide'
+    });
+    Tipped.create('[data-tooltip-key="autoCacheUserPosts"]', $(autoCacheUserPostsTooltip).html(), {
+      skin: 'light', position: 'bottomleft', behavior: 'hide'
+    });
+    Tipped.create('[data-tooltip-key="saveViaFirebase"]', $(saveViaFirebaseTooltip).html(), {
+      skin: 'light', position: 'bottomleft', behavior: 'hide'
+    });
   },
   toggleCheck(e) {
     const check = e.target.checked;

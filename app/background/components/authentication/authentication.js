@@ -1,6 +1,7 @@
 import View from '../view/view';
 import template from 'lodash.template';
 import authenticationTemplate from './authentication.html';
+import './authentication.less';
 
 const Authentication = View.extend({
   defaults: {
@@ -13,7 +14,7 @@ const Authentication = View.extend({
     }
   },
   template: template(authenticationTemplate),
-  className: 'authentication options',
+  className: 'authentication',
   tagName: 'section',
   render() {
     this.$el.html(this.template(this.props.attributes));

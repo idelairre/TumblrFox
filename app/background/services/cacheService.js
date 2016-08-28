@@ -213,18 +213,19 @@ export default class Cache {
     const limit = 10;
     const last = await db.likes.toCollection().last();
     const totalCount = await db.likes.toCollection().count();
+
     let cachedCount = 0;
     let start = await db.likes.toCollection().first();
+    
     async.doWhilst(async next => {
       try {
         const posts = await db.likes.where('id').above(start.id).limit(limit).toArray();
         start = maxBy(posts, 'id');
         await Firebase.bulkPut('likes', posts);
         items.cachedPostsCount += posts.length;
-        const progress = calculatePercent(cachedCount, totalCount);
         sendResponse({
           type: 'progress',
-          payload: progress
+          payload: calculatePercent(cachedCount, totalCount)
         });
         next(null, start, last);
       } catch (e) {
@@ -239,10 +240,9 @@ export default class Cache {
     try {
       const CacheWorker = require('./cacheWorkerService').default;
       const { offset, fileSize } = fileSlug;
-      const progress = calculatePercent(offset, fileSize);
       sendResponse({
         type: 'progress',
-        payload: progress
+        payload: calculatePercent(offset, fileSize)
       });
       const file = await CacheWorker.assembleFile(fileSlug);
       Papa.parse(file, {

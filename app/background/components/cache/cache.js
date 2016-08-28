@@ -6,6 +6,7 @@ import Tipped from '../../lib/tipped';
 import View from '../view/view';
 import cacheTemplate from './cache.html';
 import cacheTooltip from './tooltips/cacheTooltip.html';
+import './cache.less';
 
 const Cache = View.extend({
   defaults: {
@@ -21,7 +22,7 @@ const Cache = View.extend({
     }
   },
   template: template(cacheTemplate),
-  className: 'cache options',
+  className: 'cache',
   tagName: 'section',
   events() {
     return {
@@ -63,10 +64,8 @@ const Cache = View.extend({
     this.$('select').val('max');
   },
   afterRender() {
-    setTimeout(() => {
-      Tipped.create('[data-tooltip-key="caching"]', $(cacheTooltip).html(), {
-        skin: 'light', position: 'topleft', behavior: 'hide'
-      });
+    Tipped.create('[data-tooltip-key="caching"]', $(cacheTooltip).html(), {
+      skin: 'light', position: 'topleft', behavior: 'hide'
     });
   },
   handleButton(e) {

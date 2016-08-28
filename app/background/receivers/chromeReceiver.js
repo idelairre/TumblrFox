@@ -3,31 +3,10 @@ import receiverHandler from '../services/receiverService';
 import sendMessage from '../services/messageService';
 import BlogStore from '../stores/blogStore';
 import BlogSource from '../source/blogSource';
-import { oauthRequest } from '../lib/oauthRequest';
 import PostSource from '../source/postSource';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
-
-const loadUser = async () => {
-  try {
-    const response = await oauthRequest({
-      url: 'https://api.tumblr.com/v2/user/info'
-    });
-    const likesCount = await db.likes.toCollection().count();
-    const postsCount = await db.posts.toCollection().count();
-    constants.set('userName', response.user.name);
-    constants.set('cachedLikesCount', likesCount);
-    constants.set('cachedPostsCount', postsCount);
-    constants.set('totalLikesCount', response.user.likes);
-    constants.set('totalPostsCount', response.user.blogs[0].posts);
-    constants.set('totalFollowingCount', response.user.following);
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-chrome.runtime.onStartup.addListener(loadUser());
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);

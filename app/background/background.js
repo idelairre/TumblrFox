@@ -1,9 +1,11 @@
 /* global chrome:true */
 /* eslint no-undef: "error" */
+
 import chromeReceiver from './receivers/chromeReceiver';
 import db from './lib/db';
-import idleService from './services/idleService';
+import idleHandler from './handlers/idleHandler';
 import optionsReceiver from './receivers/optionsReceiver';
+import startupHandler from './handlers/startupHandler';
 import './lib/livereload';
 
 const inExtension = chrome.runtime.onMessage;
@@ -24,7 +26,7 @@ const listenForUpdate = () => {
 
 const listenForIdleState = () => {
   chrome.idle.setDetectionInterval(15);
-  chrome.idle.onStateChanged.addListener(idleService);
+  chrome.idle.onStateChanged.addListener(idleHandler);
 };
 
 if (inExtension) {
@@ -33,5 +35,7 @@ if (inExtension) {
   listenForUpdate();
   listenForIdleState();
 }
+
+chrome.runtime.onStartup.addListener(startupHandler);
 
 window.db = db;

@@ -4,160 +4,8 @@ body {
 input {
 	width: 100%;
 }
-.authentication {
-	label {
-		margin-bottom: 4px;
-	}
-	input:last-child {
-		margin-bottom: 10px;
-	}
-}
 .container {
 	width: 474px;
-}
-.cache {
-	input::-webkit-inner-spin-button {
-		display: none;
-	}
-	input::-webkit-clear-button {
-	  display: none;
-	  -webkit-appearance: none;
-	}
-	.container {
-		margin-top: -10px;
-	}
-	.likes-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		.label {
-			max-width: 60px;
-			margin-right: 5px;
-		}
-		.likes-info {
-			order: 1;
-			display: flex;
-		}
-		.likes-options {
-			order: 2;
-			display: flex;
-			justify-content: space-between;
-			.page-num-label {
-				order: 1;
-				max-height: 25px;
-			}
-			.page-num {
-				align-self: center;
-				order: 2;
-				max-height: 25px;
-				margin-right: 5px;
-			}
-			.date-label {
-				order: 3;
-				max-height: 25px;
-			}
-			.date {
-				align-self: center;
-				order: 4;
-				width: 90px;
-				max-height: 25px;
-				margin-right: 5px;
-				border-image-source: initial;
-		    border-image-slice: initial;
-		    border-image-width: initial;
-		    border-image-outset: initial;
-		    border-image-repeat: initial;
-		    box-sizing: border-box;
-		    color: rgb(68, 68, 68);
-		    min-height: 2em;
-		    border-width: 1px;
-		    border-style: solid;
-		    border-color: rgb(191, 191, 191);
-		    border-radius: 2px;
-		    font: inherit;
-		    margin: 0px;
-		    padding: 3px;
-		    outline: none;
-				margin-right: 5px;
-			}
-			.likes-button {
-				align-self: center;
-				order: 5;
-				max-height: 25px;
-			}
-		}
-	}
-	.following-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		.following-info {
-			order: 1;
-		}
-		.following-options {
-			order: 2;
-			max-height: 25px;
-			.following-button {
-				order: 1;
-				max-height: 25px;
-			}
-		}
-	}
-	.posts-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		.posts-info {
-			order: 1;
-		}
-		.posts-options {
-			order: 2;
-			max-height: 25px;
-			.posts-button {
-				order: 1;
-				max-height: 25px;
-			}
-		}
-	}
-	.tags-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		.tags-info {
-			order: 1;
-		}
-		.tags-options {
-			order: 2;
-			max-height: 25px;
-			.tags-button {
-				order: 1;
-				max-height: 25px;
-			}
-		}
-	}
-}
-.debug--options {
-	width: 474px;
-	.debug {
-		overflow: scroll;
-		background-color: #EEEEEE;
-		width: 90%;
-		min-height: 45px;
-		margin-bottom: 10px;
-		position: relative;
-	}
-	.collapse {
-		float: right;
-		width: 5%;
-		right: 3%;
-		.collapse-button {
-			position: absolute;
-			cursor: pointer;
-			margin-left: 10px;
-			font-size: 20px;
-			text-align: center;
-		}
-	}
 }
 .input-option {
 	margin-top: 5px;
@@ -178,7 +26,7 @@ input {
 #debug {
 	span-family: 'Courier New', Courier, 'Lucida Sans Typewriter', 'Lucida Typewriter', monospace;
 }
-.options {
+section {
 	input {
 		float: right;
 	}
