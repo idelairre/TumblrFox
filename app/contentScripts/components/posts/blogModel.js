@@ -1,4 +1,3 @@
-import { isArray, keys, pick, take } from 'lodash';
 import { $, Model, Collection } from 'backbone';
 import BlogSource from '../../source/blogSource';
 import Events from '../../application/events';

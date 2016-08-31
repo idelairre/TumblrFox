@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { defaultsDeep, extend, omit } from 'lodash';
 import AppState from '../application/state';
 import Events from '../application/events';
@@ -5,8 +6,6 @@ import PostView from '../components/postView/postViewComponent';
 import ComponentFetcher from './componentFetcherUtil';
 
 const { Tumblelog } = Tumblr.Prima.Models;
-
-const $ = window.$ || window.jQuery; // since this deals in tumblr created objects, get a reference to their jQuery instance;
 
 const unescapeQuotes = string => {
   return string.replace(/\\"/g, '"');

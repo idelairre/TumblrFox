@@ -1,4 +1,4 @@
-import { defaults, extend } from 'lodash';
+import { extend } from 'lodash';
 
 const LOCAL_STORAGE_KEY = 'IdleMonitor.actionTime';
 

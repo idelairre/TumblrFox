@@ -32,6 +32,7 @@ const App = function () {
     pollingInterval: 200000,
     rendered: false,
     test: false,
+    cachedUserPosts: false,
     cachedTags: false,
     cachedLikes: false,
     cachedFollowing: false,
@@ -162,13 +163,10 @@ extend(App.prototype, ChromeMixin.properties, {
         formKey: this.constants.formKey
       });
     }
-    this._initializeConstants();
-  },
-  _initializeConstants() { // TODO: change these to their corresponding constants value
     this.options.set('logging', this.constants.debug);
     this.options.set('cachedTags', (this.constants.cachedTagsCount !== 0));
-    this.options.set('cachedUserPosts', (this.constants.cachedPostsCount >= constants.totalPostsCount));
-    this.options.set('cachedUserPosts', (this.constants.cachedLikesCount !== 0));
+    this.options.set('cachedUserPosts', (this.constants.cachedPostsCount !== 0));
+    this.options.set('cachedLikes', (this.constants.cachedLikesCount !== 0));
     this.options.set('cachedFollowing', (this.constants.cachedFollowingCount !== 0));
     this.options.set('firstRun', this.constants.firstRun);
     this.options.set('version', this.constants.version);

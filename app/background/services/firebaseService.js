@@ -10,10 +10,9 @@ export default class Firebase {
 
     const calculateProgress = e => {
       if (e.lengthComputable) {
-        const progress = calculatePercent(e.loaded, e.total);
         port({
           type: 'progress',
-          payload: progress
+          payload: calculatePercent(e.loaded, e.total)
         });
       }
     }
