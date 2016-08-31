@@ -37,13 +37,11 @@ export default class Likes {
       sendError(err, sendResponse);
     });
     Source.addListener('done', msg => {
-      if (isFunction(sendResponse)) {
-        sendResponse({
-          type: 'done',
-          payload: constants,
-          message: msg
-        });
-      }
+      sendResponse({
+        type: 'done',
+        payload: constants,
+        message: msg
+      });
     });
     Source.start();
   }
@@ -124,9 +122,7 @@ export default class Likes {
       sorted.push(result);
     });
     sorted = sortBy(sorted, ['match']).reverse();
-    return sorted.map(result => {
-      return result.item;
-    });
+    return sorted.map(result => result.item);
   }
 
   static async fetch(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
@@ -173,11 +169,11 @@ export default class Likes {
         }));
         await Likes.put(post);
         const count = await db.likes.toCollection().count();
-        console.log('[ADDED LIKE]', count);
+        // console.log('[ADDED LIKE]', count);
       }, 300);
     } else {
       await db.likes.delete(postId);
-      console.log('[REMOVED LIKE]');
+      // console.log('[REMOVED LIKE]');
     }
   }
 

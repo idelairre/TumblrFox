@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { Model } from 'backbone';
-import { extend, camelCase, clone, forIn, invert, isEmpty, last, mapKeys, omit, pick, result, uniqueId } from 'lodash';
+import { extend, forIn, isEmpty, uniqueId } from 'lodash';
 import * as Components from './components/components';
 import * as Models from './models/models';
 import ActionListener from './listeners/actionListener';
@@ -119,9 +119,6 @@ extend(App.prototype, ChromeMixin.properties, {
   },
   unbindListeners() {
     this.stopListening();
-  },
-  getComponents(components) {
-    extend(Backbone.Model, this.componentFetcher.get('TumblrModel'));
   },
   addInitializer(e, callback) {
     const eventId = uniqueId(e);

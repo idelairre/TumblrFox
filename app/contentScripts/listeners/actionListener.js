@@ -3,6 +3,7 @@ import Listener from './listener';
 import BlogSource from '../source/blogSource';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Events from '../application/events';
+import { isObject } from 'lodash';
 
 const ActionListener = Listener.extend({ // TODO: make this component watch for added and deleted following
   mixins: [ChromeMixin],
@@ -26,6 +27,9 @@ const ActionListener = Listener.extend({ // TODO: make this component watch for 
     }, 0);
   },
   sendLike(type, postId) {
+    if (isObject(postId)) {
+      return; // we are probably in a masonry view on the search page and its probably sending logging data
+    }
     const slug = {
       postId,
       type
