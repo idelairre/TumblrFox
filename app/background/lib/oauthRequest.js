@@ -50,13 +50,3 @@ export const oauthRequest = slug => {
   });
   return deferred.promise();
 };
-
-export const resetOauthSlug = slug => {
-  for (const key in slug) {
-    if ({}.hasOwnProperty.call(slug, key)) {
-      if (key.includes('oauth')) {
-        delete slug[key];
-      }
-    }
-  }
-};
