@@ -51,14 +51,16 @@ const Options = View.extend({
   initialize() {
     this.initialized = false;
     if (constants.initialized) { // is this rational? if it doesn't set correctly here and on the constants reply, it sets on ready.
-      this.props = new Model(constants.toJSON());
+      this.initializeConstants();
     } else {
-      constants.once('ready', () => {
-        this.props = new Model(constants.toJSON());
-      });
+      constants.once('ready', ::this.initializeConstants);
     }
     this.bindEvents();
     this.initializePort();
+  },
+  initializeConstants() {
+    this.props = new Model(constants.toJSON());
+    this.restoreOptions(this.props.toJSON());
   },
   initializePort() {
     this.port = chrome.runtime.connect({
@@ -69,14 +71,11 @@ const Options = View.extend({
         const eventName = snakeCase(response.type).toUpperCase();
         Backbone.Events.trigger(eventName, response);
       });
-      this.postMessage({
-        type: 'fetchConstants'
-      });
     }
   },
   renderSubviews() {
     this._subviews = Array.from(this.$('[data-subview]'));
-    this._subviews.map(el => {
+    this._subviews = this._subviews.map(el => {
       const subviewName = $(el).data('subview');
       const view = new this.subviews[subviewName].constructor(this.props.attributes);
       view.render();
@@ -86,8 +85,7 @@ const Options = View.extend({
     this.initialized = true;
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'REPLY_CONSTANTS', ::this.restoreOptions);
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
+    this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.updateProps);
     this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.postMessage);
     this.listenTo(Backbone.Events, 'CACHE_POSTS', ::this.postMessage);
     this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.postMessage);
@@ -99,6 +97,20 @@ const Options = View.extend({
     this.listenTo(Backbone.Events, 'SAVE_CACHE', ::this.postMessage);
     this.listenTo(Backbone.Events, 'ERROR', ::this.showError);
     this.listenTo(Backbone.Events, 'DONE', ::this.showDone);
+  },
+  updateProps(newProps) {
+    this.props.set(newProps);
+    const changed = this.props.changedAttributes();
+    this._subviews.forEach(subview => {
+      Object.keys(changed).forEach(key => {
+        if ({}.hasOwnProperty.call(subview, 'props')) {
+          if ({}.hasOwnProperty.call(subview.props.attributes, key)) {
+            subview.props.set(key, changed[key]);
+            console.log(subview.props.toJSON());
+          }
+        }
+      });
+    });
   },
   showError(response) {
     this.$errorModal = new Modal({
@@ -121,12 +133,6 @@ const Options = View.extend({
   },
   setCacheLikesButton() {
     this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));
-  },
-  setProps(newProps) {
-    this.postMessage({
-      type: 'updateSettings',
-      payload: newProps
-    });
   },
   postMessage(slug) { // signature: action: {String}, payload: {Object}
     this.port.postMessage(slug);

@@ -79,8 +79,8 @@ export default class Following {
     const sendError = isFunction(sendResponse) ? logError : noop;
     Source.addListener('items', async following => {
       await Following.bulkPut(following);
-      Source.next();
       sendProgress();
+      Source.next();
     });
     Source.addListener('error', err => {
       sendError(err, sendResponse);

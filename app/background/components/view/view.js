@@ -1,8 +1,8 @@
 import Backbone, { Model } from 'backbone';
 
 const assignProps = (target, source) => {
-  if (!target) {
-    return;
+  if (!target || !source) {
+    throw new Error('Invalid arguments');
   }
   for (const key in source) {
     if ({}.hasOwnProperty.call(target, key)) {
@@ -40,12 +40,7 @@ const View = Backbone.View.extend({
     this._bindListeners();
   },
   _bindListeners() {
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.setProps);
-    this.listenTo(this.props, 'change', () => {
-      if (this.rendered) {
-        Backbone.Events.trigger('CHANGE_PROPS', this.props.toJSON());
-      }
-    });
+    this.listenTo(this.props, 'change', ::this.render);
   },
   initialize: Function.prototype,
   afterRender: Function.prototype,
@@ -55,12 +50,7 @@ const View = Backbone.View.extend({
   },
   beforeRender: Function.prototype,
   _beforeRender: Function.prototype,
-  render: Function.prototype,
-  setProps(newProps) {
-    assignProps(this.props.attributes, newProps);
-    this.props.set(this.props.attributes);
-    this.render();
-  },
+  render: Function.prototype
 });
 
 export default View;

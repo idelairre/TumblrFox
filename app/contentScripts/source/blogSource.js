@@ -3,8 +3,6 @@ import { extend, first, isArray, pick } from 'lodash';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Source from './source';
 
-const { Tumblelog } = Tumblr.Prima.Models;
-
 const BlogSource = Source.extend({
   mixins: [ChromeMixin],
   initialize() {
@@ -87,7 +85,7 @@ const BlogSource = Source.extend({
       return this.clientFetch(query).then(data => {
         const { posts, tumblelog } = data.response;
         if (tumblelog && !Tumblelog.collection.findWhere({ name: tumblelog.name })) {
-          Tumblelog.collection.add(new Tumblelog(tumblelog));
+          Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
         }
         return posts;
       });
@@ -180,7 +178,7 @@ const BlogSource = Source.extend({
     }
     $.when.apply($, promises).then(tumblelog => {
       if (tumblelog) {
-        Tumblelog.collection.add(new Tumblelog(tumblelog));
+        Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
         tumblelogs.push(tumblelog);
       }
     }).always(() => {

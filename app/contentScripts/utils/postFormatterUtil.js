@@ -5,8 +5,6 @@ import Events from '../application/events';
 import PostView from '../components/postView/postViewComponent';
 import ComponentFetcher from './componentFetcherUtil';
 
-const { Tumblelog } = Tumblr.Prima.Models;
-
 const unescapeQuotes = string => {
   return string.replace(/\\"/g, '"');
 };
@@ -23,7 +21,7 @@ const stripScripts = s => {
 }
 
 const PostFormatter = function () {
-  if (!window.location.href.includes('search')) {
+  if (!window.location.href.includes('search') && Backbone.history.location.host === 'www.tumblr.com') {
     this.avatarManager = ComponentFetcher.get('AvatarManager')();
     this.initializedAvatars = false;
     Events.on('fox:filteredPosts', () => {
@@ -213,7 +211,7 @@ extend(PostFormatter.prototype, {
 
   marshalPostAttributes(postData) {
     postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
-    const blogData = Tumblelog.collection.findWhere({ name: postData.tumblelog }) ? Tumblelog.collection.findWhere({ name: postData.tumblelog }).toJSON() : defaultsDeep({
+    const blogData = Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: postData.tumblelog }) ? Tumblr.Prima.Models.collection.findWhere({ name: postData.tumblelog }).toJSON() : defaultsDeep({
       avatar_url: postData.blog.avatar[1].url,
       name: postData.tumblelog,
       url: `http://${postData.tumblelog_uuid}`,
@@ -249,7 +247,7 @@ extend(PostFormatter.prototype, {
       postData['is-animated'] = 1;
     }
     if (typeof postData.reblogged_from_name !== 'undefined') {
-      const parentData = Tumblelog.collection.findWhere({ name: postData.reblogged_from_name }) || defaultsDeep({
+      const parentData = Tumblr.Prima.Models.collection.findWhere({ name: postData.reblogged_from_name }) || defaultsDeep({
         name: postData.reblogged_from_name,
         following: postData.reblogged_from_following,
         url: `http://${postData.reblogged_from_name}.tumblr.com`
@@ -257,7 +255,7 @@ extend(PostFormatter.prototype, {
       postData['tumblelog-parent-data'] = (typeof parentData !== 'undefined' ? typeof parentData.toJSON === 'function' ? parentData.toJSON() : parentData : false);
     }
     if (typeof postData.reblogged_root_name !== 'undefined') {
-      const rootData = Tumblelog.collection.findWhere({ name: postData.reblogged_root_name }) || defaultsDeep({
+      const rootData = Tumblr.Prima.Models.collection.findWhere({ name: postData.reblogged_root_name }) || defaultsDeep({
         name: postData.reblogged_root_name,
         following: postData.reblogged_root_following,
         url:  `http://${postData.reblogged_root_name}.tumblr.com`

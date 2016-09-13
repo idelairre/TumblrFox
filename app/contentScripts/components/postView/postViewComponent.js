@@ -41,7 +41,7 @@ const { PostView } = Tumblr;
 
 const tagTemplate = template(`<a class="post_tag" data-tag="<%= tag %>" href="<%= Tumblr.Utils.PostTags.tag_url(tag) %>">#<%= tag %></a>`);
 
-const FoxPostView = PostView.extend({
+const FoxPostView = PostView ? PostView.extend({
   tagName: 'li',
   className: 'post_container',
   template: template(postViewTemplate),
@@ -172,7 +172,7 @@ const FoxPostView = PostView.extend({
     this.model.stopListening();
     this.stopListening();
   }
-});
+}) : {};
 
 Tumblr.PostView = FoxPostView;
 

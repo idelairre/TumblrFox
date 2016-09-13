@@ -75,8 +75,8 @@ export default class Blog {
     const sendError = isFunction(sendResponse) ? logError : noop;
     Source.addListener('items', async posts => {
       await Blog.bulkPut(posts);
-      Source.next();
       sendProgress();
+      Source.next();
     });
     Source.addListener('error', err => {
       sendError(err, sendResponse);

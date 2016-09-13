@@ -92,13 +92,6 @@ const Cache = View.extend({
   dateChange(e) {
     const date = Date.parse($(e.currentTarget).val());
     this.model.set('date', date);
-  },
-  renderProps(props) {
-    Object.keys(props).forEach(key => {
-      if (typeof value === 'number') {
-        this.$el.find(`span#${key}`).text(props[key]);
-      }
-    });
   }
 });
 

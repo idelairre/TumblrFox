@@ -4,11 +4,9 @@ import Events from '../../application/events';
 import Filters from '../../utils/filtersUtil';
 import Utils from '../../utils';
 
-const { Tumblelog, Post } = Tumblr.Prima.Models;
-
 const BlogModel = Model.extend({
   defaults: {
-    blogname: Tumblr.Prima.currentUser().id,
+    blogname: Tumblr.Prima.currentUser().id || Tumblr.Fox.options.get('username'),
     cached: false,
     following: false,
     next_offset: 0,

@@ -48,7 +48,7 @@ export const logValues = (database, sendResponse, callback) => {
       }
     }
     if (callback) {
-      callback();
+      callback(payload);
     }
   } catch (e) {
     console.error(e);
@@ -69,13 +69,15 @@ export const logError = (error, next, sendResponse) => {
     sendResponse = next;
     isAsync = false;
   }
-  sendResponse({
-    type: 'error',
-    payload: {
-      message: error
-    }
-  });
-  if (isAsync) {
+  if (isFunction(sendResponse)) {
+    sendResponse({
+      type: 'error',
+      payload: {
+        message: error
+      }
+    });
+  }
+  if (isAsync && isFunction(next)) {
     next(error);
   }
 };

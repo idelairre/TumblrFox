@@ -10,8 +10,11 @@ import Following from '../stores/followingStore';
 
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
-  constants.set('previousVersion',  details.previousVersion);
+  constants.set('previousVersion', details.previousVersion);
   constants.set('version', chrome.runtime.getManifest().version);
+  if (constants.get('previousVersion') !== constants.get('version')) {
+    constants.set('firstRun', true);
+  }
 });
 
 const setConstants = payload => {

@@ -5,14 +5,21 @@ import 'backbone.radio';
 
 const optionsChannel = Backbone.Radio.channel('options');
 
+const atTumblr = Backbone.history.location.host === 'www.tumblr.com';
+
 const ComponentFetcher = function (modules) {
   this.initializeWebpackJsonp();
 
   this.$$componentCache = {};
-  this.modules = window.webpackModules;
-  this.require = window.$require;
+
+  if (window.webpackModules) {
+    this.modules = window.webpackModules;
+    this.require = window.$require;
+  }
+
   this.componentIds = {};
   this.initialize.apply(this);
+
   if (isObject(modules)) {
     this.getComponents(modules);
   }
@@ -23,11 +30,13 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
     this.trigger('initialize:componentFetcher', this);
   },
   initializeWebpackJsonp() {
-    window.webpackJsonp([0], [function (module, exports, tumblrRequire) {
-      const args = Array.from(arguments);
-      window.webpackModules = args[2].m;
-      window.$require = tumblrRequire;
-    }]);
+    if (window.webpackJsonp) {
+      window.webpackJsonp([0], [function (module, exports, tumblrRequire) {
+        const args = Array.from(arguments);
+        window.webpackModules = args[2].m;
+        window.$require = tumblrRequire;
+      }]);
+    }
   },
   getComponent(object, searchTerm) {
     let putFlag = true;
@@ -103,7 +112,7 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   }
 });
 
-const manifest = {
+const manifest = atTumblr ? {
   $: 'fn.init',
   AutoComplete: '/svc/search/blog_search_typeahead',
   AvatarManager: '$postContainer',
@@ -130,7 +139,7 @@ const manifest = {
   TagsPopover: 'click [data-term]',
   TumblrModel: '.Model.extend({})',
   TumblrView: 'this._beforeRender'
-};
+} : {};
 
 if (window.location.pathname.match(/search/)) {
   delete manifest.AvatarManager;
