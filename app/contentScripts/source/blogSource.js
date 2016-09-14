@@ -1,5 +1,5 @@
 import { $ } from 'backbone';
-import { extend, first, isArray, pick } from 'lodash';
+import { extend, first, pick } from 'lodash';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Source from './source';
 
@@ -84,8 +84,8 @@ const BlogSource = Source.extend({
     if (query.post_type === 'ANY' && (!query.term || query.term.length === 0)) {
       return this.clientFetch(query).then(data => {
         const { posts, tumblelog } = data.response;
-        if (tumblelog && !Tumblelog.collection.findWhere({ name: tumblelog.name })) {
-          Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
+        if (tumblelog && !Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: tumblelog.name })) {
+          Tumblr.Prima.Models.Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
         }
         return posts;
       });
@@ -123,7 +123,7 @@ const BlogSource = Source.extend({
   },
   collateData(posts) { // NOTE: find out why this works and other $.when.apply patterns get wonky in this configuration
     const deferred = $.Deferred();
-    if (typeof posts === 'undefined' || !isArray(posts)) {
+    if (typeof posts === 'undefined' || !Array.isArray(posts)) {
       return deferred.reject('cannot collate, posts are undefined or are not an array');
     }
     const promises = posts.map(post => {
@@ -160,25 +160,25 @@ const BlogSource = Source.extend({
     const promises = [];
     const tumblelogs = [];
     const deferred = $.Deferred();
-    if (!Tumblelog.collection.findWhere({ name: post.tumblelog })) {
+    if (!Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: post.tumblelog })) {
       promises.push(this.getInfo(post.tumblelog));
     }
     if (post.reblogged_from_name &&
       post.reblogged_from_name !== post.tumblelog &&
-      !Tumblelog.collection.findWhere({ name: post.reblogged_from_name }) &&
+      !Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: post.reblogged_from_name }) &&
       !this.rejected.includes(post.reblogged_from_name)) {
       promises.push(this.getInfo(post.reblogged_from_name));
     }
     if (post.reblogged_root_name &&
       post.reblogged_root_name !== post.reblogged_from_name &&
       post.reblogged_root_name !== post.tumblelog &&
-      !Tumblelog.collection.findWhere({ name: post.reblogged_root_name }) &&
+      !Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: post.reblogged_root_name }) &&
       !this.rejected.includes(post.reblogged_from_name)) {
       promises.push(this.getInfo(post.reblogged_root_name));
     }
     $.when.apply($, promises).then(tumblelog => {
       if (tumblelog) {
-        Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
+        Tumblr.Prima.Models.Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
         tumblelogs.push(tumblelog);
       }
     }).always(() => {
