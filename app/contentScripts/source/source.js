@@ -1,13 +1,13 @@
-import { isArray, isFunction, result } from 'lodash';
+import { result } from 'lodash';
 
 const Source = function (options) {
   this.options = Object.assign({}, result(this, 'options'), options);
-  if (isArray(this.mixins)) {
+  if (Array.isArray(this.mixins)) {
     this.mixins.forEach(mixin => {
       mixin.applyTo(this);
     });
   }
-  if (isFunction(this.initialize)) {
+  if (typeof this.initialize === 'function') {
     this.initialize.apply(this, arguments);
   }
 };

@@ -15,7 +15,7 @@ const TagSearchAutocompleteModel = AutoComplete.extend({
   },
   initialize(options) {
     this.state = options.state;
-    this.items = new Backbone.Collection();
+    this.items = new Collection();
     this.set(this.defaults);
     this.$$rawTags = [];
     this.$$dashboardTags = [];
@@ -60,7 +60,6 @@ const TagSearchAutocompleteModel = AutoComplete.extend({
     } else if (this.state.get('disabled')) {
       return $.Deferred().reject();
     }
-    return this.fetchTagsFromLikes();
   },
   initialFetch() { // NOTE: if this is empty, fetch tags from the tumblr search bar
     Tumblr.postsView.postViews.filter(post => {

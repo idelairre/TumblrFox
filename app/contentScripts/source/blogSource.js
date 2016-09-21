@@ -1,5 +1,5 @@
 import { $ } from 'backbone';
-import { extend, first, pick } from 'lodash';
+import { extend, pick } from 'lodash';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Source from './source';
 
@@ -149,7 +149,7 @@ const BlogSource = Source.extend({
     const results = [];
     data.forEach(item => {
       const { posts, tumblelog } = item.response;
-      const post = first(posts);
+      const post = posts[0];
       this._fetchTumblelogs(post);
       results.push(post);
     });

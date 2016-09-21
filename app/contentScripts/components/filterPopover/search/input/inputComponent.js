@@ -51,7 +51,7 @@ const InputComponent = SearchInput.extend({
     });
     this.conversations.fetchFavorites({
       data: {
-       limit: 4
+        limit: 4
       }
     });
   },
@@ -60,7 +60,6 @@ const InputComponent = SearchInput.extend({
       model: this.blogSearchAutocompleteModel,
       el: this.$$('.blog-search-input')
     });
-    setTimeout(::this.updateSearchSettings, 0);
     if (this.state.get('disabled')) {
       this.setDisabled();
     }
@@ -117,7 +116,6 @@ const InputComponent = SearchInput.extend({
     } else {
       this.blogSearchAutocompleteHelper.model = this.tagSearchAutocompleteModel;
       this.$el.find('input').attr('placeholder', `Search ${this.state.getState()}`);
-
     }
   },
   fetchResults(query) {
