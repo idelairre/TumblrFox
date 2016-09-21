@@ -1,5 +1,5 @@
 import { $ } from 'backbone';
-import { clone, defer, findKey, pick } from 'lodash';
+import { clone, defer, pick } from 'lodash';
 import { ComponentFetcher } from '../../../../utils';
 import PopoverComponent from '../../../popover/popoverComponent';
 

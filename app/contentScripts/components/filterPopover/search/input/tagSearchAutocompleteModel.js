@@ -51,7 +51,7 @@ const TagSearchAutocompleteModel = AutoComplete.extend({
   flushTags() {
     this.items.reset([]);
   },
-  fetch() {
+  fetch() { // TODO: get the code for normal autocomplete fetch and add it here so you don't have to do that bogus thing where you switch models
     this.trigger('request');
     if (this.state.get('dashboard')) {
       return this.dashboardFetch();
