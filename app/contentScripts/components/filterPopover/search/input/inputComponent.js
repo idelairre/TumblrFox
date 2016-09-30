@@ -62,6 +62,11 @@ const InputComponent = SearchInput.extend({
     });
     if (this.state.get('disabled')) {
       this.setDisabled();
+    } else {
+      setTimeout(() => {
+        this.updateSearchSettings();
+        this.flushTags();
+      }, 1);
     }
   },
   events: {
@@ -112,6 +117,7 @@ const InputComponent = SearchInput.extend({
   updateSearchSettings() {
     if (this.state.get('user')) {
       this.blogSearchAutocompleteHelper.model = this.blogSearchAutocompleteModel;
+      this.blogSearchAutocompleteHelper.model.set('blogname', this.model.get('blogname'));
       this.setUserPlaceholder();
     } else {
       this.blogSearchAutocompleteHelper.model = this.tagSearchAutocompleteModel;

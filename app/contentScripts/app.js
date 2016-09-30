@@ -141,19 +141,19 @@ extend(App.prototype, ChromeMixin.properties, {
   },
   initializeIntervalTasks() {
     this.on('heartbeat', () => {
-      Object.keys(this._intervalTasks).map(func => {
+      Object.keys(this._intervalTasks).forEach(func => {
         this._intervalTasks[func]();
       });
     });
   },
   _checkInitializers() {
     let initialized = true;
-    forIn(this._initializers, initializer => {
-      if (!initializer.called) {
+    for (const initializer in this._initializers) {
+      if (!this._initializers[initializer].called) {
         initialized = false;
         return initialized;
       }
-    });
+    }
     return initialized;
   },
   initializeConstants() {

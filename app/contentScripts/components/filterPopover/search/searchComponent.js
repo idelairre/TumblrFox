@@ -179,7 +179,7 @@ const SearchComponent = PeeprBlogSearch.extend({
       };
       this.unbindEvents();
       this.toggle.state.set('disabled', true);
-      each(this._subviews, subview => {
+      this._subviews.forEach(subview => {
         subview.undelegateEvents();
         subview.stopListening();
         subview.$el.css(disabled);
