@@ -73,7 +73,6 @@ const Progress = View.extend({
       this.$bar.animate(percentComplete * 0.01);
       Backbone.Events.trigger('CHANGE_PROPS', constants);
       if (parseInt(percentComplete) === 100) {
-        console.log('[DONE]');
         return;
       }
     } else {

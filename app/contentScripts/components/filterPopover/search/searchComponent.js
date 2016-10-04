@@ -143,6 +143,7 @@ const SearchComponent = PeeprBlogSearch.extend({
     if (this.state.get('dashboard')) {
       this.state.setState('user');
     }
+    this.$input.find('input').val('');
     return this.onFetchRequested();
   },
   onFetchRequested() {

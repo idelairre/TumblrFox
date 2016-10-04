@@ -1,7 +1,7 @@
 /* global Promise:true */
 /* eslint no-undef: "error" */
 
-import { first, isEqual, isFunction, noop, omit, sortBy, union } from 'lodash';
+import { isEqual, isFunction, noop, omit, sortBy, union } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import filters from '../utils/filters';
@@ -162,11 +162,11 @@ export default class Likes {
     if (type === 'like') {
       setTimeout(async () => {
         const posts = await Source.fetchMostRecent();
-        const post = first(posts.filter(post => {
+        const post = posts.filter(post => {
           if (parseInt(post.id) === parseInt(postId)) {
             return post;
           }
-        }));
+        })[0];
         await Likes.put(post);
         const count = await db.likes.toCollection().count();
         // console.log('[ADDED LIKE]', count);

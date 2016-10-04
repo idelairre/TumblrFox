@@ -35,7 +35,8 @@ const DashboardModel = Model.extend({
     const deferred = $.Deferred();
     const filteredFetch = () => {
       return this._fetch(query).then(response => {
-        return Filters.applyFilters(query, response);
+        const api = !(query.post_type === 'ANY' && query.term.length === 0);
+        return Filters.applyFilters(query, response, api);
       });
     }
     const recursiveFetch = posts => {

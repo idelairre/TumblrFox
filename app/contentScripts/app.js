@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { Model } from 'backbone';
-import { extend, forIn, isEmpty, uniqueId } from 'lodash';
+import { extend, isEmpty, uniqueId } from 'lodash';
 import * as Components from './components/components';
 import * as Models from './models/models';
 import ActionListener from './listeners/actionListener';

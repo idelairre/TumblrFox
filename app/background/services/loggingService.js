@@ -31,22 +31,13 @@ export const logValues = (database, sendResponse, callback) => {
 
     const payload = { constants, database, percentComplete, itemsLeft, total };
 
-    if (itemsLeft === 0) {
-      if (sendResponse) {
-        sendResponse({
-          type: 'done',
-          payload,
-          message: 'Finished processing items'
-        });
-      }
-    } else {
-      if (sendResponse) {
-        sendResponse({
-          type: 'progress',
-          payload
-        });
-      }
+    if (sendResponse) {
+      sendResponse({
+        type: 'progress',
+        payload
+      });
     }
+    
     if (callback) {
       callback(payload);
     }

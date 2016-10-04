@@ -1,4 +1,5 @@
-import { isFunction, mapKeys, template, pick } from 'lodash';
+import { template, pick } from 'lodash';
+import Events from '../../../../application/events';
 import { ComponentFetcher } from '../../../../utils';
 import filtersDropdownTemplate from './filtersDropdownTemplate.html';
 
@@ -36,6 +37,7 @@ const FiltersDropDownComponent = SearchFilters.extend({
   },
   onFilterClick() {
     SearchFilters.prototype.onFilterClick.apply(this, arguments);
+    Events.trigger('fox:search:start');
   }
 });
 

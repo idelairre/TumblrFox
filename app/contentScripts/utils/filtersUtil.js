@@ -5,7 +5,11 @@ const Filter = {
     const deferred = $.Deferred();
     const promises = [];
     if (query.filter_nsfw && query.post_role === 'ORIGINAL') {
-      deferred.resolve(this._filterByRole(posts));
+      if (flagApi) {
+        this._filterNsfwApi(posts).then(this._filterByRole).then(deferred.resolve);
+      } else {
+        this._filterNsfwClient(posts).then(this._filterByRole).then(deferred.resolve);
+      }
     } else if (query.filter_nsfw && query.post_role !== 'ORIGINAL') {
       if (flagApi) {
         this._filterNsfwApi(posts).then(deferred.resolve);

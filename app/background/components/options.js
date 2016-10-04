@@ -69,7 +69,9 @@ const Options = View.extend({
     if (this.port) {
       this.port.onMessage.addListener(response => {
         const eventName = snakeCase(response.type).toUpperCase();
-        Backbone.Events.trigger(eventName, response);
+        if (typeof eventName !== 'undefined') {
+          Backbone.Events.trigger(eventName, response);
+        }
       });
     }
   },
@@ -106,7 +108,6 @@ const Options = View.extend({
         if ({}.hasOwnProperty.call(subview, 'props')) {
           if ({}.hasOwnProperty.call(subview.props.attributes, key)) {
             subview.props.set(key, changed[key]);
-            console.log(subview.props.toJSON());
           }
         }
       });
