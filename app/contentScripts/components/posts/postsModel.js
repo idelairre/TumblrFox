@@ -68,9 +68,8 @@ const PostsModel = ControllerModel.extend({
     this.searchModel.set('next_offset', offset);
   },
   bindEvents() {
-    this.listenTo(this.searchModel, 'change:filter_nsfw change:post_role', ::this.applyFilter);
     this.listenTo(Events, 'fox:fetch:complete', this.toggleLoading.bind(this, false));
-    this.listenTo(Tumblr.AutoPaginator, 'after', ::this.filterDashboard);
+    this.listenTo(Tumblr.AutoPaginator, 'after', ::this.filterAds);
   },
   unbindEvents() {
     // this.stopListening();
@@ -192,28 +191,21 @@ const PostsModel = ControllerModel.extend({
     }
     this.searchModel.set('renderedResults', false);
   },
-  filterDashboard() {
+  filterAds() {
     this.postViews.$el.find('.standalone-ad-container').remove();
-    if (this.searchModel.get('filter_nsfw')) {
-      const posts = Array.from(this.postViews.$el.find('[data-tumblelog-content-rating]'));
-      posts.forEach(posts, post => {
-        post = $(post);
-        const rating = post.data('tumblelog-content-rating');
-        if (rating === 'nsfw' || rating === 'adult') {
-          post.remove();
-        }
-      });
-    }
-    this.postViews.createPosts();
   },
-  filterPosts() {
+  filterPosts() { // called by search component
     const deferred = $.Deferred();
+    if (this.state.get('dashboard')) {
+      this.dashboardModel.reset();
+    }
     if (this.autopaginator.get('enableDefaultPagination')) {
       this.autopaginator.disableDefaultPagination();
     }
+    this.postViews.collection.invoke('dismiss');
     $('li[data-pageable]').fadeOut(300).promise().then(() => {
-      invoke(this.posts, 'remove');
       this.postViews.collection.reset();
+      invoke(this.posts, 'remove');
       this.posts = [];
       $('li[data-pageable]').remove();
       $('.standalone-ad-container').remove();
@@ -221,12 +213,6 @@ const PostsModel = ControllerModel.extend({
       deferred.resolve();
     });
     return deferred.promise();
-  },
-  applyFilter() {
-    this.postViews.collection.invoke('dismiss'); // just filter everything, this works around a bug where new posts would not attach in the correct location after filtering
-    if (!this.autopaginator.get('enabled')) {
-      this.autopaginator.start();
-    }
   }
 });
 

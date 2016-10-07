@@ -21,6 +21,9 @@ const DashboardModel = Model.extend({
       post.model.set('html', $(post.$el).prop('outerHTML'));
     });
   },
+  reset() {
+    DashboardSource.reset();
+  },
   dashboardFetch() {
     return DashboardSource.clientFetch();
   },

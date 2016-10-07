@@ -11,12 +11,22 @@ const { Tumblelog } = Tumblr.Prima.Models;
 const DashboardSource = Source.extend({
   mixins: [ChromeMixin],
   initialize() {
-    this.streamCursor = $('#next_page_link').data('stream-cursor') || '';
-    this.endPoint = '/svc/post/dashboard';
+    this.firstPage = `https://www.tumblr.com/dashboard/1/${$('.post').first().data('id')}`;
+    this.firstCursor = $('#next_page_link').data('stream-cursor') || '';
+    this.streamCursor = this.firstCursor;
     this.following = Tumblelog.collection.toJSON();
     this.bindEvents();
   },
+  reset() {
+    window.next_page = this.firstPage;
+    this.streamCursor = this.firstCursor;
+  },
   bindEvents() {
+    $(document).ajaxSuccess((event, xhr, settings) => {
+      if (settings.url.includes('/svc/dashboard/')) {
+        this.streamCursor = xhr.responseJSON.response.DashboardPosts.nextCursor;
+      }
+    });
     this.listenTo(Events, 'fox:update:following', ::this.updateFollowing);
   },
   updateFollowing() {
@@ -94,6 +104,9 @@ const DashboardSource = Source.extend({
         window.next_page = data.meta.tumblr_old_next_page;
         this.streamCursor = data.response.DashboardPosts.nextCursor;
         const posts = Utils.PostFormatter.formatDashboardPosts(data.response.DashboardPosts.body);
+        if (typeof window.after_auto_paginate === 'function') {
+          window.after_auto_paginate();
+        }
         deferred.resolve(posts);
       },
       error: error => {

@@ -35,8 +35,8 @@ const FiltersDropDownComponent = SearchFilters.extend({
   setDate(e) {
     this.model.set('before', Date.parse(e.currentTarget.value) / 1000);
   },
-  onFilterClick() {
-    SearchFilters.prototype.onFilterClick.apply(this, arguments);
+  onCheckboxClick() {
+    SearchFilters.prototype.onCheckboxClick.apply(this, arguments);
     Events.trigger('fox:search:start');
   }
 });

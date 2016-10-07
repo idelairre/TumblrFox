@@ -36,7 +36,8 @@ const Filter = {
     const promises = posts.map(post => {
       const deferred = $.Deferred();
       if (post.hasOwnProperty('tumblelog-content-rating')) {
-        if (post['tumblelog-content-rating'] === ('nsfw' || 'adult')) {
+        const rating = post['tumblelog-content-rating'];
+        if (rating === 'nsfw' || rating === 'adult') {
           deferred.resolve();
         } else {
           deferred.resolve(post);
