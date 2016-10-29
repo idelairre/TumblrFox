@@ -1,6 +1,6 @@
-import args from '../lib/args';
-import path from 'path';
-import webpack from 'webpack';
+var args = require('../lib/args');
+var path = require('path');
+var webpack = require('webpack');
 
 module.exports = {
   entry: {

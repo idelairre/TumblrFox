@@ -1,4 +1,4 @@
-import { camelCase, noop, isFunction } from 'lodash';
+import { camelCase, isFunction } from 'lodash';
 import constants from '../constants';
 
 const log = console.log.bind(console, '[TUMBLRFOX]');
@@ -37,7 +37,7 @@ export const logValues = (database, sendResponse, callback) => {
         payload
       });
     }
-    
+
     if (callback) {
       callback(payload);
     }

@@ -12,8 +12,11 @@ db.version(26).stores({
   tags: 'tag, count'
 });
 
-db.on('error', e => {
-  console.error(e.stack || e);
+db.version(27).stores({
+  posts: 'id, blog_name, note_count, *tags, *tokens, type, timestamp',
+  likes: 'id, blog_name, liked_timestamp, note_count, *tags, *tokens, type, liked',
+  following: 'name, updated, order, content_rating',
+  tags: 'tag, count'
 });
 
 console.time('initialize');

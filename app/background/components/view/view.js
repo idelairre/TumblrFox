@@ -40,7 +40,10 @@ const View = Backbone.View.extend({
     this._bindListeners();
   },
   _bindListeners() {
-    this.listenTo(this.props, 'change', ::this.render);
+    this.listenTo(this.props, 'change', () => {
+      this.render();
+      Backbone.Events.trigger('CHANGE_PROPS', this.props.attributes);
+    });
   },
   initialize: Function.prototype,
   afterRender: Function.prototype,

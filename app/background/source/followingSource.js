@@ -1,10 +1,11 @@
 import { Deferred } from 'jquery';
 import { omit, replace } from 'lodash';
+import sanitizeHtml from 'sanitize-html';
+import Source from 'tumblr-source';
 import { oauthRequest } from '../lib/oauthRequest';
 import BlogSource from './blogSource';
-import Source from './source';
-import sanitizeHtml from 'sanitize-html';
-import 'babel-polyfill';
+import constants from '../constants';
+import fetch from '../utils/fetch';
 
 class FollowingSource extends Source {
   options = {
@@ -18,9 +19,12 @@ class FollowingSource extends Source {
     until: false
   }
 
-  initializeConstants() {
-    this.options.offset = this.constants.get('cachedFollowingCount');
-    this.options.total = this.constants.get('totalFollowingCount');
+  load() {
+    this.loadConstants(constants);
+    setTimeout(() => {
+      this.options.offset = this.constants.get('cachedFollowingCount');
+      this.options.total = this.constants.get('totalFollowingCount');
+    });
   }
 
   step() {

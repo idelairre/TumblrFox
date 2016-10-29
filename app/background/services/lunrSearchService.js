@@ -1,4 +1,3 @@
-/* global document:true */
 import $ from 'jquery';
 import Lunr from 'lunr';
 import stripScripts from '../utils/stripScripts';

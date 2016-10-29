@@ -3,15 +3,20 @@
 
 import chromeReceiver from './receivers/chromeReceiver';
 import db from './lib/db';
+import errorHandler from './handlers/errorHandler';
 import idleHandler from './handlers/idleHandler';
 import optionsReceiver from './receivers/optionsReceiver';
-import startupHandler from './handlers/startupHandler';
+import loadStartupHandler from './handlers/startupHandler';
 import './lib/livereload';
 
 const inExtension = chrome.runtime.onMessage;
 
 const loadChromeEventHandlers = () => {
   chrome.runtime.onMessage.addListener(chromeReceiver);
+};
+
+const loadErrorHandler = () => {
+  window.addEventListener('unhandledrejection', errorHandler);
 };
 
 const loadOptionsEventHandlers = () => {
@@ -31,11 +36,11 @@ const listenForIdleState = () => {
 
 if (inExtension) {
   loadChromeEventHandlers();
+  loadErrorHandler();
+  loadStartupHandler();
   loadOptionsEventHandlers();
   listenForUpdate();
   listenForIdleState();
 }
-
-chrome.runtime.onStartup.addListener(startupHandler);
 
 window.db = db;

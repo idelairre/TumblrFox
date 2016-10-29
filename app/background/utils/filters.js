@@ -29,17 +29,17 @@ const filters = (query, post) => {
     }
   }
   return true;
-}
+};
 
 export const filterNsfw = post => {
   if (post.hasOwnProperty('tumblelog-content-rating') && post['tumblelog-content-rating'] === 'nsfw' || post['tumblelog-content-rating'] === 'adult') {
     return false;
   }
   return true;
-}
+};
 
 export const filterReblogs = post => {
   return !post.is_reblog;
-}
+};
 
 export default filters;

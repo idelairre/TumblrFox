@@ -4,8 +4,8 @@
 node_modules
 npm-debug.log
 .tmp
-jsonParser.js
 tokens.json
 dist/
 packages/
 test/test.build.js
+report

@@ -19,10 +19,6 @@ const loadUser = async () => {
   } catch (err) {
     console.error(err);
   }
-}
-
-const startupHandler = () => {
-  loadUser();
 };
 
-export default startupHandler;
+export default loadUser;

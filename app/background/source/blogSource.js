@@ -1,25 +1,34 @@
 import { ajax, Deferred } from 'jquery';
-import parsePosts from '../utils/parsePosts';
 import { isObject } from 'lodash';
+import Source from 'tumblr-source';
+import constants from '../constants';
+import fetch from '../utils/fetch';
+import parsePosts from '../utils/parsePosts';
 import tokens from '../tokens.json';
-import Source from './source';
 
 class BlogSource extends Source {
   options = {
     page: 0,
     iterator: 'page',
-    item: 'blog posts',
+    item: 'posts',
     url: null,
     until: false
+  };
+
+  fetch() {
+    return fetch.call(this, arguments);
   }
 
-  initializeConstants() {
-    if (this.constants.get('nextBlogSourceSlug')) {
-      Object.assign(this.options, this.constants.get('nextBlogSourceSlug'));
-    }
-    if (!this.options.url) {
-      this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}`;
-    }
+  load() {
+    this.loadConstants(constants);
+    setTimeout(() => {
+      if (this.constants.get('nextBlogSourceSlug')) {
+        Object.assign(this.options, this.constants.get('nextBlogSourceSlug'));
+      }
+      if (!this.options.url) {
+        this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}`;
+      }
+    });
   }
 
   condition() {
@@ -53,8 +62,8 @@ class BlogSource extends Source {
       success: data => {
         deferred.resolve(data.response.blog);
       },
-      error: e => {
-        deferred.reject(e);
+      error: err => {
+        deferred.reject(err.responseJSON);
       }
     });
     return deferred.promise();
@@ -71,8 +80,8 @@ class BlogSource extends Source {
       success: (data) => {
         deferred.resolve(data);
       },
-      error: e => {
-        deferred.reject(e);
+      error: err => {
+        deferred.reject(err.responseJSON);
       }
     });
     return deferred.promise();
@@ -107,8 +116,13 @@ class BlogSource extends Source {
       offset: request.next_offset || 0,
       limit: 10 || request.limit
     };
+
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
+    }
+
+    if (typeof request.id !== 'undefined') {
+      slug.id = request.id;
     }
 
     if (typeof slug.blogname !== 'string') {
@@ -131,7 +145,7 @@ class BlogSource extends Source {
         deferred.resolve(data.response.posts);
       },
       error: error => {
-        deferred.reject(error);
+        deferred.reject(error.responseJSON.meta);
       }
     });
     return deferred.promise();

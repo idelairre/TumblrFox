@@ -29,7 +29,7 @@ const App = function () {
     initialized: false,
     idle: false,
     polling: false,
-    pollingInterval: 200000,
+    pollingInterval: 400000,
     rendered: false,
     test: false,
     cachedUserPosts: false,
@@ -92,7 +92,7 @@ extend(App.prototype, ChromeMixin.properties, {
       return;
     }
     if (typeof interval === 'undefined') {
-      interval = this.options.get('pollingInterval') || 20000;
+      interval = this.options.get('pollingInterval');
     }
     this.Events.trigger('fox:heartbeat:started');
     this.options.set('polling', true);

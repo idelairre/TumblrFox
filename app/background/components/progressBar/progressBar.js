@@ -13,7 +13,7 @@ const Progress = View.extend({
   render() {
     this.$el.html(this.template);
     setTimeout(() => {
-      this.afterRender()
+      this.afterRender();
     }, 0);
   },
   afterRender() {

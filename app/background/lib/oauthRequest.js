@@ -42,7 +42,7 @@ export const oauthRequest = slug => {
   oauth.authorize(() => {
     onAuthorized(slug, (error, response) => {
       if (error) {
-        deferred.reject(error);
+        deferred.reject(`Error, status: ${error.statusText}`);
       } else {
         deferred.resolve(response);
       }

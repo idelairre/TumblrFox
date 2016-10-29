@@ -1,7 +1,6 @@
 import constants from '../constants';
 import { countBy, forIn, identity } from 'lodash';
 import db from '../lib/db';
-import 'babel-polyfill';
 
 export default class Tags {
   static async add(tags) {

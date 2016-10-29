@@ -112,6 +112,7 @@ const Options = View.extend({
         }
       });
     });
+    constants.set(this.props.attributes);
   },
   showError(response) {
     this.$errorModal = new Modal({

@@ -1,14 +1,16 @@
 import { findKey, isEmpty, last } from 'lodash';
 import $, { ajax, each, Deferred } from 'jquery';
+import Source from 'tumblr-source';
 import { debug } from '../services/loggingService';
+import constants from '../constants';
+import fetch from '../utils/fetch';
 import parsePosts from '../utils/parsePosts';
 import formatDate from '../utils/formatDate';
-import Source from './source';
 
 class LikeSource extends Source {
   options = {
     url: 'https://www.tumblr.com/likes',
-    item: 'liked posts',
+    item: 'posts',
     iterator: 'page',
     timestamp: null,
     page: null,
@@ -16,13 +18,20 @@ class LikeSource extends Source {
     untilPage: 'max'
   };
 
-  initializeConstants() {
-    if (this.constants.get('likeSourceLimits')) {
-      Object.assign(this.options, this.constants.get('likeSourceLimits'));
-    }
-    if (this.constants.get('nextLikeSourceSlug')) {
-      Object.assign(this.options, this.constants.get('nextLikeSourceSlug'));
-    }
+  fetch() {
+    return fetch.call(this, arguments);
+  }
+
+  load() {
+    this.loadConstants(constants);
+    setTimeout(() => {
+      if (this.constants.get('likeSourceLimits')) {
+        Object.assign(this.options, this.constants.get('likeSourceLimits'));
+      }
+      if (this.constants.get('nextLikeSourceSlug')) {
+        Object.assign(this.options, this.constants.get('nextLikeSourceSlug'));
+      }
+    });
   }
 
   condition() {
@@ -43,7 +52,7 @@ class LikeSource extends Source {
     });
   }
 
-  parse(response = '') {
+  parse(response) {
     try {
       let link = $(response).find('#pagination').find('a#next_page_link');
       if (link) {
@@ -77,21 +86,6 @@ class LikeSource extends Source {
         deferred.reject(error);
       }
     });
-    return deferred.promise();
-  }
-
-  async crawl(retry) {
-    const deferred = Deferred();
-    try {
-      if (retry && this.retriedTimes && this.retriedTimes <= this.retryTimes) {
-        debug(`Retried times: ${this.retriedTimes + 1}, retrying from page: ${this.options.page}, timestamp: ${formatDate(this.options.nextLikeSlug.timestamp)}...`);
-      }
-      const posts = await this.fetch(retry);
-      debug(`✔ Crawled ${posts.length} posts from page: ${this.options.page}, timestamp: ${formatDate(this.options.timestamp)}`);
-      deferred.resolve(posts);
-    } catch (e) {
-      deferred.reject(e);
-    }
     return deferred.promise();
   }
 }

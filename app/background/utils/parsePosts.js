@@ -1,4 +1,4 @@
-import $, { each } from 'jquery';
+import $ from 'jquery';
 
 const processTags = post => {
   const tagElems = $(post).find('div.post_tags');
@@ -9,10 +9,9 @@ const processTags = post => {
       }
     });
     return rawTags;
-  } else {
-    return [];
   }
-}
+  return [];
+};
 
 const processPost = (postHtml, timestamp = false) => {
   const post = $(postHtml).data('json');
@@ -26,7 +25,7 @@ const processPost = (postHtml, timestamp = false) => {
   post.note_count = $(postHtml).find('.note_link_current').data('count') || 0;
   post.blog_name = post.tumblelog;
   return post;
-}
+};
 
 const parsePosts = (data, timestamp = false) => {
   try {
@@ -39,9 +38,9 @@ const parsePosts = (data, timestamp = false) => {
       }
     });
     return postsJson;
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
   }
-}
+};
 
 export default parsePosts;

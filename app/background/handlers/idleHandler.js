@@ -14,6 +14,6 @@ const idleHandler = async state => {
   if (state === 'idle' && constants.initialized && constants.autoCacheLikes) {
     LikeStore.cache();
   }
-}
+};
 
 export default idleHandler;

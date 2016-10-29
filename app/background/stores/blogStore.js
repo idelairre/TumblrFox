@@ -1,14 +1,12 @@
 import { isEqual, isFunction, noop } from 'lodash';
 import db from '../lib/db';
 import filters from '../utils/filters';
-import sortByPopularity from '../utils/sort';
 import marshalQuery from '../utils/marshalQuery';
 import { noopCallback } from '../utils/helpers';
 import Source from '../source/blogSource';
 import Lunr from '../services/lunrSearchService';
 import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
-import 'babel-polyfill';
 
 let caching = false; // NOTE: this is temporary, might have to actually instansiate the class
 
@@ -23,7 +21,7 @@ export default class Blog {
       } else if (query.post_type) {
         matches = await db.posts.where('type').anyOfIgnoreCase(query.post_type).filter(_filters).reverse().toArray();
       } else {
-        matches = await db.posts.toCollection().filter(_filters).reverse().toArray();
+        matches = await db.posts.orderBy('timestamp').filter(_filters).reverse().toArray();
       }
       return matches.slice(query.next_offset, query.next_offset + query.limit);
     } catch (err) {
@@ -39,9 +37,13 @@ export default class Blog {
     }
   }
 
-  static async put(post) {
+  static async put(post) { // cross reference with timestamp, when user requests posts order by timestamp, that should fix the indexing problem
     try {
       let count = await db.posts.toCollection().count();
+      const [apiPost] = await Source.fetchBlogPosts({ blogname: post.blog_name, id: post.id, limit: 1 });
+
+      post.timestamp = apiPost.timestamp;
+      post._id = count;
       post.tokens = Lunr.tokenizeHtml(post.html);
       // TODO: add a clause here to get the parent-tumblelog content rating
       if (!{}.hasOwnProperty.call(post, 'note_count') && {}.hasOwnProperty.call(post, 'notes')) {
@@ -49,6 +51,7 @@ export default class Blog {
       }
       const user = await Source.getContentRating(post['tumblelog-parent-data'].name);
       post['tumblelog-content-rating'] = user.content_rating;
+
       await db.posts.put(post);
       count = await db.posts.toCollection().count();
       constants.set('cachedPostsCount', count);
@@ -57,10 +60,9 @@ export default class Blog {
     }
   }
 
-  static async bulkPut(posts) {
+  static bulkPut(posts) {
     try {
-      const promises = posts.map(Blog.put);
-      return Promise.all(promises);
+      return Promise.all(posts.map(Blog.put));
     } catch (err) {
       console.error(err);
     }

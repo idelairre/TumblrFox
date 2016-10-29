@@ -12,7 +12,6 @@ import { logValues, logError } from '../services/loggingService';
 import Lunr from '../services/lunrSearchService';
 import Source from '../source/likeSource';
 import Tags from './tagStore';
-import 'babel-polyfill';
 
 let $postsCache = [];
 
@@ -168,7 +167,6 @@ export default class Likes {
           }
         })[0];
         await Likes.put(post);
-        const count = await db.likes.toCollection().count();
         // console.log('[ADDED LIKE]', count);
       }, 300);
     } else {

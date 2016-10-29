@@ -4,7 +4,6 @@ import { noopCallback } from '../utils/helpers';
 import Source from '../source/followingSource';
 import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
-import 'babel-polyfill';
 
 let caching = false;
 

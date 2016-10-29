@@ -1,12 +1,11 @@
 import { Deferred } from 'jquery';
-import { isArray, isEmpty } from 'lodash';
+import { isEmpty } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
 import { filterAsync } from '../utils/helpers';
 import BlogSource from './blogSource';
 import constants from '../constants';
 import db from '../lib/db';
 import sendMessage from '../services/messageService';
-import 'babel-polyfill';
 
 export default class PostSource {
   static async filteredFetch(query) {

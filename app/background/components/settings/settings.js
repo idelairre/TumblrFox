@@ -35,14 +35,14 @@ const Settings = View.extend({
   toggleCheck(e) {
     const check = e.target.checked;
     const key = this.$(e.currentTarget).prop('id');
-    if (key === 'extensionTests') {
+    // if (key === 'extensionTests') {
       const eventName = snakeCase(key).toUpperCase();
       Backbone.Events.trigger(eventName, {
         type: key
       });
-    } else {
+    // } else {
       this.props.set(key, check);
-    }
+    // }
   }
 });
 

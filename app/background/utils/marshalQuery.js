@@ -21,6 +21,6 @@ const marshalQuery = query => {
     delete query.post_role;
   }
   return query;
-}
+};
 
 export default marshalQuery;
