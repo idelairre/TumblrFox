@@ -60,7 +60,9 @@ const AutoPaginator = Model.extend({
   disableDefaultPagination() {
     this.set('defaultPaginationEnabled', false);
     Tumblr.AutoPaginator.stop();
-    console.log('[TUMBLR AUTOPAGINATOR]: stopped');
+    if (Tumblr.Fox.options.get('logging')) {
+      console.log('[TUMBLR AUTOPAGINATOR]: stopped');
+    }
   },
   onScroll(e) {
     if (!this.get('enabled')) {

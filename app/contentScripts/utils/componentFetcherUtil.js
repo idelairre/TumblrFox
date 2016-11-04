@@ -3,8 +3,6 @@ import 'backbone.radio';
 
 // perhaps there is a way to memoize fetched component numbers?
 
-const optionsChannel = Backbone.Radio.channel('options');
-
 const atTumblr = Backbone.history.location.host === 'www.tumblr.com';
 
 const ComponentFetcher = function (modules) {
@@ -56,9 +54,6 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
     }
     if (results.length === 0) {
       console.error('[FETCHING COMPONENT FAILED]', object);
-    }
-    if (optionsChannel.request('fox:getOptions')) {
-      console.log('[FETCHING COMPONENT]', object, results);
     }
     return results;
   },

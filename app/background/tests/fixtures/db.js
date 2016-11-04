@@ -12,10 +12,6 @@ db.version(26).stores({
   tags: 'tag, count'
 });
 
-db.on('error', e => {
-  console.error(e.stack || e);
-});
-
 db.open().then(() => {
   debug(db);
   debug('test db initialized');

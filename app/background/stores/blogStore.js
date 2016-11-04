@@ -75,6 +75,7 @@ export default class Blog {
     caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
+    
     Source.addListener('items', async posts => {
       await Blog.bulkPut(posts);
       sendProgress();

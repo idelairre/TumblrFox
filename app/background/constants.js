@@ -1,15 +1,17 @@
 /* global chrome:true, window:true, __ENV__ */
 /* eslint no-undef: "error" */
 
-import Constants from 'constants-fox';
+import Constants from 'constant-fox';
 import db from './lib/db';
 import { oauthRequest } from './lib/oauthRequest';
 import tokens from './tokens.json';
+import manifest from '../manifest.json';
 
 const CONSUMER_KEY = tokens.consumerKey;
 const CONSUMER_SECRET = tokens.consumerSecret;
-const VERSION = chrome.runtime.getManifest().version;
+const VERSION = manifest.version;
 const EXT_ID = chrome.runtime.id;
+const ENV = typeof __ENV__ === 'undefined' ? 'test' : __ENV__;
 
 const defaults = {
   autoCacheUserPosts: false,
@@ -24,7 +26,7 @@ const defaults = {
   dashboardCache: [],
   debug: false,
   defaultKeys: true,
-  env: __ENV__,
+  env: ENV,
   eventManifest: [],
   extensionId: EXT_ID,
   firstRun: false,

@@ -7,11 +7,12 @@ import PostSource from '../source/postSource';
 import Tags from '../stores/tagStore';
 import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
+import manifest from '../../manifest.json';
 
-chrome.runtime.onInstalled.addListener(details => {
+chrome.runtime.onInstalled.addListener(details => { // TODO: move this to background since it has to do with initialization
   console.log('previousVersion', details.previousVersion);
   constants.set('previousVersion', details.previousVersion);
-  constants.set('version', chrome.runtime.getManifest().version);
+  constants.set('version', manifest.version);
   if (constants.get('previousVersion') !== constants.get('version')) {
     constants.set('firstRun', true);
   }

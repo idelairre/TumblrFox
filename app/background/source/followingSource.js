@@ -20,11 +20,7 @@ class FollowingSource extends Source {
   }
 
   load() {
-    this.loadConstants(constants);
-    setTimeout(() => {
-      this.options.offset = this.constants.get('cachedFollowingCount');
-      this.options.total = this.constants.get('totalFollowingCount');
-    });
+    this.loadConstants(constants, ['cachedFollowingCount', 'totalFollowingCount']);
   }
 
   step() {

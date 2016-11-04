@@ -20,11 +20,7 @@ class BlogSource extends Source {
   }
 
   load() {
-    this.loadConstants(constants);
-    setTimeout(() => {
-      if (this.constants.get('nextBlogSourceSlug')) {
-        Object.assign(this.options, this.constants.get('nextBlogSourceSlug'));
-      }
+    this.loadConstants(constants, 'nextBlogSourceSlug', function () {
       if (!this.options.url) {
         this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}`;
       }
@@ -67,6 +63,11 @@ class BlogSource extends Source {
       }
     });
     return deferred.promise();
+  }
+
+  async isNsfw(user) {
+    const { is_nsfw } = await this.getInfo(user);
+    return is_nsfw;
   }
 
   async getAvatar(user) {

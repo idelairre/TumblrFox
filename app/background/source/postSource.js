@@ -33,7 +33,7 @@ export default class PostSource {
     return await recursiveFetch(query);
   }
 
-  static applyNsfwFilter(posts) {
+  static applyNsfwFilter(posts = []) { // NOTE: just don't use async/await for this, its weird
     const filter = post => { // NOTE: filter is synchronous
       return BlogSource.getInfo(post.blog_name).then(following => {
         if (following.is_nsfw) {
@@ -51,7 +51,7 @@ export default class PostSource {
     const deferred = Deferred();
     const slug = {
       offset: request.next_offset || 0,
-      limit: request.limit,
+      limit: request.limit || 10,
       url: 'https://api.tumblr.com/v2/user/dashboard'
     };
     if (typeof request.post_type !== 'undefined') {
@@ -84,7 +84,7 @@ export default class PostSource {
         if (query.post_type !== 'ANY') {
           slug.type = query.post_type.toLowerCase();
         }
-        const posts = await BlogSource.blogRequest(slug);
+        const posts = await BlogSource.fetchBlogPosts(slug);
         if (typeof posts[0] !== 'undefined') {
           response.push(posts[0]);
           sendMessage({

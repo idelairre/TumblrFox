@@ -19,7 +19,8 @@ import LikeSource from './source/likeSource';
 import LoaderMixin from './components/mixins/loaderMixin';
 import Thoth from './utils/idleMonitorUtil';
 import Utils from './utils';
-import 'backbone.radio';
+
+// TODO: strip out Backbone radio
 
 const App = function () {
   this.constants = constants;
@@ -40,10 +41,6 @@ const App = function () {
   });
 
   this.state = AppState;
-
-  const optionsChannel = Backbone.Radio.channel('options');
-
-  optionsChannel.reply('fox:getOptions', this.options.toJSON());
 
   this._initializers = {};
   this._intervalTasks = {};

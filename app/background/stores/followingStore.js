@@ -55,6 +55,7 @@ export default class Following {
       retryTimes: 0,
       sync: true
     };
+    
     Source.addListener('items', async following => {
       await Following.bulkPut(following);
       const count = await db.following.toCollection().count();
@@ -76,6 +77,7 @@ export default class Following {
     caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'following', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
+
     Source.addListener('items', async following => {
       await Following.bulkPut(following);
       sendProgress();
@@ -113,9 +115,7 @@ export default class Following {
 
   static async bulkPut(followings) {
     try {
-      const promises = followings.map(async following => {
-        return await Following.put(following);
-      });
+      const promises = followings.map(Following.put);
       return Promise.all(promises);
     } catch (err) {
       console.error(err);

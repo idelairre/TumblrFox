@@ -1,27 +1,24 @@
 'use strict';
 
 var path = require('path');
-var config = require('../config/webpack.config');
 
 module.exports = {
   basePath: '../..',
   autoWatch: false,
   singleRun: true,
   colors: true,
-  frameworks: ['jasmine'],
+  frameworks: ['jasmine', 'sinon-chrome'],
   browsers: ['Chrome'],
   files: ['app/background/tests/tests.js'],
   preprocessors: {
     'app/background/tests/tests.js': ['webpack']
   },
   webpack: {
+    devtool: 'cheap-module-source-map',
     module: {
-      noParse: /node_modules\/json-schema\/lib\/validate\.js/,
-      preLoaders: [{
-        test: /\.js$/,
-        loader: 'eslint-loader',
-        exclude: /node_modules/
-      }],
+      noParse: [
+        /node_modules\/json-schema\/lib\/validate\.js/,
+      ],
       loaders: [{
         test: /\.less$/,
         loader: 'style-loader!css-loader!less-loader'
@@ -72,5 +69,9 @@ module.exports = {
       noInfo: true,
       warnings: false
     }
-  }
+  },
+  captureTimeout: 60000,
+  browserDisconnectTimeout : 10000,
+  browserDisconnectTolerance : 1,
+  browserNoActivityTimeout : 60000
 }

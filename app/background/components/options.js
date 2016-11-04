@@ -19,8 +19,6 @@ import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
 
-// TODO: see if you can't just import constants and make it act like a backbone model
-
 const Options = View.extend({
   defaults: {
     initialized: false
@@ -50,16 +48,12 @@ const Options = View.extend({
   },
   initialize() {
     this.initialized = false;
-    if (constants.initialized) { // is this rational? if it doesn't set correctly here and on the constants reply, it sets on ready.
-      this.initializeConstants();
-    } else {
-      constants.once('ready', ::this.initializeConstants);
-    }
+    this.initializeConstants();
     this.bindEvents();
     this.initializePort();
   },
   initializeConstants() {
-    this.props = new Model(constants.toJSON());
+    this.props = this.model;
     this.restoreOptions(this.props.toJSON());
   },
   initializePort() {
@@ -84,7 +78,6 @@ const Options = View.extend({
       this.$(`[data-subview="${subviewName}"]`).replaceWith(view.$el);
       return view;
     });
-    this.initialized = true;
   },
   bindEvents() {
     this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.updateProps);
@@ -145,9 +138,19 @@ const Options = View.extend({
     if (!this.initialized) {
       this.renderSubviews();
     }
+    this.initialized = true;
   }
 });
 
-new Options({
-  el: $('.container')
-});
+const renderOptions = () => {
+  new Options({
+    el: $('.container'),
+    model: new Model(constants.toJSON())
+  });
+}
+
+if (constants.initialized()) {
+  renderOptions();
+} else {
+  constants.once('initialized', renderOptions);
+}

@@ -1,4 +1,4 @@
-import { isArray, forIn, template } from 'lodash';
+import { forIn, template } from 'lodash';
 import { ComponentFetcher } from '../../utils';
 import ExtendedPopoverMixin from '../mixins/extendedPopoverMixin';
 import popoverTemplate from './popoverTemplate.html';
@@ -70,7 +70,7 @@ const PopoverComponent = TumblrView.extend({
     this.$el.html(this.template(this.options));
     this.$el.addClass(this.options.class);
     let hiddenItems = null;
-    if (isArray(this.options.items)) {
+    if (Array.isArray(this.options.items)) {
       this.options.items.map(item => {
         this._evalHidden(item, hiddenItems);
         this._setHidden(item.listItems);

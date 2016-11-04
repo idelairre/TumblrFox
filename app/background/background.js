@@ -30,7 +30,7 @@ const listenForUpdate = () => {
 };
 
 const listenForIdleState = () => {
-  chrome.idle.setDetectionInterval(15);
+  chrome.idle.setDetectionInterval(400000);
   chrome.idle.onStateChanged.addListener(idleHandler);
 };
 

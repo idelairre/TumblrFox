@@ -1,6 +1,6 @@
 import { $, View } from 'backbone';
 import { formKey } from '../../application/constants';
-import { debounce, each, invoke, pick, template } from 'lodash';
+import { debounce, invoke, pick, template } from 'lodash';
 import { ComponentFetcher } from '../../utils';
 import FollowingModel from './followingModel';
 import FollowingSearchComponent from './followingSearch/followingSearchComponent';

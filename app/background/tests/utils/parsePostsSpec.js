@@ -1,5 +1,5 @@
+import { isEqual } from 'lodash';
 import parsePosts from '../../utils/parsePosts';
-import { isArray, isEqual } from 'lodash';
 import likesFixture from '../fixtures/likes-fixture.html';
 import 'babel-polyfill';
 
@@ -11,7 +11,7 @@ describe('parsePosts()', () => {
 
   it ('should parse posts into array', () => {
     const response = parsePosts(likesFixture);
-    expect(isArray(response)).toBe(true);
+    expect(Array.isArray(response)).toBe(true);
   });
 
   it ('posts should have custom tumblr post properties ', () => {
