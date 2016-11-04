@@ -20,8 +20,6 @@ import LoaderMixin from './components/mixins/loaderMixin';
 import Thoth from './utils/idleMonitorUtil';
 import Utils from './utils';
 
-// TODO: strip out Backbone radio
-
 const App = function () {
   this.constants = constants;
 

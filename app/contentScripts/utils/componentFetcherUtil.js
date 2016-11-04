@@ -1,5 +1,4 @@
 import { camelCase, extend, forIn, isObject } from 'lodash';
-import 'backbone.radio';
 
 // perhaps there is a way to memoize fetched component numbers?
 
