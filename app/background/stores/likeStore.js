@@ -27,7 +27,7 @@ export default class Likes {
     caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
-    
+
     Source.addListener('items', async posts => {
       await Likes.bulkPut(posts);
       Source.next();

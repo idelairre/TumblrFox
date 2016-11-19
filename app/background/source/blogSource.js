@@ -20,8 +20,10 @@ class BlogSource extends Source {
   }
 
   load() {
-    this.loadConstants(constants, 'nextBlogSourceSlug', function () {
-      if (!this.options.url) {
+    this.constants = constants;
+    this.constants.once('ready', () => {
+      Object.assign(this.options, this.constants.get('nextBlogSourceSlug'));
+      if (!this.options.url && this.options.page === 0) {
         this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}`;
       }
     });
@@ -41,6 +43,7 @@ class BlogSource extends Source {
       page: this.options.page,
       url: this.options.url
     });
+    console.log(this.constants.get('nextBlogSourceSlug'));
   }
 
   parse(data) {

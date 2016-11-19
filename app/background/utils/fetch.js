@@ -15,7 +15,7 @@ async function fetch() {
       }
     },
     error: err => {
-      if (e.statusText === 'timeout') {
+      if (err.statusText === 'timeout') {
         deferred.reject(this.TIMEOUT_MESSAGE);
       } else {
         deferred.reject(err);

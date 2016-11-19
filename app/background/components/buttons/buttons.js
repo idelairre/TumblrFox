@@ -24,8 +24,8 @@ const Buttons = View.extend({
     this.bindEvents();
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'CACHE_LIKES', this.$('#resetCache').prop('disabled', true));
-    this.listenTo(Backbone.Events, 'DONE', this.$('#resetCache').prop('disabled', false));
+    this.listenTo(Backbone.Events, 'CACHE_LIKES', () => ::this.$('#resetCache').prop('disabled', true));
+    this.listenTo(Backbone.Events, 'DONE', () => ::this.$('#resetCache').prop('disabled', false));
     this.listenTo(Backbone.Events, 'CACHE_UPLOADED', ::this.createDownload);
     this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.createFileBlob);
     this.listenTo(this.props, 'change:canFetchApiLikes', ::this.setCacheLikesButton);

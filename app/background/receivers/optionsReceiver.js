@@ -33,12 +33,6 @@ const restoreCache = (request, postMessage) => {
   }
 };
 
-// const runTests = () => {
-//   chrome.tabs.create({
-//     url: chrome.extension.getURL('pages/tests.html')
-//   });
-// }
-
 const optionsReceiver = portHandler({
   cachePosts: Blog.cache,
   cacheLikes: Likes.cache,
@@ -48,7 +42,6 @@ const optionsReceiver = portHandler({
   rehashTags: Cache.rehashTags,
   resetCache: Cache.reset,
   restoreCache: restoreCache,
-  // extensionTests: runTests,
   updateSettings: updateConstants
 });
 

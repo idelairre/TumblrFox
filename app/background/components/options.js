@@ -60,6 +60,9 @@ const Options = View.extend({
     this.port = chrome.runtime.connect({
       name: 'options'
     });
+    this.initializeListeners();
+  },
+  initializeListeners() {
     if (this.port) {
       this.port.onMessage.addListener(response => {
         const eventName = snakeCase(response.type).toUpperCase();
@@ -130,7 +133,9 @@ const Options = View.extend({
     this.$('button#cacheLikes').prop('disabled', !this.props.get('canFetchApiLikes') && !this.props.get('clientCaching'));
   },
   postMessage(slug) { // signature: action: {String}, payload: {Object}
-    this.port.postMessage(slug);
+    if (this.port) {
+      this.port.postMessage(slug);
+    }
   },
   restoreOptions(response) {
     const { payload } = response;

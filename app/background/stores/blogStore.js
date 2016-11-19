@@ -72,10 +72,11 @@ export default class Blog {
     if (caching) {
       return;
     }
+
     caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
-    
+
     Source.addListener('items', async posts => {
       await Blog.bulkPut(posts);
       sendProgress();
@@ -83,8 +84,10 @@ export default class Blog {
     });
     Source.addListener('error', err => {
       sendError(err, sendResponse);
+      caching = false;
     });
     Source.addListener('done', msg => {
+      caching = false;
       if (isFunction(sendResponse)) {
         sendResponse({
           type: 'done',

@@ -158,52 +158,48 @@ export default class Cache {
 
   static async resetPosts() {
     await db.posts.toCollection().delete();
-    constants.set('cachedPostsCount', 0);
-    constants.set('nextBlogSourceSlug', constants._defaults.nextBlogSourceSlug);
-    constants.initialize();
+    constants.reset('cachedPostsCount');
+    constants.reset('nextBlogSourceSlug');
   }
 
   static async resetFollowing() {
     await db.following.toCollection().delete();
-    constants.set('cachedFollowingCount', 0);
-    constants.initialize();
+    constants.reset('cachedFollowingCount');
   }
 
   static async resetLikes() {
     await db.likes.toCollection().delete();
-    constants.set('cachedLikesCount', 0);
-    constants.set('nextLikeSourceSlug', constants._defaults.nextLikeSourceSlug);
-    constants.initialize();
+    constants.reset('cachedLikesCount');
+    constants.reset('nextLikeSourceSlug');
   }
 
   static async resetTags() {
     await db.tags.toCollection().delete();
-    constants.set('cachedTagsCount', 0);
-    constants.initialize();
+    constants.reset('cachedTagsCount');
   }
 
   static async reset(table, sendResponse) {
     try {
       sendResponse({
-        type: 'deleting'
+        type: 'deleting',
+      });
+      constants.once('reset', () => {
+        sendResponse({
+          type: 'done',
+          message: table === 'all' ? 'Cache reset' : `${capitalize(table)} cache reset`,
+          payload: {
+            constants: constants.toJSON()
+          }
+        });
       });
       if (table === 'all') {
         await Cache.resetLikes();
         await Cache.resetFollowing();
         await Cache.resetPosts();
         await Cache.resetTags();
-        constants.reset();
       } else {
-        const method = `reset${capitalize(table)}`;
-        await Cache[method]();
+        await Cache[`reset${capitalize(table)}`]();
       }
-      sendResponse({
-        type: 'done',
-        message: table === 'all' ? 'Cache reset' : `${capitalize(table)} cache reset`,
-        payload: {
-          constants
-        }
-      });
     } catch (e) {
       logError(e, sendResponse);
     }
