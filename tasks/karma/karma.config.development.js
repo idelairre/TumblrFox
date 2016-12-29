@@ -6,7 +6,7 @@ module.exports = function(config) {
   config.set(Object.assign(baseConfig, {
     autoWatch: true,
     singleRun: false,
-    reporters: ['progress', 'html'],
+    reporters: ['kjhtml'],
     htmlReporter: {
       outputFile: 'report/units.html',
       pageTitle: 'Unit Tests',

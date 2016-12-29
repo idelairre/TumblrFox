@@ -29,7 +29,9 @@ export const logValues = (database, sendResponse, callback) => {
     const totalKey = camelCase(`total-${database}-count`);
     const { percentComplete, itemsLeft, total } = calculatePercent(constants.get(cachedKey), constants.get(totalKey));
 
-    const payload = { constants: constants.toJSON(), database, percentComplete, itemsLeft, total };
+    const changed = {};
+    changed[cachedKey] = constants.get(cachedKey);
+    const payload = { constants: changed, database, percentComplete, itemsLeft, total };
 
     if (sendResponse) {
       sendResponse({

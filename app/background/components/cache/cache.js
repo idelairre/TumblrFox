@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import Backbone, { Model } from 'backbone';
+import { Events, Model } from 'backbone';
 import template from 'lodash.template';
 import snakeCase from '../../utils/snakeCase';
 import Tipped from '../../lib/tipped';
@@ -44,6 +44,7 @@ const Cache = View.extend({
       page: 'max',
       date: new Date(2007, 1, 1)
     });
+    this.bindEvents();
   },
   bindEvents() {
     this.listenTo(this.model, 'change', ::this.props.set('likeSourceLimits', this.model.toJSON()));
@@ -54,7 +55,6 @@ const Cache = View.extend({
     this.$page = this.$('.page-num');
     this.$date.val(this.toDateInputValue(this.model.get('date')));
     this.renderPageOpts();
-    this.bindEvents();
   },
   renderPageOpts() {
     const pageOpts = this.pageOpts.map(opt => {
@@ -65,14 +65,16 @@ const Cache = View.extend({
   },
   afterRender() {
     Tipped.create('[data-tooltip-key="caching"]', $(cacheTooltip).html(), {
-      skin: 'light', position: 'topleft', behavior: 'hide'
+      skin: 'light',
+      position: 'topleft',
+      behavior: 'hide'
     });
   },
   handleButton(e) {
     e.preventDefault();
     const key = this.$(e.currentTarget).prop('id');
     const eventName = snakeCase(key).toUpperCase();
-    Backbone.Events.trigger(eventName, {
+    Events.trigger(eventName, {
       type: key
     });
   },

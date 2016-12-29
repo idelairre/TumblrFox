@@ -1,15 +1,15 @@
-import async from 'async';
 import { capitalize, isFunction, invoke, maxBy, union } from 'lodash';
+import { Deferred } from 'jquery';
+import async from 'async';
 import Dexie from 'dexie';
 import Papa from '../lib/papaParse';
-import constants from '../constants';
 import { logValues, logError, calculatePercent } from './loggingService';
+import constants from '../constants';
 import db from '../lib/db';
 import Firebase from './firebaseService';
 import Likes from '../stores/likeStore';
 import Lunr from '../services/lunrSearchService';
 import Tags from '../stores/tagStore';
-import { Deferred } from 'jquery';
 import 'babel-polyfill';
 
 const Promise = Dexie.Promise;

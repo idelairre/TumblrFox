@@ -1,4 +1,4 @@
-import { isFunction, isString, keyBy, toArray } from 'lodash';
+import { isFunction, isString, keyBy } from 'lodash';
 import { ajax, Deferred } from 'jquery';
 import { calculatePercent } from './loggingService';
 import constants from '../constants';
@@ -37,7 +37,7 @@ export default class Firebase {
         xhr.onprogress = calculateProgress;
       },
       success: response => {
-        deferred.resolve(toArray(response));
+        deferred.resolve(Array.toArray(response));
       },
       error: error => {
         console.log(error);

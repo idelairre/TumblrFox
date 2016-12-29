@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { LikesModel } from '../../models/models';
 import DashboardSource from '../../source/likeSource';
 import { isSorted } from '../../../shared/jasmine-helpers';
+import 'babel-polyfill';
 
 const likesModel = new LikesModel();
 
@@ -15,9 +16,7 @@ describe('LikesModel', () => {
       };
       likesModel.fetch(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post.type).toMatch(/photo/);
-        });
+        response.forEach(post => expect(post.type).toMatch(/photo/));
         done();
       });
     });
@@ -31,9 +30,7 @@ describe('LikesModel', () => {
       };
       likesModel.fetch(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post.is_reblog).toEqual(false);
-        });
+        response.forEach(post => expect(post.is_reblog).toEqual(false));
         done();
       });
     });
@@ -48,9 +45,7 @@ describe('LikesModel', () => {
       };
       likesModel.fetch(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post['tumblelog-content-rating']).not.toBeDefined();
-        });
+        response.forEach(post => expect(post['tumblelog-content-rating']).not.toBeDefined());
         done();
       });
     });
@@ -116,6 +111,7 @@ describe('LikesModel', () => {
         term: 'art'
       };
       likesModel.search(query).then(response => {
+        expect(response).toBeDefined();
         done();
       });
     });
@@ -131,9 +127,7 @@ describe('LikesModel', () => {
       };
       likesModel.search(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(parseInt(query.before) > parseInt(post.liked_timestamp * 1000));
-        });
+        response.forEach(post => expect(parseInt(query.before) > parseInt(post.liked_timestamp * 1000)));
         done();
       });
     });

@@ -23,9 +23,11 @@ class LikeSource extends Source {
   }
 
   load() {
-    this.constants = constants;
-    Object.assign(this.options, this.constants.get('likeSourceLimits'));
-    Object.assign(this.options, this.constants.get('nextLikeSourceSlug'));
+    constants.once('ready', () => {
+      this.constants = constants;
+      Object.assign(this.options, this.constants.get('likeSourceLimits'));
+      Object.assign(this.options, this.constants.get('nextLikeSourceSlug'));
+    });
   }
 
   condition() {

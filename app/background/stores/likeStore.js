@@ -5,7 +5,7 @@ import { isEqual, isFunction, noop, omit, sortBy, union } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import filters from '../utils/filters';
-import { noopCallback } from '../utils/helpers';
+import noopCallback from '../utils/noopCallback';
 import marshalQuery from '../utils/marshalQuery';
 import sortByPopularity from '../utils/sort';
 import { logValues, logError } from '../services/loggingService';
@@ -13,18 +13,16 @@ import Lunr from '../services/lunrSearchService';
 import Source from '../source/likeSource';
 import Tags from './tagStore';
 
-let $postsCache = [];
-
-const lastQuery = {};
-
-let caching = false;
-
 export default class Likes {
+  static caching = false;
+  static lastQuery = {};
+  static $postsCache = [];
+
   static cache(sendResponse) {
-    if (caching) {
+    if (Likes.caching) {
       return;
     }
-    caching = true;
+    Likes.caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
 
@@ -34,9 +32,11 @@ export default class Likes {
       sendProgress();
     });
     Source.addListener('error', err => {
+      Likes.caching = false;
       sendError(err, sendResponse);
     });
     Source.addListener('done', msg => {
+      Likes.caching = false;
       sendResponse({
         type: 'done',
         payload: constants,
@@ -77,13 +77,13 @@ export default class Likes {
   }
 
   static cacheFetch(query) {
-    return $postsCache.slice(query.next_offset, query.next_offset + query.limit);
+    return Likes.$postsCache.slice(query.next_offset, query.next_offset + query.limit);
   }
 
   static async searchLikesByTerm(query) {
     try {
       query = marshalQuery(query);
-      if (isEqual(lastQuery, omit(query, ['next_offset']))) {
+      if (isEqual(Likes.lastQuery, omit(query, ['next_offset']))) {
         return Likes.cacheFetch(query);
       }
       const term = query.term;
@@ -92,14 +92,14 @@ export default class Likes {
       if (typeof query.term === 'undefined') {
         query.term = term;
       }
-      Object.assign(lastQuery, omit(query, ['next_offset']));
+      Object.assign(Likes.lastQuery, omit(query, ['next_offset']));
       let response = await db.likes.where('tokens').anyOfIgnoreCase(...query.term).or('tags').anyOfIgnoreCase(...query.term).filter(_filters).reverse().toArray();
       if (query.sort !== 'CREATED_DESC') {
         response = sortByPopularity(response);
       } else {
         response = Likes.sortResults(query.term, response);
       }
-      $postsCache = response;
+      Likes.$postsCache = response;
 
       return response.slice(query.next_offset, query.next_offset + query.limit);
     } catch (err) {
@@ -127,13 +127,13 @@ export default class Likes {
 
   static async fetch(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
     query = marshalQuery(query);
-    if (isEqual(lastQuery, omit(query, ['next_offset']))) {
+    if (isEqual(Likes.lastQuery, omit(query, ['next_offset']))) {
       return Likes.cacheFetch(query);
     }
     const _filters = filters.bind(this, query);
     try {
       let matches = [];
-      Object.assign(lastQuery, omit(query, ['next_offset']));
+      Object.assign(Likes.lastQuery, omit(query, ['next_offset']));
       if (query.sort !== 'CREATED_DESC') {
         matches = await db.likes.orderBy('note_count').filter(_filters).reverse().toArray();
       } else if (query.post_type) {
@@ -143,7 +143,7 @@ export default class Likes {
       } else {
         matches = await db.likes.toCollection().filter(_filters).reverse().toArray();
       }
-      $postsCache = matches;
+      Likes.$postsCache = matches;
       return matches.slice(query.next_offset, query.next_offset + query.limit);
     } catch (err) {
       console.error(err);

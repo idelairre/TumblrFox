@@ -5,7 +5,7 @@ var __karmaWebpackManifest__ = [];
 
 // require all modules ending in "_test" from the
 // current directory and all subdirectories
-var testsContext = require.context('.', true, /Spec$/);
+var testsContext = require.context('./', true, /Spec$/);
 
 function inManifest(path) {
   return __karmaWebpackManifest__.indexOf(path) >= 0;

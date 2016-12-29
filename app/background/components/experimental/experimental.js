@@ -19,9 +19,11 @@ const Experimental = View.extend({
   template: template(experimentalTemplate),
   className: 'experimental',
   tagName: 'section',
+  initialize() {
+    this.bindEvents();
+  },
   render() {
     this.$el.html(this.template(this.props.attributes));
-    this.bindEvents();
   },
   events: {
     'click [type=checkbox]': 'toggleCheck'

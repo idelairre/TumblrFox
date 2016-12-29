@@ -1,9 +1,10 @@
 import $ from 'jquery';
-import Backbone, { View } from 'backbone';
+import { Events } from 'backbone';
 import ProgressBar from 'progressbar.js';
+import View from '../view/view';
 
 const Progress = View.extend({
-  template: '<div></div>',
+  template: '',
   id: 'container',
   className: 'progress',
   tagName: 'div',
@@ -12,12 +13,9 @@ const Progress = View.extend({
   },
   render() {
     this.$el.html(this.template);
-    setTimeout(() => {
-      this.afterRender();
-    }, 0);
   },
   afterRender() {
-    this.$bar = new ProgressBar.Line(container, {
+    this.$bar = new ProgressBar.Line(this.$el[0], {
       strokeWidth: 4,
       easing: 'easeInOut',
       duration: 100,
@@ -53,32 +51,32 @@ const Progress = View.extend({
     this.$el.hide();
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'ASSEMBLE_FILE', ::this.show);
-    this.listenTo(Backbone.Events, 'DOWNLOAD_CACHE', ::this.show);
-    this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.show);
-    this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.show);
-    this.listenTo(Backbone.Events, 'CACHE_POSTS', ::this.show);
-    this.listenTo(Backbone.Events, 'DELETING', ::this.fakeAnimateProgress);
-    this.listenTo(Backbone.Events, 'DONE', ::this.hide);
-    this.listenTo(Backbone.Events, 'PROGRESS', ::this.animateProgress);
-    this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.show);
-    this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.show);
-    this.listenTo(Backbone.Events, 'REHASH_TAGS', ::this.show);
-    this.listenTo(Backbone.Events, 'RESTORING_CACHE', ::this.animateProgress);
-    this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.hide);
+    this.listenTo(Events, 'ASSEMBLE_FILE', ::this.show);
+    this.listenTo(Events, 'DOWNLOAD_CACHE', ::this.show);
+    this.listenTo(Events, 'CACHE_LIKES', ::this.show);
+    this.listenTo(Events, 'CACHE_FOLLOWING', ::this.show);
+    this.listenTo(Events, 'CACHE_POSTS', ::this.show);
+    this.listenTo(Events, 'DELETING', ::this.fakeAnimateProgress);
+    this.listenTo(Events, 'DONE', ::this.hide);
+    this.listenTo(Events, 'PROGRESS', ::this.update);
+    this.listenTo(Events, 'RESTORE_CACHE', ::this.show);
+    this.listenTo(Events, 'RESET_CACHE', ::this.show);
+    this.listenTo(Events, 'REHASH_TAGS', ::this.show);
+    this.listenTo(Events, 'RESTORING_CACHE', ::this.update);
+    this.listenTo(Events, 'CACHE_CONVERTED', ::this.hide);
   },
-  animateProgress(response) {
+  update(response) {
     if (typeof response.payload !== 'undefined') {
       const { constants, percentComplete } = response.payload;
-      this.$bar.animate(percentComplete * 0.01);
-      Backbone.Events.trigger('CHANGE_PROPS', constants);
-      if (parseInt(percentComplete) === 100) {
-        return;
-      }
+      Events.trigger('CHANGE_PROPS', constants); // TODO: add a 'changeAttributes' method to Constant so this doesn't send a shit ton of 'CHANGE_PROPS' events
+      this.animateProgress(percentComplete);
+    }
+  },
+  animateProgress(percentComplete) {
+    if (percentComplete >= 100) {
+      this.$bar.animate(1);
     } else {
-      if (response.type && response.type === 'done') {
-        this.$bar.animate(1);
-      }
+      this.$bar.animate(percentComplete * 0.01);
     }
   },
   fakeAnimateProgress() {

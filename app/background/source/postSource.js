@@ -1,7 +1,7 @@
 import { Deferred } from 'jquery';
 import { isEmpty } from 'lodash';
 import { oauthRequest } from '../lib/oauthRequest';
-import { filterAsync } from '../utils/helpers';
+import filterAsync from '../utils/filterAsync';
 import BlogSource from './blogSource';
 import constants from '../constants';
 import db from '../lib/db';

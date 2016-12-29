@@ -1,8 +1,11 @@
 import $ from 'jquery';
 import { without } from 'lodash';
+import { Generator } from 'tumblr-faker';
 import { BlogModel } from '../../models/models';
 import BlogSource from '../../source/blogSource';
 import Events from '../../application/events';
+import { isSorted } from '../../../shared/jasmine-helpers';
+import 'babel-polyfill';
 
 const blogModel = new BlogModel();
 const Tumblr = window.Tumblr;
@@ -36,9 +39,7 @@ describe('BlogModel', () => {
         post_type: 'QUOTE'
       };
       blogModel.fetch(query).then(response => {
-        response.posts.forEach(post => {
-          expect(post.type).toMatch(/quote/);
-        });
+        response.posts.forEach(post => expect(post.type).toMatch(/quote/));
         done();
       });
     });
@@ -55,9 +56,7 @@ describe('BlogModel', () => {
       blogModel.fetch(query).then(response => {
         expect(response).toBeDefined(response);
         expect(response.posts.length).toEqual(query.limit);
-        response.posts.forEach(post => {
-          expect(post.reblogged_from_tumblr_url).toBe(null);
-        });
+        response.posts.forEach(post => expect(post.reblogged_from_tumblr_url).toBe(null));
         done();
       });
     });
@@ -78,19 +77,15 @@ describe('BlogModel', () => {
           if (typeof post.reblogged_from_name === 'undefined' || !post.reblogged_from_name) {
             return;
           }
-          const deferred = $.Deferred();
-          blogModel.getContentRating(post.reblogged_from_name).then(response => {
-            deferred.resolve(response);
-          });
-          return deferred.promise();
+          return blogModel.getContentRating(post.reblogged_from_name);
         }), undefined);
-        $.when.apply($, promises).done((...response) => {
-          const responses = [].concat(...response);
+
+        Promise.all(promises).then(responses => {
           responses.forEach(user => {
             expect(user.content_rating).not.toMatch('nsfw');
           });
           done();
-        });
+        }).catch(err => console.error(err));
       });
     });
 
@@ -105,7 +100,7 @@ describe('BlogModel', () => {
         post_role: 'ORIGINAL'
       };
       blogModel.fetch(query).then(response => {
-        expect(response.posts.length).toEqual(query.limit)
+        expect(response.posts.length).toEqual(query.limit);
         done();
       });
     });
@@ -124,7 +119,7 @@ describe('BlogModel', () => {
       blogModel.fetch(query).then(response => {
         expect(response).toBeDefined();
         response.forEach(post => {
-          expect(post.reblogged_from_tumblr_url).toBe(null);
+          expect(post.reblogged_from_tumblr_url).toBe(null)
         });
         done();
       });
@@ -139,24 +134,21 @@ describe('BlogModel', () => {
         post_type: 'PHOTO',
         filter_nsfw: true
       };
+
       blogModel.search(query).then(response => {
         const promises = without(response.map(post => {
           if (!post.reblogged_from_name) {
             return;
           }
-          const deferred = $.Deferred();
-          blogModel.getContentRating(post.reblogged_from_name).then(response => {
-            deferred.resolve(response);
-          });
-          return deferred.promise();
+          return blogModel.getContentRating(post.reblogged_from_name);
         }), undefined);
-        $.when.apply($, promises).done((...response) => {
-          const responses = [].concat(...response);
+
+        Promise.all(promises).then(responses => {
           responses.forEach(user => {
             expect(user.content_rating).not.toMatch('nsfw');
           });
           done();
-        });
+        }).catch(err => console.error(err));
       });
     });
   });
@@ -181,8 +173,8 @@ describe('BlogModel', () => {
       });
     });
 
-    it('should be called when the blogname query equals the current user name', done => {
-      spyOn(BlogSource, 'cacheFetch').and.returnValue($.Deferred().resolve());
+    it('should be called when the blogname query equals the current user name', async done => {
+      spyOn(BlogSource, 'cacheFetch').and.returnValue(Promise.resolve());
 
       const query = {
         blogname: Tumblr.Prima.currentUser().id,
@@ -194,156 +186,9 @@ describe('BlogModel', () => {
 
       Tumblr.Fox.options.set('cachedUserPosts', true);
 
-      blogModel.fetch(query).then(() => {
-        expect(BlogSource.cacheFetch).toHaveBeenCalled();
-        done();
-      });
-    });
-
-    it('should filter posts by type', done => {
-      const query = {
-        blogname: Tumblr.Prima.currentUser().id,
-        term: '',
-        next_offset: 0,
-        limit: 10,
-        post_type: 'PHOTO'
-      };
-
-      Tumblr.Fox.options.set('cachedUserPosts', true);
-
-      blogModel.fetch(query).then(response => {
-        response.forEach(post => {
-          expect(post.type).toMatch(query.post_type.toLowerCase());
-        });
-        done();
-      });
-    });
-
-    it('should filter posts by role', done => {
-      const query = {
-        blogname: Tumblr.Prima.currentUser().id,
-        term: '',
-        next_offset: 0,
-        limit: 10,
-        post_type: 'ANY',
-        post_role: 'ORIGINAL'
-      };
-
-      Tumblr.Fox.options.set('cachedUserPosts', true);
-
-      blogModel.fetch(query).then(response => {
-        response.forEach(post => {
-          expect(post.is_reblog).toEqual(false);
-        });
-        done();
-      });
-    });
-
-    it('should filter posts by role and type', done => {
-      const query = {
-        blogname: Tumblr.Prima.currentUser().id,
-        term: '',
-        next_offset: 0,
-        limit: 10,
-        post_type: 'PHOTO',
-        post_role: 'ORIGINAL'
-      };
-
-      Tumblr.Fox.options.set('cachedUserPosts', true);
-
-      blogModel.fetch(query).then(response => {
-        response.forEach(post => {
-          expect(post.is_reblog).toEqual(false);
-          expect(post.type).toEqual(jasmine.stringMatching(query.post_type.toLowerCase()));
-        });
-        done();
-      });
-    });
-
-    it('should filter posts by content rating', done => {
-      const query = {
-        blogname: Tumblr.Prima.currentUser().id,
-        term: '',
-        next_offset: 0,
-        limit: 10,
-        post_type: 'PHOTO',
-        filter_nsfw: true
-      };
-
-      Tumblr.Fox.options.set('cachedUserPosts', true);
-
-      blogModel.fetch(query).then(response => {
-        const promises = without(response.map(post => {
-          if (typeof post['tumblelog-parent-data'] === 'undefined') {
-            return;
-          }
-          const deferred = $.Deferred();
-          const name = post['tumblelog-parent-data'].name;
-          if (!name) {
-            return;
-          }
-          blogModel.getContentRating(name).then(response => {
-            deferred.resolve(response);
-          });
-          return deferred.promise();
-        }), undefined);
-        $.when.apply($, promises).done((...response) => {
-          const responses = [].concat(...response);
-          responses.forEach(user => {
-            expect(user.content_rating).not.toMatch('nsfw');
-          });
-          done();
-        });
-      });
-    });
-
-    it('should sort posts by note count', done => {
-      const query = {
-        blogname: Tumblr.Prima.currentUser().id,
-        term: '',
-        next_offset: 0,
-        limit: 10,
-        post_type: 'PHOTO',
-        filter_nsfw: false,
-        sort: 'POPULARITY DESC'
-      };
-
-      const isSorted = array => {
-        const len = array.length - 1;
-        for (let i = 0; i < len; ++i) {
-          if (array[i] > array[i + 1]) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      Tumblr.Fox.options.set('cachedUserPosts', true);
-
-      blogModel.fetch(query).then(response => {
-        expect(isSorted(response)).toEqual(true);
-        done();
-      });
-    });
-
-    it('should filter posts by role and content rating', done => { // can't do this yet due to Tumblr api limitations, just tests to make sure the response exists
-      const query = {
-        blogname: Tumblr.Prima.currentUser().id,
-        term: '',
-        next_offset: 0,
-        limit: 10,
-        post_type: 'ANY',
-        filter_nsfw: true,
-        post_role: 'ORIGNAL'
-      };
-
-      Tumblr.Fox.options.set('cachedUserPosts', true);
-
-      blogModel.fetch(query).then(response => {
-        expect(response).toBeDefined();
-        expect(response.length).toEqual(query.limit);
-        done();
-      });
+      await blogModel.fetch(query);
+      expect(BlogSource.cacheFetch).toHaveBeenCalled();
+      done();
     });
   });
 });

@@ -9,7 +9,7 @@ class LunrSearch {
     this.lunr = Lunr();
   }
 
-  tokenizeHtml(html) { // TODO: strip out html data
+  tokenizeHtml(html) {
     html = stripScripts(html);
     const text = $(html).text();
     let tokens = this.tokenize(text).filter(token => {

@@ -13,8 +13,10 @@ const Debug = View.extend({
   template: template(debugTemplate),
   className: 'debug--options',
   tagName: 'section',
-  render() {
+  initialize() {
     this.listenTo(Backbone.Events, 'all', ::this.log);
+  },
+  render() {
     this.$el.html(this.template(this.props.attributes));
     this.$collapseButton = this.$el.find('#collapseButton');
     this.$debug = this.$el.find('#debugConsole');

@@ -2,15 +2,15 @@ import { isEqual, isFunction, noop } from 'lodash';
 import db from '../lib/db';
 import filters from '../utils/filters';
 import marshalQuery from '../utils/marshalQuery';
-import { noopCallback } from '../utils/helpers';
+import noopCallback from '../utils/noopCallback';
 import Source from '../source/blogSource';
 import Lunr from '../services/lunrSearchService';
 import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 
-let caching = false; // NOTE: this is temporary, might have to actually instansiate the class
-
 export default class Blog {
+  static caching = false;
+
   static async fetch(query) {
     query = marshalQuery(query);
     const _filters = filters.bind(this, query);
@@ -69,11 +69,11 @@ export default class Blog {
   }
 
   static async cache(sendResponse) {
-    if (caching) {
+    if (Blog.caching) {
       return;
     }
 
-    caching = true;
+    Blog.caching = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
 
@@ -84,10 +84,10 @@ export default class Blog {
     });
     Source.addListener('error', err => {
       sendError(err, sendResponse);
-      caching = false;
+      Blog.caching = false;
     });
     Source.addListener('done', msg => {
-      caching = false;
+      Blog.caching = false;
       if (isFunction(sendResponse)) {
         sendResponse({
           type: 'done',
@@ -100,7 +100,7 @@ export default class Blog {
   }
 
   static async update() { // NOTE: this needs a test
-    if (caching) {
+    if (Blog.caching) {
       return;
     }
     Source.addListener('items', posts => {
@@ -117,9 +117,11 @@ export default class Blog {
       }
     });
     Source.addListener('error', err => {
+      Blog.caching = false;
       console.error(err);
     });
     Source.addListener('done', () => {
+      Blog.caching = false;
       Source.removeListeners();
     });
     Source.start();

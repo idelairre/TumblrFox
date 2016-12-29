@@ -1,5 +1,5 @@
-import constants from '../constants';
 import { countBy, forIn, identity } from 'lodash';
+import constants from '../constants';
 import db from '../lib/db';
 
 export default class Tags {

@@ -2,8 +2,6 @@
 /* eslint no-undef: "error" */
 
 import Constants from 'constant-fox';
-import db from './lib/db';
-import { oauthRequest } from './lib/oauthRequest';
 import tokens from './tokens.json';
 import manifest from '../manifest.json';
 

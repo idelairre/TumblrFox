@@ -1,13 +1,14 @@
 import { isFunction, noop } from 'lodash';
 import db from '../lib/db';
-import { noopCallback } from '../utils/helpers';
+import noopCallback from '../utils/noopCallback';
 import Source from '../source/followingSource';
 import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 
-let caching = false;
-
 export default class Following {
+
+  static caching = false;
+
   static async fetch(query) {
     if (typeof query === 'undefined') {
       return db.following.toCollection().toArray();
@@ -55,7 +56,7 @@ export default class Following {
       retryTimes: 0,
       sync: true
     };
-    
+
     Source.addListener('items', async following => {
       await Following.bulkPut(following);
       const count = await db.following.toCollection().count();
@@ -71,10 +72,10 @@ export default class Following {
   }
 
   static cache(sendResponse) {
-    if (caching) {
+    if (Following.cache) {
       return;
     }
-    caching = true;
+    Following.cache = true;
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'following', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
 

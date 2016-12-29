@@ -20,9 +20,11 @@ class FollowingSource extends Source {
   }
 
   load() {
-    this.constants = constants;
-    Object.assign(this.options, this.constants.get('cachedFollowingCount'));
-    Object.assign(this.options, this.constants.get('totalFollowingCount'));
+    constants.once('ready', () => {
+      this.constants = constants;
+      Object.assign(this.options, this.constants.get('cachedFollowingCount'));
+      Object.assign(this.options, this.constants.get('totalFollowingCount'));
+    });
   }
 
   step() {

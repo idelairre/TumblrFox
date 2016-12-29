@@ -61,10 +61,7 @@ const BlogModel = Model.extend({
           query.next_offset += 15;
           return recursiveFetch(posts);
         }
-        deferred.resolve({
-          posts,
-          query
-        });
+        deferred.resolve({ posts, query });
       });
     }
     recursiveFetch(posts);

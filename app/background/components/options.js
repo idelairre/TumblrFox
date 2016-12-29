@@ -3,7 +3,7 @@
 /* eslint no-undef: "error" */
 
 import $ from 'jquery';
-import Backbone, { Model, View } from 'backbone';
+import { Events, Model, View } from 'backbone';
 import capitalize from '../utils/capitalize';
 import camelCase from '../utils/camelCase';
 import constants from '../constants';
@@ -48,13 +48,16 @@ const Options = View.extend({
   },
   initialize() {
     this.initialized = false;
-    this.initializeConstants();
+    this.initializeViews();
     this.bindEvents();
     this.initializePort();
   },
-  initializeConstants() {
+  initializeViews() {
     this.props = this.model;
-    this.restoreOptions(this.props.toJSON());
+    if (!this.initialized) {
+      this.renderSubviews();
+    }
+    this.initialized = true;
   },
   initializePort() {
     this.port = chrome.runtime.connect({
@@ -67,7 +70,7 @@ const Options = View.extend({
       this.port.onMessage.addListener(response => {
         const eventName = snakeCase(response.type).toUpperCase();
         if (typeof eventName !== 'undefined') {
-          Backbone.Events.trigger(eventName, response);
+          Events.trigger(eventName, response);
         }
       });
     }
@@ -83,18 +86,18 @@ const Options = View.extend({
     });
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'CHANGE_PROPS', ::this.updateProps);
-    this.listenTo(Backbone.Events, 'CACHE_LIKES', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'CACHE_POSTS', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'CACHE_FOLLOWING', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'DOWNLOAD_CACHE', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'RESTORE_CACHE', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'RESET_CACHE', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'REHASH_TAGS', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'EXTENSION_TESTS', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'SAVE_CACHE', ::this.postMessage);
-    this.listenTo(Backbone.Events, 'ERROR', ::this.showError);
-    this.listenTo(Backbone.Events, 'DONE', ::this.showDone);
+    this.listenTo(Events, 'CHANGE_PROPS', ::this.updateProps);
+    this.listenTo(Events, 'CACHE_LIKES', ::this.postMessage);
+    this.listenTo(Events, 'CACHE_POSTS', ::this.postMessage);
+    this.listenTo(Events, 'CACHE_FOLLOWING', ::this.postMessage);
+    this.listenTo(Events, 'DOWNLOAD_CACHE', ::this.postMessage);
+    this.listenTo(Events, 'RESTORE_CACHE', ::this.postMessage);
+    this.listenTo(Events, 'RESET_CACHE', ::this.postMessage);
+    this.listenTo(Events, 'REHASH_TAGS', ::this.postMessage);
+    this.listenTo(Events, 'EXTENSION_TESTS', ::this.postMessage);
+    this.listenTo(Events, 'SAVE_CACHE', ::this.postMessage);
+    this.listenTo(Events, 'ERROR', ::this.showError);
+    this.listenTo(Events, 'DONE', ::this.showDone);
   },
   updateProps(newProps) {
     this.props.set(newProps);
@@ -108,7 +111,7 @@ const Options = View.extend({
         }
       });
     });
-    constants.set(this.props.attributes);
+    constants.set(changed);
   },
   showError(response) {
     this.$errorModal = new Modal({
@@ -125,7 +128,7 @@ const Options = View.extend({
       header: 'Done',
       message: `${response.message}`
     });
-    Backbone.Events.trigger('CHANGE_PROPS', response.payload.constants);
+    Events.trigger('CHANGE_PROPS', response.payload.constants);
     this.$doneModal.render();
     this.$el.append(this.$doneModal.$el);
   },
@@ -137,18 +140,35 @@ const Options = View.extend({
       this.port.postMessage(slug);
     }
   },
-  restoreOptions(response) {
-    const { payload } = response;
-    this.props.set(payload);
+  restoreOptions(constants) {
     if (!this.initialized) {
       this.renderSubviews();
     }
     this.initialized = true;
+  },
+  remove() {
+    this.stopListening(Events);
+    this._subviews.forEach(subview => subview.remove());
+    this._subviews = [];
+    return View.prototype.remove.apply(this, arguments);
   }
 });
 
+window.App = {
+  Components: {
+    Authentication,
+    Buttons,
+    Cache,
+    Debug,
+    Experimental,
+    ProgressBar,
+    Settings,
+    Options
+  }
+};
+
 const renderOptions = () => {
-  new Options({
+  window.App.options = new Options({
     el: $('.container'),
     model: new Model(constants.toJSON())
   });
@@ -159,3 +179,5 @@ if (constants.initialized()) {
 } else {
   constants.once('initialized', renderOptions);
 }
+
+export default Options;

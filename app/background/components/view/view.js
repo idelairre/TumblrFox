@@ -1,4 +1,4 @@
-import Backbone, { Model } from 'backbone';
+import Backbone, { Events, Model } from 'backbone';
 
 const assignProps = (target, source) => {
   if (!target || !source) {
@@ -16,20 +16,18 @@ const View = Backbone.View.extend({
   defaults: {},
   rendered: false,
   constructor(props) {
-    if (!props) {
-      return;
+    if (props && this.defaults.props) {
+      const _props = assignProps(this.defaults.props, props);
+      this.props = new Model(_props);
     }
-    const _props = assignProps(this.defaults.props, props);
-    this.props = new Model(_props);
     this.attributes = {};
     Backbone.View.call(this, props);
     this._setup.call(this);
   },
   _setup() {
     this.rendered = false;
-    let render = this.render;
+    const render = this.render;
     this.render = function() {
-      this._beforeRender.apply(this, arguments);
       this.beforeRender.apply(this, arguments);
       render.apply(this, arguments);
       setTimeout(() => {
@@ -37,13 +35,26 @@ const View = Backbone.View.extend({
         this._afterRender.apply(this, arguments);
       }, 0);
     };
+    const remove = this.remove;
+    this.remove = function() {
+      this.afterRemove.apply(this, arguments);
+      this._afterRemove.apply(this, arguments);
+      remove.apply(this, arguments);
+    }
     this._bindListeners();
   },
   _bindListeners() {
-    this.listenTo(this.props, 'change', () => {
-      this.render();
-      Backbone.Events.trigger('CHANGE_PROPS', this.props.attributes);
+    this.listenTo(Events, 'CHANGE_PROPS', props => {
+      if (this.props) {
+        this.props.set(props, { silent: true });
+        this.render();
+      }
     });
+    if (this.props) {
+      this.listenTo(this.props, 'change', () => {
+        Events.trigger('CHANGE_PROPS', this.props.changedAttributes());
+      });
+    }
   },
   initialize: Function.prototype,
   afterRender: Function.prototype,
@@ -52,8 +63,14 @@ const View = Backbone.View.extend({
     this.trigger('rendered', this);
   },
   beforeRender: Function.prototype,
-  _beforeRender: Function.prototype,
-  render: Function.prototype
+  render: Function.prototype,
+  _afterRemove() {
+    this.stopListening(Events);
+  },
+  remove() {
+    Backbone.View.prototype.remove.apply(this, arguments);
+  },
+  afterRemove: Function.prototype
 });
 
 export default View;
