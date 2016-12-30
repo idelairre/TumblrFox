@@ -20,8 +20,8 @@ class BlogSource extends Source {
   }
 
   load() {
+    this.constants = constants;
     constants.once('ready', () => {
-      this.constants = constants;
       Object.assign(this.options, this.constants.get('nextBlogSourceSlug'));
       if (!this.options.url && this.options.page === 0) {
         this.options.url = `https://www.tumblr.com/blog/${this.constants.get('userName')}`;

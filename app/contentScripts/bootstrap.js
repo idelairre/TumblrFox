@@ -1,7 +1,7 @@
-import FilterPopoverIcon from './components/filterPopover/filterPopoverIcon';
-import FollowingModel from './components/followingList/followingModel';
 import App from './app';
 import Events from './application/events';
+import FilterPopoverIcon from './components/filterPopover/filterPopoverIcon';
+import FollowingModel from './components/followingList/followingModel';
 import { Router } from './application/router';
 import RouteController from './application/routerController';
 import { ComponentFetcher } from './utils';

@@ -2,7 +2,7 @@ import { bind, defaults, each, extend, filter, invoke, isFunction, noop, omit, t
 
 // TODO: make this sensible
 
-function before(t, e) {
+Mixin.before = function(t, e) {
   each(e, function(e, i) {
     const s = t[i];
     t[i] = function() {
@@ -12,7 +12,7 @@ function before(t, e) {
   });
 }
 
-function after(t, e) {
+Mixin.after = function(t, e) {
   each(e, function(e, i) {
     const s = t[i];
     t[i] = function() {
@@ -23,11 +23,11 @@ function after(t, e) {
   });
 }
 
-function around(t, e) {
+Mixin.around = function(t, e) {
   each(e, function(e, i) {
     const s = t[i];
     t[i] = function() {
-      const t = toArray(arguments);
+      const t = Array.from(arguments);
       t.unshift(bind(s, this));
       e.apply(this, t);
       return t;
@@ -35,11 +35,11 @@ function around(t, e) {
   });
 }
 
-function onto(t, e) {
+Mixin.onto = function(t, e) {
   each(e, function(e, i) {
     const s = i in t ? t[i] : false;
     t[i] = function() {
-      const t = toArray(arguments);
+      const t = Array.from(arguments);
       i = s ? bind(s, this) : noop;
       t.unshift(i);
       e.apply(this, t);
@@ -72,14 +72,12 @@ Mixin.prototype.applyTo = function(entity) {
   extend(entity, omit(properties, 'before', 'after', 'around', 'onto', 'defaults', 'extend', 'applyTo'));
   invoke(this.mixins, 'applyTo', entity);
   mixinExtend(entity, properties.before);
-  after(entity, properties.after);
-  around(entity, properties.around);
-  onto(entity, properties.onto);
-  isFunction(properties.applyTo) && properties.applyTo.apply(this, arguments);
+  Mixin.after(entity, properties.after);
+  Mixin.around(entity, properties.around);
+  Mixin.onto(entity, properties.onto);
+  if (isFunction(properties.applyTo)) {
+    properties.applyTo.apply(this, arguments);
+  }
 }
-Mixin.before = before;
-Mixin.after = after;
-Mixin.around = around;
-Mixin.onto = onto;
 
 module.exports = Mixin;

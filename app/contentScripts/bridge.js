@@ -89,7 +89,8 @@ class Bridge {
           }
         });
       } catch (err) {
-        console.error(err, e);
+        console.error(err);
+        console.error(e);
       }
     });
     this.debug('initialized');
