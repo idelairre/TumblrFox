@@ -1,4 +1,4 @@
-import { bind, defaults, each, extend, filter, invoke, isFunction, noop, omit, toArray } from 'lodash';
+import { bind, defaults, each, extend, filter, invoke, isFunction, noop, omit } from 'lodash';
 
 // TODO: make this sensible
 
@@ -28,22 +28,22 @@ Mixin.around = function(t, e) {
     const s = t[i];
     t[i] = function() {
       const t = Array.from(arguments);
-      t.unshift(bind(s, this));
+      t.unshift(s.bind(this));
       e.apply(this, t);
       return t;
     }
   });
 }
 
-Mixin.onto = function(t, e) {
-  each(e, function(e, i) {
-    const s = i in t ? t[i] : false;
-    t[i] = function() {
-      const t = Array.from(arguments);
-      i = s ? bind(s, this) : noop;
-      t.unshift(i);
-      e.apply(this, t);
-      return t;
+Mixin.onto = function(target, onto) {
+  each(onto, function(val, key) {
+    const prop = key in target ? target[key] : false;
+    target[key] = function() {
+      const args = Array.from(arguments);
+      key = prop ? prop.bind(this) : noop;
+      args.unshift(i);
+      val.apply(this, args);
+      return args;
     }
   });
 }
