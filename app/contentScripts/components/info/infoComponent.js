@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { template, pick } from 'lodash';
 import { View } from 'backbone';
 import infoTemplate from './infoTemplate.html';

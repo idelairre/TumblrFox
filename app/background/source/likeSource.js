@@ -64,8 +64,8 @@ class LikeSource extends Source {
         }
       }
       return [];
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       this.constants.set('maxLikesCount', this.constants.get('cachedLikesCount'));
     }
   }

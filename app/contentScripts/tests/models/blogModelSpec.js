@@ -5,7 +5,6 @@ import { BlogModel } from '../../models/models';
 import BlogSource from '../../source/blogSource';
 import Events from '../../application/events';
 import { isSorted } from '../../../shared/jasmine-helpers';
-import 'babel-polyfill';
 
 const blogModel = new BlogModel();
 const Tumblr = window.Tumblr;

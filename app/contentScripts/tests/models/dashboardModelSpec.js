@@ -3,7 +3,6 @@ import { without } from 'lodash';
 import AppState from '../../application/state';
 import { BlogModel, DashboardModel } from '../../models/models';
 import DashboardSource from '../../source/dashboardSource';
-import 'babel-polyfill';
 
 const dashboardModel = new DashboardModel({
   state: AppState
@@ -61,7 +60,7 @@ describe('DashboardModel', () => {
           blogModel.getContentRating(post.reblogged_from_name).then(deferred.resolve);
           return deferred.promise();
         }), undefined);
-        
+
         $.when.apply($, promises).done((...response) => {
           const responses = [].concat(...response);
           responses.forEach(user => expect(user.content_rating).not.toMatch('nsfw'));

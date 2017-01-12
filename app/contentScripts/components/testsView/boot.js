@@ -8,7 +8,7 @@
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
 
-(function(Tumblr, Events) {
+(function(Events) {
 
   /**
    * ## Require &amp; Instantiate
@@ -130,19 +130,10 @@
 
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
-  var testComponent = Tumblr.Fox.Application.testComponent || {};
-
-  var initialized = testComponent.initialized || false;
-
-  if (initialized) {
+  Events.once('tests:initialize', () => {
     htmlReporter.initialize();
     env.execute();
-  } else {
-    Events.once('initialized:tests', () => {
-      htmlReporter.initialize();
-      env.execute();
-    });
-  }
+  });
 
   /**
    * Helper function for readability above.
@@ -152,4 +143,4 @@
     return destination;
   }
 
-})(window.Tumblr, Tumblr.Fox.Events);
+})(Tumblr.Fox.Events);

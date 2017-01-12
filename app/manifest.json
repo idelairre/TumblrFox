@@ -28,7 +28,8 @@
     ],
     "js": [
       "scripts/vendor.bundle.js",
-      "scripts/contentscript.js"
+      "scripts/contentscript.js",
+      "scripts/tests.js"
     ],
     "run_at": "document_end",
     "all_frames": false
@@ -43,5 +44,5 @@
     "https://tumblr.com/*"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",
-  "web_accessible_resources": ["pages/chrome_ex_oauth.html", "images/*.png", "scripts/vendor.bundle.js", "scripts/fox-bootstrap.js"]
+  "web_accessible_resources": ["pages/chrome_ex_oauth.html", "images/*.png", "scripts/vendor.bundle.js", "scripts/fox-bootstrap.js", "scripts/tests.js"]
 }

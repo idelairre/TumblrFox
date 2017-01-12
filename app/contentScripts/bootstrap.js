@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import App from './app';
 import Events from './application/events';
 import FilterPopoverIcon from './components/filterPopover/filterPopoverIcon';
@@ -7,7 +8,6 @@ import RouteController from './application/routerController';
 import { ComponentFetcher } from './utils';
 
 Backbone.history.stop();
-window.$ = window.jQuery;
 
 function bootstrap() {
 
@@ -20,7 +20,7 @@ function bootstrap() {
 	if (window.Tumblr) {
 		initialize();
 	} else {
-		loaderObserver.observe(window, {
+		loaderObserver.observe(document, {
 			childList: true,
 			subtree: true
 		});
@@ -75,5 +75,5 @@ function bootstrap() {
 if (document.readyState) {
 	bootstrap();
 } else {
-	window.onload = bootstrap
+	window.addEventListener('load', bootstrap);
 }

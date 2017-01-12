@@ -34,17 +34,17 @@ export default class PostSource {
   }
 
   static applyNsfwFilter(posts = []) { // NOTE: just don't use async/await for this, its weird
-    const filter = post => { // NOTE: filter is synchronous
-      return BlogSource.getInfo(post.blog_name).then(following => {
-        if (following.is_nsfw) {
-          return;
-        }
-        return post;
-      });
-    }
-   return filterAsync(posts, filter).then(response => {
-     return response;
-   });
+  	const filter = post => { // NOTE: filter is synchronous
+  		return BlogSource.getInfo(post.blog_name).then(following => {
+  			if (following.is_nsfw) {
+  				return;
+  			}
+  			return post;
+  		});
+  	}
+  	return filterAsync(posts, filter).then(response => {
+  		return response;
+  	});
   }
 
   static async fetch(request) {

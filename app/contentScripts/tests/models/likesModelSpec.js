@@ -2,7 +2,6 @@ import $ from 'jquery';
 import { LikesModel } from '../../models/models';
 import DashboardSource from '../../source/likeSource';
 import { isSorted } from '../../../shared/jasmine-helpers';
-import 'babel-polyfill';
 
 const likesModel = new LikesModel();
 

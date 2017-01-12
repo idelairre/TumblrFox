@@ -8,13 +8,6 @@ import 'script!../../../shared/jasmine-html';
 import 'script!./boot';
 import '../../../shared/jasmine.css';
 
-const requireAll = req => {
-  req.keys().forEach(req);
-}
-
-requireAll(require.context('../../tests/models/', true, /\.js$/));
-requireAll(require.context('../../tests/source/', true, /\.js$/));
-
 const Test = View.extend({
   template: template(testTemplate),
   tagName: 'li',
@@ -31,8 +24,8 @@ const Test = View.extend({
     $('.post_container').first().after(this.$el);
     this.initialized = true;
     Tumblr.Events.off();
-    Tumblr.Fox.Events.trigger('initialized:tests');
     this.removePosts().then(() => {
+      Tumblr.Fox.Events.trigger('tests:load');
       return this;
     });
   },
@@ -49,9 +42,7 @@ const Test = View.extend({
     return deferred.promise();
   },
   dismiss() {
-    this.$el.fadeOut(300).promise().then(() => {
-      this.remove();
-    });
+    this.$el.fadeOut(300).promise().then(this.remove);
   }
 });
 

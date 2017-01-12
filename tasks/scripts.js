@@ -9,9 +9,8 @@ import livereload from 'gulp-livereload';
 import args from './lib/args';
 import fs from 'fs';
 
-if (!args.production) {
-  // config.entry.tests = ['./app/background/lib/lodash.js'];
-  // config.entry.tests = ['./app/background/lib/lodash.js', './app/background/tests/tests.js'];
+if (args.production) {
+  delete config.entry.tests;
 }
 
 gulp.task('scripts', () => {

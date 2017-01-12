@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import BlogSource from '../source/blogSource';
 
 const Filter = {

@@ -8,6 +8,7 @@ module.exports = {
     options: ['./app/background/lib/backbone.js', './app/background/components/options.js'],
     contentscript: './app/contentScripts/contentscript.js',
     'fox-bootstrap': './app/contentScripts/bootstrap.js',
+    tests: './app/contentScripts/tests/tests.js',
     background: ['./app/background/lib/lodash.js', './app/background/background.js'],
     vendor: ['jquery', 'babel-polyfill'],
   },
@@ -19,7 +20,7 @@ module.exports = {
     jsonpFunction: 'foxJsonp'
   },
   externals: {
-    "backbone": "Backbone",
+    "backbone": "window.Backbone",
     "lodash": "window._"
   },
   plugins: [
