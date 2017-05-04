@@ -1,3 +1,4 @@
+import { has } from 'lodash';
 import { debug } from './loggingService';
 import sendMessage from './messageService';
 import constants from '../constants';
@@ -11,7 +12,7 @@ import constants from '../constants';
 
 const errorHandler = (sendResponse, err) => {
 	console.error(err);
-	if (typeof err === 'object' && {}.hasOwnProperty.call(err, 'statusText')) {
+	if (typeof err === 'object' && has(err, 'statusText')) {
 		sendResponse({
 			type: 'error',
 			payload: {
@@ -46,7 +47,7 @@ const receiverHandler = handlers => {
 			console.error(lastError.message);
 		}
 		console.log('[REQUEST]: ', request.type);
-		if ({}.hasOwnProperty.call(handlers, request.type)) {
+		if (has(handlers, request.type)) {
 			const func = handlers[request.type](request.payload);
 			if (typeof func !== 'undefined') {
 				if (func instanceof Promise) {

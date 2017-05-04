@@ -24,9 +24,7 @@ const loadOptionsEventHandlers = () => {
 };
 
 const listenForUpdate = () => {
-  chrome.runtime.onUpdateAvailable.addListener(() => {
-    chrome.runtime.reload();
-  });
+  chrome.runtime.onUpdateAvailable.addListener(() => chrome.runtime.reload());
 };
 
 const listenForIdleState = () => {

@@ -52,6 +52,7 @@ describe('BlogModel', () => {
         post_type: 'ANY',
         post_role: 'ORIGINAL'
       };
+
       blogModel.fetch(query).then(response => {
         expect(response).toBeDefined(response);
         expect(response.posts.length).toEqual(query.limit);
@@ -69,6 +70,7 @@ describe('BlogModel', () => {
         post_type: 'PHOTO',
         filter_nsfw: true
       };
+
       blogModel.fetch(query).then(response => {
         expect(response).toBeDefined();
         // expect(response.length).toEqual(query.limit);
@@ -80,9 +82,7 @@ describe('BlogModel', () => {
         }), undefined);
 
         Promise.all(promises).then(responses => {
-          responses.forEach(user => {
-            expect(user.content_rating).not.toMatch('nsfw');
-          });
+          responses.forEach(user => expect(user.content_rating).not.toMatch('nsfw'));
           done();
         }).catch(err => console.error(err));
       });
@@ -115,11 +115,10 @@ describe('BlogModel', () => {
         post_type: 'ANY',
         post_role: 'ORIGINAL'
       };
+      
       blogModel.fetch(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post.reblogged_from_tumblr_url).toBe(null)
-        });
+        response.forEach(post => expect(post.reblogged_from_tumblr_url).toBe(null));
         done();
       });
     });
@@ -143,11 +142,9 @@ describe('BlogModel', () => {
         }), undefined);
 
         Promise.all(promises).then(responses => {
-          responses.forEach(user => {
-            expect(user.content_rating).not.toMatch('nsfw');
-          });
+          responses.forEach(user => expect(user.content_rating).not.toMatch('nsfw'));
           done();
-        }).catch(err => console.error(err));
+        }).catch(console.error);
       });
     });
   });

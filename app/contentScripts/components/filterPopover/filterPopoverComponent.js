@@ -1,4 +1,4 @@
-import { $ } from 'backbone';
+import $ from 'jquery';
 import { omit, pick } from 'lodash';
 import { ComponentFetcher } from '../../utils';
 import FilterMenuComponent from './filterMenu/filterMenuComponent';

@@ -1,5 +1,5 @@
-import { findKey, isEmpty, last } from 'lodash';
-import $, { ajax, each, Deferred } from 'jquery';
+import { has, last } from 'lodash';
+import $, { ajax, Deferred } from 'jquery';
 import Source from 'tumblr-source';
 import { debug } from '../services/loggingService';
 import constants from '../constants';
@@ -56,7 +56,7 @@ class LikeSource extends Source {
         if (link && link.attr('href')) {
           let next = last(link.attr('href').split('/')); // TODO: make this fail more gracefully
           this.options.page += 1;
-          if ({}.hasOwnProperty.call(this.options, 'timestamp')) { // this doesn't work for blog posts
+          if (has(this.options, 'timestamp')) { // this doesn't work for blog posts
             this.options.timestamp = next;
             return parsePosts(response, this.options.timestamp);
           }

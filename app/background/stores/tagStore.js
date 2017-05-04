@@ -1,6 +1,8 @@
-import { countBy, forIn, identity } from 'lodash';
+import { countBy, identity } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
+
+// NOTE: this is a bit of a mess, it only manages the tags of liked posts
 
 export default class Tags {
   static async add(tags) {
@@ -12,17 +14,18 @@ export default class Tags {
     return await db.tags.orderBy('count').reverse().limit(250).toArray();
   }
 
-  static async fetchTagsByUser(blogname) {
-    const posts = await db.posts.where('blogname').anyOfIgnoreCase(blogname).toArray();
+  static async fetchTagsByUser(blogname) { // when do you actually want to call this?
+    const posts = await db.posts.where('blog_name').anyOfIgnoreCase(blogname).toArray();
     const tags = [];
-    const tagCounts = countBy(tagArray, identity);
-    forIn(tagCounts, (value, key) => {
+    const tagCounts = countBy(tags, identity);
+
+    for (let key in tagCounts) {
       const tag = {
         tag: key,
-        count: value
+        count: tagCounts[key]
       };
       tags.push(tag);
-    });
+    }
     return tags;
   }
 
@@ -48,7 +51,7 @@ export default class Tags {
         count: 1
       };
       await db.tags.add(tagSlug);
-    } catch (e) {
+    } catch (err) {
       const tag = await db.tags.get(tagName);
       tag.count += 1;
       await db.tags.put(tag);

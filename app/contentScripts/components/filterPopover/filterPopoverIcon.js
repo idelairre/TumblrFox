@@ -1,4 +1,5 @@
-import { View, $ } from 'backbone';
+import $ from 'jquery';
+import { View } from 'backbone';
 import { pick } from 'lodash';
 import { ComponentFetcher } from '../../utils';
 import FilterPopoverContainer from './filterPopoverContainer';

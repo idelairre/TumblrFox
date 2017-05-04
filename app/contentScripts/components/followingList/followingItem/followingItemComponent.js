@@ -1,22 +1,25 @@
-import { $, View } from 'backbone';
+import $ from 'jquery';
+import { View } from 'backbone';
 import { isNumber, template } from 'lodash';
 import { Time } from '../../../utils';
 import followingItemTemplate from './followingItemTemplate.html';
 
-$.fn.removeAttributes = function(args) {
-  const ignore = args.ignore;
-  return this.each(function() {
-    const attributes = $.map(this.attributes, item => {
-      if (typeof ignore !== 'undefined' && item.name !== ignore) {
-        return item.name;
-      }
+(function ($) {
+  $.fn.removeAttributes = function(args) {
+    const ignore = args.ignore;
+    return this.each(function() {
+      const attributes = $.map(this.attributes, item => {
+        if (typeof ignore !== 'undefined' && item.name !== ignore) {
+          return item.name;
+        }
+      });
+      const elem = $(this);
+      $.each(attributes, (i, item) => {
+        elem.removeAttr(item);
+      });
     });
-    const elem = $(this);
-    $.each(attributes, (i, item) => {
-      elem.removeAttr(item);
-    });
-  });
-};
+  };
+})(jQuery);
 
 // https://api.tumblr.com/v2/blog/${user}/avatar/128
 

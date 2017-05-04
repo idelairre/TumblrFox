@@ -1,4 +1,4 @@
-import { isFunction, noop } from 'lodash';
+import { has, isFunction, noop } from 'lodash';
 import db from '../lib/db';
 import noopCallback from '../utils/noopCallback';
 import Source from '../source/followingSource';
@@ -6,14 +6,13 @@ import { logValues, logError } from '../services/loggingService';
 import constants from '../constants';
 
 export default class Following {
-
   static caching = false;
 
   static async fetch(query) {
     if (typeof query === 'undefined') {
       return db.following.toCollection().toArray();
     }
-    if (!query.order && ({}.hasOwnProperty.call(query, 'offset') && {}.hasOwnProperty.call(query, 'limit'))) { // this looks like overkill but its needed since evaluating query.offset && query.limit returns a number
+    if (!query.order && (has(query, 'offset') && has(query, 'limit'))) { // this looks like overkill but its needed since evaluating query.offset && query.limit returns a number
       return db.following.toCollection().offset(query.offset).limit(query.limit).toArray();
     } else if (query.order === 'alphabetically') { // NOTE: these cases are for when the user is fetching from the following view
       return db.following.orderBy('name').offset(query.offset).limit(query.limit).toArray();
@@ -26,7 +25,7 @@ export default class Following {
 
   static async fetchNsfwBlogs() {
     const following = await db.following.filter(follower => {
-      if ({}.hasOwnProperty.call(follower, 'content_rating') && (follower.content_rating === 'adult' || follower.content_rating === 'nsfw')) {
+      if (has(follower, 'content_rating') && (follower.content_rating === 'adult' || follower.content_rating === 'nsfw')) {
         return follower;
       }
     }).toArray();
@@ -125,7 +124,7 @@ export default class Following {
 
   static async _setContentRating(following) {
     try {
-      if (!{}.hasOwnProperty.call(following, 'is_nsfw')) {
+      if (!has(following, 'is_nsfw')) {
         const tumblelogInfo = await Source.getInfo(following.name);
         if (tumblelogInfo.is_nsfw) {
           following.content_rating = 'nsfw';

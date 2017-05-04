@@ -1,5 +1,6 @@
-import { $, Model } from 'backbone';
-import { isArray, isEmpty, pick, keys } from 'lodash';
+import $ from 'jquery';
+import { Model } from 'backbone';
+import { has, isEmpty, pick } from 'lodash';
 import FollowingSource from '../../source/followingSource';
 
 const { Tumblelog } = Tumblr.Prima.Models;
@@ -21,10 +22,8 @@ const FollowingModel = Model.extend({
     this.set('loading', false);
   },
   add(following) {
-    if (isArray(following)) {
-      following.forEach(follower => {
-        new Tumblelog(follower);
-      });
+    if (Array.isArray(following)) {
+      following.forEach(follower => new Tumblelog(follower));
     } else {
       new Tumblelog(following);
     }
@@ -35,7 +34,7 @@ const FollowingModel = Model.extend({
       offset: this.get('offset'),
       limit: this.get('limit')
     }
-    if (this.hasOwnProperty('state')) {
+    if (has(this, 'state')) {
       attributes.order = this.state.getState();
     }
     return attributes;
@@ -43,6 +42,7 @@ const FollowingModel = Model.extend({
   fetch() {
     const deferred = $.Deferred();
     this.set('loading', true);
+    this.trigger('fetch:start');
     this._fetch().then(followings => {
       if (Backbone.history.fragment === 'following' && this.get('offset') === 0) {
         this.items.reset(followings);
@@ -55,6 +55,7 @@ const FollowingModel = Model.extend({
       }
       this.set('offset', this.get('offset') + this.get('limit'));
       this.set('loading', false);
+      this.trigger('fetch:complete');
       deferred.resolve(this.items);
     });
     return deferred.promise();
@@ -66,7 +67,7 @@ const FollowingModel = Model.extend({
     });
   },
   _fetch() {
-    if (this.hasOwnProperty('state') && this.state.get('orderFollowed')) {
+    if (has(this, 'state') && this.state.get('orderFollowed')) {
       return FollowingSource.pageFetch(this.toJSON());
     }
     return FollowingSource.fetch(this.toJSON());

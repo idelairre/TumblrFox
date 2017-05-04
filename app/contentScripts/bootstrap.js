@@ -55,7 +55,7 @@ function bootstrap() {
 			}
     });
 
-		Tumblr.Fox.onHeartbeat('refreshFollowing', function () {
+		Tumblr.Fox.onHeartbeat('refreshFollowing', function () { // TODO: add event listener for adding and deleting followers so this is called as necessary
 			this.chromeTrigger('chrome:refresh:following');
 		});
 

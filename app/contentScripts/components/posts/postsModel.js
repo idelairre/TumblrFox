@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { each, invoke, pick } from 'lodash';
+import { has, invoke, pick } from 'lodash';
 import AppState from '../../application/state';
 import Autopaginator from '../autopaginator/autopaginatorModel';
 import BlogModel from './blogModel';
@@ -93,7 +93,7 @@ const PostsModel = ControllerModel.extend({
     switch (this.state.getState()) {
       case 'user':
         this.blogModel.fetch(slug).then(response => {
-          if (response.hasOwnProperty('posts')) {
+          if (has(response, 'posts')) {
             const { posts, query } = response;
             this.searchModel.set(query);
             fetchHelper(posts);
@@ -106,6 +106,7 @@ const PostsModel = ControllerModel.extend({
         if (slug.term.length > 0) {
           return this.renderSearchResults(slug).then(fetchHelper);
         }
+        
         this.dashboardModel.fetch(slug).then(response => {
           const { posts, query } = response;
           this.searchModel.set(query);
@@ -126,9 +127,11 @@ const PostsModel = ControllerModel.extend({
       this.toggleLoading(false);
       this.incrementOffset(results.length);
       this.evalAndLogResults(results);
+
       if (results.length && results.length > 0) {
         Utils.PostFormatter.renderPosts(results);
       }
+
       deferred.resolve();
     };
 
@@ -145,7 +148,7 @@ const PostsModel = ControllerModel.extend({
       case 'dashboard':
         this.set('searching', true);
         this.loader.show(); // want to keep the loader status decouped from posts model so results can be rendered
-        this.dashboardModel.search(query).done(() => {
+        this.dashboardModel.search(query).then(() => {
           this.set('searching', false);
           Tumblr.Fox.Events.trigger('fox:search:complete');
           this.loader.hide();
@@ -157,13 +160,13 @@ const PostsModel = ControllerModel.extend({
   },
   renderSearchResults(slug) {
     const deferred = $.Deferred();
+
     if (this.searchModel.get('renderedResults')) {
       return deferred.reject();
     }
+
     this.searchModel.getSearchResults(slug).then(matches => {
-      setTimeout(() => {
-        deferred.resolve(matches);
-      }, 500);
+      setTimeout(() => deferred.resolve(matches), 500);
     });
     return deferred.promise();
   },
@@ -186,9 +189,11 @@ const PostsModel = ControllerModel.extend({
     if (!this.autopaginator.get('enabled')) {
       this.autopaginator.start();
     }
+
     if (this.autopaginator.get('defaultPaginationEnabled')) {
       this.autopaginator.disableDefaultPagination();
     }
+
     this.searchModel.set('renderedResults', false);
   },
   filterAds() {
@@ -196,12 +201,15 @@ const PostsModel = ControllerModel.extend({
   },
   filterPosts() { // called by search component
     const deferred = $.Deferred();
+
     if (this.state.get('dashboard')) {
       this.dashboardModel.reset();
     }
+
     if (this.autopaginator.get('enableDefaultPagination')) {
       this.autopaginator.disableDefaultPagination();
     }
+
     this.postViews.collection.invoke('dismiss');
     $('li[data-pageable]').fadeOut(300).promise().then(() => {
       this.postViews.collection.reset();

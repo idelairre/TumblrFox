@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import Backbone from 'backbone';
+import { Events } from 'backbone';
 import template from 'lodash.template';
 import Tipped from '../../lib/tipped';
 import View from '../view/view';
@@ -29,7 +29,7 @@ const Experimental = View.extend({
     'click [type=checkbox]': 'toggleCheck'
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'INITIALIZED', this.renderProps);
+    this.listenTo(Events, 'INITIALIZED', this.renderProps);
   },
   afterRender() {
     Tipped.create('[data-tooltip-key="autoCacheLikes"]', $(autoCacheLikesTooltip).html(), {

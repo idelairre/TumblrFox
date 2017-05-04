@@ -72,9 +72,7 @@ const AutoPaginator = Model.extend({
       if (this.posts.get('loading') || (this.posts.get('searching') && this.posts.searchModel.matches.length === 0)) {
         return;
       }
-      this.posts.fetch(this.model.toJSON()).then(() => {
-        this.trigger('after');
-      });
+      this.posts.fetch(this.model.toJSON()).then(() => this.trigger('after'));
     }
   }
 });

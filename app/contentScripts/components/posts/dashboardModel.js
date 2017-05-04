@@ -1,5 +1,6 @@
-import { $, Model } from 'backbone';
-import { pick, take, union, last, first, uniq } from 'lodash';
+import $ from 'jquery';
+import { Model } from 'backbone';
+import { pick } from 'lodash';
 import Filters from '../../utils/filtersUtil';
 import BlogModel from './blogModel';
 import DashboardSource from '../../source/dashboardSource';
@@ -17,9 +18,7 @@ const DashboardModel = Model.extend({
   },
   initializeAttributes() {
     this.posts.map(Utils.PostFormatter.parseTags);
-    this.posts.forEach(post => {
-      post.model.set('html', $(post.$el).prop('outerHTML'));
-    });
+    this.posts.forEach(post => post.model.set('html', $(post.$el).prop('outerHTML')));
   },
   reset() {
     DashboardSource.reset();
@@ -53,7 +52,9 @@ const DashboardModel = Model.extend({
         }
       });
     }
+    
     recursiveFetch(posts);
+
     return deferred.promise();
   },
   search(query) {

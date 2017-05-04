@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import { Model } from 'backbone';
 import { extend, isEmpty, uniqueId } from 'lodash';
 import * as Components from './components/components';

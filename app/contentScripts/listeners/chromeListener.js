@@ -2,7 +2,7 @@ import Listener from './listener';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import constants from '../application/constants';
 import Events from '../application/events';
-import { clone, omit, pick, snakeCase } from 'lodash';
+import { snakeCase } from 'lodash';
 
 const ChromeListener = Listener.extend({
   mixins: [ChromeMixin],

@@ -4,8 +4,7 @@
 
 import $ from 'jquery';
 import { Events, Model, View } from 'backbone';
-import capitalize from '../utils/capitalize';
-import camelCase from '../utils/camelCase';
+import { has, capitalize, camelCase, snakeCase } from 'lodash';
 import constants from '../constants';
 import Authentication from './authentication/authentication';
 import Buttons from './buttons/buttons';
@@ -14,7 +13,6 @@ import Debug from './debug/debug';
 import Experimental from './experimental/experimental';
 import ProgressBar from './progressBar/progressBar';
 import Settings from './settings/settings';
-import snakeCase from '../utils/snakeCase';
 import Modal from './modal/modal';
 import './tipped.less';
 import './options.less';
@@ -104,8 +102,8 @@ const Options = View.extend({
     const changed = this.props.changedAttributes();
     this._subviews.forEach(subview => {
       Object.keys(changed).forEach(key => {
-        if ({}.hasOwnProperty.call(subview, 'props')) {
-          if ({}.hasOwnProperty.call(subview.props.attributes, key)) {
+        if (has(subview, 'props')) {
+          if (has(subview.props.attributes, key)) {
             subview.props.set(key, changed[key]);
           }
         }

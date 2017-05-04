@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { defaultsDeep, extend, omit } from 'lodash';
+import { defaultsDeep, extend, has, omit } from 'lodash';
 import AppState from '../application/state';
 import Events from '../application/events';
 import PostView from '../components/postView/postViewComponent';
@@ -89,7 +89,7 @@ extend(PostFormatter.prototype, {
       if (typeof post.html !== 'undefined') {
         return this.renderPostFromHtml(post);
       }
-      if (post.hasOwnProperty('tumblelog-data')) {
+      if (has(post, 'tumblelog-data')) {
         return this.renderPost(post);
       }
       this.renderPost(post, true); // second argument signals to marshal the post

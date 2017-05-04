@@ -1,17 +1,21 @@
-import { $ } from 'backbone';
+import $ from 'jquery';
+import { has } from 'lodash';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Source from './source';
 
 const { Tumblelog } = Tumblr.Prima.Models;
-const { find, omit, pick } = _;
+
+function preventJS(html) {
+  return html.replace(/<script(?=(\s|>))/i, '<script type="text/xml" ');
+}
 
 const FollowingSource = Source.extend({
   mixins: [ChromeMixin],
   collateData(following) {
-    const when = $.Deferred();
     const promises = following.map(follower => {
       const deferred = $.Deferred();
-      if (!follower.hasOwnProperty('avatar_url')) { // NOTE: this is weird
+
+      if (!has(follower, 'avatar_url')) { // NOTE: this is weird
         BlogSource.getInfo(follower.name).then(tumblelog => {
           tumblelog.updated = follower.updated;
           if (tumblelog.following) {
@@ -22,18 +26,16 @@ const FollowingSource = Source.extend({
       }
       return deferred.resolve(follower);
     });
-    $.when.apply($, promises).then((...responses) => {
-      when.resolve([].concat(...responses));
+
+    return Promise.all(promises).then(response => {
+      return response;
     });
-    return when.promise();
   },
   fetch(query) {
     const deferred = $.Deferred();
     this.chromeTrigger('chrome:fetch:following', query, response => {
-      this.collateData(response).then(followers => {
-        deferred.resolve(followers);
-      });
-  });
+      this.collateData(response).then(deferred.resolve);
+    });
     return deferred.promise();
   },
   update(following) {
@@ -44,15 +46,14 @@ const FollowingSource = Source.extend({
     $.ajax({
       type: 'GET',
       url: `https://www.tumblr.com/following/${query.offset}`,
+      contentType: 'text/plain',
       success: data => {
-        const following = Array.from($(data).find('.follower'));
-        const response = [];
-        following.forEach(follower => {
-          follower = $(follower);
+        const following = Array.from($(preventJS(data)).find('.follower'));
+        const response = following.map(follower => {
           const json = $(follower).find('[data-tumblelog-popover]').data('tumblelog-popover');
           if (json) {
-            json.updated = follower.find('.description').text();
-            response.push(json);
+            json.updated = $(follower).find('.description').text();
+            return json;
           }
         });
         deferred.resolve(response);

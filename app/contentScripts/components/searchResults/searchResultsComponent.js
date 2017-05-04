@@ -1,4 +1,5 @@
-import { $, View, Model } from 'backbone';
+import $ from 'jquery';
+import { Model, View } from 'backbone';
 import { template, pick } from 'lodash';
 import Events from '../../application/events';
 import SearchModel from '../filterPopover/search/searchModel';

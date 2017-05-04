@@ -1,5 +1,6 @@
-import { $, View, Model } from 'backbone';
-import { assign, template } from 'lodash';
+import $ from 'jquery';
+import { View, Model } from 'backbone';
+import { template } from 'lodash';
 import toggleTemplate from './toggle.html';
 
 const Toggle = View.extend({
@@ -9,7 +10,7 @@ const Toggle = View.extend({
     'click': 'toggle'
   },
   initialize(e) {
-    this.options = assign({}, e);
+    this.options = Object.assign({}, e);
     this.state = new Model({
       toggled: false,
       disabled: false

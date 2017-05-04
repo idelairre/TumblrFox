@@ -1,11 +1,12 @@
 import $ from 'jquery';
-import DashboardSource from '../../source/dashboardSource';
+import BlogSource from '../../source/blogSource';
 import { isSorted } from '../../../shared/jasmine-helpers';
 
 describe('DashboardSource', () => {
-  describe('clientFetch()', () => {
+  describe('apiFetch()', () => {
     it ('should work', async done => {
-      const response = await DashboardSource.clientFetch();
+      const query = { blogname: 'luxfox', limit: 12 };
+      const response = await BlogSource.apiFetch(query);
       expect(response).toBeDefined();
       done();
     });

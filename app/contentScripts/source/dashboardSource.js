@@ -1,5 +1,5 @@
-import { $ } from 'backbone';
-import { extend, findIndex, isFunction, omit, pick, sortBy } from 'lodash';
+import $ from 'jquery';
+import { chunk, extend, isFunction, omit, pick } from 'lodash';
 import BlogSource from './blogSource';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Events from '../application/events';
@@ -40,14 +40,14 @@ const DashboardSource = Source.extend({
   fetch(query) {
     const deferred = $.Deferred();
     let slug = pick(query, 'next_offset', 'filter_nsfw', 'limit', 'post_type', 'post_role', 'sort');
+
     if (query.post_type === 'ANY') {
       slug = omit(slug, 'post_type');
     }
+
     this.chromeTrigger('chrome:fetch:dashboardPosts', slug, response => {
       if (response) {
-        this.collateData(response).then(posts => {
-          deferred.resolve(posts);
-        });
+        this.collateData(response).then(deferred.resolve);
       } else {
         deferred.reject();
       }
@@ -55,33 +55,36 @@ const DashboardSource = Source.extend({
     return deferred.promise();
   },
   search(query) {
+    // break up requests into lots of 12
+    // wait until last request is done
+    // start new request
+
     if (Tumblr.Fox.options.get('test')) {
-      this.following = this.following.slice(0, 10);
+      this.following = this.following.slice(0, 36);
     }
-    const deferred = $.Deferred();
-    const promises = this.following.map(follower => {
-      query.blogname = isFunction(follower.get) ? follower.get('name') : follower.name;
-      query.limit = 1;
-      return BlogSource.search(query).then(data => {
-        if (data.response.posts.length > 0) {
-          BlogSource._fetchTumblelogs(data.response.posts[0]).then(() => {
-            if (!Tumblr.Fox.options.get('test')) {
-              Events.trigger('fox:search:postFound', data.response.posts[0]);
-            }
+
+    const chunked = chunk(this.following, 12);
+
+    const results = chunked.reduce((acc, followers, i) => {
+      acc.push(new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const promises = followers.map(follower => {
+            query.blogname = isFunction(follower.get) ? follower.get('name') : follower.name;
+            query.limit = 1;
+
+            return BlogSource.search(query).then(data => {
+              if (data.response.posts.length > 0) {
+                Events.trigger('fox:search:postFound', data.response.posts[0]);
+              }
+            }).fail(reject);
           });
-        }
-        return data.response.posts[0];
-      });
-    });
-    $.when.apply($, promises).always((...results) => {
-      const posts = [].concat(...results).filter(post => {
-        if (typeof post !== 'undefined') {
-          return post;
-        }
-      });
-      deferred.resolve(posts);
-    });
-    return deferred.promise();
+          resolve(Promise.all(promises).catch(console.error));
+        }, i * 500);
+      }));
+      return acc;
+    }, []);
+
+    return Promise.all(results);
   },
   clientFetch(streamCursor) {
     const deferred = $.Deferred();
@@ -104,9 +107,11 @@ const DashboardSource = Source.extend({
         window.next_page = data.meta.tumblr_old_next_page;
         this.streamCursor = data.response.DashboardPosts.nextCursor;
         const posts = Utils.PostFormatter.formatDashboardPosts(data.response.DashboardPosts.body);
+
         if (typeof window.after_auto_paginate === 'function') {
           window.after_auto_paginate();
         }
+
         deferred.resolve(posts);
       },
       error: error => {

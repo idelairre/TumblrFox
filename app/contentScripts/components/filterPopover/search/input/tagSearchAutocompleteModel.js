@@ -1,5 +1,6 @@
-import { $, Collection } from 'backbone';
-import { countBy, clone, identity, invoke, forIn, omit } from 'lodash';
+import $ from 'jquery';
+import { Collection } from 'backbone';
+import { countBy, identity, invoke, forIn } from 'lodash';
 import { ComponentFetcher } from '../../../../utils';
 import ChromeMixin from '../../../mixins/chromeMixin';
 import Events from '../../../../application/events';
@@ -92,7 +93,7 @@ const TagSearchAutocompleteModel = AutoComplete.extend({
     });
     return deferred.promise();
   },
-  fetchTagsByUser() {
+  fetchTagsByUser() { // NOTE: this might be pointless
     const deferred = $.Deferred();
     this.chromeTrigger('chrome:fetch:tagsByUser', tags => {
       this.parse(tags);

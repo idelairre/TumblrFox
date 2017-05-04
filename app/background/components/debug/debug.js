@@ -1,4 +1,4 @@
-import Backbone from 'backbone';
+import { Events } from 'backbone';
 import template from 'lodash.template';
 import View from '../view/view';
 import debugTemplate from './debug.html';
@@ -14,7 +14,7 @@ const Debug = View.extend({
   className: 'debug--options',
   tagName: 'section',
   initialize() {
-    this.listenTo(Backbone.Events, 'all', ::this.log);
+    this.listenTo(Events, 'all', ::this.log);
   },
   render() {
     this.$el.html(this.template(this.props.attributes));

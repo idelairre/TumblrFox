@@ -2,7 +2,7 @@
   "name": "TumblrFox",
   "short_name": "TumblrFox",
   "description": "A super hacky dashboard filter for Tumblr",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
@@ -12,6 +12,7 @@
   "background": {
     "scripts": [
       "scripts/vendor.bundle.js",
+      "scripts/lodash.js",
       "scripts/background.js"
     ]
   },

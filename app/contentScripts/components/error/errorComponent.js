@@ -9,12 +9,13 @@ const ErrorComponent = Listener.extend({
   },
   handleError(e) {
     let error = e.payload.error;
-    
+
     console.error(error);
 
     if (isObject(error)) {
       error = JSON.stringify(error);
     }
+    
     if (e.payload.stack) {
       console.error(e.payload.stack);
     }

@@ -9,8 +9,9 @@ module.exports = {
     contentscript: './app/contentScripts/contentscript.js',
     'fox-bootstrap': './app/contentScripts/bootstrap.js',
     tests: './app/contentScripts/tests/tests.js',
-    background: ['./app/background/lib/lodash.js', './app/background/background.js'],
+    background: ['./app/background/background.js'],
     vendor: ['jquery', 'babel-polyfill'],
+    lodash: './app/background/lib/lodash.js'
   },
   devtool: args.sourcemaps ? 'source-map' : null,
   watch: args.watch,

@@ -1,4 +1,5 @@
-import { $, Collection } from 'backbone';
+import $ from 'jquery';
+import { Collection } from 'backbone';
 import { clone, omit, pick } from 'lodash';
 import AppState from '../../../application/state';
 import ChromeMixin from '../../mixins/chromeMixin';

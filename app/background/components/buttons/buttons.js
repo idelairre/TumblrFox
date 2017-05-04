@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import Backbone from 'backbone';
+import { Events } from 'backbone';
 import parseFile from './parseFile';
 import snakeCase from '../../utils/snakeCase';
 import template from 'lodash.template';
@@ -24,10 +24,10 @@ const Buttons = View.extend({
     this.bindEvents();
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'CACHE_LIKES', () => ::this.$('#resetCache').prop('disabled', true));
-    this.listenTo(Backbone.Events, 'DONE', () => ::this.$('#resetCache').prop('disabled', false));
-    this.listenTo(Backbone.Events, 'CACHE_UPLOADED', ::this.createDownload);
-    this.listenTo(Backbone.Events, 'CACHE_CONVERTED', ::this.createFileBlob);
+    this.listenTo(Events, 'CACHE_LIKES', () => ::this.$('#resetCache').prop('disabled', true));
+    this.listenTo(Events, 'DONE', () => ::this.$('#resetCache').prop('disabled', false));
+    this.listenTo(Events, 'CACHE_UPLOADED', ::this.createDownload);
+    this.listenTo(Events, 'CACHE_CONVERTED', ::this.createFileBlob);
     this.listenTo(this.props, 'change:canFetchApiLikes', ::this.setCacheLikesButton);
     this.listenTo(this.props, 'change:clientCaching', ::this.setCacheLikesButton);
   },

@@ -20,6 +20,7 @@ const State = Model.extend({
       console.error(`Error: state model is already in state "${state}"`);
       return;
     }
+    
     for (const key in this.attributes) {
       if (key === state) {
         this.attributes[key] = true;

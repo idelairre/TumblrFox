@@ -1,4 +1,4 @@
-import { $ } from 'backbone';
+import $ from 'jquery';
 import { ComponentFetcher } from '../../utils';
 import FilterPopoverComponent from './filterPopoverComponent';
 

@@ -1,7 +1,7 @@
 /* global Promise:true */
 /* eslint no-undef: "error" */
 
-import { isEqual, isFunction, noop, omit, sortBy, union } from 'lodash';
+import { has, isEqual, isFunction, noop, omit, sortBy, union } from 'lodash';
 import constants from '../constants';
 import db from '../lib/db';
 import filters from '../utils/filters';
@@ -83,22 +83,28 @@ export default class Likes {
   static async searchLikesByTerm(query) {
     try {
       query = marshalQuery(query);
+
       if (isEqual(Likes.lastQuery, omit(query, ['next_offset']))) {
         return Likes.cacheFetch(query);
       }
+
       const term = query.term;
       const _filters = filters.bind(this, query);
       query.term = Lunr.tokenize(query.term);
+
       if (typeof query.term === 'undefined') {
         query.term = term;
       }
+
       Object.assign(Likes.lastQuery, omit(query, ['next_offset']));
       let response = await db.likes.where('tokens').anyOfIgnoreCase(...query.term).or('tags').anyOfIgnoreCase(...query.term).filter(_filters).reverse().toArray();
+
       if (query.sort !== 'CREATED_DESC') {
         response = sortByPopularity(response);
       } else {
         response = Likes.sortResults(query.term, response);
       }
+
       Likes.$postsCache = response;
 
       return response.slice(query.next_offset, query.next_offset + query.limit);
@@ -109,31 +115,37 @@ export default class Likes {
 
   static sortResults(terms, results) {
     let sorted = [];
-    results.forEach(post => {
+    for (let i = 0; results.length > i; i += 1) {
+      const post = results[i];
       const result = {
         match: 0,
-        item: post
+        item: post[i]
       };
-      for (let i = 0; terms.length > i; i += 1) {
-        if (post.tokens.includes(terms[i])) {
-          result.match += (1 - (i * 0.3));
+
+      for (let j = 0; terms.length > j; j += 1) {
+        if (post.tokens.includes(terms[j])) {
+          result.match += (1 - (j * 0.3));
         }
       }
       sorted.push(result);
-    });
+    }
     sorted = sortBy(sorted, ['match']).reverse();
     return sorted.map(result => result.item);
   }
 
   static async fetch(query) { // NOTE: this is a mess, refactor using dexie filters, try to share code with FuseSearch
     query = marshalQuery(query);
+
     if (isEqual(Likes.lastQuery, omit(query, ['next_offset']))) {
       return Likes.cacheFetch(query);
     }
+
     const _filters = filters.bind(this, query);
+
     try {
       let matches = [];
       Object.assign(Likes.lastQuery, omit(query, ['next_offset']));
+
       if (query.sort !== 'CREATED_DESC') {
         matches = await db.likes.orderBy('note_count').filter(_filters).reverse().toArray();
       } else if (query.post_type) {
@@ -178,7 +190,7 @@ export default class Likes {
 
   static async _updateContentRating(post) {
     try {
-      if (post['tumblelog-content-rating'] && post['tumblelog-data'].following) {
+      if (has(post, 'tumblelog-content-rating') && has(post['tumblelog-data'], 'following')) {
         const name = post['tumblelog-data'].name;
         const following = await db.following.get(name);
         if (following) {

@@ -77,9 +77,7 @@ describe('LikesModel', () => {
       };
       likesModel.search(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post.type).toMatch(/photo/);
-        });
+        response.forEach(post => expect(post.type).toMatch(/photo/));
         done();
       });
     });
@@ -94,9 +92,7 @@ describe('LikesModel', () => {
       };
       likesModel.search(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post['tumblelog-content-rating']).not.toBeDefined();
-        });
+        response.forEach(post => expect(post['tumblelog-content-rating']).not.toBeDefined());
         done();
       });
     });

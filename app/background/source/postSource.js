@@ -15,9 +15,11 @@ export default class PostSource {
       try {
         const response = await PostSource.fetch(query);
         posts = posts.concat(response).slice(0, query.limit);
+        
         if (isEmpty(posts)) {
           emptyCount += 1;
         }
+
         if (emptyCount === 4) {
           return deferred.reject('Returned an empty response more than 3 times');
         } else if (posts.length < query.limit) {
@@ -26,6 +28,7 @@ export default class PostSource {
         } else {
           return deferred.resolve(posts);
         }
+
       } catch (err) {
         deferred.reject(err);
       }

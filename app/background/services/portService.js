@@ -1,3 +1,5 @@
+import { has } from 'lodash';
+
 let port;
 
 const portHandler = handlers => {
@@ -5,7 +7,7 @@ const portHandler = handlers => {
 		port = $port;
 		port.onMessage.addListener(request => {
 			const { type } = request;
-			if (handlers.hasOwnProperty(type)) {
+			if (has(handlers, type)) {
 				if (request.payload) {
 					handlers[type](request.payload, ::port.postMessage);
 				} else {

@@ -14,6 +14,7 @@ module.exports = {
     'app/background/tests/tests.js'
   ],
   preprocessors: {
+    'app/background/tests/**/*.js': ['eslint'],
     'app/background/tests/tests.js': ['webpack']
   },
   webpack: {
@@ -27,11 +28,6 @@ module.exports = {
       noParse: [
         /node_modules\/json-schema\/lib\/validate\.js/,
       ],
-      preLoaders: [{
-        test: /\.js$/,
-        loader: 'eslint-loader',
-        exclude: /node_modules/
-      }],
       loaders: [{
         test: /\.less$/,
         loader: 'style-loader!css-loader!less-loader'

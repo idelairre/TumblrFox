@@ -1,6 +1,7 @@
-import { $, View } from 'backbone';
-import { formKey } from '../../application/constants';
+import $ from 'jquery';
+import { View } from 'backbone';
 import { debounce, invoke, pick, template } from 'lodash';
+import { formKey } from '../../application/constants';
 import { ComponentFetcher } from '../../utils';
 import FollowingModel from './followingModel';
 import FollowingSearchComponent from './followingSearch/followingSearchComponent';
@@ -84,7 +85,7 @@ const FollowingList = TumblrView.extend({ // TODO: change this to a collection v
   bindEvents() {
     this.listenTo(Tumblr.Fox.Events, 'fox:following:refresh', ::this.refresh);
     this.listenTo(Tumblr.Fox.Events, 'fox:following:state', ::this.state.setState);
-    this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 150));
+    this.listenTo(Tumblr.Events, 'DOMEventor:flatscroll', debounce(this.onScroll, 275));
     this.listenTo(this.model, 'change:loading', ::this.setLoading);
     this.listenTo(this.model.items, 'reset', ::this.populate);
     this.listenTo(this.model.items, 'add', this.createFollower);
@@ -134,17 +135,17 @@ const FollowingList = TumblrView.extend({ // TODO: change this to a collection v
     return deferred.promise();
   },
   onScroll(e) {
-    if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) {
+    if ((e.documentHeight - e.windowScrollY) < e.windowHeight * 3) { // TODO: bump scroll bar up a little bit to throttle the loader
       if (this.loader.get('loading')) {
         return;
       }
-      this.model.fetch();
+      this.model.fetch().then(() => $(window).scrollTop(e.windowScrollY));
     }
   },
   populate(collection) {
     const followers = collection.models.slice(0, this.model.get('limit'));
     this.clearElements().then(() => {
-      followers.map(::this.createFollower);
+      followers.map(this.createFollower);
       this.model.set('offset', this.model.get('limit'));
       this.$followings = $('.follower');
       this.$followings = this.$followings.slice(1, this.$followings.length);

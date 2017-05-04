@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import { has } from 'lodash';
 import BlogSource from '../source/blogSource';
 
 const Filter = {
@@ -36,7 +37,7 @@ const Filter = {
     const when = $.Deferred();
     const promises = posts.map(post => {
       const deferred = $.Deferred();
-      if (post.hasOwnProperty('tumblelog-content-rating')) {
+      if (has(post, 'tumblelog-content-rating')) {
         const rating = post['tumblelog-content-rating'];
         if (rating === 'nsfw' || rating === 'adult') {
           deferred.resolve();

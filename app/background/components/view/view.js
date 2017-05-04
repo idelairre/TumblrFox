@@ -1,11 +1,12 @@
 import Backbone, { Events, Model } from 'backbone';
+import { has } from 'lodash';
 
 const assignProps = (target, source) => {
   if (!target || !source) {
     throw new Error('Invalid arguments');
   }
   for (const key in source) {
-    if ({}.hasOwnProperty.call(target, key)) {
+    if (has(target, key)) {
       target[key] = source[key];
     }
   }

@@ -1,3 +1,5 @@
+import { has } from 'lodash';
+
 const filters = (query, post) => {
   if (query.blogname && query.blogname !== '') {
     if (!post.blog_name.toLowerCase().includes(query.blogname.toLowerCase())) {
@@ -20,7 +22,7 @@ const filters = (query, post) => {
     }
   }
   if (query.before) {
-    if (post.hasOwnProperty('liked_timestamp')) {
+    if (has(post, 'liked_timestamp')) {
       if (!(query.before > post.liked_timestamp)) {
         return false;
       }
@@ -32,7 +34,7 @@ const filters = (query, post) => {
 };
 
 export const filterNsfw = post => {
-  if (post.hasOwnProperty('tumblelog-content-rating') && post['tumblelog-content-rating'] === 'nsfw' || post['tumblelog-content-rating'] === 'adult') {
+  if (has(post, 'tumblelog-content-rating') && post['tumblelog-content-rating'] === 'nsfw' || post['tumblelog-content-rating'] === 'adult') {
     return false;
   }
   return true;

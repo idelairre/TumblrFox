@@ -1,3 +1,4 @@
+import { has } from 'lodash';
 import 'operative';
 
 const CacheWorker = operative({
@@ -31,7 +32,7 @@ const CacheWorker = operative({
       for (let i = 0; i < jsonData.length; i += 1) { // 1st loop is to extract each row
         let row = [];
         for (const key in jsonData[i]) { // 2nd loop will extract each column and convert it in string comma-seprated
-          if ({}.hasOwnProperty.call(jsonData[i], key)) {
+          if (has(jsonData[i], key)) {
             row[headers.indexOf(key)] = `${JSON.stringify(jsonData[i][key])}`;
           }
         }

@@ -17,10 +17,12 @@ function bootstrap() {
     if (!window.Tumblr || didBootstrap) {
       return;
     }
+
     require('./models/blogModelSpec');
-    require('./models/dashboardModelSpec');
-    require('./models/likesModelSpec');
-    require('./source/dashboardSourceSpec');
+    // require('./models/dashboardModelSpec');
+    // require('./models/likesModelSpec');
+    // require('./source/dashboardSourceSpec');
+    require('./source/blogSourceSpec');
 
     Tumblr.Fox.Events.trigger('tests:initialize');
 

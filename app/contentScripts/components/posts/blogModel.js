@@ -1,4 +1,5 @@
-import { $, Model, Collection } from 'backbone';
+import $ from 'jquery';
+import { Collection, Model } from 'backbone';
 import BlogSource from '../../source/blogSource';
 import Events from '../../application/events';
 import Filters from '../../utils/filtersUtil';
@@ -35,6 +36,7 @@ const BlogModel = Model.extend({
     if (query.blogname === Tumblr.Prima.currentUser().id && Tumblr.Fox.options.get('cachedUserPosts')) {
       return BlogSource.cacheFetch(query);
     }
+
     if (query.term.length > 0) {
       return this.search(query);
     } else if (query.term.length === 0) {
@@ -64,7 +66,9 @@ const BlogModel = Model.extend({
         deferred.resolve({ posts, query });
       });
     }
+
     recursiveFetch(posts);
+    
     return deferred.promise();
   },
   _fetch(query) {

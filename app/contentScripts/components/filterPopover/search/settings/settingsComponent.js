@@ -1,4 +1,4 @@
-import { $ } from 'backbone';
+import $ from 'jquery';
 import { clone, defer, pick } from 'lodash';
 import { ComponentFetcher } from '../../../../utils';
 import PopoverComponent from '../../../popover/popoverComponent';

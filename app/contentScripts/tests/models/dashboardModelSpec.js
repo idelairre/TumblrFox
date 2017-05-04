@@ -20,9 +20,7 @@ describe('DashboardModel', () => {
       };
       dashboardModel.fetch(query).then(response => {
         expect(response).toBeDefined();
-        response.posts.forEach(post => {
-          expect(post.type).toEqual(query.post_type.toLowerCase());
-        });
+        response.posts.forEach(post => expect(post.type).toEqual(query.post_type.toLowerCase()));
         done();
       });
     });
@@ -35,9 +33,7 @@ describe('DashboardModel', () => {
         limit: 10
       };
       dashboardModel.fetch(query).then(response => {
-        response.posts.forEach(post => {
-          expect(post.reblogged_from_tumblr_url).toEqual(null);
-        });
+        response.posts.forEach(post => expect(post.reblogged_from_tumblr_url).toEqual(null));
         done();
       });
     });
@@ -97,9 +93,7 @@ describe('DashboardModel', () => {
 
       dashboardModel.search(query).then(response => {
         expect(response).toBeDefined();
-        response.forEach(post => {
-          expect(post.type).toMatch(/quote/);
-        });
+        response.forEach(post => expect(post.type).toMatch(/quote/));
         done();
       });
     });
@@ -114,9 +108,7 @@ describe('DashboardModel', () => {
       };
 
       dashboardModel.search(query).then(response => {
-        response.forEach(post => {
-          expect(post.reblogged_from_tumblr_url).toEqual(null);
-        });
+        response.forEach(post => expect(post.reblogged_from_tumblr_url).toEqual(null));
         done();
       });
     });

@@ -24,6 +24,7 @@ export default class Firebase {
     } else if (isString(item)) {
       url = `${url}/${item.id}`;
     }
+    
     url = `${url}.json`;
 
     ajax({

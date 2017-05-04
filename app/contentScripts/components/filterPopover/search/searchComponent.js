@@ -158,13 +158,9 @@ const SearchComponent = PeeprBlogSearch.extend({
     Events.trigger('fox:search:started');
     this.posts.filterPosts().then(() => {
       if (this.model.get('term') && this.model.get('term').length > 0) {
-        this.posts.search(this.model.toJSON()).then(() => {
-          this.toggleLoading(false);
-        });
+        this.posts.search(this.model.toJSON()).then(() => this.toggleLoading(false));
       } else {
-        this.posts.fetch(this.model.toJSON()).then(() => {
-          this.toggleLoading(false);
-        });
+        this.posts.fetch(this.model.toJSON()).then(() => this.toggleLoading(false));
       }
     });
   },

@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import Backbone from 'backbone';
+import { Events } from 'backbone';
 import template from 'lodash.template'
 import snakeCase from '../../utils/snakeCase';
 import View from '../view/view';
@@ -30,7 +30,7 @@ const Settings = View.extend({
     'click [type=checkbox]': 'toggleCheck'
   },
   bindEvents() {
-    this.listenTo(Backbone.Events, 'CACHE_LIKES', this.postMessage);
+    this.listenTo(Events, 'CACHE_LIKES', this.postMessage);
   },
   toggleCheck(e) {
     const check = e.target.checked;

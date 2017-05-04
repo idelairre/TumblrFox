@@ -1,3 +1,5 @@
+import { has } from 'lodash';
+
 module.exports = (function object(Object) {
   Object.defineProperty(Object.prototype, 'renameProperty', {
     writable: false,
@@ -7,7 +9,7 @@ module.exports = (function object(Object) {
       if (oldName === newName) {
         return this;
       }
-      if (this.hasOwnProperty(oldName)) {
+      if (has(this, oldName)) {
         this[newName] = this[oldName];
         delete this[oldName];
       }

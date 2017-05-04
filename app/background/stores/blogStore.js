@@ -1,4 +1,4 @@
-import { isEqual, isFunction, noop } from 'lodash';
+import { has, isEqual, isFunction, noop } from 'lodash';
 import db from '../lib/db';
 import filters from '../utils/filters';
 import marshalQuery from '../utils/marshalQuery';
@@ -45,10 +45,11 @@ export default class Blog {
       post.timestamp = apiPost.timestamp;
       post._id = count;
       post.tokens = Lunr.tokenizeHtml(post.html);
-      // TODO: add a clause here to get the parent-tumblelog content rating
-      if (!{}.hasOwnProperty.call(post, 'note_count') && {}.hasOwnProperty.call(post, 'notes')) {
+
+      if (!has(post, 'note_count') && has(post, 'notes')) {
         post.note_count = post.notes.count;
       }
+
       const user = await Source.getContentRating(post['tumblelog-parent-data'].name);
       post['tumblelog-content-rating'] = user.content_rating;
 
@@ -74,6 +75,7 @@ export default class Blog {
     }
 
     Blog.caching = true;
+
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'posts', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
 
@@ -103,6 +105,7 @@ export default class Blog {
     if (Blog.caching) {
       return;
     }
+
     Source.addListener('items', posts => {
       try {
         const promises = posts.map(testPost => {

@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import AppState from '../application/state';
 import Listener from './listener';
 import BlogSource from '../source/blogSource';
@@ -22,9 +23,7 @@ const ActionListener = Listener.extend({ // TODO: make this component watch for 
     });
   },
   removeIndashAd(data) {
-    setTimeout(() => {
-      $('.peepr-ad-container').remove();
-    }, 0);
+    setTimeout(() => $('.peepr-ad-container').remove(), 0);
   },
   sendLike(type, postId) {
     if (isObject(postId)) {
