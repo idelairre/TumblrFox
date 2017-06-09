@@ -1,1 +1,3 @@
-module.exports = Object.assign({}, Backbone.Events);
+import { Events } from 'backbone';
+
+module.exports = Object.assign({}, Events);

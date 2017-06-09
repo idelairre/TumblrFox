@@ -18,9 +18,11 @@ const FollowingSource = Source.extend({
       if (!has(follower, 'avatar_url')) { // NOTE: this is weird
         BlogSource.getInfo(follower.name).then(tumblelog => {
           tumblelog.updated = follower.updated;
+
           if (tumblelog.following) {
             this.update(tumblelog);
           }
+
           return deferred.resolve(tumblelog);
         });
       }
@@ -51,6 +53,7 @@ const FollowingSource = Source.extend({
         const following = Array.from($(preventJS(data)).find('.follower'));
         const response = following.map(follower => {
           const json = $(follower).find('[data-tumblelog-popover]').data('tumblelog-popover');
+          
           if (json) {
             json.updated = $(follower).find('.description').text();
             return json;

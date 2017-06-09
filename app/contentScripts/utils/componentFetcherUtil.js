@@ -41,16 +41,20 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
       searchTerm = object;
       putFlag = false;
     }
+
     const results = [];
+
     for (const key in this.modules) {
       if (this.modules[key].toString().includes(searchTerm) && key !== '0') {
         results.push(key);
       }
     }
+
     if (results.length === 1 && putFlag) {
       this.put(object, this.require(results[0]));
       this.componentIds[object] = results[0];
     }
+
     if (results.length === 0) {
       console.error('[FETCHING COMPONENT FAILED]', object);
     }
@@ -71,6 +75,7 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   },
   asyncGet(componentName) {
     const deferred = $.Deferred();
+    
     if (typeof this.$$componentCache[componentName] === 'undefined') {
       Tumblr.Fox.once(`initialize:dependency:${componentName}`, component => {
         deferred.resolve(component);

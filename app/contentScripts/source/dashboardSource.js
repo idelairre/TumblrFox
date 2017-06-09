@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { chunk, extend, isFunction, omit, pick } from 'lodash';
+import { chunk, compact, extend, flatten, isFunction, omit, pick } from 'lodash';
 import BlogSource from './blogSource';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Events from '../application/events';
@@ -63,10 +63,11 @@ const DashboardSource = Source.extend({
       this.following = this.following.slice(0, 36);
     }
 
+    const deferred = $.Deferred();
     const chunked = chunk(this.following, 12);
 
     const results = chunked.reduce((acc, followers, i) => {
-      acc.push(new Promise((resolve, reject) => {
+      return acc = acc.concat($.Deferred(({ resolve, reject }) => {
         setTimeout(() => {
           const promises = followers.map(follower => {
             query.blogname = isFunction(follower.get) ? follower.get('name') : follower.name;
@@ -75,16 +76,20 @@ const DashboardSource = Source.extend({
             return BlogSource.search(query).then(data => {
               if (data.response.posts.length > 0) {
                 Events.trigger('fox:search:postFound', data.response.posts[0]);
+                return data.response.posts[0];
               }
             }).fail(reject);
           });
           resolve(Promise.all(promises).catch(console.error));
         }, i * 500);
       }));
-      return acc;
     }, []);
 
-    return Promise.all(results);
+    Promise.all(results).then(response => {
+      deferred.resolve(compact(flatten(response))); // welcome to lodash hell
+    });
+
+    return deferred.promise();
   },
   clientFetch(streamCursor) {
     const deferred = $.Deferred();

@@ -212,12 +212,8 @@ extend(PostFormatter.prototype, {
   marshalPostAttributes(postData) {
     postData = omit(postData, ['body', 'format', 'highlighted', 'recommended_color', 'recommended_source', 'summary', 'state', 'trail']);
     const { Tumblelog } = Tumblr.Prima.Models;
-    const blogData = Tumblelog.collection.findWhere({ name: postData.tumblelog }) ? Tumblelog.collection.findWhere({ name: postData.tumblelog }).toJSON() : defaultsDeep({
-      avatar_url: postData.blog.avatar[1].url,
-      name: postData.tumblelog,
-      url: `http://${postData.tumblelog_uuid}`,
-      uuid: postData.tumblelog_uuid
-    });
+    const blogData = Tumblelog.collection.findWhere({ name: postData.tumblelog })
+
     postData = defaultsDeep({
       'can_reply': postData.can_reply,
       'id': postData.id,
@@ -241,12 +237,15 @@ extend(PostFormatter.prototype, {
       'type': this.formatType(postData),
       'tumblelog-data': blogData
     }, postData);
+
     if (postData.type === 'video') {
       postData['direct-video'] = 1;
     }
+
     if (postData.type === 'photo' && postData.post_html.includes('.gif')) {
       postData['is-animated'] = 1;
     }
+
     if (typeof postData.reblogged_from_name !== 'undefined') {
       const parentData = Tumblelog.collection.findWhere({ name: postData.reblogged_from_name }) || defaultsDeep({
         name: postData.reblogged_from_name,
@@ -255,6 +254,7 @@ extend(PostFormatter.prototype, {
       });
       postData['tumblelog-parent-data'] = (typeof parentData !== 'undefined' ? typeof parentData.toJSON === 'function' ? parentData.toJSON() : parentData : false);
     }
+
     if (typeof postData.reblogged_root_name !== 'undefined') {
       const rootData = Tumblelog.collection.findWhere({ name: postData.reblogged_root_name }) || defaultsDeep({
         name: postData.reblogged_root_name,

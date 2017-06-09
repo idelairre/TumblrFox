@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import BlogSource from '../../source/blogSource';
-import { isSorted } from '../../../shared/jasmine-helpers';
+import { isSorted } from '../jasmine/jasmine-helpers';
 
 describe('DashboardSource', () => {
   describe('apiFetch()', () => {

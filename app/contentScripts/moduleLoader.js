@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-export const Inject = filePaths => {
+const Inject = filePaths => {
   const deferred = $.Deferred();
   let done = 0;
   let resolved = false;
@@ -20,3 +20,5 @@ export const Inject = filePaths => {
   }
   return deferred.promise();
 }
+
+export default Inject;

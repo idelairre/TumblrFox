@@ -59,6 +59,7 @@ class FollowingSource extends Source {
       limit: this.options.limit,
       offset: this.options.offset
     };
+    
     try {
       const response = await oauthRequest(slug);
       deferred.resolve(this.parse(response));

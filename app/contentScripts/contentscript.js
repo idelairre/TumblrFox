@@ -2,8 +2,8 @@
 /* global document:true */
 /* global window:true */
 
-import { Inject } from './moduleLoader';
 import Bridge from './bridge';
+import Inject from './moduleLoader';
 
 if (window.top === window && 'chrome' in window) {
   console.log('@tumblr');
@@ -13,7 +13,7 @@ if (window.top === window && 'chrome' in window) {
          if (__ENV__ === 'development') {
            Inject(['scripts/tests.js']);
          }
-       })
+       });
     });
   });
 }

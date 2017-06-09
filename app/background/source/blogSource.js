@@ -1,5 +1,5 @@
 import { ajax, Deferred } from 'jquery';
-import { isObject } from 'lodash';
+import { isUndefined, isObject, isString } from 'lodash';
 import Source from 'tumblr-source';
 import constants from '../constants';
 import fetch from '../utils/fetch';
@@ -51,9 +51,11 @@ class BlogSource extends Source {
 
   async getInfo(user) {
     const deferred = Deferred();
-    if (typeof user !== 'string') {
+    
+    if (!isString(user)) {
       deferred.reject(`${isObject(user) ? JSON.stringify(user) : user} is not a valid blogname`);
     }
+
     ajax({
       type: 'GET',
       url: `https://api.tumblr.com/v2/blog/${user}.tumblr.com/info?api_key=${tokens.consumerKey}`,
@@ -74,9 +76,11 @@ class BlogSource extends Source {
 
   async getAvatar(user) {
     const deferred = Deferred();
-    if (typeof user !== 'string') {
+
+    if (!isString(user)) {
       deferred.reject(`${isObject(user) ? JSON.stringify(user) : user} is not a valid blogname`);
     }
+
     ajax({
       type: 'GET',
       url: `https://api.tumblr.com/v2/blog/${user}/avatar`,
@@ -120,15 +124,15 @@ class BlogSource extends Source {
       limit: 10 || request.limit
     };
 
-    if (typeof request.post_type !== 'undefined') {
+    if (!isUndefined(request.post_type)) {
       slug.type = request.post_type.toLowerCase();
     }
 
-    if (typeof request.id !== 'undefined') {
+    if (!isUndefined(request.id)) {
       slug.id = request.id;
     }
 
-    if (typeof slug.blogname !== 'string') {
+    if (!isString(slug.blogname)) {
       deferred.reject(slug.blogname, 'is not a valid blogname');
     }
 

@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import DashboardSource from '../../source/dashboardSource';
-import { isSorted } from '../../../shared/jasmine-helpers';
+import { isSorted } from '../jasmine/jasmine-helpers';
 
 describe('DashboardSource', () => {
   describe('clientFetch()', () => {

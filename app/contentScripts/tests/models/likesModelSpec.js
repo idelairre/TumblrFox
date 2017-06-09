@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { LikesModel } from '../../models/models';
 import DashboardSource from '../../source/likeSource';
-import { isSorted } from '../../../shared/jasmine-helpers';
+import { isSorted } from '../jasmine/jasmine-helpers';
 
 const likesModel = new LikesModel();
 

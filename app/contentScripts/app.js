@@ -43,7 +43,7 @@ const App = function () {
   this._intervalTasks = {};
 };
 
-extend(App.prototype, ChromeMixin.properties, {
+extend(App.prototype, ChromeMixin.properties, Backbone.Events, {
   loadComponents() {
     this.Application = {};
     this.Components = Components;
@@ -85,13 +85,16 @@ extend(App.prototype, ChromeMixin.properties, {
     if (this.options.get('polling')) {
       return;
     }
+
     if (typeof interval === 'undefined') {
       interval = this.options.get('pollingInterval');
     }
+
     this.Events.trigger('fox:heartbeat:started');
     this.options.set('polling', true);
     this.heartbeat = setInterval(() => {
       this.trigger('heartbeat');
+
       if (this.options.get('logging')) {
         console.log('%c[TUMBLRFOX] ♥', 'color:#81562C');
       }
@@ -202,6 +205,6 @@ extend(App.prototype, ChromeMixin.properties, {
       callback.call(this);
     });
   }
-}, Backbone.Events);
+});
 
 module.exports = new App();

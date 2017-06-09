@@ -1,12 +1,9 @@
 import $ from 'jquery';
-import { template, toArray, invoke, noop } from 'lodash';
+import { template, invoke, noop } from 'lodash';
 import { View } from 'backbone';
 import constants from '../../application/constants';
 import testTemplate from './testTemplate.html';
-import 'script!../../../shared/jasmine';
-import 'script!../../../shared/jasmine-html';
-import 'script!./boot';
-import '../../../shared/jasmine.css';
+import '../../tests/jasmine/jasmine.css';
 
 const Test = View.extend({
   template: template(testTemplate),
@@ -25,7 +22,8 @@ const Test = View.extend({
     this.initialized = true;
     Tumblr.Events.off();
     this.removePosts().then(() => {
-      Tumblr.Fox.Events.trigger('tests:load');
+      const testsReady = new Event('testsReady');
+      window.dispatchEvent(testsReady);
       return this;
     });
   },

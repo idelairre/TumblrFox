@@ -8,6 +8,12 @@ const BlogSource = Source.extend({
   initialize() {
     this.rejected = [];
   },
+  addBlog(tumblelog) {
+    Tumblr.Prima.Models.Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
+  },
+  getBlog(name) {
+    return Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name });
+  },
   getInfo(blogname) {
     const deferred = $.Deferred();
 
@@ -25,7 +31,7 @@ const BlogSource = Source.extend({
       type: 'GET',
       url: 'https://www.tumblr.com/svc/data/tumblelog',
       beforeSend: xhr => {
-        xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
+        xhr.setRequestHeader('X-tumblr-form-key', Tumblr.Fox.constants.formKey);
       },
       data: {
         tumblelog: blogname
@@ -84,8 +90,8 @@ const BlogSource = Source.extend({
     if (query.post_type === 'ANY' && (!query.term || query.term.length === 0)) {
       return this.clientFetch(query).then(data => {
         const { posts, tumblelog } = data.response;
-        if (tumblelog && !Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: tumblelog.name })) {
-          Tumblr.Prima.Models.Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
+        if (tumblelog && !this.getBlog(tumblelog.name)) {
+          this.addBlog(tumblelog);
         }
         return posts;
       });
@@ -93,23 +99,31 @@ const BlogSource = Source.extend({
     return this.apiFetch(query);
   },
   clientFetch(query) {
+    const deferred = $.Deferred();
+
     const slug = {
       tumblelog_name_or_id: query.blogname,
+      post_id: query.postId || '',
       limit: query.limit,
-      offset: query.next_offset
+      offset: query.offset || query.next_offset,
+      should_bypass_safemode: false
     };
 
-    if (query.postId) {
-      slug.post_id = query.postId;
+    if (!this.getBlog(query.blogname)) {
+      this.getInfo(query.blogname).then(this.addBlog);
     }
 
-    return $.ajax({ // NOTE: might put this back to the deferred anti-pattern because it makes the $.when.apply($, ...) pattern not work as well
-      url: 'https://www.tumblr.com/svc/indash_blog/posts',
+    $.ajax({ // NOTE: might put this back to the deferred anti-pattern because it makes the $.when.apply($, ...) pattern not work as well
+      url: 'https://www.tumblr.com/svc/indash_blog',
       beforeSend: xhr => {
-        xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
+        xhr.setRequestHeader('X-tumblr-form-key', Tumblr.Fox.constants.formKey);
       },
-      data: slug
+      data: slug,
+      success: data => deferred.resolve(data),
+      error: error => deferred.reject(error)
     });
+
+    return deferred.promise();
   },
   search(query) {
     const slug = pick(query, 'next_offset', 'limit', 'sort', 'post_type', 'post_role', 'filter_nsfw');
@@ -119,7 +133,7 @@ const BlogSource = Source.extend({
       url: `https://www.tumblr.com/svc/search/blog_search/${query.blogname}/${query.term}`,
       data: slug,
       beforeSend: xhr => {
-        xhr.setRequestHeader('x-tumblr-form-key', Tumblr.Fox.constants.formKey);
+        xhr.setRequestHeader('X-tumblr-form-key', Tumblr.Fox.constants.formKey);
       },
       timeout: 3000
     });
@@ -140,53 +154,45 @@ const BlogSource = Source.extend({
       });
     });
 
-    Promise.all(promises).then(posts => {
-      deferred.resolve(this._handleCollatedData(posts));
-    });
+    Promise.all(promises).then(response => {
+      deferred.resolve(this._handleCollatedData(response));
+    }).catch(console.error);
 
     return deferred.promise();
   },
   _handleCollatedData(data) {
-    const deferred = $.Deferred();
-
-    const results = data.map(item => {
-      const { posts, tumblelog } = item.response;
+    return data.map(item => {
+      const { posts } = item.response;
       const [post] = posts;
       this._fetchTumblelogs(post);
       return post;
     });
-
-    deferred.resolve(results);
-
-    return deferred.promise();
   },
   _fetchTumblelogs(post) {
     const promises = [];
     const tumblelogs = [];
     const deferred = $.Deferred();
 
-    if (!Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: post.tumblelog })) {
-      promises.push(this.getInfo(post.tumblelog));
-    }
-
-    if (post.reblogged_from_name &&
+    // if its not reblogged from itself and its not stored in collections or on the rejected list
+    if (has(post, 'reblogged_from_name') &&
       post.reblogged_from_name !== post.tumblelog &&
-      !Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: post.reblogged_from_name }) &&
+      !this.getBlog(post.reblogged_from_name) &&
       !this.rejected.includes(post.reblogged_from_name)) {
       promises.push(this.getInfo(post.reblogged_from_name));
     }
 
-    if (post.reblogged_root_name &&
+    // if the root blog is not the same blog as its reblogged from and the root blog is not the source of the post
+    if (has(post,'reblogged_root_name') &&
       post.reblogged_root_name !== post.reblogged_from_name &&
       post.reblogged_root_name !== post.tumblelog &&
-      !Tumblr.Prima.Models.Tumblelog.collection.findWhere({ name: post.reblogged_root_name }) &&
+      !this.getBlog(post.reblogged_root_name) &&
       !this.rejected.includes(post.reblogged_from_name)) {
       promises.push(this.getInfo(post.reblogged_root_name));
     }
 
     $.when.apply($, promises).then(tumblelog => {
       if (tumblelog) {
-        Tumblr.Prima.Models.Tumblelog.collection.add(new Tumblr.Prima.Models.Tumblelog(tumblelog));
+        this.addBlog(tumblelog);
         tumblelogs.push(tumblelog);
       }
     }).always(() => deferred.resolve(tumblelogs));

@@ -22,7 +22,8 @@ module.exports = {
   },
   externals: {
     "backbone": "window.Backbone",
-    "lodash": "window._"
+    "lodash": "window._",
+    "Tumblr": "window.Tumblr"
   },
   plugins: [
     new webpack.DefinePlugin({

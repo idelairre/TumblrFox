@@ -1,11 +1,11 @@
 import $ from 'jquery';
-import { has } from 'lodash';
+import { compact, has } from 'lodash';
 import BlogSource from '../source/blogSource';
 
 const Filter = {
   applyFilters(query, posts, flagApi) {
     const deferred = $.Deferred();
-    const promises = [];
+
     if (query.filter_nsfw && query.post_role === 'ORIGINAL') {
       if (flagApi) {
         this._filterNsfwApi(posts).then(this._filterByRole).then(deferred.resolve);
@@ -34,58 +34,54 @@ const Filter = {
     });
   },
   _filterNsfwClient(posts) {
-    const when = $.Deferred();
+    const deferred = $.Deferred();
     const promises = posts.map(post => {
-      const deferred = $.Deferred();
-      if (has(post, 'tumblelog-content-rating')) {
-        const rating = post['tumblelog-content-rating'];
-        if (rating === 'nsfw' || rating === 'adult') {
-          deferred.resolve();
+      return $.Deferred(({ resolve }) => {
+        if (has(post, 'tumblelog-content-rating')) {
+          const rating = post['tumblelog-content-rating'];
+          if (rating === 'nsfw' || rating === 'adult') {
+            resolve();
+          } else {
+            resolve(post);
+          }
         } else {
-          deferred.resolve(post);
+          resolve(post);
         }
-      } else {
-        deferred.resolve(post);
-      }
-      return deferred.promise();
+      }).promise();
     });
-    $.when.apply($, promises).done((...response) => {
-      const filteredPosts = [].concat(...response).filter(post => {
-        if (typeof post !== 'undefined') {
-          return post;
-        }
-      });
-      when.resolve(filteredPosts);
+
+    Promise.all(promises).then(posts => {
+      deferred.resolve(compact(posts));
     });
-    return when.promise();
+
+    return deferred.promise();
   },
   _filterNsfwApi(posts) {
-    const when = $.Deferred();
+    const deferred = $.Deferred();
     const promises = posts.map(post => {
-      const deferred = $.Deferred();
       const name = post.reblogged_from_name || post.reblogged_root_name;
-      if (typeof name === 'undefined') {
-        deferred.resolve(post);
-      } else {
-        BlogSource.getContentRating(name).then(response => {
-          if (response.content_rating === 'nsfw') {
-            deferred.resolve();
-          } else {
-            deferred.resolve(post);
-          }
-        });
-      }
-      return deferred.promise();
-    });
-    $.when.apply($, promises).done((...response) => {
-      const filteredPosts = [].concat(...response).filter(post => {
-        if (typeof post !== 'undefined') {
-          return post;
+      return $.Deferred(({ resolve, reject }) => {
+        if (typeof name === 'undefined') {
+          resolve(post);
+        } else {
+          BlogSource.getContentRating(name).then(response => {
+            const { content_rating } = response;
+
+            if (content_rating === 'nsfw') {
+              resolve();
+            } else {
+              resolve(post);
+            }
+          }).fail(reject);
         }
-      });
-      when.resolve(filteredPosts);
+      }).promise();
     });
-    return when.promise();
+
+    Promise.all(promises).then(response => {
+      deferred.resolve(compact(response));
+    }).catch(deferred.reject);
+
+    return deferred.promise();
   }
 }
 

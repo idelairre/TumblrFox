@@ -38,9 +38,11 @@ class LikeSource extends Source {
     if (this.options.page) {
       this.options.url = `https://www.tumblr.com/likes/page/${this.options.page}`;
     }
+
     if (this.options.timestamp) {
       this.options.url += `/${this.options.timestamp}`;
     }
+    
     this.constants.set('nextLikeSourceSlug', {
       timestamp: this.options.timestamp,
       page: this.options.page,

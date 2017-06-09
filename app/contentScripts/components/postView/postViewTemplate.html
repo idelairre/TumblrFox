@@ -29,7 +29,7 @@
           data-blog-url="<%- model.get('tumblelog-data').url %>"
           data-tumblelog-name="<%- model.get('tumblelog') %>"
           data-use-channel-avatar="1"
-          data-peepr='{"tumblelog": "<%- model.get('tumblelog') %>" }'
+          data-peepr='{"tumblelog": "<%- model.get('name') %>" }'
           data-tumblelog-popover="<%- JSON.stringify(_.pick(model.get('tumblelog-data'), popoverData)) %>"></a>
       </div>
     </div>
@@ -37,10 +37,10 @@
       <div class="post_header">
         <div class="post_info">
           <div class="post_info_fence <%- model.get('tumblelog-parent-data') ? 'has_follow_button' : '' %>">
-            <a class="post_info_link" href="<%- model.get('tumblelog-data').url %>" data-peepr='{"tumblelog": "<%- model.get('tumblelog-data').name %>" }' data-tumblog-popover="<%- JSON.stringify(model.get('tumblelog-data')) %>"><%- model.get('tumblelog-data').name %></a>
+            <a class="post_info_link" href="<%- model.get('tumblelog-data').url %>" data-peepr='{"tumblelog": "<%- model.get('name') %>" }' data-tumblog-popover="<%- JSON.stringify(model.get('tumblelog-data')) %>"><%- model.get('name') %></a>
             <% if (model.get('tumblelog-parent-data')) { %>
               <span class="reblog_source">
-                <span class="reblog_icon" title="<%- model.get('tumblelog-data').name %> reblogged <%- model.get('tumblelog-parent-data').name %>">reblogged</span>
+                <span class="reblog_icon" title="<%- model.get('name') %> reblogged <%- model.get('tumblelog-parent-data').name %>">reblogged</span>
                 <a class="post_info_link" href="<%- model.get('tumblelog-parent-data').url %>" title="<%-model.get('tumblelog-parent-data').name %>" data-tumblelog-name="<%- model.get('tumblelog-parent-data').name %>" rel="noopener" data-peepr='{"tumblelog":"<%- model.get('tumblelog-parent-data').name %>", "postId":"<%- model.get('root_id') %>"}'><%- model.get('tumblelog-parent-data').name %></a>
               </span>
             <% } %>

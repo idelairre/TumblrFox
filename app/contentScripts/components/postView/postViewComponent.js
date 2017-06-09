@@ -50,6 +50,7 @@ const FoxPostView = PostView ? PostView.extend({
       console.info('Attempted to render an empty post, this is likely an error');
       return;
     }
+
     if (options.model && options.model.get('html')) {
       this.$el.html(options.model.get('html'));
       this.$el.attr('data-pageable', `post_${options.model.get('id')}`);
@@ -69,14 +70,18 @@ const FoxPostView = PostView ? PostView.extend({
         });
       }
     }
+
     PostView.prototype.initialize.apply(this);
+
     if (this.model.get('liked')) { // its probably coming from the backend
       setTimeout(() => {
         this._initializeSelectors();
         this.sync();
       }, 0);
     }
+
     Tumblr.postsView.collection.add(this.model);
+
     if (typeof this.parseTags === 'function') { // NOTE: find out why this doesn't work
       this.parseTags();
     }
@@ -124,7 +129,6 @@ const FoxPostView = PostView ? PostView.extend({
     }
   },
   sync(update) {
-    const deferred = $.Deferred();
     BlogSource.clientFetch({
       blogname: this.model.get('tumblelog'),
       postId: this.model.get('id'),

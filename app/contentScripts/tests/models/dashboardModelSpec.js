@@ -1,8 +1,9 @@
 import $ from 'jquery';
-import { without } from 'lodash';
+import { has } from 'lodash';
 import AppState from '../../application/state';
 import { BlogModel, DashboardModel } from '../../models/models';
 import DashboardSource from '../../source/dashboardSource';
+import 'babel-polyfill';
 
 const dashboardModel = new DashboardModel({
   state: AppState
@@ -12,57 +13,78 @@ const blogModel = new BlogModel();
 
 describe('DashboardModel', () => {
   describe('fetch()', () => {
-    it('should filter by type', done => {
+    it('should filter by type', async done => {
       const query = {
         post_type: 'PHOTO',
         next_offset: 0,
         limit: 10
       };
-      dashboardModel.fetch(query).then(response => {
-        expect(response).toBeDefined();
-        response.posts.forEach(post => expect(post.type).toEqual(query.post_type.toLowerCase()));
+
+      try {
+        const { posts } = await dashboardModel.fetch(query);
+
+        expect(posts).toBeDefined();
+
+        for (let post in posts) {
+          expect(posts[post].type).toEqual(query.post_type.toLowerCase());
+        }
+
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter by post role', done => {
+    it('should filter by post role', async done => {
       const query = {
         post_type: 'PHOTO',
         next_offset: 0,
         post_role: 'ORIGINAL',
         limit: 10
       };
-      dashboardModel.fetch(query).then(response => {
-        response.posts.forEach(post => expect(post.reblogged_from_tumblr_url).toEqual(null));
+
+      try {
+        const { posts } = await dashboardModel.fetch(query);
+
+        for (let post in posts) {
+          expect(posts[post].reblogged_from_tumblr_url).toEqual(null);
+        }
+
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter by content rating', done => {
+    it('should filter by content rating', async done => {
       const query = {
         post_type: 'PHOTO',
         next_offset: 0,
         filter_nsfw: true,
         limit: 10
       };
-      dashboardModel.fetch(query).then(response => {
-        expect(response).toBeDefined();
-        // expect(response.length).toEqual(query.limit);
-        const promises = without(response.posts.map(post => {
-          if (!post.reblogged_from_name || !post.reblogged_from_name) {
-            return;
-          }
-          const deferred = $.Deferred();
-          blogModel.getContentRating(post.reblogged_from_name).then(deferred.resolve);
-          return deferred.promise();
-        }), undefined);
 
-        $.when.apply($, promises).done((...response) => {
-          const responses = [].concat(...response);
-          responses.forEach(user => expect(user.content_rating).not.toMatch('nsfw'));
-          done();
+      try {
+        const { posts } = await dashboardModel.fetch(query);
+
+        expect(posts).toBeDefined();
+        // expect(response.length).toEqual(query.limit);
+        const promises = posts.filter(post => {
+          if (has(post, 'reblogged_from_name')) {
+            return blogModel.getContentRating(post.reblogged_from_name);
+          }
         });
-      });
+
+        const responses = await Promise.all(promises);
+
+        for (let user in responses) {
+          expect(responses[user].content_rating).not.toMatch('nsfw');
+        }
+
+        done();
+      } catch (err) {
+        fail(err);
+      }
     });
   });
 
@@ -82,7 +104,7 @@ describe('DashboardModel', () => {
       });
     });
 
-    it('should filter by type', done => {
+    it('should filter by type', async done => {
       const query = {
         term: 'me',
         limit: 10,
@@ -91,14 +113,22 @@ describe('DashboardModel', () => {
         post_role: 'ANY',
       };
 
-      dashboardModel.search(query).then(response => {
+      try {
+        const response = await dashboardModel.search(query);
+
         expect(response).toBeDefined();
-        response.forEach(post => expect(post.type).toMatch(/quote/));
+
+        for (let post in response) {
+          expect(response[post].type).toMatch(/quote/);
+        }
+
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter by role', done => {
+    it('should filter by role', async done => {
       const query = {
         term: 'me',
         limit: 10,
@@ -107,10 +137,17 @@ describe('DashboardModel', () => {
         post_role: 'ORIGINAL',
       };
 
-      dashboardModel.search(query).then(response => {
-        response.forEach(post => expect(post.reblogged_from_tumblr_url).toEqual(null));
+      try {
+        const response = await dashboardModel.search(query);
+
+        for (let post in response) {
+          expect(response[post].reblogged_from_tumblr_url).toEqual(null);
+        }
+
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
   });
 });

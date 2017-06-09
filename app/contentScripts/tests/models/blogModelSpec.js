@@ -1,10 +1,11 @@
 import $ from 'jquery';
-import { without } from 'lodash';
+import { has } from 'lodash';
 import { Generator } from 'tumblr-faker';
 import { BlogModel } from '../../models/models';
 import BlogSource from '../../source/blogSource';
 import Events from '../../application/events';
-import { isSorted } from '../../../shared/jasmine-helpers';
+import { isSorted } from '../jasmine/jasmine-helpers';
+import 'babel-polyfill';
 
 const blogModel = new BlogModel();
 const Tumblr = window.Tumblr;
@@ -14,12 +15,15 @@ describe('BlogModel', () => {
     expect(blogModel).toBeDefined();
   });
 
-  it('should get user\'s content ratings', done => {
-    blogModel.getContentRating('banshee-hands').then(response => {
+  it('should get user\'s content ratings', async done => {
+    try {
+      const response = await blogModel.getContentRating('banshee-hands');
       expect(response).toBeDefined();
       expect(response.content_rating).toEqual('nsfw');
       done();
-    });
+    } catch (err) {
+      fail(err);
+    }
   });
 
   it('should set its blogname attribute on the "fox:changeUser" event', () => {
@@ -29,7 +33,7 @@ describe('BlogModel', () => {
   });
 
   describe('fetch()', () => {
-    it('should filter posts by type', done => {
+    it('should filter posts by type', async done => {
       const query = {
         blogname: 'banshee-hands',
         term: '',
@@ -37,13 +41,21 @@ describe('BlogModel', () => {
         limit: 10,
         post_type: 'QUOTE'
       };
-      blogModel.fetch(query).then(response => {
-        response.posts.forEach(post => expect(post.type).toMatch(/quote/));
+
+      try {
+        const { posts } = await blogModel.fetch(query);
+
+        for (let post in posts) {
+          expect(posts[post].type).toMatch(/quote/);
+        }
+
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter posts by role', done => {
+    it('should filter posts by role', async done => {
       const query = {
         blogname: 'thethingaboutprogramming',
         term: '',
@@ -53,15 +65,18 @@ describe('BlogModel', () => {
         post_role: 'ORIGINAL'
       };
 
-      blogModel.fetch(query).then(response => {
+      try {
+        const response = await blogModel.fetch(query);
         expect(response).toBeDefined(response);
         expect(response.posts.length).toEqual(query.limit);
         response.posts.forEach(post => expect(post.reblogged_from_tumblr_url).toBe(null));
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter posts by content rating', done => {
+    it('should filter posts by content rating', async done => {
       const query = {
         blogname: 'banshee-hands',
         term: '',
@@ -71,24 +86,27 @@ describe('BlogModel', () => {
         filter_nsfw: true
       };
 
-      blogModel.fetch(query).then(response => {
-        expect(response).toBeDefined();
-        // expect(response.length).toEqual(query.limit);
-        const promises = without(response.posts.map(post => {
-          if (typeof post.reblogged_from_name === 'undefined' || !post.reblogged_from_name) {
-            return;
-          }
-          return blogModel.getContentRating(post.reblogged_from_name);
-        }), undefined);
+      try {
+        const { posts } = await blogModel.fetch(query);
 
-        Promise.all(promises).then(responses => {
-          responses.forEach(user => expect(user.content_rating).not.toMatch('nsfw'));
-          done();
-        }).catch(err => console.error(err));
-      });
+        expect(posts).toBeDefined();
+
+        const responses = await Promise.all(posts.filter(post => {
+          if (has(post, 'reblogged_from_name')) {
+            return blogModel.getContentRating(post.reblogged_from_name);
+          }
+        }));
+
+        for (let user in responses) {
+          expect(responses[user].content_rating).not.toMatch('nsfw');
+        }
+        done();
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter posts by both content rating and role', done => { // NOTE: not possible at the moment, this just tests to make sure it doesn't break
+    it('should filter posts by both content rating and role', async done => { // NOTE: not possible at the moment, this just tests to make sure it doesn't break
       const query = {
         blogname: 'lochnessmonster',
         term: '',
@@ -98,15 +116,19 @@ describe('BlogModel', () => {
         filter_nsfw: true,
         post_role: 'ORIGINAL'
       };
-      blogModel.fetch(query).then(response => {
-        expect(response.posts.length).toEqual(query.limit);
+
+      try {
+        const { posts } = await blogModel.fetch(query);
+        expect(posts.length).toEqual(query.limit);
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
-  });
+  }, 5000);
 
   describe('search()', () => {
-    it('should filter posts by role', done => {
+    it('should filter posts by role', async done => {
       const query = {
         blogname: 'lochnessmonster',
         term: 'gf',
@@ -115,15 +137,23 @@ describe('BlogModel', () => {
         post_type: 'ANY',
         post_role: 'ORIGINAL'
       };
-      
-      blogModel.fetch(query).then(response => {
+
+      try {
+        const response = await blogModel.fetch(query);
+
         expect(response).toBeDefined();
-        response.forEach(post => expect(post.reblogged_from_tumblr_url).toBe(null));
+
+        for (let post in response) {
+          expect(response[post].reblogged_from_tumblr_url).toBe(null);
+        }
+
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
-    it('should filter posts by content rating', done => {
+    it('should filter posts by content rating', async done => {
       const query = {
         blogname: 'lonerboner',
         term: 'me',
@@ -133,24 +163,27 @@ describe('BlogModel', () => {
         filter_nsfw: true
       };
 
-      blogModel.search(query).then(response => {
-        const promises = without(response.map(post => {
-          if (!post.reblogged_from_name) {
-            return;
+      try {
+        const response = await blogModel.search(query);
+        const responses = await Promise.all(response.filter(post => {
+          if (has(post, 'reblogged_from_name')) {
+            return blogModel.getContentRating(post.reblogged_from_name);
           }
-          return blogModel.getContentRating(post.reblogged_from_name);
-        }), undefined);
+        }));
 
-        Promise.all(promises).then(responses => {
-          responses.forEach(user => expect(user.content_rating).not.toMatch('nsfw'));
-          done();
-        }).catch(console.error);
-      });
+        for (let user in response) {
+          expect(response[user].content_rating).not.toMatch('nsfw');
+        }
+
+        done();
+      } catch (err) {
+        fail(err);
+      }
     });
   });
 
   describe('cacheFetch()', () => {
-    it('should not be called if the user\'s posts are not cached', done => {
+    it('should not be called if the user\'s posts are not cached', async done => {
       spyOn(BlogSource, 'cacheFetch');
 
       const query = {
@@ -163,10 +196,13 @@ describe('BlogModel', () => {
 
       Tumblr.Fox.options.set('cachedUserPosts', false);
 
-      blogModel.fetch(query).then(() => {
+      try {
+        await blogModel.fetch(query);
         expect(BlogSource.cacheFetch).not.toHaveBeenCalled();
         done();
-      });
+      } catch (err) {
+        fail(err);
+      }
     });
 
     it('should be called when the blogname query equals the current user name', async done => {
@@ -182,9 +218,13 @@ describe('BlogModel', () => {
 
       Tumblr.Fox.options.set('cachedUserPosts', true);
 
-      await blogModel.fetch(query);
-      expect(BlogSource.cacheFetch).toHaveBeenCalled();
-      done();
+      try {
+        await blogModel.fetch(query);
+        expect(BlogSource.cacheFetch).toHaveBeenCalled();
+        done();
+      } catch (err) {
+        fail(err);
+      }
     });
   });
 });

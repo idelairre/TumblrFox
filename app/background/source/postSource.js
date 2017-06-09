@@ -15,7 +15,7 @@ export default class PostSource {
       try {
         const response = await PostSource.fetch(query);
         posts = posts.concat(response).slice(0, query.limit);
-        
+
         if (isEmpty(posts)) {
           emptyCount += 1;
         }
@@ -57,11 +57,14 @@ export default class PostSource {
       limit: request.limit || 10,
       url: 'https://api.tumblr.com/v2/user/dashboard'
     };
+
     if (typeof request.post_type !== 'undefined') {
       slug.type = request.post_type.toLowerCase();
     }
+
     try {
       const response = await oauthRequest(slug);
+
       if (request.filter_nsfw) {
         deferred.resolve(PostSource.applyNsfwFilter(response.posts));
       } else {
@@ -84,10 +87,13 @@ export default class PostSource {
           tag: query.term,
           limit: 1
         };
+
         if (query.post_type !== 'ANY') {
           slug.type = query.post_type.toLowerCase();
         }
+
         const posts = await BlogSource.fetchBlogPosts(slug);
+        
         if (typeof posts[0] !== 'undefined') {
           response.push(posts[0]);
           sendMessage({
