@@ -1,6 +1,6 @@
 import $ from 'jquery';
-import { assign, each, omit, pick } from 'lodash';
-import { ComponentFetcher } from '../../../utils';
+import { omit, pick } from 'lodash';
+import ComponentFetcher from '../../../utils/componentFetcherUtil';
 import Events from '../../../application/events';
 import FiltersComponent from './filters/filtersComponent';
 import FiltersDropDownComponent from './filters/filtersDropdownComponent';
@@ -26,7 +26,7 @@ const { EventBus, InboxCompose, PeeprBlogSearch, SearchResultView } = ComponentF
 
 const SearchComponent = PeeprBlogSearch.extend({
   className: 'filter-search',
-  template: $(searchTemplate).html(),
+  template: searchTemplate,
   mixins: [LoaderMixin],
   subviews: {
     filters: {
@@ -84,6 +84,7 @@ const SearchComponent = PeeprBlogSearch.extend({
     if (typeof this.model !== 'undefined') {
       this.posts.searchModel = this.model;
     }
+
     if (typeof this.state !== 'undefined') {
       this.posts.state = this.state;
     }

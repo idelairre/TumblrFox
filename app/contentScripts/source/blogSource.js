@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { has, pick } from 'lodash';
+import Tumblr from 'tumblr';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Source from './source';
 
@@ -73,7 +74,7 @@ const BlogSource = Source.extend({
   },
   apiFetch(query) {
     const deferred = $.Deferred();
-    const slug = pick(query, 'blogname', 'next_offset', 'limit', 'sort', 'post_type', 'filter_nsfw');
+    const slug = pick(query, ['blogname', 'next_offset', 'limit', 'sort', 'post_type', 'filter_nsfw']);
 
     this.chromeTrigger('chrome:fetch:blogPosts', slug, response => {
       this.collateData(response).then(deferred.resolve);
@@ -126,7 +127,7 @@ const BlogSource = Source.extend({
     return deferred.promise();
   },
   search(query) {
-    const slug = pick(query, 'next_offset', 'limit', 'sort', 'post_type', 'post_role', 'filter_nsfw');
+    const slug = pick(query, ['next_offset', 'limit', 'sort', 'post_type', 'post_role', 'filter_nsfw']);
 
     return $.ajax({
       type: 'GET',
@@ -196,6 +197,7 @@ const BlogSource = Source.extend({
         tumblelogs.push(tumblelog);
       }
     }).always(() => deferred.resolve(tumblelogs));
+    
     return deferred.promise();
   }
 });

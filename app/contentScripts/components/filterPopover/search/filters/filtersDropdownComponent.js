@@ -1,6 +1,6 @@
 import { template, pick } from 'lodash';
 import Events from '../../../../application/events';
-import { ComponentFetcher } from '../../../../utils';
+import ComponentFetcher from '../../../../utils/componentFetcherUtil';
 import filtersDropdownTemplate from './filtersDropdownTemplate.html';
 
 const { animation, SearchFilters } = ComponentFetcher.getAll('animation', 'SearchFilters');

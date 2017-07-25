@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { Collection } from 'backbone';
-import { countBy, identity, invoke, forIn } from 'lodash';
-import { ComponentFetcher } from '../../../../utils';
+import { countBy, identity, invoke } from 'lodash';
+import ComponentFetcher from '../../../../utils/componentFetcherUtil';
 import ChromeMixin from '../../../mixins/chromeMixin';
 import Events from '../../../../application/events';
 
@@ -41,13 +41,20 @@ const TagSearchAutocompleteModel = AutoComplete.extend({
   },
   processTags(tagCounts) {
     this.$$dashboardTags = [];
-    forIn(tagCounts, (value, key) => {
+    for (const key in tagCounts) {
       const tag = {
         tag: key,
-        count: value
+        count: tagCounts[key]
       };
       this.$$dashboardTags.push(tag);
-    });
+    }
+    // forIn(tagCounts, (value, key) => {
+    //   const tag = {
+    //     tag: key,
+    //     count: value
+    //   };
+    //   this.$$dashboardTags.push(tag);
+    // });
   },
   flushTags() {
     this.items.reset([]);

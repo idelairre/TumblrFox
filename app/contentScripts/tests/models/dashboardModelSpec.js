@@ -3,7 +3,6 @@ import { has } from 'lodash';
 import AppState from '../../application/state';
 import { BlogModel, DashboardModel } from '../../models/models';
 import DashboardSource from '../../source/dashboardSource';
-import 'babel-polyfill';
 
 const dashboardModel = new DashboardModel({
   state: AppState

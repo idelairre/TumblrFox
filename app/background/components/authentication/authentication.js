@@ -1,5 +1,5 @@
+import { template } from 'lodash';
 import View from '../view/view';
-import template from 'lodash.template';
 import authenticationTemplate from './authentication.html';
 import './authentication.less';
 

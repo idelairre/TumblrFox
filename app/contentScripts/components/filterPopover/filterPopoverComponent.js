@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { omit, pick } from 'lodash';
-import { ComponentFetcher } from '../../utils';
+import Tumblr from 'tumblr';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
 import FilterMenuComponent from './filterMenu/filterMenuComponent';
 import SearchComponent from './search/searchComponent';
 import SearchModel from './search/searchModel';
@@ -10,16 +11,14 @@ const { ConversationsCollection, ClickHandler, PopoverMixin, TumblrView } = Comp
 const { Tumblelog } = Tumblr.Prima.Models;
 
 const filterPopoverTemplate = `
-  <script id="filterPopoverTemplate" type="text/template">
-    <div id="filterPopoverMenu" class="popover popover_menu popover_gradient" style="display: block; width: 240px; margin-top: -4px;">
-      <div class="popover_inner">
-        <ul class="popover_inner_list">
-          <div class="filter-menu" data-subview="filterMenu"></div>
-          <div data-subview="searchFilter"></div>
-        </ul>
-      </div>
+  <div id="filterPopoverMenu" class="popover popover_menu popover_gradient" style="display: block; width: 240px; margin-top: -4px;">
+    <div class="popover_inner">
+      <ul class="popover_inner_list">
+        <div class="filter-menu" data-subview="filterMenu"></div>
+        <div data-subview="searchFilter"></div>
+      </ul>
     </div>
-  </script>`;
+  </div>`;
 
 const FilterPopoverComponent = TumblrView.extend({
   className: 'popover--filter-popover',
@@ -27,7 +26,7 @@ const FilterPopoverComponent = TumblrView.extend({
     preventInteraction: true
   },
   mixins: [PopoverMixin],
-  template: $(filterPopoverTemplate).html(),
+  template: filterPopoverTemplate,
   subviews: {
     filterMenu: {
       constructor: FilterMenuComponent,

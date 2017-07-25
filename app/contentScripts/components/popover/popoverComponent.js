@@ -1,5 +1,6 @@
-import { forIn, template } from 'lodash';
-import { ComponentFetcher } from '../../utils';
+import $ from 'jquery';
+import { template } from 'lodash';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
 import ExtendedPopoverMixin from '../mixins/extendedPopoverMixin';
 import popoverTemplate from './popoverTemplate.html';
 
@@ -58,12 +59,12 @@ const TumblrView = ComponentFetcher.get('TumblrView');
 
 const PopoverComponent = TumblrView.extend({
   mixins: [ExtendedPopoverMixin],
-  template: template(popoverTemplate),
+  template: template(popoverTemplate, { imports: { _: window._ } }),
   events: {
     'click li.popover_menu_item': 'toggleSelected'
   },
-  initialize(e) {
-    this.options = Object.assign({}, e); // set sum nice defaults plz
+  initialize(options) {
+    this.options = Object.assign({}, options); // set sum nice defaults plz
     this.initialized = false;
   },
   render() {
@@ -76,7 +77,7 @@ const PopoverComponent = TumblrView.extend({
         this._setHidden(item.listItems);
       });
     } else {
-      forIn(this.options.items.listItems, item => {
+      this.options.items.listItems.forEach(item => {
         this._evalHidden(item, hiddenItems);
       });
       this._setHidden(this.options.items.listItems);

@@ -2,7 +2,7 @@
   "name": "TumblrFox",
   "short_name": "TumblrFox",
   "description": "A super hacky dashboard filter for Tumblr",
-  "version": "0.6.6",
+  "version": "0.6.8",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
@@ -12,7 +12,6 @@
   "background": {
     "scripts": [
       "scripts/vendor.bundle.js",
-      "scripts/lodash.js",
       "scripts/background.js"
     ]
   },
@@ -41,7 +40,8 @@
     "idle",
     "storage",
     "unlimitedStorage",
-    "http://api.tumblr.com/*",
+    "<all_urls>",
+    "https://api.tumblr.com/*",
     "https://tumblr.com/*"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",

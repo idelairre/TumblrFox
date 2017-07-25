@@ -1,17 +1,18 @@
 import $ from 'jquery';
 import { Collection } from 'backbone';
 import { clone, omit, pick } from 'lodash';
+import Tumblr from 'tumblr';
 import AppState from '../../../application/state';
 import ChromeMixin from '../../mixins/chromeMixin';
 import Events from '../../../application/events';
-import Utils from '../../../utils';
+import { ComponentFetcher, PostFormatter } from '../../../utils';
 
-const BlogSearch = Utils.ComponentFetcher.get('BlogSearch');
+const BlogSearch = ComponentFetcher.get('BlogSearch');
 
 const SearchModel = BlogSearch.extend({
   mixins: [ChromeMixin],
   initialize(options) {
-    Object.assign(this, pick(options, 'state'));
+    Object.assign(this, pick(options, ['state']));
     this.matches = new Collection();
     this.set(this.defaults);
     this.set('count', 0);
@@ -60,7 +61,7 @@ const SearchModel = BlogSearch.extend({
     });
   },
   add(post) {
-    const postData = Utils.PostFormatter.marshalPostAttributes(post);
+    const postData = PostFormatter.marshalPostAttributes(post);
     this.matches.add(postData);
   },
   flushMatches() {
@@ -86,10 +87,10 @@ const SearchModel = BlogSearch.extend({
       let count = this.get('count');
       this.set('count', count += 1);
       if (this.get('count') <= this.get('limit')) {
-        Utils.PostFormatter.renderPost(model.toJSON());
+        PostFormatter.renderPost(model.toJSON());
       }
     } else {
-      Utils.PostFormatter.renderPost(model.toJSON());
+      PostFormatter.renderPost(model.toJSON());
     }
   },
   getSearchResults(slug) {

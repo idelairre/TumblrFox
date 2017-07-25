@@ -6,10 +6,10 @@ const portHandler = handlers => {
 	return $port => {
 		port = $port;
 		port.onMessage.addListener(request => {
-			const { type } = request;
+			const { payload, type } = request;
 			if (has(handlers, type)) {
-				if (request.payload) {
-					handlers[type](request.payload, ::port.postMessage);
+				if (payload) {
+					handlers[type](payload, ::port.postMessage);
 				} else {
 					handlers[type](::port.postMessage);
 				}

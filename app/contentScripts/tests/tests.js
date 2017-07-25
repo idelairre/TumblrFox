@@ -7,6 +7,8 @@
 // NOTE: this is called in two different contexts. The if catches are meant to ensure that these functions
 // only run if Tumblr is in the window and we are in the context of the webpage and not the chrome extension
 
+// NOTE: tests will only run in ONE tab with Tumblr, DO NOT HAVE MULTIPLE TABS OPEN
+
 function bootstrap() {
   if (!window.Tumblr) {
     return;

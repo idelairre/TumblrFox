@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { chunk, compact, extend, flatten, isFunction, omit, pick } from 'lodash';
+import Tumblr from 'tumblr';
 import BlogSource from './blogSource';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Events from '../application/events';
@@ -39,10 +40,10 @@ const DashboardSource = Source.extend({
   },
   fetch(query) {
     const deferred = $.Deferred();
-    let slug = pick(query, 'next_offset', 'filter_nsfw', 'limit', 'post_type', 'post_role', 'sort');
+    let slug = pick(query, ['next_offset', 'filter_nsfw', 'limit', 'post_type', 'post_role', 'sort']);
 
     if (query.post_type === 'ANY') {
-      slug = omit(slug, 'post_type');
+      slug = omit(slug, ['post_type']);
     }
 
     this.chromeTrigger('chrome:fetch:dashboardPosts', slug, response => {
@@ -67,21 +68,22 @@ const DashboardSource = Source.extend({
     const chunked = chunk(this.following, 12);
 
     const results = chunked.reduce((acc, followers, i) => {
-      return acc = acc.concat($.Deferred(({ resolve, reject }) => {
-        setTimeout(() => {
-          const promises = followers.map(follower => {
-            query.blogname = isFunction(follower.get) ? follower.get('name') : follower.name;
-            query.limit = 1;
+      return acc = acc.concat(
+        $.Deferred(({ resolve, reject }) => {
+          setTimeout(() => {
+            const promises = followers.map(follower => {
+              query.blogname = isFunction(follower.get) ? follower.get('name') : follower.name;
+              query.limit = 1;
 
-            return BlogSource.search(query).then(data => {
-              if (data.response.posts.length > 0) {
-                Events.trigger('fox:search:postFound', data.response.posts[0]);
-                return data.response.posts[0];
-              }
-            }).fail(reject);
-          });
-          resolve(Promise.all(promises).catch(console.error));
-        }, i * 500);
+              return BlogSource.search(query).then(data => {
+                if (data.response.posts.length > 0) {
+                  Events.trigger('fox:search:postFound', data.response.posts[0]);
+                  return data.response.posts[0];
+                }
+              }).fail(reject);
+            });
+            resolve(Promise.all(promises).catch(console.error));
+          }, i * 500);
       }));
     }, []);
 

@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import { View } from 'backbone';
 import { isNumber, template } from 'lodash';
+import Tumblr from 'tumblr';
 import { Time } from '../../../utils';
 import followingItemTemplate from './followingItemTemplate.html';
 

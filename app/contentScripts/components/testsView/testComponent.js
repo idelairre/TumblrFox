@@ -1,12 +1,12 @@
 import $ from 'jquery';
-import { template, invoke, noop } from 'lodash';
+import { template, invoke } from 'lodash';
 import { View } from 'backbone';
 import constants from '../../application/constants';
 import testTemplate from './testTemplate.html';
 import '../../tests/jasmine/jasmine.css';
 
 const Test = View.extend({
-  template: template(testTemplate),
+  template: template(testTemplate, { imports: { _: window._ } }),
   tagName: 'li',
   className: 'post_container test_container',
   events: {
@@ -22,8 +22,7 @@ const Test = View.extend({
     this.initialized = true;
     Tumblr.Events.off();
     this.removePosts().then(() => {
-      const testsReady = new Event('testsReady');
-      window.dispatchEvent(testsReady);
+      window.dispatchEvent(new Event('testsReady')); // dispatch an event indicating that we should require all the tests
       return this;
     });
   },

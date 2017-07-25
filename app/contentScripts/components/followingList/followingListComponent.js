@@ -1,8 +1,9 @@
 import $ from 'jquery';
 import { View } from 'backbone';
 import { debounce, invoke, pick, template } from 'lodash';
+import Tumblr from 'tumblr';
 import { formKey } from '../../application/constants';
-import { ComponentFetcher } from '../../utils';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
 import FollowingModel from './followingModel';
 import FollowingSearchComponent from './followingSearch/followingSearchComponent';
 import FollowingItemComponent from './followingItem/followingItemComponent';

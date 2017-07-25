@@ -1,5 +1,5 @@
 import { Events } from 'backbone';
-import template from 'lodash.template';
+import { template } from 'lodash';
 import View from '../view/view';
 import debugTemplate from './debug.html';
 import './debug.less';

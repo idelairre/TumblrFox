@@ -1,17 +1,16 @@
 var args = require('../lib/args');
 var path = require('path');
 var webpack = require('webpack');
+var LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 
 module.exports = {
   entry: {
-    onload: ['./app/background/lib/chromeExOauth.js', './app/background/lib/chromeExOauthsimple.js', './app/background/lib/onload.js'],
-    options: ['./app/background/lib/backbone.js', './app/background/components/options.js'],
+    options: ['backbone', './app/background/components/options.js'],
     contentscript: './app/contentScripts/contentscript.js',
     'fox-bootstrap': './app/contentScripts/bootstrap.js',
     tests: './app/contentScripts/tests/tests.js',
     background: ['./app/background/background.js'],
-    vendor: ['jquery', 'babel-polyfill'],
-    lodash: './app/background/lib/lodash.js'
+    vendor: ['jquery']
   },
   devtool: args.sourcemaps ? 'source-map' : null,
   watch: args.watch,
@@ -22,13 +21,18 @@ module.exports = {
   },
   externals: {
     "backbone": "window.Backbone",
-    "lodash": "window._",
-    "Tumblr": "window.Tumblr"
+    "_": "window._",
+    "tumblr": "window.Tumblr"
   },
   plugins: [
     new webpack.DefinePlugin({
       '__ENV__': args.test ? JSON.stringify('test') : JSON.stringify(args.production ? 'production' : 'development'),
       '__VENDOR__': JSON.stringify(args.vendor)
+    }),
+    new LodashModuleReplacementPlugin({
+      coercions: true,
+      paths: true,
+      shorthands: true
     }),
     new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js', Infinity),
   ].concat(args.production ? [new webpack.optimize.UglifyJsPlugin(), new webpack.optimize.DedupePlugin(), new webpack.optimize.AggressiveMergingPlugin()] : []),

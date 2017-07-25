@@ -8,8 +8,9 @@ import manifest from '../manifest.json';
 const CONSUMER_KEY = tokens.consumerKey;
 const CONSUMER_SECRET = tokens.consumerSecret;
 const VERSION = manifest.version;
-const EXT_ID = chrome.runtime.id;
 const ENV = typeof __ENV__ === 'undefined' ? 'test' : __ENV__;
+
+console.log(ENV);
 
 const defaults = {
   autoCacheUserPosts: false,
@@ -18,6 +19,7 @@ const defaults = {
   cachedLikesCount: 0,
   cachedFollowingCount: 0,
   cachedTagsCount: 0,
+  componentIds: {},
   consumerKey: CONSUMER_KEY,
   consumerSecret: CONSUMER_SECRET,
   currentUser: {},
@@ -26,7 +28,7 @@ const defaults = {
   defaultKeys: true,
   env: ENV,
   eventManifest: [],
-  extensionId: EXT_ID,
+  // extensionId: EXT_ID,
   firstRun: false,
   formKey: '',
   maxLikesCount: 0,

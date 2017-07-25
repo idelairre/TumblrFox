@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import { Events, Model } from 'backbone';
-import template from 'lodash.template';
-import snakeCase from '../../utils/snakeCase';
+import { snakeCase, template } from 'lodash';
 import Tipped from '../../lib/tipped';
 import View from '../view/view';
 import cacheTemplate from './cache.html';

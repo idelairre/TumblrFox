@@ -1,13 +1,12 @@
-import $ from 'jquery';
 import { defaults, pick, template, omit } from 'lodash';
-import { ComponentFetcher } from '../../../utils';
+import ComponentFetcher from '../../../utils/componentFetcherUtil';
 import filterMenuTemplate from './filterMenuTemplate.html';
 
 const { BlogSearchPopover, KeyCommandsMixin, TumblrView } = ComponentFetcher.getAll('BlogSearchPopover', 'KeyCommandsMixin', 'TumblrView');
 
 const FilterMenuComponent = TumblrView.extend({
   className: 'popover--filter-select-dropdown',
-  template: template($(filterMenuTemplate).html()),
+  template: template(filterMenuTemplate, { imports: { _: window._ } }),
   mixins: [KeyCommandsMixin],
   defaults: {
     keyboardFocusClass: 'keyboard_focus',
@@ -21,16 +20,16 @@ const FilterMenuComponent = TumblrView.extend({
     'keyup:enter': 'selectLi'
   },
   events: {
-    'click [data-js-menu-item]': 'toggleSelection'
+    'click [data-js-menu-item]': 'selectLi'
   },
   initialize(options) {
     Object.assign(this, pick(options, ['state', 'model']));
-    this.options = defaults(omit(options, 'state', 'model'), this.defaults);
-    this.bindEvents();
+    this.options = defaults(omit(options, ['state', 'model']), this.defaults);
+    // this.bindEvents();
   },
   render() {
     this.$el.html(this.template);
-    this.resetChecks();
+    // this.resetChecks();
     if (this.state.get('disabled')) {
       this.$('.popover_menu_item').addClass('disabled');
       return;
@@ -55,13 +54,17 @@ const FilterMenuComponent = TumblrView.extend({
     BlogSearchPopover.prototype.targetPrevLi.apply(this, arguments);
   },
   selectLi(e) {
+    // BlogSearchPopover.prototype.selectLi.apply(this, arguments);
     e.preventDefault();
-    if (!this.$active) {
+
+    if (this.disabled) {
       return;
     }
-    const type = this.$active.find('[data-js-menu-item-link]').data('js-menu-item-link');
+
+    const $selected = this.$(e.currentTarget);
+    const type = $selected.find('[data-js-menu-item-link]').data('js-menu-item-link');
     this.resetChecks();
-    this.$(`i[data-check="${type}"]`).show();
+    $selected.find(`i[data-check="${type}"]`).show();
     this.model.set('post_type', type.toUpperCase());
   },
   scrollToActive() {
@@ -69,19 +72,6 @@ const FilterMenuComponent = TumblrView.extend({
   },
   resetChecks() {
     this.$('i[data-check]').hide();
-  },
-  toggleSelection(e) {
-    e.preventDefault();
-    if (this.disabled) {
-      return;
-    }
-    const type = this.$(e.target).data('js-menu-item-link');
-    this.resetChecks();
-    this.$(`i[data-check="${type}"]`).show();
-    this.selectFilter(type.toUpperCase());
-  },
-  selectFilter(type) {
-    this.model.set('post_type', type);
   }
 });
 

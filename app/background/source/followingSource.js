@@ -1,11 +1,14 @@
 import { Deferred } from 'jquery';
-import { omit, replace } from 'lodash';
+import { omit } from 'lodash';
 import sanitizeHtml from 'sanitize-html';
 import Source from 'tumblr-source';
 import { oauthRequest } from '../lib/oauthRequest';
 import BlogSource from './blogSource';
 import constants from '../constants';
 import fetch from '../utils/fetch';
+
+// NOTE: the only real advantage to using the oauth api fetch is that its faster
+// consider refactoring this to simply fetch from the following page so data is consistent
 
 class FollowingSource extends Source {
   options = {
@@ -42,9 +45,10 @@ class FollowingSource extends Source {
     if (this.constants.get('totalFollowingCount') === 0) {
       this.constants.set('totalFollowingCount', response.total_blogs);
     }
-    return response.blogs = response.blogs.map(following => {
+
+    return response.blogs.map(following => {
       following.following = true;
-      following.avatar_url = replace(following.avatar[1].url, '64', '128');
+      // following.avatar_url = replace(following.avatar[1].url, '64', '128');
       following.description = sanitizeHtml(following.description, {
         allowedTags: []
       });
@@ -59,7 +63,7 @@ class FollowingSource extends Source {
       limit: this.options.limit,
       offset: this.options.offset
     };
-    
+
     try {
       const response = await oauthRequest(slug);
       deferred.resolve(this.parse(response));

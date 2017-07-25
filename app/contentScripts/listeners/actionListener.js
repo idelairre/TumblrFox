@@ -29,6 +29,7 @@ const ActionListener = Listener.extend({ // TODO: make this component watch for 
     if (isObject(postId)) {
       return; // we are probably in a masonry view on the search page and its probably sending logging data
     }
+    
     const slug = {
       postId,
       type

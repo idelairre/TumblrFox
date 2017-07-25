@@ -1,5 +1,5 @@
-import template from 'lodash.template';
 import { View } from 'backbone';
+import { template } from 'lodash';
 import modalTemplate from './modal.html';
 import './modal.less';
 

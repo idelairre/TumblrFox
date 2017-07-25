@@ -29,7 +29,9 @@ export default class Following {
         return follower;
       }
     }).toArray();
+
     const response = {};
+    
     following.forEach(follower => {
       response[follower.name] = follower.content_rating;
     });

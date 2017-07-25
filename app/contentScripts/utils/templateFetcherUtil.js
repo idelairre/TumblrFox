@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import { extend, trim } from 'lodash';
+import { extend } from 'lodash';
 
 const TemplateCache = function () {
   this.templates = {};
@@ -15,7 +15,7 @@ extend(TemplateCache.prototype, {
     return cachedTemplate;
   },
   put(templateId, template) {
-    this.templates[templateId] = trim(template);
+    this.templates[templateId] = template.trim();
   },
   initialize() {
     const templates = $('[type="text/template"]');

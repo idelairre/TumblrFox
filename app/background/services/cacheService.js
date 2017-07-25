@@ -1,4 +1,4 @@
-import { capitalize, isFunction, invoke, maxBy, union } from 'lodash';
+import { capitalize, invoke, maxBy, union } from 'lodash';
 import { Deferred } from 'jquery';
 import async from 'async';
 import Dexie from 'dexie';
@@ -10,9 +10,8 @@ import Firebase from './firebaseService';
 import Likes from '../stores/likeStore';
 import Lunr from '../services/lunrSearchService';
 import Tags from '../stores/tagStore';
-import 'babel-polyfill';
 
-const Promise = Dexie.Promise;
+// const Promise = Dexie.Promise;
 
 export default class Cache {
   static updateTokens(table) {
@@ -64,9 +63,11 @@ export default class Cache {
     const primaryKey = db[table].schema.primKey.name;
     let offset = 0;
     let count = await db[table].toCollection().count();
+
     if (count === 0) {
       deferred.resolve();
     }
+
     async.doWhilst(async next => {
       try {
         const items = await db[table].toCollection().offset(offset).limit(100).toArray();
@@ -92,7 +93,7 @@ export default class Cache {
               await db[table][operation](item);
             }
           });
-          await Promise.all(promises);
+          await Dexie.Promise.all(promises);
         }
         count = await db[table].toCollection().count();
         console.log(`cached${capitalize(table)}Count`);

@@ -1,29 +1,33 @@
-/* global chrome:true */
+/* global chrome:true, browser:true */
 /* global window:true */
 /* global CustomEvent:true */
 /* global Event:true */
 /* eslint no-undef: "error" */
 
+import { camelCase, last, snakeCase } from 'lodash';
+import browser from '../background/lib/browserPolyfill';
 import B64 from './utils/b64Util';
-import camelCase from '../background/utils/camelCase';
-import snakeCase from '../background/utils/snakeCase';
-import { Deferred } from 'jquery';
 
 const log = console.log.bind(console, '[BRIDGE]');
 
 class Bridge {
-  initialize() {
-    const deferred = Deferred();
-    chrome.runtime.sendMessage({
-      type: 'fetchConstants'
-    }, response => {
-      this.logging = response.debug;
-      this.injectConstants(response);
-      chrome.runtime.onMessage.addListener(::this.bindRecievers);
-      this.bindOutgoing();
-      deferred.resolve();
-    });
-    return deferred.promise();
+  async initialize() {
+    try {
+      const response = await browser.runtime.sendMessage({
+        type: 'fetchConstants'
+      });
+
+      console.log(response);
+
+      if (response) {
+        this.logging = response.debug;
+        this.injectConstants(response);
+        browser.runtime.onMessage.addListener(this.bindRecievers);
+        this.bindOutgoing();
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   debug() { // NOTE: there is a slight delay here, not sure why
@@ -32,16 +36,14 @@ class Bridge {
     }
   }
 
-  trigger(eventName, payload) {
-    if (typeof payload === 'undefined') {
-      payload = {};
-    }
-    payload._type = eventName;
-    const req = new CustomEvent('response', {
-      detail: payload
-    });
+  trigger(eventName, payload = {}) {
+    payload.type = eventName;
+    // const req = new CustomEvent('response', {
+    //   detail: payload
+    // });
     this.debug(`trigger: "${eventName}"`, payload);
-    window.dispatchEvent(req);
+    // window.dispatchEvent(req);
+    window.postMessage(payload, 'https://www.tumblr.com');
   }
 
   injectConstants(constants) {
@@ -75,17 +77,19 @@ class Bridge {
           type: eventName,
           payload: e.detail.data
         };
-        chrome.runtime.sendMessage(req, response => {
-          const responseArr = snakeCase(eventName).split('_');
-          const responseName = responseArr[responseArr.length - 1];
-          const payload = {
-            payload: response,
-            type: responseName
-          };
-          if (response && response.type === 'error') {
-            this.trigger(`response:error`, payload);
-          } else if (response) {
-            this.trigger(`response:${responseName}:${e.detail._id}`, payload);
+        browser.runtime.sendMessage(req).then(response => {
+          if (typeof response !== 'undefined') {
+            const responseName = last(snakeCase(eventName).split('_'));
+            const payload = {
+              payload: response,
+              type: responseName
+            };
+
+            if (response && response.type === 'error') {
+              this.trigger(`response:error`, payload);
+            } else if (response) {
+              this.trigger(`response:${responseName}:${e.detail._id}`, payload);
+            }
           }
         });
       } catch (err) {

@@ -1,3 +1,5 @@
+import browser from '../lib/browserPolyfill';
+
 let tumblr = null;
 
 const initializeTab = response => {
@@ -7,21 +9,22 @@ const initializeTab = response => {
   }
 }
 
-chrome.tabs.query({
+browser.tabs.query({
   url: 'https://www.tumblr.com/*',
-}, initializeTab);
+}).then(initializeTab);
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  chrome.tabs.query({
+browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  browser.tabs.query({
     url: 'https://www.tumblr.com/*',
-  }, initializeTab);
+  }).then(initializeTab);
 });
 
 const sendMessage = payload => {
   if (!tumblr) {
     return;
   }
-  chrome.tabs.sendMessage(tumblr, payload, response => {
+  
+  browser.tabs.sendMessage(tumblr, payload).then(response => {
     if (response) {
       console.log(response);
     }

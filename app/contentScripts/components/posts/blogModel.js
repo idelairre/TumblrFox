@@ -53,7 +53,7 @@ const BlogModel = Model.extend({
     const deferred = $.Deferred();
     const filteredFetch = () => {
       return this._fetch(query).then(response => {
-        return Filters.applyFilters(query, response, true); // NOTE: remember that this takes two arguments
+        return Filters.applyFilters(query, response, true); // NOTE: remember that this takes three arguments
       });
     }
     const recursiveFetch = posts => {
@@ -68,7 +68,7 @@ const BlogModel = Model.extend({
     }
 
     recursiveFetch(posts);
-    
+
     return deferred.promise();
   },
   _fetch(query) {

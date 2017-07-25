@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import { extend } from 'lodash';
 
 const LOCAL_STORAGE_KEY = 'IdleMonitor.actionTime';
@@ -20,7 +21,7 @@ function IdleMonitor(options) {
   // Apply action callbacks
   Object.keys(this.options.events).forEach(selector => {
     const element = (selector === 'document' ? document : selector);
-    $(element).on(this.options.events[selector], this.actionCallback.bind(this));
+    $(element).on(this.options.events[selector], ::this.actionCallback);
   });
 }
 
@@ -59,7 +60,7 @@ extend(IdleMonitor.prototype, Backbone.Events, {
     }
     this.stop();
     this.actionCallback();
-    this.timeout = setInterval(this.checkCallback.bind(this), this.options.checkIntervalSecs * 1000);
+    this.timeout = setInterval(::this.checkCallback, this.options.checkIntervalSecs * 1000);
   },
   stop() {
     if (this.timeout) {

@@ -9,8 +9,8 @@ const Toggle = View.extend({
   events: {
     'click': 'toggle'
   },
-  initialize(e) {
-    this.options = Object.assign({}, e);
+  initialize(options) {
+    this.options = Object.assign({}, options);
     this.state = new Model({
       toggled: false,
       disabled: false

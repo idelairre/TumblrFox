@@ -1,6 +1,7 @@
+// import browser from '../lib/browserPolyfill';
 import constants from '../constants';
 import receiverHandler from '../services/receiverService';
-import sendMessage from '../services/messageService';
+// import sendMessage from '../services/messageService';
 import BlogStore from '../stores/blogStore';
 import BlogSource from '../source/blogSource';
 import PostSource from '../source/postSource';
@@ -9,7 +10,7 @@ import Likes from '../stores/likeStore';
 import Following from '../stores/followingStore';
 import manifest from '../../manifest.json';
 
-chrome.runtime.onInstalled.addListener(details => { // TODO: move this to background since it has to do with initialization
+browser.runtime.onInstalled.addListener(details => { // TODO: move this to background since it has to do with initialization
   console.log('previousVersion', details.previousVersion);
   constants.set('previousVersion', details.previousVersion);
   constants.set('version', manifest.version);
@@ -24,13 +25,9 @@ const setConstants = payload => {
   }
 };
 
-const sendConstants = () => {
-  return constants.toJSON();
-};
+const sendConstants = () => constants.toJSON();
 
-constants.on('reset',() => {
-  sendMessage(constants.toJSON());
-});
+// constants.on('reset', () => sendMessage(constants.toJSON()));
 
 const chromeReciever = receiverHandler({
   cacheBlogPosts: BlogStore.cache,
@@ -48,7 +45,6 @@ const chromeReciever = receiverHandler({
   refreshFollowing: Following.refresh,
   searchLikesByTag: Likes.fetch,
   searchLikesByTerm: Likes.searchLikesByTerm,
-  setFilter: Likes.setFilter,
   syncLike: Likes.syncLike,
   updateBlogCache: BlogStore.update,
   updateFollowing: Following.update,

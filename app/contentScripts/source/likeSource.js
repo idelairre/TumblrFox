@@ -9,7 +9,7 @@ const LikeSource = Source.extend({
     if (typeof slug.term === 'undefined' || (has(slug, 'term') && slug.term.length === 0)) {
       return this.filter(slug);
     }
-    
+
     return this.filterByTerm(slug);
   },
   filter(slug) {
@@ -24,10 +24,10 @@ const LikeSource = Source.extend({
   },
   search(query) {
     const deferred = $.Deferred();
-    query = pick(query, 'blogname', 'before', 'filter_nsfw', 'limit', 'next_offset', 'post_role', 'post_type', 'sort', 'term');
+    query = pick(query, ['blogname', 'before', 'filter_nsfw', 'limit', 'next_offset', 'post_role', 'post_type', 'sort', 'term']);
 
     if (query.blogname === Tumblr.Prima.currentUser().id) {
-      query = omit(query, 'blogname');
+      query = omit(query, ['blogname']);
     }
 
     this.fetch(query).then(deferred.resolve);

@@ -1,7 +1,6 @@
 import { isEqual } from 'lodash';
 import parsePosts from '../../utils/parsePosts';
 import likesFixture from '../fixtures/likes-fixture.html';
-import 'babel-polyfill';
 
 describe('parsePosts()', () => {
   it ('should work', () => {

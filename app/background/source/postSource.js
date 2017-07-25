@@ -16,7 +16,7 @@ export default class PostSource {
         const response = await PostSource.fetch(query);
         posts = posts.concat(response).slice(0, query.limit);
 
-        if (isEmpty(posts)) {
+        if (posts.length === 0) {
           emptyCount += 1;
         }
 
@@ -73,6 +73,7 @@ export default class PostSource {
     } catch (err) {
       deferred.reject(err);
     }
+
     return deferred.promise();
   }
 
@@ -93,7 +94,7 @@ export default class PostSource {
         }
 
         const posts = await BlogSource.fetchBlogPosts(slug);
-        
+
         if (typeof posts[0] !== 'undefined') {
           response.push(posts[0]);
           sendMessage({
@@ -106,6 +107,7 @@ export default class PostSource {
     } catch (err) {
       deferred.reject(err);
     }
+    
     return deferred.promise();
   }
 }

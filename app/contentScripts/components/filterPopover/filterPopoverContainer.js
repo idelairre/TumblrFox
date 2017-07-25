@@ -1,13 +1,13 @@
 import $ from 'jquery';
-import { ComponentFetcher } from '../../utils';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
 import FilterPopoverComponent from './filterPopoverComponent';
 
 const PrimaComponent = ComponentFetcher.get('PrimaComponent');
 
 const FilterPopoverContainer = PrimaComponent.extend({
   name: 'FilterPopover',
-  initialize(e) {
-    this.options = Object.assign({}, e);
+  initialize(options) {
+    this.options = Object.assign({}, options);
   },
   view(e) {
     Object.assign(e, {

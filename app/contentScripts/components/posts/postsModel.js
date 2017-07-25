@@ -10,7 +10,7 @@ import LikesModel from './likesModel';
 import LoaderComponent from '../loader/loaderComponent';
 import SearchModel from '../filterPopover/search/searchModel';
 import SearchResultsComponent from '../searchResults/searchResultsComponent';
-import Utils from '../../utils';
+import PostFormatter from '../../utils/postFormatterUtil';
 
 // NOTE: scrolling while searching tries to render results when there are none and disables the autopaginator
 
@@ -82,7 +82,7 @@ const PostsModel = ControllerModel.extend({
 
     const fetchHelper = posts => {
       if (posts.length > 0) {
-        Utils.PostFormatter.renderPosts(posts);
+        PostFormatter.renderPosts(posts);
       }
       this.incrementOffset(posts.length);
       this.evalAndLogResults(posts);
@@ -106,7 +106,7 @@ const PostsModel = ControllerModel.extend({
         if (slug.term.length > 0) {
           return this.renderSearchResults(slug).then(fetchHelper);
         }
-        
+
         this.dashboardModel.fetch(slug).then(response => {
           const { posts, query } = response;
           this.searchModel.set(query);
@@ -129,7 +129,7 @@ const PostsModel = ControllerModel.extend({
       this.evalAndLogResults(results);
 
       if (results.length && results.length > 0) {
-        Utils.PostFormatter.renderPosts(results);
+        PostFormatter.renderPosts(results);
       }
 
       deferred.resolve();

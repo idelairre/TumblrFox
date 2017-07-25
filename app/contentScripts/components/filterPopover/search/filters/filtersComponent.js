@@ -1,5 +1,5 @@
 import { pick } from 'lodash';
-import { ComponentFetcher } from '../../../../utils';
+import ComponentFetcher from '../../../../utils/componentFetcherUtil';
 import FiltersDropDownComponent from './filtersDropdownComponent';
 
 const { PeeprBlogSearch, SearchFiltersPopover } = ComponentFetcher.getAll('PeeprBlogSearch', 'SearchFiltersPopover');

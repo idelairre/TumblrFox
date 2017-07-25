@@ -1,35 +1,38 @@
 /* global chrome:true */
+/* global browser:true */
 /* eslint no-undef: "error" */
 
+import browser from './lib/browserPolyfill';
 import chromeReceiver from './receivers/chromeReceiver';
 import db from './lib/db';
 import errorHandler from './handlers/errorHandler';
 import idleHandler from './handlers/idleHandler';
 import optionsReceiver from './receivers/optionsReceiver';
 import loadStartupHandler from './handlers/startupHandler';
+import sendMessage from './services/messageService';
 import './lib/livereload';
 
-const inExtension = chrome.runtime.onMessage;
+const inExtension = browser.runtime.onMessage;
 
 const loadChromeEventHandlers = () => {
-  chrome.runtime.onMessage.addListener(chromeReceiver);
+  browser.runtime.onMessage.addListener(chromeReceiver);
 };
 
 const loadErrorHandler = () => {
-  window.addEventListener('unhandledrejection', errorHandler);
+  window.onerror = errorHandler;
 };
 
 const loadOptionsEventHandlers = () => {
-  chrome.runtime.onConnect.addListener(optionsReceiver);
+  browser.runtime.onConnect.addListener(optionsReceiver);
 };
 
 const listenForUpdate = () => {
-  chrome.runtime.onUpdateAvailable.addListener(() => chrome.runtime.reload());
+  browser.runtime.onUpdateAvailable.addListener(() => browser.runtime.reload());
 };
 
 const listenForIdleState = () => {
-  chrome.idle.setDetectionInterval(400000);
-  chrome.idle.onStateChanged.addListener(idleHandler);
+  browser.idle.setDetectionInterval(400000);
+  browser.idle.onStateChanged.addListener(idleHandler);
 };
 
 if (inExtension) {

@@ -6,8 +6,6 @@ import FollowingModel from '../components/followingList/followingModel';
 import { RouteController } from './router';
 import { ComponentFetcher } from '../utils';
 
-const Tumblr = window.Tumblr;
-
 const Controller = RouteController.extend({
   initialize(options = {}) {
     Object.assign(this, options);

@@ -1,7 +1,7 @@
 <div class="popover popover_menu popover_gradient">
   <div class="popover_inner">
     <ul class="popover_inner_list search_filter_items">
-      <% items = (_.isArray(items) ? items : [items]) %>
+      <% items = (Array.isArray(items) ? items : [items]) %>
       <% _.each(items, function(item, key, index) { %>
         <% if (item.header) { %>
         <li class="popover_subsection">

@@ -10,12 +10,14 @@ const ChromeListener = Listener.extend({
     this.bindEvents();
   },
   bindEvents() {
-    window.addEventListener('response', e => {
-      const response = e.detail;
-      const type = response._type;
-      const payload = response.payload;
-      Events.trigger(`chrome:${type}`, payload);
-    });
+    // window.addEventListener('response', e => {
+    //   const response = e.detail;
+    //   Events.trigger(`chrome:${response.type}`, response.payload);
+    // });
+    window.addEventListener('message', event => {
+      console.log(event.data);
+      Events.trigger(`chrome:${event.data.type}`, event.data.payload);
+    }, false);
   },
   normalize(eventName) {
     return `chrome:${snakeCase(eventName).replace(/_/g, ':')}`;

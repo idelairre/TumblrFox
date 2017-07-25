@@ -1,5 +1,5 @@
 import { extend } from 'lodash';
-import { ComponentFetcher } from '../../utils';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
 
 const { animation, ClickHandler, Mixin, PopoverMixin } = ComponentFetcher.getAll('animation', 'ClickHandler', 'Mixin', 'PopoverMixin');
 

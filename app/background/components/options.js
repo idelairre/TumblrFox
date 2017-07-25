@@ -5,6 +5,7 @@
 import $ from 'jquery';
 import { Events, Model, View } from 'backbone';
 import { has, capitalize, camelCase, snakeCase } from 'lodash';
+import browser from '../lib/browserPolyfill';
 import constants from '../constants';
 import Authentication from './authentication/authentication';
 import Buttons from './buttons/buttons';
@@ -58,7 +59,7 @@ const Options = View.extend({
     this.initialized = true;
   },
   initializePort() {
-    this.port = chrome.runtime.connect({
+    this.port = browser.runtime.connect({
       name: 'options'
     });
     this.initializeListeners();

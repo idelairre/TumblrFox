@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { defaultsDeep, extend, has, omit } from 'lodash';
+import Tumblr from 'tumblr';
 import AppState from '../application/state';
 import Events from '../application/events';
 import PostView from '../components/postView/postViewComponent';
@@ -8,17 +9,6 @@ import ComponentFetcher from './componentFetcherUtil';
 const unescapeQuotes = string => {
   return string.replace(/\\"/g, '"');
 };
-
-const stripScripts = s => {
- var div = document.createElement('div');
- div.innerHTML = s;
- var scripts = div.getElementsByTagName('script');
- var i = scripts.length;
- while (i--) {
-   scripts[i].parentNode.removeChild(scripts[i]);
- }
- return div.innerHTML;
-}
 
 const PostFormatter = function () {
   if (!window.location.href.includes('search') && Backbone.history.location.host === 'www.tumblr.com') {
@@ -50,6 +40,7 @@ extend(PostFormatter.prototype, {
     } else if (postData.type === 'chat') {
       return 'conversation';
     }
+
     return postData.type;
   },
   renderPostFromHtml(post) {
@@ -57,6 +48,7 @@ extend(PostFormatter.prototype, {
       if (Tumblr.postsView.collection.get(post.id)) {
         return;
       }
+
       const escapedHtml = unescapeQuotes(unescapeQuotes(post.html)); // NOTE: make it so you don't have to run this twice
       const postElement = $($.parseHTML(`<li class="post_container" data-pageable="post_${post.id}">${escapedHtml}</li>`));
       const postModel = new Tumblr.Prima.Models.Post(postElement.find('.post').data('json'));
@@ -72,29 +64,30 @@ extend(PostFormatter.prototype, {
   renderPost(postData, marshalAttributes) {
     if (marshalAttributes) {
       const postModel = this.marshalPostAttributes(postData);
-      new PostView({
-        model: new Tumblr.Prima.Models.Post(postModel)
-      });
+      new PostView({ model: new Tumblr.Prima.Models.Post(postModel) });
     } else {
-      new PostView({
-        model: new Tumblr.Prima.Models.Post(postData)
-      });
+      new PostView({ model: new Tumblr.Prima.Models.Post(postData) });
     }
   },
   renderPosts(posts) {
     posts.map(post => { // NOTE: posts do not come out in order due to different formatting times
-      if (Tumblr.postsView.collection.get(post.id)) {
+      if (has(post, 'id') && Tumblr.postsView.collection.get(post.id)) {
         return;
       }
-      if (typeof post.html !== 'undefined') {
+
+      if (has(post, 'html') && typeof post.html !== 'undefined') {
         return this.renderPostFromHtml(post);
       }
+
       if (has(post, 'tumblelog-data')) {
         return this.renderPost(post);
       }
+
       this.renderPost(post, true); // second argument signals to marshal the post
     });
+
     Tumblr.Events.trigger('DOMEventor:updateRect');
+
     if (!this.initializedAvatars) {
       this.avatarManager.initialize();
       this.initializedAvatars = true;
@@ -114,10 +107,13 @@ extend(PostFormatter.prototype, {
     } else {
       post.tags = [];
     }
+
     post.model.set('tags', post.tags);
+
     if (AppState.get('dashboard')) {
       Events.trigger('fox:updateTags', post.model.get('tags'));
     }
+
     return post;
   },
   renderDashboardPosts(posts) {
@@ -252,6 +248,7 @@ extend(PostFormatter.prototype, {
         following: postData.reblogged_from_following,
         url: `http://${postData.reblogged_from_name}.tumblr.com`
       });
+
       postData['tumblelog-parent-data'] = (typeof parentData !== 'undefined' ? typeof parentData.toJSON === 'function' ? parentData.toJSON() : parentData : false);
     }
 
@@ -261,9 +258,12 @@ extend(PostFormatter.prototype, {
         following: postData.reblogged_root_following,
         url:  `http://${postData.reblogged_root_name}.tumblr.com`
       });
+
       postData['tumblelog-root-data'] = (typeof rootData !== 'undefined' ? typeof rootData.toJSON === 'function' ? rootData.toJSON() : rootData : false);
     }
+
     postData = omit(postData, ['blog', 'reblog', 'reblogged_from_can_message', 'reblogged_from_following', 'reblogged_from_followed', 'reblogged_from_id', 'reblogged_from_name', 'reblogged_from_title', 'reblogged_from_tumblr_url', 'reblogged_from_url', 'reblogged_from_uuid', 'reblogged_root_can_message', 'reblogged_root_following', 'reblogged_root_name', 'reblogged_root_title', 'reblogged_root_url', 'reblogged_root_uuid']);
+
     return postData;
   }
 });

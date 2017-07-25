@@ -1,5 +1,6 @@
 import { Model } from 'backbone';
 import { extend, isEmpty, uniqueId } from 'lodash';
+import Tumblr from 'tumblr';
 import * as Components from './components/components';
 import * as Models from './models/models';
 import ActionListener from './listeners/actionListener';
@@ -20,6 +21,8 @@ import Thoth from './utils/idleMonitorUtil';
 import Utils from './utils';
 
 const App = function () {
+  this.Application = {};
+
   this.constants = constants;
 
   this.options = new Model({
@@ -37,6 +40,8 @@ const App = function () {
     enableTextSearch: false
   });
 
+  this.Events = Events;
+
   this.state = AppState;
 
   this._initializers = {};
@@ -44,10 +49,8 @@ const App = function () {
 };
 
 extend(App.prototype, ChromeMixin.properties, Backbone.Events, {
-  loadComponents() {
-    this.Application = {};
+  loadComponents() { // NOTE: break this apart
     this.Components = Components;
-    this.Events = Events;
     this.Listeners = {
       ActionListener,
       ChromeListener,
@@ -74,11 +77,13 @@ extend(App.prototype, ChromeMixin.properties, Backbone.Events, {
     this.loadComponents();
     this.initializeConstants();
     this.bindListeners();
+
     if (!this.constants.clientTests) {
       this.startHeartBeat();
       this.initializeThoth();
       this.initializeIntervalTasks();
     }
+
     this.trigger('initialized');
   },
   startHeartBeat(interval) {
@@ -112,7 +117,7 @@ extend(App.prototype, ChromeMixin.properties, Backbone.Events, {
   },
   bindListeners() {
     if (this.options.get('logging')) {
-      this.Listeners.EventsListener.start();
+      EventsListener.start();
     }
   },
   unbindListeners() {
@@ -177,6 +182,7 @@ extend(App.prototype, ChromeMixin.properties, Backbone.Events, {
     if (!this.constants.enableIdleMonitor) {
       return;
     }
+
     const events = {
       checkIntervalSecs: 10,
       events: {
@@ -185,7 +191,8 @@ extend(App.prototype, ChromeMixin.properties, Backbone.Events, {
       warningSecs: 1,
       timeoutSecs: 10
     };
-    this.idleMonitor = new Tumblr.Fox.Thoth(events);
+
+    this.idleMonitor = new Thoth(events);
     this.idleMonitor.start();
 
     this.idleMonitor.on('action', () => {

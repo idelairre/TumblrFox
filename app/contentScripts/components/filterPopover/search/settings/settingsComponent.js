@@ -1,12 +1,12 @@
 import $ from 'jquery';
-import { clone, defer, pick } from 'lodash';
-import { ComponentFetcher } from '../../../../utils';
+import { pick } from 'lodash';
+import Tumblr from 'tumblr';
+import ComponentFetcher from '../../../../utils/componentFetcherUtil';
 import PopoverComponent from '../../../popover/popoverComponent';
 
 const TumblrView = ComponentFetcher.get('TumblrView');
 
-const settingsPopoverTemplate = `
-    <i class="icon_search toggle-search nav_icon"></i>`
+const settingsPopoverTemplate = `<i class="icon_search toggle-search nav_icon"></i>`
 
 const SettingsComponent = TumblrView.extend({
   className: 'search-settings',
@@ -24,7 +24,7 @@ const SettingsComponent = TumblrView.extend({
   template: settingsPopoverTemplate,
   initialize(options) {
     this.intialized = false;
-    Object.assign(this, this.defaults, pick(options, 'state'));
+    Object.assign(this, this.defaults, pick(options, ['state']));
     this.listenTo(this.state, 'change:state', ::this.setSearchStateMenu);
     this.setSearchStateMenu(this.state.getState());
     return this;
@@ -66,9 +66,9 @@ const SettingsComponent = TumblrView.extend({
     this.popover && this.popover.hide();
   },
   onPopoverClose() {
-    defer(() => {
+    setTimeout(() => {
       this.popover = null;
-    });
+    }, 0);
   },
   onSelect(setting) {
     if (this.initialized && !this.state.get(setting)) {

@@ -552,4 +552,4 @@ if (OAuthSimple === undefined) {
   };
 }
 
-module.exports.OAuthSimple = OAuthSimple;
+module.exports = OAuthSimple;

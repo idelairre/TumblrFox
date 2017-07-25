@@ -22,7 +22,9 @@ export default class Likes {
     if (Likes.caching) {
       return;
     }
+
     Likes.caching = true;
+
     const sendProgress = isFunction(sendResponse) ? logValues.bind(this, 'likes', sendResponse) : noopCallback;
     const sendError = isFunction(sendResponse) ? logError : noop;
 
@@ -97,12 +99,14 @@ export default class Likes {
       }
 
       Object.assign(Likes.lastQuery, omit(query, ['next_offset']));
+
       let response = await db.likes.where('tokens').anyOfIgnoreCase(...query.term).or('tags').anyOfIgnoreCase(...query.term).filter(_filters).reverse().toArray();
 
       if (query.sort !== 'CREATED_DESC') {
         response = sortByPopularity(response);
       } else {
         response = Likes.sortResults(query.term, response);
+
       }
 
       Likes.$postsCache = response;
@@ -119,7 +123,7 @@ export default class Likes {
       const post = results[i];
       const result = {
         match: 0,
-        item: post[i]
+        item: post
       };
 
       for (let j = 0; terms.length > j; j += 1) {
@@ -129,7 +133,9 @@ export default class Likes {
       }
       sorted.push(result);
     }
+
     sorted = sortBy(sorted, ['match']).reverse();
+
     return sorted.map(result => result.item);
   }
 

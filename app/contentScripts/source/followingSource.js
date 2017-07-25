@@ -1,5 +1,7 @@
 import $ from 'jquery';
 import { has } from 'lodash';
+import Tumblr from 'tumblr';
+import BlogSource from './blogSource';
 import ChromeMixin from '../components/mixins/chromeMixin';
 import Source from './source';
 
@@ -11,7 +13,7 @@ function preventJS(html) {
 
 const FollowingSource = Source.extend({
   mixins: [ChromeMixin],
-  collateData(following) {
+  collateData(following) { // NOTE: what we want is something that fits the client Tumblelog model, this transforms api follower items into tumblelogs
     const promises = following.map(follower => {
       const deferred = $.Deferred();
 
@@ -53,7 +55,7 @@ const FollowingSource = Source.extend({
         const following = Array.from($(preventJS(data)).find('.follower'));
         const response = following.map(follower => {
           const json = $(follower).find('[data-tumblelog-popover]').data('tumblelog-popover');
-          
+
           if (json) {
             json.updated = $(follower).find('.description').text();
             return json;

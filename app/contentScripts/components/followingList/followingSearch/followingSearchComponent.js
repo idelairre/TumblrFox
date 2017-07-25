@@ -1,5 +1,5 @@
-import { defer, omit } from 'lodash';
-import { ComponentFetcher } from '../../../utils';
+import { omit } from 'lodash';
+import ComponentFetcher from '../../../utils/componentFetcherUtil';
 import PopoverComponent from '../../popover/popoverComponent';
 
 const { TumblrView } = ComponentFetcher.getAll('TumblrView');
@@ -25,7 +25,7 @@ const FollowingSearch = TumblrView.extend({
   },
   initialize(options) {
     this.state = options.state;
-    this.options = Object.assign({}, this.defaults, omit(options, 'state'));
+    this.options = Object.assign({}, this.defaults, omit(options, ['state']));
   },
   render() {
     this.$el.html(this.template);
@@ -40,10 +40,9 @@ const FollowingSearch = TumblrView.extend({
         selection: 'checkmark',
         items: this.options.popoverOptions,
         onSelect: state => {
-          if (this.state.get(state)) {
-            return;
+          if (!this.state.get(state)) {
+            Tumblr.Fox.Events.trigger('fox:following:state', state);
           }
-          Tumblr.Fox.Events.trigger('fox:following:state', state);
         }
       });
       this.popover.render();
@@ -54,9 +53,9 @@ const FollowingSearch = TumblrView.extend({
     this.popover && this.popover.hide();
   },
   onPopoverClose() {
-    defer(() => {
+    setTimeout(() => {
       this.popover = null;
-    });
+    }, 0);
   }
 });
 

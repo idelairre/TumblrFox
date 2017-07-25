@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 import { escape } from 'lodash';
+import browser from '../lib/browserPolyfill';
 import { debug } from '../services/loggingService';
-import 'babel-polyfill';
 
 const db = new Dexie('TumblrFox');
 
@@ -43,7 +43,7 @@ window.downloadTableJson = function (table, query) {
     const url = URL.createObjectURL(blob, {
       type: `application/json,charset=utf-8`
     });
-    chrome.downloads.download({ url, filename: `${query.filename}.json` || `tumblrfox-${table}-data.json` });
+    browser.downloads.download({ url, filename: `${query.filename}.json` || `tumblrfox-${table}-data.json` });
   }
   if (query.term && query.limit) {
     db[table].where(query.index).anyOfIgnoreCase(query.term).limit(query.limit).toArray().then(download);

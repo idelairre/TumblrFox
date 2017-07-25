@@ -1,4 +1,4 @@
-import { ComponentFetcher } from '../../utils';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
 
 const TumblrView = ComponentFetcher.get('TumblrView');
 

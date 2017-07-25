@@ -1,72 +1,27 @@
-<script id="filterMenuTemplate" type="text/template">
-  <li class="popover_subsection">
-    <div class="popover_header">
-      Filter
-    </div>
-    <ul class="popover_menu_list search_filter_items" <%= Tumblr.Fox.state.get('disabled') ? 'style="opacity: 0.6"' : '' %>>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="any">
-          <i class="popover_menu_item_anchor_icon icon_posts"></i>
-          All
-          <i class="icon icon_checkmark" style="float: right" data-check="any"></i>
+<li class="popover_subsection">
+  <div class="popover_header">
+    Filter
+  </div>
+  <ul class="popover_menu_list search_filter_items" <%= Tumblr.Fox.state.get('disabled') ? 'style="opacity: 0.6"' : '' %>>
+    <% var items = [
+        { item: 'any', icon: 'icon_posts' },
+        { item: 'text', icon: 'icon_post_text' },
+        { item: 'photo', icon: 'icon_post_photo' },
+        { item: 'quote', icon: 'icon_post_quote' },
+        { item: 'link', icon: 'icon_post_link' },
+        { item: 'chat', icon: 'icon_post_chat' },
+        { item: 'audio', icon: 'icon_post_audio' },
+        { item: 'video', icon: 'icon_post_video' },
+        { item: 'answer', icon: 'help-icon' }
+      ]; %>
+    <% _.map(items, function (i) { %>
+      <li class="popover_menu_item" data-js-menu-item="<%- i.item %>">
+        <span class="popover_menu_item_anchor" data-js-menu-item-link="<%- i.item %>">
+          <i class="icon icon_checkmark" data-check="<%- i.item %>"></i>
+          <i class="popover_menu_item_anchor_icon <%- i.icon %>"></i>
+          <%- _.capitalize(i.item) %>
         </a>
       </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="text">
-          <i class="popover_menu_item_anchor_icon icon_post_text"></i>
-          Text
-          <i class="icon icon_checkmark" style="float: right" data-check="text"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="photo">
-          <i class="popover_menu_item_anchor_icon icon_post_photo"></i>
-          Photos
-          <i class="icon icon_checkmark" style="float: right" data-check="photo"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="quote">
-          <i class="popover_menu_item_anchor_icon icon_post_quote"></i>
-          Quotes
-          <i class="icon icon_checkmark" style="float: right" data-check="quote"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="link">
-          <i class="popover_menu_item_anchor_icon icon_post_link"></i>
-          Link
-          <i class="icon icon_checkmark" style="float: right" data-check="link"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="chat">
-          <i class="popover_menu_item_anchor_icon icon_post_chat"></i>
-          Chat
-          <i class="icon icon_checkmark" style="float: right" data-check="chat"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="audio">
-          <i class="popover_menu_item_anchor_icon icon_post_audio"></i>
-          Audio
-          <i class="icon icon_checkmark" style="float: right" data-check="audio"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="video">
-          <i class="popover_menu_item_anchor_icon icon_post_video"></i>
-          Video
-            <i class="icon icon_checkmark" style="float: right" data-check="video"></i>
-        </a>
-      </li>
-      <li class="popover_menu_item" data-js-menu-item>
-        <a class="popover_menu_item_anchor" href="#" data-js-menu-item-link="answer">
-          <i class="popover_menu_item_anchor_icon help-icon"></i>
-          Answer
-          <i class="icon icon_checkmark" style="float: right" data-check="answer"></i>
-        </a>
-      </li>
-    </ul>
-  </li>
-</script>
+    <% }); %>
+  </ul>
+</li>

@@ -1,4 +1,5 @@
-var ExOAuthSimple = require('./chromeExOauthsimple').OAuthSimple;
+var ExOAuthSimple = require('./chromeExOauthsimple');
+var browser = require('./browserPolyfill');
 
 // Copyright (c) 2010 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -18,22 +19,20 @@ var ExOAuthSimple = require('./chromeExOauthsimple').OAuthSimple;
  *     "callback_page" {String} If you renamed chrome_ex_oauth.html, the name
  *          this file was renamed to.
  */
-function ChromeExOAuth(url_request_token, url_auth_token, url_access_token,
-  consumer_key, consumer_secret, oauth_scope, opt_args) {
+
+function ChromeExOAuth(url_request_token, url_auth_token, url_access_token, consumer_key, consumer_secret, oauth_scope, opt_args) {
   this.url_request_token = url_request_token;
   this.url_auth_token = url_auth_token;
   this.url_access_token = url_access_token;
   this.consumer_key = consumer_key;
   this.consumer_secret = consumer_secret;
   this.oauth_scope = oauth_scope;
-  this.app_name = opt_args && opt_args['app_name'] ||
-    "ChromeExOAuth Library";
+  this.app_name = opt_args && opt_args.hasOwnProperty('app_name') ? opt_args['app_name'] : "ChromeExOAuth Library";
   this.key_token = "oauth_token";
   this.key_token_secret = "oauth_token_secret";
-  this.callback_page = opt_args && opt_args['callback_page'] ||
-    '../pages/chrome_ex_oauth.html';
+  this.callback_page = opt_args && opt_args.hasOwnProperty('callback_page') ? opt_args['callback_page'] : '../pages/chrome_ex_oauth.html';
   this.auth_params = {};
-  if (opt_args && opt_args['auth_params']) {
+  if (opt_args && opt_args.hasOwnProperty('auth_params')) {
     for (key in opt_args['auth_params']) {
       if (opt_args['auth_params'].hasOwnProperty(key)) {
         this.auth_params[key] = opt_args['auth_params'][key];
@@ -70,19 +69,22 @@ ChromeExOAuth.initBackgroundPage = function (oauth_config) {
   window.chromeExOAuthRedirectStarted = false;
   window.chromeExOAuthRequestingAccess = false;
 
-  var url_match = chrome.extension.getURL(window.chromeExOAuth.callback_page);
+
+  var url_match = browser.extension.getURL(window.chromeExOAuth.callback_page);
   var tabs = {};
-  chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+
+  browser.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.url &&
       changeInfo.url.substr(0, url_match.length) === url_match &&
-      changeInfo.url != tabs[tabId] &&
-      window.chromeExOAuthRequestingAccess == false) {
-      chrome.tabs.create({
-        'url': changeInfo.url
-      }, function (tab) {
-        tabs[tab.id] = tab.url;
-        chrome.tabs.remove(tabId);
-      });
+      changeInfo.url !== tabs[tabId] &&
+      window.chromeExOAuthRequestingAccess === false &&
+      changeInfo.status !== 'loading') {
+        browser.tabs.create({
+          'url': changeInfo.url
+        }).then(function(tab) {
+          tabs[tab.id] = tab.url;
+          browser.tabs.remove(tabId);
+        });
     }
   });
 
@@ -104,8 +106,8 @@ ChromeExOAuth.prototype.authorize = function (callback) {
     window.chromeExOAuthOnAuthorize = function (token, secret) {
       callback(token, secret);
     };
-    chrome.tabs.create({
-      'url': chrome.extension.getURL(this.callback_page)
+    browser.tabs.create({
+      'url': browser.extension.getURL(this.callback_page)
     });
   }
 };
@@ -257,7 +259,8 @@ ChromeExOAuth.fromConfig = function (oauth_config) {
     oauth_config['consumer_secret'],
     oauth_config['scope'], {
       'app_name': oauth_config['app_name'],
-      'auth_params': oauth_config['auth_params']
+      'auth_params': oauth_config['auth_params'],
+      'callback_page': oauth_config['callback_page']
     }
   );
 };
@@ -268,18 +271,19 @@ ChromeExOAuth.fromConfig = function (oauth_config) {
  * chrome_ex_oauth.html.
  */
 ChromeExOAuth.initCallbackPage = function () {
-  var background_page = chrome.extension.getBackgroundPage();
+  var background_page = browser.extension.getBackgroundPage();
   var oauth_config = background_page.chromeExOAuthConfig;
   var oauth = ChromeExOAuth.fromConfig(oauth_config);
   background_page.chromeExOAuthRedirectStarted = true;
+  // opens background page, queries for oauth info in url
   oauth.initOAuthFlow(function (token, secret) {
     background_page.chromeExOAuthOnAuthorize(token, secret);
     background_page.chromeExOAuthRedirectStarted = false;
-    chrome.tabs.query({
+    browser.tabs.query({
       active: true,
       currentWindow: true
-    }, function (tabs) {
-      chrome.tabs.remove(tabs[0].id);
+    }).then(function (tabs) {
+      browser.tabs.remove(tabs[0].id);
     });
   });
 };
@@ -295,8 +299,9 @@ ChromeExOAuth.initCallbackPage = function () {
  *     onreadystatechange handler for more information.
  */
 ChromeExOAuth.sendRequest = function (method, url, headers, body, callback) {
-  var xhr = new XMLHttpRequest();
+  var xhr = new XMLHttpRequest({ mozSystem: true });
   xhr.onreadystatechange = function (data) {
+    console.log('response', data);
     callback(xhr, data);
   };
   xhr.open(method, url, true);
@@ -452,6 +457,7 @@ ChromeExOAuth.prototype.getTokenSecret = function () {
 ChromeExOAuth.prototype.initOAuthFlow = function (callback) {
   if (!this.hasToken()) {
     var params = ChromeExOAuth.getQueryStringParams();
+    console.log(params);
     if (params['chromeexoauthcallback'] == 'true') {
       var oauth_token = params['oauth_token'];
       var oauth_verifier = params['oauth_verifier'];
@@ -486,6 +492,7 @@ ChromeExOAuth.prototype.getRequestToken = function (callback, opt_args) {
   if (typeof callback !== "function") {
     throw new Error("Specified callback must be a function.");
   }
+
   var url = opt_args && opt_args['url_callback'] ||
     window && window.top && window.top.location &&
     window.top.location.href;
@@ -552,12 +559,11 @@ ChromeExOAuth.prototype.onRequestToken = function (callback, xhr) {
  *         token {String} The OAuth access token.
  *         secret {String} The OAuth access token secret.
  */
-ChromeExOAuth.prototype.getAccessToken = function (oauth_token, oauth_verifier,
-  callback) {
+ChromeExOAuth.prototype.getAccessToken = function (oauth_token, oauth_verifier, callback) {
   if (typeof callback !== "function") {
     throw new Error("Specified callback must be a function.");
   }
-  var bg = chrome.extension.getBackgroundPage();
+  var bg = browser.extension.getBackgroundPage();
   if (bg.chromeExOAuthRequestingAccess == false) {
     bg.chromeExOAuthRequestingAccess = true;
 
@@ -593,7 +599,7 @@ ChromeExOAuth.prototype.getAccessToken = function (oauth_token, oauth_verifier,
  */
 ChromeExOAuth.prototype.onAccessToken = function (callback, xhr) {
   if (xhr.readyState == 4) {
-    var bg = chrome.extension.getBackgroundPage();
+    var bg = browser.extension.getBackgroundPage();
     if (xhr.status == 200) {
       var params = ChromeExOAuth.formDecode(xhr.responseText);
       var token = params["oauth_token"];
@@ -609,4 +615,4 @@ ChromeExOAuth.prototype.onAccessToken = function (callback, xhr) {
   }
 };
 
-module.exports.ChromeExOAuth = ChromeExOAuth;
+module.exports = ChromeExOAuth;

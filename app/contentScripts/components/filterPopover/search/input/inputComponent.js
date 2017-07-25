@@ -1,5 +1,5 @@
 import { debounce, extend, pick, template } from 'lodash';
-import { ComponentFetcher } from '../../../../utils';
+import ComponentFetcher from '../../../../utils/componentFetcherUtil';
 import Events from '../../../../application/events';
 import TagSearchAutocompleteModel from './tagSearchAutocompleteModel';
 

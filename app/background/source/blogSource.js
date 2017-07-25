@@ -51,7 +51,7 @@ class BlogSource extends Source {
 
   async getInfo(user) {
     const deferred = Deferred();
-    
+
     if (!isString(user)) {
       deferred.reject(`${isObject(user) ? JSON.stringify(user) : user} is not a valid blogname`);
     }
@@ -101,6 +101,7 @@ class BlogSource extends Source {
       const response = {
         user
       };
+
       if (tumblelog.is_nsfw) {
         response.content_rating = 'nsfw';
       } else {
@@ -141,6 +142,7 @@ class BlogSource extends Source {
     if (slug.type) {
       url += `/${slug.type}`;
     }
+    
     url += `?api_key=${tokens.consumerKey}`;
     delete slug.blogname;
 

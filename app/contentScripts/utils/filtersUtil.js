@@ -3,9 +3,9 @@ import { compact, has } from 'lodash';
 import BlogSource from '../source/blogSource';
 
 const Filter = {
-  applyFilters(query, posts, flagApi) {
+  applyFilters(query, posts, flagApi) { // NOTE: perhaps there is another way to detect that the post is from the api?
     const deferred = $.Deferred();
-
+    
     if (query.filter_nsfw && query.post_role === 'ORIGINAL') {
       if (flagApi) {
         this._filterNsfwApi(posts).then(this._filterByRole).then(deferred.resolve);

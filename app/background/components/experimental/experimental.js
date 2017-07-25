@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { Events } from 'backbone';
-import template from 'lodash.template';
+import { template } from 'lodash';
 import Tipped from '../../lib/tipped';
 import View from '../view/view';
 import autoCacheLikesTooltip from './tooltips/autoCacheLikesTooltip.html';

@@ -2,6 +2,9 @@ import $ from 'jquery';
 import { Model } from 'backbone';
 import { has, isEmpty, pick } from 'lodash';
 import FollowingSource from '../../source/followingSource';
+import ComponentFetcher from '../../utils/componentFetcherUtil';
+
+const moment = ComponentFetcher.get('moment');
 
 const { Tumblelog } = Tumblr.Prima.Models;
 
@@ -18,6 +21,7 @@ const FollowingModel = Model.extend({
       this.set(this.defaults);
     }
 
+    this.atFollowing = this.checkRoute();
     this.items = Tumblelog.collection;
     this.set('loading', false);
   },
@@ -27,6 +31,7 @@ const FollowingModel = Model.extend({
     } else {
       new Tumblelog(following);
     }
+
     Tumblr.Fox.Events.trigger('fox:update:following');
   },
   toJSON() {
@@ -34,9 +39,11 @@ const FollowingModel = Model.extend({
       offset: this.get('offset'),
       limit: this.get('limit')
     }
+
     if (has(this, 'state')) {
       attributes.order = this.state.getState();
     }
+
     return attributes;
   },
   fetch() {
@@ -44,7 +51,7 @@ const FollowingModel = Model.extend({
     this.set('loading', true);
     this.trigger('fetch:start');
     this._fetch().then(followings => {
-      if (Backbone.history.fragment === 'following' && this.get('offset') === 0) {
+      if (this.atFollowing && this.get('offset') === 0) {
         this.items.reset(followings);
       } else {
         followings.forEach(following => {
@@ -61,6 +68,11 @@ const FollowingModel = Model.extend({
     return deferred.promise();
   },
   fetchAll() {
+    // if it was fetched less than an hour ago
+    // if (this.get('lastFetch') === && !this.atFollowing) {
+    //
+    // }
+
     return FollowingSource.fetch().then(following => {
       this.items.reset(following);
       Tumblr.Fox.Events.trigger('fox:update:following');
@@ -70,7 +82,12 @@ const FollowingModel = Model.extend({
     if (has(this, 'state') && this.state.get('orderFollowed')) {
       return FollowingSource.pageFetch(this.toJSON());
     }
+
+    this.set('lastFetch', new Date());
     return FollowingSource.fetch(this.toJSON());
+  },
+  checkRoute() {
+    return Backbone.history.fragment === 'following';
   }
 });
 

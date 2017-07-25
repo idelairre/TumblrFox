@@ -3,7 +3,7 @@ import { isEmpty, template } from 'lodash';
 import BlogSource from '../../source/blogSource';
 import postViewTemplate from './postViewTemplate.html';
 
-const { PostView } = Tumblr;
+const { PostView } = Tumblr; // NOTE: this has to be destructured like this and not imported or everything will fuck up
 
 /**
 * PostView viewModel
@@ -44,10 +44,11 @@ const tagTemplate = template(`<a class="post_tag" data-tag="<%= tag %>" href="<%
 const FoxPostView = PostView ? PostView.extend({
   tagName: 'li',
   className: 'post_container',
-  template: template(postViewTemplate),
+  template: template(postViewTemplate, { imports: { _: window._ } }),
   initialize(options) {
     if (isEmpty(options)) {
-      console.info('Attempted to render an empty post, this is likely an error');
+      console.error('Attempted to render an empty post, this is likely an error');
+      console.log(options);
       return;
     }
 
@@ -63,6 +64,7 @@ const FoxPostView = PostView ? PostView.extend({
     } else if (options.el) { // probably a normal post
       this.model = options.model;
       this.$el.attr('data-view-exists', true);
+
       if (Tumblr.Fox.state.get('likes') && !this.$el.data('tumblrfox-post')) {
         Tumblr.Fox.Events.trigger('fox:postsView:createPost', {
           el: options.el.prop('outerHTML'),

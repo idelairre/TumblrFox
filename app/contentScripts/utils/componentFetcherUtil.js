@@ -1,4 +1,6 @@
-import { camelCase, extend, forIn, isObject } from 'lodash';
+import { camelCase, extend } from 'lodash';
+import chromeTrigger from './chromeTrigger';
+import constants from '../application/constants';
 
 // perhaps there is a way to memoize fetched component numbers?
 
@@ -14,17 +16,20 @@ const ComponentFetcher = function (modules) {
     this.require = window.$require;
   }
 
-  this.componentIds = {};
+  this.componentIds = constants.componentIds || {};
   this.initialize.apply(this);
 
-  if (isObject(modules)) {
-    this.getComponents(modules);
-  }
+  this.getComponents(modules);
 };
 
 extend(ComponentFetcher.prototype, Backbone.Events, {
   initialize() {
     this.trigger('initialize:componentFetcher', this);
+    this.listenTo(this, 'initialize:components:done', () => {
+      chromeTrigger('chrome:initialize:constants', {
+        componentIds: this.componentIds
+      });
+    });
   },
   initializeWebpackJsonp() {
     if (window.webpackJsonp) {
@@ -37,33 +42,40 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   },
   getComponent(object, searchTerm) {
     let putFlag = true;
+    let result;
+
     if (typeof searchTerm === 'undefined') {
       searchTerm = object;
       putFlag = false;
+      result = [];
     }
-
-    const results = [];
 
     for (const key in this.modules) {
       if (this.modules[key].toString().includes(searchTerm) && key !== '0') {
-        results.push(key);
+        if (!putFlag) { // we're searching and possibly expect multiple results
+          result.push(key);
+        } else { // we're trying to actually fetch a component
+          result = key;
+        }
       }
     }
 
-    if (results.length === 1 && putFlag) {
-      this.put(object, this.require(results[0]));
-      this.componentIds[object] = results[0];
+    if (putFlag) {
+      this.put(object, this.require(result));
+      this.componentIds[object] = result;
     }
 
-    if (results.length === 0) {
+    if (!result) {
       console.error('[FETCHING COMPONENT FAILED]', object);
     }
-    return results;
+
+    return result;
   },
   getComponents(manifest) {
-    forIn(manifest, (value, key) => {
-      this.getComponent(key, value);
-    });
+    for (const key in manifest) {
+      this.getComponent(key, manifest[key]);
+    }
+
     this.trigger('initialize:components:done');
   },
   getId(name) {
@@ -75,7 +87,7 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
   },
   asyncGet(componentName) {
     const deferred = $.Deferred();
-    
+
     if (typeof this.$$componentCache[componentName] === 'undefined') {
       Tumblr.Fox.once(`initialize:dependency:${componentName}`, component => {
         deferred.resolve(component);
@@ -95,7 +107,9 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
     if (!Array.isArray(componentArray)) {
       componentArray = Array.from(arguments);
     }
+
     const response = {};
+
     componentArray.map(component => {
       if (typeof this.$$componentCache[component] === 'undefined') {
         throw new Error(`Component "${component}" in "${componentArray}" not found or not yet loaded`);
@@ -112,7 +126,6 @@ extend(ComponentFetcher.prototype, Backbone.Events, {
 });
 
 const manifest = atTumblr ? {
-  $: 'fn.init',
   AutoComplete: '/svc/search/blog_search_typeahead',
   AvatarManager: '$postContainer',
   animation: 'webkitAnimationEnd',
@@ -124,7 +137,6 @@ const manifest = atTumblr ? {
   EventBus: '_addEventHandlerByString',
   InboxCompose: '"inbox-compose"',
   PrimaComponent: '.uniqueId("component")',
-  Poller: 'BasePoller',
   PopoverMixin:  '_crossesView',
   PeeprBlogSearch: 'peepr-blog-search',
   SearchResultView: 'inbox-recipients',
@@ -140,7 +152,7 @@ const manifest = atTumblr ? {
   TumblrView: 'this._beforeRender'
 } : {};
 
-if (window.location.pathname.match(/search/)) {
+if (window.location.pathname.match(/search/) || window.location.pathname.match(/explore/)) {
   delete manifest.AvatarManager;
 }
 

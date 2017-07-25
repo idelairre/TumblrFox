@@ -4,27 +4,23 @@ import { pick } from 'lodash';
 import Filters from '../../utils/filtersUtil';
 import BlogModel from './blogModel';
 import DashboardSource from '../../source/dashboardSource';
-import Utils from '../../utils';
+import PostFormatter from '../../utils/postFormatterUtil';
 
 const DashboardModel = Model.extend({
   initialize(options) {
-    Object.assign(this, pick(options, 'state'));
+    Object.assign(this, pick(options, ['state']));
+
     if (this.state.get('disabled')) {
       return;
     }
+
     this.postViews = Tumblr.postsView;
     this.posts = this.postViews.postViews;
     this.initializeAttributes();
   },
   initializeAttributes() {
-    this.posts.map(Utils.PostFormatter.parseTags);
+    this.posts.map(PostFormatter.parseTags);
     this.posts.forEach(post => post.model.set('html', $(post.$el).prop('outerHTML')));
-  },
-  reset() {
-    DashboardSource.reset();
-  },
-  dashboardFetch() {
-    return DashboardSource.clientFetch();
   },
   _fetch(query) {
     if (query.post_type === 'ANY' && query.term.length === 0) {
@@ -52,14 +48,14 @@ const DashboardModel = Model.extend({
         }
       });
     }
-    
+
     recursiveFetch(posts);
 
     return deferred.promise();
   },
-  search(query) {
-    return DashboardSource.search(query);
-  }
+  reset: DashboardSource.reset,
+  dashboardFetch: DashboardSource.clientFetch,
+  search: DashboardSource.search
 });
 
 module.exports = DashboardModel;

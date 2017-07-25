@@ -1,10 +1,14 @@
 import $ from 'jquery';
-import Utils from '../utils'
+import { decode } from '../utils/b64Util';
 
 const attachNode = $('#posts').find('li').last();
 const formKey = $('#tumblr_form_key').attr('content');
 
-const constants = JSON.parse(Utils.B64.decode(window.tumblrFoxConstants));
+let constants = {};
+
+if (window.tumblrFoxConstants) {
+  Object.assign(constants, JSON.parse(decode(window.tumblrFoxConstants)));
+}
 
 constants.attachNode = attachNode;
 constants.rootUrl = 'https://www.tumblr.com/';

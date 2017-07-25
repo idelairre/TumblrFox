@@ -1,6 +1,6 @@
 import App from '../../app';
 import { Model } from 'backbone';
-import { assign, isFunction, isObject, noop } from 'lodash';
+import { isFunction, isObject, noop } from 'lodash';
 
 const modelInstances = {};
 

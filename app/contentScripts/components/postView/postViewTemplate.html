@@ -12,7 +12,7 @@
     data-tumblelog="<%- model.get('tumblelog') %>"
     data-tumblog-key="<%- model.get('tumblelog-data').key %>"
     data-can_reply="<%- model.get('can_reply') ? 1 : 0 %>"
-    data-json="<%- JSON.stringify(_.omit(model.toJSON(), 'html', 'post_html', 'tags')) %>"
+    data-json="<%- JSON.stringify(_.omit(model.toJSON(), ['html', 'post_html', 'tags'])) %>"
     data-view-exists="true"
     data-tumblrfox-post="true">
     <div class="post_avatar  show_user_menu">

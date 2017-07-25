@@ -2,7 +2,6 @@ import { isFunction, isString, keyBy } from 'lodash';
 import { ajax, Deferred } from 'jquery';
 import { calculatePercent } from './loggingService';
 import constants from '../constants';
-import 'babel-polyfill';
 
 export default class Firebase {
   static get(endPoint, item, port) {
@@ -24,7 +23,7 @@ export default class Firebase {
     } else if (isString(item)) {
       url = `${url}/${item.id}`;
     }
-    
+
     url = `${url}.json`;
 
     ajax({

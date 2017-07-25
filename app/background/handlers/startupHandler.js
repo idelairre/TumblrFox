@@ -1,7 +1,6 @@
 import constants from '../constants';
 import db from '../lib/db';
 import { oauthRequest } from '../lib/oauthRequest';
-import 'babel-polyfill';
 
 const loadUser = async () => {
   try {
